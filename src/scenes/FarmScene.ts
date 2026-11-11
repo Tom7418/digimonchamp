@@ -11,7 +11,21 @@ import { bar, Button, COLORS, FONT } from '../ui/Button';
 
 const W = 512;
 const TOP_H = 384;
-const FIELD = { x0: 40, x1: W - 40, y0: 110, y1: 330 };
+const HEX_R = 36;
+/** 기본 케이지(4칸)의 육각형 중심 */
+const BASIC_HEX = [
+  { x: 48, y: 470 },
+  { x: 102, y: 501 },
+  { x: 48, y: 532 },
+  { x: 102, y: 563 },
+];
+/** 확장 공간: 6열 × 3행 벌집 */
+const slotPos = (i: number) => {
+  const col = i % 6;
+  const row = Math.floor(i / 6);
+  return { x: 196 + col * 54, y: 440 + row * 62 + (col % 2 ? 31 : 0) };
+};
+const CAGE_COLOR: Record<string, number> = { rest: 0xf4a6c0, train: 0xf0d58c, basic: 0xa9dba9 };
 
 export interface BattleSetup {
   title: string;
@@ -23,15 +37,29 @@ export interface BattleSetup {
   members: { uid: number; mode: AttackMode }[];
 }
 
+interface View {
+  c: Phaser.GameObjects.Container;
+  sig: string;
+  poops: Phaser.GameObjects.Image[];
+  dragging: boolean;
+}
+
 export class FarmScene extends Phaser.Scene {
-  private views = new Map<number, { c: Phaser.GameObjects.Container; sig: string; poops: Phaser.GameObjects.Image[] }>();
+  private views = new Map<number, View>();
+  private hexGfx!: Phaser.GameObjects.Graphics;
+  private hexLabels: Phaser.GameObjects.Text[] = [];
+  private hexSig = '';
   private ring!: Phaser.GameObjects.Ellipse;
+  private portrait?: Phaser.GameObjects.Container;
+  private portraitSig = '';
   private headText!: Phaser.GameObjects.Text;
   private infoText!: Phaser.GameObjects.Text;
   private nameText!: Phaser.GameObjects.Text;
+  private subText!: Phaser.GameObjects.Text;
   private statsText!: Phaser.GameObjects.Text;
   private apText!: Phaser.GameObjects.Text;
   private recordText!: Phaser.GameObjects.Text;
+  private noticeText!: Phaser.GameObjects.Text;
   private msgText!: Phaser.GameObjects.Text;
   private hungerBar!: ReturnType<typeof bar>;
   private fatigueBar!: ReturnType<typeof bar>;
@@ -48,64 +76,92 @@ export class FarmScene extends Phaser.Scene {
   create() {
     this.views = new Map();
     this.speedButtons = [];
+    this.hexLabels = [];
+    this.hexSig = '';
+    this.portrait = undefined;
+    this.portraitSig = '';
     this.overlay = undefined;
     playBgm(this, 'bgm_farm');
 
-    // 위 화면: 사육장
-    this.add.rectangle(W / 2, TOP_H / 2, W, TOP_H, 0x9ed8a4);
-    this.add.rectangle(W / 2, 45, W, 90, 0xbfe6ff);
-    this.add.rectangle(W / 2, TOP_H - 2, W, 4, 0x1e2129);
-    this.ring = this.add.ellipse(0, 0, 70, 22).setStrokeStyle(3, 0xffc857).setFillStyle(0xffc857, 0.25);
-    this.headText = this.add.text(10, 8, '', { fontFamily: FONT, fontSize: '15px', color: '#1e2129' });
-    this.infoText = this.add.text(10, 30, '', { fontFamily: FONT, fontSize: '13px', color: '#1e2129' });
+    // ── 위 화면: 정보 ──
+    this.add.rectangle(W / 2, TOP_H / 2, W, TOP_H, 0x243447);
+    this.add.rectangle(W / 2, 28, W, 56, 0x1b2838);
+    this.headText = this.add.text(10, 8, '', { fontFamily: FONT, fontSize: '15px', color: COLORS.text });
+    this.infoText = this.add.text(10, 31, '', { fontFamily: FONT, fontSize: '12px', color: COLORS.dim });
+    [1, 10, 60].forEach((sp, i) => this.speedButtons.push(new Button(this, W - 108 + i * 42, 28, 38, 24, `×${sp}`, () => this.setSpeed(sp))));
+    this.setSpeed(state.speed);
+
+    this.add.ellipse(92, 232, 150, 44, 0x1b2838);
+    this.add.rectangle(92, 150, 160, 170, 0x2f4a66).setStrokeStyle(2, 0x4a6b8a);
+    new Button(this, 30, 262, 32, 26, '◀', () => this.cycle(-1));
+    new Button(this, 154, 262, 32, 26, '▶', () => this.cycle(1));
+    this.nameText = this.add.text(186, 68, '', { fontFamily: FONT, fontSize: '19px', color: COLORS.text });
+    this.subText = this.add.text(186, 94, '', { fontFamily: FONT, fontSize: '13px', color: COLORS.dim });
+    const label = (y: number, t: string) => this.add.text(186, y, t, { fontFamily: FONT, fontSize: '12px', color: COLORS.dim }).setOrigin(0, 0.5);
+    label(124, '배부름');
+    this.hungerBar = bar(this, 236, 124, 262, 11, 0xffa94d);
+    label(142, '피로');
+    this.fatigueBar = bar(this, 236, 142, 262, 11, 0xff8787);
+    label(160, '수명');
+    this.lifeBar = bar(this, 236, 160, 262, 11, 0xb197fc);
+    this.statsText = this.add.text(186, 174, '', { fontFamily: FONT, fontSize: '14px', color: COLORS.text, lineSpacing: 4 });
+    this.apText = this.add.text(186, 220, '', { fontFamily: FONT, fontSize: '12px', color: '#ffd43b', wordWrap: { width: 316 } });
+    this.recordText = this.add.text(12, 286, '', { fontFamily: FONT, fontSize: '12px', color: COLORS.dim, lineSpacing: 3 });
+    this.noticeText = this.add.text(12, 328, '', { fontFamily: FONT, fontSize: '13px', color: '#ffd43b' });
     this.msgText = this.add
-      .text(W / 2, 358, '', { fontFamily: FONT, fontSize: '15px', color: '#1e2129', backgroundColor: '#ffffffdd', padding: { x: 8, y: 4 } })
+      .text(W / 2, 362, '', { fontFamily: FONT, fontSize: '14px', color: '#1e2129', backgroundColor: '#ffffffee', padding: { x: 8, y: 3 } })
       .setOrigin(0.5)
       .setAlpha(0)
       .setDepth(5);
-    [1, 10, 60].forEach((sp, i) => this.speedButtons.push(new Button(this, W - 108 + i * 42, 66, 38, 24, `×${sp}`, () => this.setSpeed(sp))));
-    this.setSpeed(state.speed);
+    this.add.rectangle(W / 2, TOP_H - 2, W, 4, 0x0f1620);
 
-    // 아래 화면: 선택한 디지몬 + 메뉴
-    const y0 = TOP_H;
-    this.add.rectangle(W / 2, y0 + 192, W, 384, COLORS.bg);
-    new Button(this, 26, y0 + 20, 32, 28, '◀', () => this.cycle(-1));
-    new Button(this, W - 26, y0 + 20, 32, 28, '▶', () => this.cycle(1));
-    this.nameText = this.add.text(W / 2, y0 + 20, '', { fontFamily: FONT, fontSize: '16px', color: COLORS.text }).setOrigin(0.5);
-    const label = (x: number, y: number, t: string) => this.add.text(x, y, t, { fontFamily: FONT, fontSize: '13px', color: COLORS.dim }).setOrigin(0, 0.5);
-    label(12, y0 + 50, '배부름');
-    this.hungerBar = bar(this, 66, y0 + 50, 100, 12, 0xffa94d);
-    label(178, y0 + 50, '피로');
-    this.fatigueBar = bar(this, 216, y0 + 50, 100, 12, 0xff8787);
-    label(328, y0 + 50, '수명');
-    this.lifeBar = bar(this, 366, y0 + 50, 134, 12, 0xb197fc);
-    this.statsText = this.add.text(12, y0 + 62, '', { fontFamily: FONT, fontSize: '14px', color: COLORS.text });
-    this.apText = this.add.text(12, y0 + 82, '', { fontFamily: FONT, fontSize: '12px', color: '#ffd43b', wordWrap: { width: W - 24 } });
-    this.recordText = this.add.text(12, y0 + 116, '', { fontFamily: FONT, fontSize: '12px', color: COLORS.dim });
+    // ── 아래 화면: 육각형 케이지 사육장 ──
+    this.add.rectangle(W / 2, TOP_H + 192, W, 384, 0x6fae78);
+    this.add.text(10, TOP_H + 6, '기본 케이지', { fontFamily: FONT, fontSize: '11px', color: '#1e2129' });
+    this.add.text(170, TOP_H + 6, '확장 공간 — 디지몬을 끌어서 케이지로 옮기세요', { fontFamily: FONT, fontSize: '11px', color: '#1e2129' });
+    this.hexGfx = this.add.graphics();
+    this.ring = this.add.ellipse(0, 0, 44, 14).setStrokeStyle(2, 0xffffff).setFillStyle(0xffffff, 0.35);
+    this.add.rectangle(W / 2, 706, W, 124, COLORS.bg);
 
     const bw = 94;
-    const row = (y: number, items: [string, () => void][]) => items.forEach(([t, fn], i) => new Button(this, 12 + bw / 2 + i * (bw + 4.5), y, bw, 36, t, fn));
-    row(y0 + 176, [
+    const row = (y: number, items: [string, () => void][]) => items.forEach(([t, fn], i) => new Button(this, 12 + bw / 2 + i * (bw + 4.5), y, bw, 34, t, fn));
+    row(668, [
       ['먹이', () => this.act(feed(state.save, state.selectedUid))],
       ['썩은 고기', () => this.act(feedRotten(state.save, state.selectedUid))],
       ['청소', () => this.act(clean(state.save, state.selectedUid))],
       ['치료', () => this.act(heal(state.save, state.selectedUid))],
-      ['케이지', () => this.showCages()],
-    ]);
-    row(y0 + 218, [
       ['진화 힌트', () => this.showHints()],
+    ]);
+    row(708, [
       ['배틀', () => this.showBattleMenu()],
       ['사냥', () => this.showHunt()],
       ['상점', () => this.showShop()],
       ['일정', () => this.showSchedule()],
+      ['기타', () => this.showEtc()],
     ]);
-    row(y0 + 260, [
-      ['놓아주기', () => this.confirm('이 디지몬을 놓아줄까요?', () => this.act(release(state.save, state.selectedUid)))],
-      ['처음부터', () => this.confirm('모든 진행을 지우고 처음부터 시작할까요?', () => this.resetAll())],
-    ]);
-    this.add
-      .text(W / 2, y0 + 366, '현실 1초 = 게임 1분 · 자동 저장 · 사육장의 디지몬을 누르면 선택', { fontFamily: FONT, fontSize: '11px', color: COLORS.dim })
-      .setOrigin(0.5);
+    this.add.text(W / 2, 750, '현실 1초 = 게임 1분 · 자동 저장', { fontFamily: FONT, fontSize: '11px', color: COLORS.dim }).setOrigin(0.5);
+
+    this.input.on('dragstart', (_p: Phaser.Input.Pointer, obj: Phaser.GameObjects.Container) => {
+      const uid = obj.getData('uid') as number;
+      const v = this.views.get(uid);
+      if (!v) return;
+      v.dragging = true;
+      obj.setDepth(4);
+      state.selectedUid = uid;
+      this.refresh();
+    });
+    this.input.on('drag', (_p: Phaser.Input.Pointer, obj: Phaser.GameObjects.Container, x: number, y: number) => obj.setPosition(x, y));
+    this.input.on('dragend', (_p: Phaser.Input.Pointer, obj: Phaser.GameObjects.Container) => {
+      const uid = obj.getData('uid') as number;
+      const v = this.views.get(uid);
+      if (!v) return;
+      v.dragging = false;
+      obj.setDepth(1);
+      const target = this.cageAt(obj.x, obj.y);
+      const d = state.save.digimon.find((x) => x.uid === uid);
+      if (target && d && target !== d.cage) this.act(setCage(state.save, uid, target));
+      else this.refresh();
+    });
 
     this.refresh();
     if (state.offlineMinutes > 0) {
@@ -171,12 +227,54 @@ export class FarmScene extends Phaser.Scene {
     }
   }
 
+  // ---------- 케이지 배치 ----------
+  private expansionCages() {
+    return state.save.cages.filter((id) => id !== '기본 케이지');
+  }
+
+  private cageCenters(cageId: string): { x: number; y: number }[] {
+    if (cageId === '기본 케이지') return BASIC_HEX;
+    const i = this.expansionCages().indexOf(cageId);
+    return i < 0 ? BASIC_HEX : [slotPos(i)];
+  }
+
+  private cageAt(x: number, y: number): string | null {
+    for (const id of state.save.cages) for (const c of this.cageCenters(id)) if (Phaser.Math.Distance.Between(x, y, c.x, c.y) <= HEX_R) return id;
+    return null;
+  }
+
+  private drawHexes() {
+    const sig = state.save.cages.join('|');
+    if (sig === this.hexSig) return;
+    this.hexSig = sig;
+    const g = this.hexGfx.clear();
+    this.hexLabels.forEach((t) => t.destroy());
+    this.hexLabels = [];
+    const hex = (x: number, y: number, fill: number, alpha = 1) => {
+      const pts = Array.from({ length: 6 }, (_, k) => new Phaser.Math.Vector2(x + HEX_R * Math.cos((Math.PI / 3) * k), y + HEX_R * Math.sin((Math.PI / 3) * k)));
+      g.fillStyle(fill, alpha).fillPoints(pts, true);
+      g.lineStyle(2, 0x2f5d3a, alpha).strokePoints(pts, true);
+    };
+    for (let i = 0; i < 18; i++) hex(slotPos(i).x, slotPos(i).y, 0x5c9a66, 0.5);
+    BASIC_HEX.forEach((p) => hex(p.x, p.y, CAGE_COLOR.basic));
+    this.expansionCages().forEach((id, i) => {
+      const cage = getCage(id);
+      const p = slotPos(i);
+      hex(p.x, p.y, cage.rest ? CAGE_COLOR.rest : CAGE_COLOR.train);
+      const effect = cage.rest ? '회복' : [...(cage.up ?? []).map((k) => STAT_LABEL[k]), ...(cage.apUp ?? [])].slice(0, 2).join('·') + '↑';
+      this.hexLabels.push(
+        this.add.text(p.x, p.y - 30, id.replace('미니 ', ''), { fontFamily: FONT, fontSize: '10px', color: '#1e2129' }).setOrigin(0.5, 0),
+        this.add.text(p.x, p.y + 30, effect, { fontFamily: FONT, fontSize: '9px', color: '#5c3d00' }).setOrigin(0.5, 1),
+      );
+    });
+  }
+
   // ---------- 화면 갱신 ----------
   private refresh() {
     const save = state.save;
     if (!save.digimon.some((d) => d.uid === state.selectedUid)) state.selectedUid = save.digimon[0].uid;
+    this.drawHexes();
 
-    // 사육장의 디지몬 표시 동기화
     const alive = new Set(save.digimon.map((d) => d.uid));
     for (const [uid, v] of this.views) {
       if (!alive.has(uid)) {
@@ -185,85 +283,80 @@ export class FarmScene extends Phaser.Scene {
         this.views.delete(uid);
       }
     }
+    const seat = new Map<string, number>();
     for (const d of save.digimon) {
       const sig = `${d.speciesId}:${d.isEgg}`;
       let v = this.views.get(d.uid);
       if (!v || v.sig !== sig) {
-        const x = v?.c.x ?? Phaser.Math.Between(FIELD.x0, FIELD.x1);
-        const y = v?.c.y ?? Phaser.Math.Between(FIELD.y0, FIELD.y1);
         v?.c.destroy();
-        const c = digimonView(this, d.speciesId, d.isEgg).setPosition(x, y);
-        c.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+        const c = digimonView(this, d.speciesId, d.isEgg).setScale(0.55).setDepth(1).setData('uid', d.uid);
+        c.setInteractive({ useHandCursor: true, draggable: true });
+        c.on('pointerdown', () => {
           state.selectedUid = d.uid;
           this.refresh();
         });
-        v = { c, sig, poops: v?.poops ?? [] };
+        v = { c, sig, poops: v?.poops ?? [], dragging: false };
         this.views.set(d.uid, v);
-        if (!d.isEgg) this.wander(d.uid);
       }
+      // 케이지 안 자리 배정
+      const n = seat.get(d.cage) ?? 0;
+      seat.set(d.cage, n + 1);
+      const centers = this.cageCenters(d.cage);
+      const center = centers[n % centers.length];
+      const ringSlot = Math.floor(n / centers.length);
+      const cap = d.cage === '기본 케이지' ? 3 : getCage(d.cage).capacity;
+      const angle = (Math.PI * 2 * (d.cage === '기본 케이지' ? ringSlot : n)) / Math.max(1, cap) + Math.PI / 2;
+      const spread = cap <= 1 || (d.cage === '기본 케이지' && ringSlot === 0 && save.digimon.length <= 4) ? 0 : 15;
+      if (!v.dragging) v.c.setPosition(center.x + Math.cos(angle) * spread, center.y + Math.sin(angle) * spread - 4);
       if (v.poops.length !== d.poop) {
         v.poops.forEach((p) => p.destroy());
-        v.poops = Array.from({ length: d.poop }, (_, i) => this.add.image(v!.c.x - 30 + i * 16, v!.c.y + 34, 'poop'));
+        v.poops = Array.from({ length: d.poop }, () => this.add.image(0, 0, 'poop').setScale(0.7));
       }
-      v.c.setAlpha(d.sick || d.injured ? 0.6 : 1);
+      v.poops.forEach((p, i) => p.setPosition(v!.c.x - 16 + i * 9, v!.c.y + 20));
+      v.c.setAlpha(d.sick || d.injured ? 0.55 : 1);
     }
 
     const date = dateOf(save.clock);
     const rank = tamerRank(save);
-    this.headText.setText(
-      `${date.year}년째 ${date.seasonName} ${date.day}일 ${String(date.hour).padStart(2, '0')}:${String(date.minute).padStart(2, '0')}   랭크 ${rank}   ${save.bits} bit`,
-    );
+    this.headText.setText(`${date.year}년째 ${date.seasonName} ${date.day}일 ${String(date.hour).padStart(2, '0')}:${String(date.minute).padStart(2, '0')}  랭크 ${rank}  ${save.bits} bit`);
+    this.infoText.setText(`용량 ${usedCapacity(save)}/${CAPACITY}G · 고기 ${save.meat} · 알약 ${save.pills} · 썩은 고기 ${save.rotten}`);
     const matches = todaysMatches(save);
-    this.infoText.setText(
-      `용량 ${usedCapacity(save)}/${CAPACITY}G · 고기 ${save.meat} · 알약 ${save.pills} · 썩은 고기 ${save.rotten}` + (matches.length ? `\n★ 오늘의 매치: ${matches.map((m) => m.name).join(', ')} (15시까지)` : ''),
-    );
+    this.noticeText.setText(matches.length ? `★ 오늘의 매치: ${matches.map((m) => m.name).join(', ')} (15시까지 엔트리)` : '');
 
     const d = state.selected;
     const sp = getSpecies(d.speciesId);
     const view = this.views.get(d.uid);
-    if (view) this.ring.setPosition(view.c.x, view.c.y + 22);
+    if (view) this.ring.setPosition(view.c.x, view.c.y + 14);
+    const pSig = `${d.speciesId}:${d.isEgg}`;
+    if (pSig !== this.portraitSig) {
+      this.portraitSig = pSig;
+      this.portrait?.destroy();
+      this.portrait = digimonView(this, d.speciesId, d.isEgg, false).setPosition(92, 160).setScale(d.isEgg ? 2.2 : Math.min(2.2, 110 / (26 + sp.stage * 9)));
+    }
     const idx = save.digimon.findIndex((x) => x.uid === d.uid) + 1;
     if (d.isEgg) {
-      this.nameText.setText(`디지에그 (${idx}/${save.digimon.length})`);
-      this.statsText.setText('곧 부화합니다.');
+      this.nameText.setText('디지에그');
+      this.subText.setText(`${idx}/${save.digimon.length}마리째 · 곧 부화합니다`);
+      this.statsText.setText('');
       this.apText.setText('');
       this.recordText.setText(`디지에그화 ${d.eggs}회 · 태어날 디지몬: ${d.originBaby}`);
+      this.hungerBar.set(0);
+      this.fatigueBar.set(0);
       this.lifeBar.set(0);
       return;
     }
     const status = [d.sick ? '병' : '', d.injured ? '부상' : ''].filter(Boolean).join('·');
-    this.nameText.setText(`${sp.name} [${STAGE_LABEL[sp.stage]}] ${sp.family}/${sp.attr}${status ? ` ⚠${status}` : ''} (${idx}/${save.digimon.length})`);
+    this.nameText.setText(sp.name + (status ? `  ⚠${status}` : ''));
+    this.subText.setText(`${STAGE_LABEL[sp.stage]} · ${sp.family} · ${sp.attr} · ${sp.size}G · ${idx}/${save.digimon.length}마리째`);
     this.hungerBar.set(d.hunger / 100);
     this.fatigueBar.set(d.fatigue / 100);
     this.lifeBar.set(Math.min(1, d.stageAge / LIFESPAN[sp.stage]));
-    this.statsText.setText(STAT_KEYS.map((k) => `${STAT_LABEL[k]} ${d.stats[k]}`).join('  '));
+    this.statsText.setText(
+      STAT_KEYS.slice(0, 3).map((k) => `${STAT_LABEL[k]} ${d.stats[k]}`).join('   ') + '\n' + STAT_KEYS.slice(3).map((k) => `${STAT_LABEL[k]} ${d.stats[k]}`).join('   '),
+    );
     const aps = [...FAMILIES, ...ATTRS].filter((k) => d.ap[k] >= 1).map((k) => `${k} ${Math.floor(d.ap[k])}`);
     this.apText.setText(aps.length ? `속성: ${aps.join(' · ')}` : '속성: 아직 없음 (훈련 케이지에 넣으면 오릅니다)');
-    this.recordText.setText(
-      `성격 ${d.personality} · 케이지 ${d.cage} · ${sp.size}G\n배틀 ${d.battles} (승 ${d.wins}) · 페널티 ${d.penalties} · 디지에그화 ${d.eggs}`,
-    );
-  }
-
-  private wander(uid: number) {
-    const v = this.views.get(uid);
-    if (!v) return;
-    const c = v.c;
-    const x = Phaser.Math.Between(FIELD.x0, FIELD.x1);
-    const y = Phaser.Math.Between(FIELD.y0, FIELD.y1);
-    this.tweens.add({
-      targets: c,
-      x,
-      y,
-      duration: Phaser.Math.Between(2500, 5000),
-      delay: Phaser.Math.Between(300, 2500),
-      onUpdate: () => {
-        if (uid === state.selectedUid) this.ring.setPosition(c.x, c.y + 22);
-        v.poops.forEach((p, i) => p.setPosition(c.x - 30 + i * 16, c.y + 34));
-      },
-      onComplete: () => {
-        if (this.views.get(uid)?.c === c) this.wander(uid);
-      },
-    });
+    this.recordText.setText(`성격 ${d.personality} · 케이지 ${d.cage}\n배틀 ${d.battles}회 (승 ${d.wins}) · 페널티 ${d.penalties} · 디지에그화 ${d.eggs}`);
   }
 
   private say(text: string, bad = false) {
@@ -271,6 +364,13 @@ export class FarmScene extends Phaser.Scene {
     this.tweens.killTweensOf(this.msgText);
     this.msgText.setAlpha(1);
     this.tweens.add({ targets: this.msgText, alpha: 0, delay: 2600, duration: 500 });
+  }
+
+  private showEtc() {
+    const o = this.openOverlay('기타', 260);
+    o.gap(10);
+    o.button('선택한 디지몬 놓아주기', () => this.confirm('이 디지몬을 놓아줄까요?', () => this.act(release(state.save, state.selectedUid))), 280);
+    o.button('처음부터 다시 시작', () => this.confirm('모든 진행을 지우고 처음부터 시작할까요?', () => this.resetAll()), 280);
   }
 
   // ---------- 오버레이 ----------
@@ -314,19 +414,6 @@ export class FarmScene extends Phaser.Scene {
     state.selectedUid = state.save.digimon[0].uid;
     state.persist();
     this.scene.restart();
-  }
-
-  private showCages() {
-    const o = this.openOverlay('케이지 옮기기', 640);
-    o.text('훈련 케이지에 넣어 두면 한 시간마다 능력치와 속성이 오릅니다.', COLORS.dim, 12);
-    for (const id of state.save.cages) {
-      const cage = getCage(id);
-      const inside = state.save.digimon.filter((d) => d.cage === id).length;
-      const effect = cage.rest
-        ? '피로 회복·부상 치료'
-        : [...(cage.up ?? []).map((k) => `${STAT_LABEL[k]}↑`), ...(cage.apUp ?? []).map((k) => `${k}↑`), ...(cage.down ?? []).map((k) => `${STAT_LABEL[k]}↓`), ...(cage.apDown ?? []).map((k) => `${k}↓`)].join(' ') || '효과 없음';
-      o.button(`${id} (${inside}/${cage.capacity > 50 ? '∞' : cage.capacity})  ${effect}`, () => this.act(setCage(state.save, state.selectedUid, id)));
-    }
   }
 
   private showHints() {

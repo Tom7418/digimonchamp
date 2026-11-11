@@ -10,13 +10,14 @@ import type { BattleSetup } from './FarmScene';
 
 const W = 512;
 const OX = 16;
-const OY = 96;
+const OY = 404;
 
 export class BattleScene extends Phaser.Scene {
   private setup!: BattleSetup;
   private sim!: BattleState;
   private rng!: Rng;
   private views: { c: Phaser.GameObjects.Container; hp: Phaser.GameObjects.Rectangle; tp: Phaser.GameObjects.Rectangle }[] = [];
+  private panelBars: { hp: Phaser.GameObjects.Rectangle; tp: Phaser.GameObjects.Rectangle }[] = [];
   private timeText!: Phaser.GameObjects.Text;
   private log!: Phaser.GameObjects.Text;
   private lines: string[] = [];
@@ -31,6 +32,7 @@ export class BattleScene extends Phaser.Scene {
   create(setup: BattleSetup) {
     this.setup = setup;
     this.views = [];
+    this.panelBars = [];
     this.lines = [];
     this.acc = 0;
     this.fast = 1;
@@ -42,30 +44,38 @@ export class BattleScene extends Phaser.Scene {
     this.sim = createBattle(mine, foes);
     this.rng = seeded(Math.floor(Math.random() * 1e9));
 
-    this.add.rectangle(W / 2, 192, W, 384, 0xf2d6a2);
-    this.add.rectangle(OX + ARENA.w / 2, OY + ARENA.h / 2, ARENA.w, ARENA.h, 0xe0b878).setStrokeStyle(3, 0x8a6a3a);
-    this.add.rectangle(W / 2, 382, W, 4, 0x1e2129);
-    this.add.text(W / 2, 10, setup.title, { fontFamily: FONT, fontSize: '18px', color: '#1e2129' }).setOrigin(0.5, 0);
-    this.add.text(16, 40, '우리 팀 ▶', { fontFamily: FONT, fontSize: '13px', color: '#1c7ed6' });
-    this.add.text(W - 16, 40, '◀ 상대 팀', { fontFamily: FONT, fontSize: '13px', color: '#c92a2a' }).setOrigin(1, 0);
-    this.timeText = this.add.text(W / 2, 40, '', { fontFamily: FONT, fontSize: '15px', color: '#1e2129' }).setOrigin(0.5, 0);
+    // 위 화면: 양 팀 상태와 진행 기록
+    this.add.rectangle(W / 2, 192, W, 384, 0x243447);
+    this.add.rectangle(W / 2, 22, W, 44, 0x1b2838);
+    this.add.text(W / 2, 10, setup.title, { fontFamily: FONT, fontSize: '18px', color: COLORS.text }).setOrigin(0.5, 0);
+    this.add.text(12, 52, '우리 팀', { fontFamily: FONT, fontSize: '13px', color: '#74c0fc' });
+    this.add.text(W - 12, 52, '상대 팀', { fontFamily: FONT, fontSize: '13px', color: '#ff8787' }).setOrigin(1, 0);
+    this.sim.units.forEach((u) => {
+      const index = this.sim.units.filter((o) => o.team === u.team && o.id < u.id).length;
+      const x = u.team === 0 ? 12 : W / 2 + 8;
+      const y = 74 + index * 36;
+      const mode = u.team === 0 ? ` · ${setup.members[index].mode}` : '';
+      this.add.text(x, y, `${u.name}${mode} · ${u.personality}`, { fontFamily: FONT, fontSize: '12px', color: COLORS.text });
+      this.add.rectangle(x, y + 22, 236, 8, 0x0f1620).setOrigin(0, 0.5);
+      const hp = this.add.rectangle(x + 1, y + 20, 234, 4, u.team === 0 ? 0x4dabf7 : 0xff6b6b).setOrigin(0, 0.5);
+      const tp = this.add.rectangle(x + 1, y + 24, 234, 2, 0xffd43b).setOrigin(0, 0.5);
+      this.panelBars.push({ hp, tp });
+    });
+    this.log = this.add.text(12, 190, '', { fontFamily: FONT, fontSize: '13px', color: COLORS.text, lineSpacing: 3 });
+    this.add.rectangle(W / 2, 382, W, 4, 0x0f1620);
 
+    // 아래 화면: 배틀 필드
+    this.add.rectangle(W / 2, 576, W, 384, 0xc9a66b);
+    this.add.rectangle(OX + ARENA.w / 2, OY + ARENA.h / 2, ARENA.w, ARENA.h, 0xe0b878).setStrokeStyle(3, 0x8a6a3a);
+    this.timeText = this.add.text(W / 2, 668, '', { fontFamily: FONT, fontSize: '15px', color: '#1e2129' }).setOrigin(0.5, 0);
     for (const u of this.sim.units) {
-      const c = digimonView(this, u.speciesId).setPosition(OX + u.x, OY + u.y);
+      const c = digimonView(this, u.speciesId).setScale(0.8).setPosition(OX + u.x, OY + u.y);
       const back = this.add.rectangle(0, -34, 44, 6, 0x1e2129);
       const hp = this.add.rectangle(-21, -34, 42, 4, u.team === 0 ? 0x4dabf7 : 0xff6b6b).setOrigin(0, 0.5);
       const tp = this.add.rectangle(-21, -29, 42, 2, 0xffd43b).setOrigin(0, 0.5);
       c.add([back, hp, tp]);
       this.views.push({ c, hp, tp });
     }
-
-    this.add.rectangle(W / 2, 576, W, 384, COLORS.bg);
-    this.add.text(16, 392, mine.map((_, i) => `${this.sim.units[i].name}: ${setup.members[i].mode} 공격 · ${this.sim.units[i].personality}`).join('\n'), {
-      fontFamily: FONT,
-      fontSize: '12px',
-      color: COLORS.dim,
-    });
-    this.log = this.add.text(16, 452, '', { fontFamily: FONT, fontSize: '14px', color: COLORS.text, lineSpacing: 3 });
     this.push('배틀 시작!');
     const ff = new Button(this, W - 70, 742, 110, 32, '빨리 감기', () => {
       this.fast = this.fast === 1 ? 5 : 1;
@@ -96,6 +106,8 @@ export class BattleScene extends Phaser.Scene {
       v.c.setPosition(OX + u.x, OY + u.y).setAlpha(u.alive ? 1 : 0.25);
       v.hp.width = 42 * (u.hp / u.maxHp);
       v.tp.width = 42 * (u.tp / u.maxTp);
+      this.panelBars[i].hp.width = 234 * (u.hp / u.maxHp);
+      this.panelBars[i].tp.width = 234 * (u.tp / u.maxTp);
     });
     this.timeText.setText(`남은 시간 ${Math.max(0, Math.ceil(TIME_LIMIT - this.sim.t))}초`);
     if (this.sim.over) this.finish();
@@ -109,7 +121,7 @@ export class BattleScene extends Phaser.Scene {
 
   private push(s: string) {
     this.lines.push(s);
-    this.log.setText(this.lines.slice(-12).join('\n'));
+    this.log.setText(this.lines.slice(-10).join('\n'));
   }
 
   private finish() {
@@ -134,6 +146,6 @@ export class BattleScene extends Phaser.Scene {
     // 배틀에는 게임 시간 1시간이 걸린다
     state.save = advance(save, 60).save;
     state.persist();
-    new Button(this, W / 2, 742, 180, 34, '사육장으로', () => this.scene.start('Farm'));
+    new Button(this, 110, 742, 180, 34, '사육장으로', () => this.scene.start('Farm'));
   }
 }

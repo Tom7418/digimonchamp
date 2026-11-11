@@ -4,7 +4,7 @@ import { FarmScene } from './scenes/FarmScene';
 import { BattleScene } from './scenes/BattleScene';
 import { HuntScene } from './scenes/HuntScene';
 
-new Phaser.Game({
+const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
   width: 512,
@@ -13,3 +13,5 @@ new Phaser.Game({
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   scene: [BootScene, FarmScene, BattleScene, HuntScene],
 });
+// 디버깅용: 브라우저 콘솔에서 __game으로 접근
+(window as unknown as { __game: Phaser.Game }).__game = game;
