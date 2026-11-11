@@ -25,6 +25,8 @@ jobs:
       - name: Validate the browser game
         run: |
           node --check web/game.js
+          node --check web/cages.js
+          node --test tests/cages.test.cjs
           node --check web/assets/sprites.js
           python tools/check_web.py
       - name: Configure GitHub Pages
