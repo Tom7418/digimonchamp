@@ -1,125 +1,139 @@
 import Phaser from 'phaser';
-import { makeOpponent, RANK_INFO, simulateBattle, type BattleEvent, type Fighter, type Rank } from '../core/battle';
-import { getMove, getSpecies } from '../core/data';
-import { defaultRng, seeded } from '../core/rng';
-import type { Tactic } from '../core/types';
+import { advance } from '../core/care';
+import { applyBattleResult, ARENA, createBattle, entrantOf, makeEnemies, stepBattle, TIME_LIMIT, type BattleState } from '../core/battle';
+import { defaultRng, seeded, type Rng } from '../core/rng';
+import { applyWin } from '../core/titles';
 import { state } from '../state';
-import { monsterTextureKey } from '../ui/art';
-import { bar, Button, COLORS, FONT } from '../ui/Button';
+import { digimonView, playBgm, playSound } from '../ui/art';
+import { Button, COLORS, FONT } from '../ui/Button';
+import type { BattleSetup } from './FarmScene';
 
 const W = 512;
-const TACTIC_LABEL: Record<Tactic, string> = { aggressive: '공격형', balanced: '균형형', careful: '신중형' };
+const OX = 16;
+const OY = 96;
 
 export class BattleScene extends Phaser.Scene {
+  private setup!: BattleSetup;
+  private sim!: BattleState;
+  private rng!: Rng;
+  private views: { c: Phaser.GameObjects.Container; hp: Phaser.GameObjects.Rectangle; tp: Phaser.GameObjects.Rectangle }[] = [];
+  private timeText!: Phaser.GameObjects.Text;
+  private log!: Phaser.GameObjects.Text;
+  private lines: string[] = [];
+  private acc = 0;
+  private fast = 1;
+  private done = false;
+
   constructor() {
     super('Battle');
   }
 
-  create(data: { rank: Rank; tactic: Tactic }) {
-    const m = state.monster;
-    const sp = getSpecies(m.speciesId);
-    const me: Fighter = { name: sp.name, speciesId: sp.id, stats: m.stats, moves: sp.moves, tactic: data.tactic };
-    const foe = makeOpponent(data.rank, defaultRng);
-    const seed = Math.floor(Math.random() * 1e9);
-    const result = simulateBattle(me, foe, seeded(seed));
+  create(setup: BattleSetup) {
+    this.setup = setup;
+    this.views = [];
+    this.lines = [];
+    this.acc = 0;
+    this.fast = 1;
+    this.done = false;
+    playBgm(this, 'bgm_battle');
 
-    // 위 화면: 경기장
+    const mine = setup.members.map((m) => entrantOf(state.save.digimon.find((d) => d.uid === m.uid)!, m.mode));
+    const foes = makeEnemies(setup.stage, setup.format, setup.scale, defaultRng);
+    this.sim = createBattle(mine, foes);
+    this.rng = seeded(Math.floor(Math.random() * 1e9));
+
     this.add.rectangle(W / 2, 192, W, 384, 0xf2d6a2);
-    this.add.ellipse(W / 2, 290, 460, 120, 0xe0b878);
+    this.add.rectangle(OX + ARENA.w / 2, OY + ARENA.h / 2, ARENA.w, ARENA.h, 0xe0b878).setStrokeStyle(3, 0x8a6a3a);
     this.add.rectangle(W / 2, 382, W, 4, 0x1e2129);
-    this.add
-      .text(W / 2, 14, `연습 시합 · ${RANK_INFO[data.rank].label}`, { fontFamily: FONT, fontSize: '18px', color: '#1e2129' })
-      .setOrigin(0.5, 0);
+    this.add.text(W / 2, 10, setup.title, { fontFamily: FONT, fontSize: '18px', color: '#1e2129' }).setOrigin(0.5, 0);
+    this.add.text(16, 40, '우리 팀 ▶', { fontFamily: FONT, fontSize: '13px', color: '#1c7ed6' });
+    this.add.text(W - 16, 40, '◀ 상대 팀', { fontFamily: FONT, fontSize: '13px', color: '#c92a2a' }).setOrigin(1, 0);
+    this.timeText = this.add.text(W / 2, 40, '', { fontFamily: FONT, fontSize: '15px', color: '#1e2129' }).setOrigin(0.5, 0);
 
-    const mine = this.add.image(140, 250, monsterTextureKey(me.speciesId)).setScale(1.2);
-    const theirs = this.add.image(372, 250, monsterTextureKey(foe.speciesId)).setScale(1.2).setFlipX(true);
-    const sprites = [mine, theirs];
+    for (const u of this.sim.units) {
+      const c = digimonView(this, u.speciesId).setPosition(OX + u.x, OY + u.y);
+      const back = this.add.rectangle(0, -34, 44, 6, 0x1e2129);
+      const hp = this.add.rectangle(-21, -34, 42, 4, u.team === 0 ? 0x4dabf7 : 0xff6b6b).setOrigin(0, 0.5);
+      const tp = this.add.rectangle(-21, -29, 42, 2, 0xffd43b).setOrigin(0, 0.5);
+      c.add([back, hp, tp]);
+      this.views.push({ c, hp, tp });
+    }
 
-    const hpBars = [bar(this, 30, 60, 200, 14, 0x51cf66), bar(this, 282, 60, 200, 14, 0x51cf66)];
-    const hpText = [
-      this.add.text(30, 72, '', { fontFamily: FONT, fontSize: '14px', color: '#1e2129' }),
-      this.add.text(482, 72, '', { fontFamily: FONT, fontSize: '14px', color: '#1e2129' }).setOrigin(1, 0),
-    ];
-    this.add.text(30, 36, `${me.name} (나)`, { fontFamily: FONT, fontSize: '15px', color: '#1e2129' });
-    this.add.text(482, 36, foe.name, { fontFamily: FONT, fontSize: '15px', color: '#1e2129' }).setOrigin(1, 0);
-    const setHp = (hp: [number, number]) =>
-      [0, 1].forEach((i) => {
-        hpBars[i].set(hp[i] / result.maxHp[i]);
-        hpText[i].setText(`${hp[i]} / ${result.maxHp[i]}`);
-      });
-    setHp([...result.maxHp]);
-
-    // 아래 화면: 로그
     this.add.rectangle(W / 2, 576, W, 384, COLORS.bg);
-    this.add.text(16, 396, `작전: ${TACTIC_LABEL[me.tactic]}   상대 작전: ${TACTIC_LABEL[foe.tactic]}`, {
+    this.add.text(16, 392, mine.map((_, i) => `${this.sim.units[i].name}: ${setup.members[i].mode} 공격 · ${this.sim.units[i].personality}`).join('\n'), {
       fontFamily: FONT,
-      fontSize: '13px',
+      fontSize: '12px',
       color: COLORS.dim,
     });
-    const fs = foe.stats;
-    this.add.text(16, 416, `상대 능력치  공격 ${fs.atk} 방어 ${fs.def} 속도 ${fs.spd} 지능 ${fs.int}`, {
-      fontFamily: FONT,
-      fontSize: '13px',
-      color: COLORS.dim,
+    this.log = this.add.text(16, 452, '', { fontFamily: FONT, fontSize: '14px', color: COLORS.text, lineSpacing: 3 });
+    this.push('배틀 시작!');
+    const ff = new Button(this, W - 70, 742, 110, 32, '빨리 감기', () => {
+      this.fast = this.fast === 1 ? 5 : 1;
+      ff.setActiveLook(this.fast > 1);
     });
-    const lines: string[] = [];
-    const log = this.add.text(16, 446, '', { fontFamily: FONT, fontSize: '14px', color: COLORS.text, lineSpacing: 4 });
-    const push = (s: string) => {
-      lines.push(s);
-      log.setText(lines.slice(-11).join('\n'));
-    };
-    push('시합 시작!');
-
-    const names = [`${me.name}(나)`, `상대 ${foe.name}`];
-    let i = 0;
-    let speedUp = 1;
-    const skip = new Button(this, W - 70, 740, 110, 32, '빨리 감기', () => {
-      speedUp = 6;
-      skip.setEnabled(false);
-    });
-
-    const step = () => {
-      const e: BattleEvent | undefined = result.events[i++];
-      if (!e) return;
-      if (e.type === 'end') return this.finish(e.winner === 0, e.reason, push, skip);
-      const attacker = sprites[e.side];
-      const target = sprites[1 - e.side];
-      const mv = getMove(e.move).name;
-      if (e.type === 'guard') {
-        push(`${names[e.side]}의 ${mv}! 방어 태세.`);
-        this.tweens.add({ targets: attacker, scaleX: 1.0, scaleY: 1.0, duration: 120, yoyo: true });
-      } else if (e.type === 'miss') {
-        push(`${names[e.side]}의 ${mv}! …빗나갔다.`);
-        this.tweens.add({ targets: target, x: target.x + (e.side === 0 ? 20 : -20), duration: 100, yoyo: true });
-      } else {
-        push(`${names[e.side]}의 ${mv}! ${e.damage} 데미지${e.crit ? ' (급소!)' : ''}`);
-        const dir = e.side === 0 ? 1 : -1;
-        this.tweens.add({ targets: attacker, x: attacker.x + 40 * dir, duration: 90, yoyo: true });
-        this.time.delayedCall(90, () => {
-          target.setTint(0xff6b6b);
-          this.cameras.main.shake(80, e.crit ? 0.012 : 0.005);
-          this.time.delayedCall(120, () => target.clearTint());
-          setHp(e.hp);
-        });
-      }
-      this.time.delayedCall(650 / speedUp, step);
-    };
-    this.time.delayedCall(600, step);
   }
 
-  private finish(won: boolean, reason: 'ko' | 'timeout', push: (s: string) => void, skip: Button) {
-    skip.destroy();
-    push(reason === 'timeout' ? '시간 종료! 남은 체력으로 판정.' : won ? '상대를 쓰러뜨렸다!' : '쓰러지고 말았다…');
-    push(won ? '★ 승리! ★' : '패배… 다음엔 더 강해지자.');
-    const m = state.monster;
-    state.monster = {
-      ...m,
-      battles: m.battles + 1,
-      wins: m.wins + (won ? 1 : 0),
-      energy: Math.max(0, m.energy - 20),
-      hunger: Math.max(0, m.hunger - 10),
+  update(_t: number, dt: number) {
+    if (this.done) return;
+    this.acc += dt * this.fast;
+    while (this.acc >= 100 && !this.sim.over) {
+      this.acc -= 100;
+      for (const e of stepBattle(this.sim, this.rng)) {
+        const name = (id: number) => `${this.sim.units[id].team === 0 ? '' : '상대 '}${this.sim.units[id].name}`;
+        if (e.type === 'hit') {
+          this.push(`${name(e.from)}의 ${e.special ? '필살기' : '공격'}! ${name(e.to)}에게 ${e.damage}`);
+          this.floatText(e.to, `-${e.damage}`, e.special ? '#e03131' : '#1e2129');
+          playSound(this, e.special ? 'se_special' : 'se_hit', { volume: 0.6 });
+          if (e.special) this.cameras.main.shake(90, 0.008);
+        } else if (e.type === 'heal') {
+          this.push(`${name(e.from)}의 지원! ${name(e.to)} 회복 +${e.amount}`);
+          this.floatText(e.to, `+${e.amount}`, '#2f9e44');
+        } else this.push(`${name(e.id)}이(가) 쓰러졌다!`);
+      }
+    }
+    this.sim.units.forEach((u, i) => {
+      const v = this.views[i];
+      v.c.setPosition(OX + u.x, OY + u.y).setAlpha(u.alive ? 1 : 0.25);
+      v.hp.width = 42 * (u.hp / u.maxHp);
+      v.tp.width = 42 * (u.tp / u.maxTp);
+    });
+    this.timeText.setText(`남은 시간 ${Math.max(0, Math.ceil(TIME_LIMIT - this.sim.t))}초`);
+    if (this.sim.over) this.finish();
+  }
+
+  private floatText(id: number, text: string, color: string) {
+    const u = this.sim.units[id];
+    const t = this.add.text(OX + u.x, OY + u.y - 44, text, { fontFamily: FONT, fontSize: '15px', color, fontStyle: 'bold' }).setOrigin(0.5);
+    this.tweens.add({ targets: t, y: t.y - 24, alpha: 0, duration: 700, onComplete: () => t.destroy() });
+  }
+
+  private push(s: string) {
+    this.lines.push(s);
+    this.log.setText(this.lines.slice(-12).join('\n'));
+  }
+
+  private finish() {
+    this.done = true;
+    const won = this.sim.winner === 0;
+    this.push(this.sim.reason === 'timeout' ? '시간 종료! 남은 체력으로 판정.' : won ? '상대 팀을 모두 쓰러뜨렸다!' : '우리 팀이 모두 쓰러졌다…');
+    let save = state.save;
+    const koUids = new Set(this.sim.units.filter((u) => u.team === 0 && !u.alive).map((u) => u.uid));
+    save = {
+      ...save,
+      digimon: save.digimon.map((d) => (this.setup.members.some((m) => m.uid === d.uid) ? applyBattleResult(d, won, koUids.has(d.uid), defaultRng) : d)),
     };
+    if (won) {
+      if (this.setup.match) {
+        save = applyWin(save, this.setup.match);
+        this.push(`★ ${this.setup.match.name} 승리! 상금 ${this.setup.prize} bit ★`);
+      } else {
+        save = { ...save, bits: save.bits + this.setup.prize };
+        this.push(`★ 승리! 상금 ${this.setup.prize} bit ★`);
+      }
+    } else this.push('패배… 다음엔 더 강해지자.');
+    // 배틀에는 게임 시간 1시간이 걸린다
+    state.save = advance(save, 60).save;
     state.persist();
-    new Button(this, W / 2, 740, 180, 36, '사육장으로', () => this.scene.start('Care'));
+    new Button(this, W / 2, 742, 180, 34, '사육장으로', () => this.scene.start('Farm'));
   }
 }

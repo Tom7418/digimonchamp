@@ -13,11 +13,5 @@ export function seeded(seed: number): Rng {
 }
 
 export const defaultRng: Rng = Math.random;
-
-export function range(rng: Rng, min: number, max: number): number {
-  return min + rng() * (max - min);
-}
-
-export function pick<T>(rng: Rng, items: T[]): T {
-  return items[Math.floor(rng() * items.length)];
-}
+export const range = (rng: Rng, min: number, max: number) => min + rng() * (max - min);
+export const pick = <T>(rng: Rng, items: readonly T[]): T => items[Math.floor(rng() * items.length)];

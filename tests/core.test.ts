@@ -1,103 +1,117 @@
 import { describe, expect, it } from 'vitest';
-import { advance, clean, feed, newMonster, train } from '../src/core/care';
-import { findEvolution, evolve, evolutionHints } from '../src/core/evolution';
-import { makeOpponent, simulateBattle, type Fighter } from '../src/core/battle';
-import { SPECIES, MOVES } from '../src/core/data';
+import { advance, capture, feedRotten, freshSave, setCage, tickFarm } from '../src/core/care';
+import { getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
+import { findEvolution, maxStageForRank } from '../src/core/evolution';
+import { createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
+import { applyWin, tamerRank, TITLES, todaysMatches } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
-import type { Monster } from '../src/core/types';
+import type { Digimon, SaveData } from '../src/core/types';
 
-describe('data integrity', () => {
-  it('every evolution target and move exists', () => {
-    for (const s of Object.values(SPECIES)) {
-      for (const e of s.evolutions) expect(SPECIES[e.to], `${s.id} -> ${e.to}`).toBeDefined();
-      for (const m of s.moves) expect(MOVES[m], `${s.id} move ${m}`).toBeDefined();
-    }
+const only = (s: SaveData): Digimon => s.digimon[0];
+const withMon = (s: SaveData, patch: Partial<Digimon>): SaveData => ({ ...s, digimon: [{ ...s.digimon[0], ...patch }] });
+
+describe('data', () => {
+  it('parses the evolution table', () => {
+    expect(Object.keys(SPECIES).length).toBeGreaterThan(200);
+    expect(getSpecies('아구몬').stage).toBe(3);
+    expect(getSpecies('아구몬').evos.map((e) => e.to)).toEqual(['지오그레이몬', '그레이몬', '스카몬', '티라노몬']);
+    expect(getSpecies('워그레이몬').stage).toBe(6);
+    expect(parseCond('용60+배틀14+승률50+에그1')).toEqual({ ap: { 용: 60 }, battles: 14, winRate: 50, eggs: 1 });
   });
-});
-
-describe('care', () => {
-  it('egg hatches into poko after 30 minutes', () => {
-    const r = advance(newMonster(), 30, seeded(1));
-    expect(r.monster.speciesId).toBe('poko');
-    expect(r.events.some((e) => e.type === 'hatched')).toBe(true);
+  it('every evolution target and habitat exists, and stages go up by one', () => {
+    for (const s of Object.values(SPECIES)) for (const e of s.evos) expect(getSpecies(e.to).stage, `${s.id}>${e.to}`).toBe(s.stage + 1);
+    for (const f of FIELDS) for (const [name] of f.spawns) expect(getSpecies(name).stage).toBeLessThanOrEqual(2);
   });
-
-  it('starving for an hour counts a care mistake', () => {
-    let m: Monster = { ...advance(newMonster(), 30, seeded(1)).monster, hunger: 0 };
-    m = advance(m, 60, seeded(2)).monster;
-    expect(m.careMistakes).toBeGreaterThanOrEqual(1);
-  });
-
-  it('feeding and cleaning work', () => {
-    let m: Monster = { ...advance(newMonster(), 30, seeded(1)).monster, hunger: 20, poop: 2 };
-    m = feed(m).monster;
-    expect(m.hunger).toBe(50);
-    m = clean(m).monster;
-    expect(m.poop).toBe(0);
-  });
-
-  it('training raises the chosen stat and costs energy', () => {
-    const m: Monster = { ...advance(newMonster(), 30, seeded(1)).monster };
-    const r = train(m, 'atk', seeded(3));
-    expect(r.ok).toBe(true);
-    expect(r.monster.stats.atk).toBeGreaterThan(m.stats.atk);
-    expect(r.monster.energy).toBe(m.energy - 15);
+  it('calendar', () => {
+    expect(dateOf(480)).toMatchObject({ year: 1, seasonName: '봄', day: 1, hour: 8 });
+    expect(dateOf(1440 * 25)).toMatchObject({ seasonName: '가을', day: 6 });
   });
 });
 
 describe('evolution', () => {
-  const base = (): Monster => ({ ...newMonster(), speciesId: 'pokorong', stageAge: 360 });
-
-  it('dominant stat decides the rookie branch', () => {
-    const m = base();
-    expect(findEvolution({ ...m, stats: { hp: 5, atk: 5, def: 5, spd: 5, int: 12 } })).toBe('lumi');
-    expect(findEvolution({ ...m, stats: { hp: 5, atk: 5, def: 12, spd: 5, int: 5 } })).toBe('gru');
-    expect(findEvolution({ ...m, stats: { hp: 5, atk: 12, def: 5, spd: 5, int: 5 } })).toBe('igni');
+  it('깜몬 evolves by time into 코로몬 at the end of its lifespan', () => {
+    const r = advance(withMon(freshSave(0), { hunger: 100 }), LIFESPAN[1], seeded(1));
+    expect(only(r.save).speciesId).toBe('코로몬');
   });
-
-  it('bad care leads to mudbug', () => {
-    const m: Monster = { ...newMonster(), speciesId: 'igni', stageAge: 1440, careMistakes: 9, stats: { hp: 20, atk: 80, def: 10, spd: 10, int: 10 } };
-    expect(findEvolution(m)).toBe('mudbug');
+  it('AP from a training cage changes the branch', () => {
+    let s = withMon(freshSave(0), { hunger: 100 });
+    s = { ...s, cages: [...s.cages, '미니 묘지'] };
+    s = setCage(s, 1, '미니 묘지').save;
+    const r = advance(s, 8 * 60, seeded(1));
+    expect(only(r.save).speciesId).toBe('퍼그몬');
+    expect(only(r.save).ap['암흑']).toBeLessThan(20);
   });
-
-  it('champion waits until requirements are met', () => {
-    const m: Monster = { ...newMonster(), speciesId: 'ignis', stageAge: 2880, stats: { hp: 50, atk: 100, def: 40, spd: 40, int: 30 } };
-    expect(findEvolution(m)).toBeNull();
-    expect(findEvolution({ ...m, stats: { ...m.stats, atk: 160 }, wins: 10 })).toBe('flaredrake');
+  it('battle count evolves 코로몬 into 아구몬, and rank gates the next stage', () => {
+    const base = withMon(freshSave(0), { speciesId: '코로몬', battles: 3, stageAge: 600 });
+    expect(findEvolution(only(base), 1, 100)).toEqual({ kind: 'evolve', to: '아구몬' });
+    const agu = { ...only(base), speciesId: '아구몬', battles: 6, stageAge: 2000 };
+    expect(findEvolution(agu, 1, 100)).toEqual({ kind: 'blocked', to: '그레이몬', reason: 'rank' });
+    expect(findEvolution(agu, 2, 100)).toEqual({ kind: 'evolve', to: '그레이몬' });
+    expect(findEvolution(agu, 2, 2)).toEqual({ kind: 'blocked', to: '그레이몬', reason: 'capacity' });
+    expect(maxStageForRank(6)).toBe(6);
   });
-
-  it('evolve adds base stats and resets stage age', () => {
-    const m: Monster = { ...newMonster(), speciesId: 'pokorong', stageAge: 360, stats: { hp: 5, atk: 5, def: 5, spd: 5, int: 5 } };
-    const e = evolve(m, 'igni');
-    expect(e.stats.atk).toBe(5 + SPECIES.igni.baseStats.atk);
-    expect(e.stageAge).toBe(0);
+  it('rotten meat causes sickness and a penalty', () => {
+    let s = { ...freshSave(0), rotten: 2 };
+    s = feedRotten(s, 1).save;
+    s = feedRotten(s, 1).save;
+    expect(only(s).sick).toBe(true);
+    expect(only(s).penalties).toBe(1);
   });
-
-  it('hints hide undiscovered names', () => {
-    const m: Monster = { ...newMonster(), speciesId: 'pokorong' };
-    const hints = evolutionHints(m, new Set(['igni']));
-    expect(hints.map((h) => h.name)).toEqual(['???', '???', '이그니']);
+  it('a final-stage Digimon reverts to an egg and hatches as its origin baby', () => {
+    let s = withMon(freshSave(0), { speciesId: '워그레이몬', stageAge: LIFESPAN[6] - 1, hunger: 100 });
+    s = tickFarm(s, seeded(1)).save;
+    expect(only(s).isEgg).toBe(true);
+    expect(only(s).eggs).toBe(1);
+    s = advance(s, 30, seeded(1)).save;
+    expect(only(s).speciesId).toBe('깜몬');
+  });
+  it('the last Digimon is never lost', () => {
+    const s = withMon(freshSave(0), { speciesId: '아구몬', stageAge: LIFESPAN[3] + 1439, hunger: 100, battles: 0 });
+    const r = tickFarm(s, seeded(1));
+    expect(r.save.digimon.length).toBe(1);
   });
 });
 
 describe('battle', () => {
-  const strong: Fighter = { name: 'A', speciesId: 'ignis', stats: { hp: 60, atk: 120, def: 60, spd: 60, int: 40 }, moves: SPECIES.ignis.moves, tactic: 'aggressive' };
-  const weak: Fighter = { name: 'B', speciesId: 'igni', stats: { hp: 10, atk: 20, def: 15, spd: 15, int: 10 }, moves: SPECIES.igni.moves, tactic: 'balanced' };
-
-  it('is deterministic for a seed', () => {
-    const a = simulateBattle(strong, weak, seeded(42));
-    const b = simulateBattle(strong, weak, seeded(42));
-    expect(a).toEqual(b);
+  it('is deterministic and ends', () => {
+    const run = () => runBattle(makeEnemies(3, 3, 1, seeded(1)), makeEnemies(3, 3, 1, seeded(2)), seeded(3));
+    const a = run();
+    expect(a.over).toBe(true);
+    expect(run().units.map((u) => u.hp)).toEqual(a.units.map((u) => u.hp));
   });
-
-  it('stronger fighter wins most of the time', () => {
+  it('a higher stage team wins', () => {
     let wins = 0;
-    for (let i = 0; i < 50; i++) if (simulateBattle(strong, weak, seeded(i)).winner === 0) wins++;
-    expect(wins).toBeGreaterThan(45);
+    for (let i = 0; i < 20; i++) if (runBattle(makeEnemies(5, 3, 1, seeded(i)), makeEnemies(3, 3, 1, seeded(i + 99)), seeded(i)).winner === 0) wins++;
+    expect(wins).toBe(20);
   });
+  it('special mode spends TP', () => {
+    const d = { ...only(freshSave(0)), speciesId: '그레이몬', personality: '쿨' as const };
+    d.stats = { hp: 200, tp: 100, atk: 80, def: 60, int: 200, spd: 60 };
+    const s = createBattle([entrantOf(d, '특수')], makeEnemies(4, 1, 1, seeded(5)));
+    const rng = seeded(7);
+    for (let i = 0; i < 300 && !s.over; i++) stepBattle(s, rng);
+    expect(s.units[0].tp).toBeLessThan(s.units[0].maxTp);
+  });
+});
 
-  it('battles end within the tick limit', () => {
-    const r = simulateBattle(makeOpponent('novice', seeded(1)), makeOpponent('novice', seeded(2)), seeded(3));
-    expect(r.events.at(-1)?.type).toBe('end');
+describe('titles and hunting', () => {
+  it('winning titles raises tamer rank', () => {
+    let s = freshSave(0);
+    expect(tamerRank(s)).toBe(1);
+    s = applyWin(s, TITLES[0]);
+    expect(tamerRank(s)).toBe(2);
+    expect(s.bits).toBe(1000);
+  });
+  it('title matches appear on their day before 15:00', () => {
+    const s = { ...freshSave(0), clock: 1440 * 2 + 9 * 60 };
+    expect(todaysMatches(s).map((m) => m.name)).toEqual(['루키 컵']);
+    expect(todaysMatches({ ...s, clock: s.clock + 7 * 60 })).toEqual([]);
+  });
+  it('capture respects capacity', () => {
+    const s = freshSave(0);
+    const r = capture(s, '포요몬', seeded(1));
+    expect(r.save.digimon.length).toBe(2);
+    const full = { ...s, digimon: Array.from({ length: 50 }, (_, i) => ({ ...s.digimon[0], uid: i + 1 })) };
+    expect(capture(full, '포요몬', seeded(1)).ok).toBe(false);
   });
 });

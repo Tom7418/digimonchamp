@@ -1,139 +1,220 @@
-import { getMove, getSpecies, SPECIES } from './data';
+import { getSpecies, speciesByStage, typicalStats } from './data';
 import { pick, range, type Rng } from './rng';
-import type { Move, Stage, Stats, Tactic } from './types';
+import { PERSONALITIES, type AttackMode, type Attr, type Digimon, type Personality, type Stage, type Stats } from './types';
 
-export interface Fighter {
+export const ARENA = { w: 480, h: 250 };
+export const TIME_LIMIT = 90;
+const DT = 0.1;
+
+export interface Unit {
+  id: number;
+  team: 0 | 1;
+  uid?: number;
   name: string;
   speciesId: string;
+  attr: Attr;
   stats: Stats;
-  moves: string[];
-  tactic: Tactic;
+  personality: Personality;
+  mode: AttackMode;
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  tp: number;
+  maxTp: number;
+  cd: number;
+  retreat: number;
+  wasHit: boolean;
+  alive: boolean;
 }
 
 export type BattleEvent =
-  | { t: number; type: 'attack'; side: 0 | 1; move: string; damage: number; crit: boolean; hp: [number, number] }
-  | { t: number; type: 'miss'; side: 0 | 1; move: string }
-  | { t: number; type: 'guard'; side: 0 | 1; move: string }
-  | { t: number; type: 'end'; winner: 0 | 1; reason: 'ko' | 'timeout' };
+  | { type: 'hit'; from: number; to: number; damage: number; special: boolean }
+  | { type: 'heal'; from: number; to: number; amount: number }
+  | { type: 'ko'; id: number };
 
-export interface BattleResult {
-  maxHp: [number, number];
-  events: BattleEvent[];
-  winner: 0 | 1;
+export interface BattleState {
+  units: Unit[];
+  t: number;
+  over: boolean;
+  winner: 0 | 1 | null;
+  reason: 'ko' | 'timeout' | null;
 }
 
-export const maxHpOf = (s: Stats) => Math.round(30 + s.hp * 2 + s.def * 0.5);
-
-const MAX_TICKS = 900;
-
-function chooseMove(f: Fighter, hpRatio: number, rng: Rng): Move {
-  const moves = (f.moves.length ? f.moves : ['headbutt']).map(getMove);
-  const attacks = moves.filter((m) => m.kind !== 'guard');
-  const guard = moves.find((m) => m.kind === 'guard');
-  const list = attacks.length ? attacks : moves;
-
-  if (f.tactic === 'aggressive') {
-    const sorted = [...list].sort((a, b) => b.power - a.power);
-    return pick(rng, sorted.slice(0, 2));
-  }
-  if (f.tactic === 'careful') {
-    if (guard && hpRatio < 0.6 && rng() < 0.35) return guard;
-    const sorted = [...list].sort((a, b) => b.power / b.cost - a.power / a.cost);
-    return rng() < 0.7 ? sorted[0] : pick(rng, list);
-  }
-  if (guard && hpRatio < 0.5 && rng() < 0.15) return guard;
-  // 균형형: 위력 비례 가중치
-  const total = list.reduce((s, m) => s + m.power, 0);
-  let r = rng() * total;
-  for (const m of list) {
-    r -= m.power;
-    if (r <= 0) return m;
-  }
-  return list[0];
+export interface Entrant {
+  uid?: number;
+  speciesId: string;
+  stats: Stats;
+  personality: Personality;
+  mode: AttackMode;
 }
 
-/** 자동 배틀 시뮬레이션. 같은 rng 시드면 같은 결과 */
-export function simulateBattle(a: Fighter, b: Fighter, rng: Rng): BattleResult {
-  const fighters = [a, b] as const;
-  const maxHp: [number, number] = [maxHpOf(a.stats), maxHpOf(b.stats)];
-  const hp: [number, number] = [...maxHp];
-  const gauge = [rng() * 30, rng() * 30];
-  const guarding = [false, false];
+export const entrantOf = (d: Digimon, mode: AttackMode): Entrant => ({ uid: d.uid, speciesId: d.speciesId, stats: d.stats, personality: d.personality, mode });
+
+export function makeEnemies(stage: Stage, count: number, scale: number, rng: Rng): Entrant[] {
+  const pool = speciesByStage(stage);
+  return Array.from({ length: count }, () => {
+    const sp = pick(rng, pool);
+    return {
+      speciesId: sp.id,
+      stats: typicalStats(sp.id, scale * range(rng, 0.9, 1.1)),
+      personality: pick(rng, PERSONALITIES),
+      mode: pick(rng, ['일반', '일반', '특수', '지원'] as AttackMode[]),
+    };
+  });
+}
+
+export function createBattle(mine: Entrant[], foes: Entrant[]): BattleState {
+  const units: Unit[] = [];
+  const place = (list: Entrant[], team: 0 | 1) =>
+    list.forEach((e, i) => {
+      const sp = getSpecies(e.speciesId);
+      const maxHp = 40 + e.stats.hp * 3;
+      const maxTp = 20 + e.stats.tp;
+      units.push({
+        id: units.length,
+        team,
+        uid: e.uid,
+        name: sp.name,
+        speciesId: sp.id,
+        attr: sp.attr,
+        stats: e.stats,
+        personality: e.personality,
+        mode: e.mode,
+        x: team === 0 ? 70 : ARENA.w - 70,
+        y: (ARENA.h / (list.length + 1)) * (i + 1),
+        hp: maxHp,
+        maxHp,
+        tp: maxTp,
+        maxTp,
+        cd: 0.5 + i * 0.2,
+        retreat: 0,
+        wasHit: false,
+        alive: true,
+      });
+    });
+  place(mine, 0);
+  place(foes, 1);
+  return { units, t: 0, over: false, winner: null, reason: null };
+}
+
+/** 백신 > 바이러스 > 데이터 > 백신 */
+function attrMult(a: Attr, b: Attr) {
+  if ((a === '백신' && b === '바이러스') || (a === '바이러스' && b === '데이터') || (a === '데이터' && b === '백신')) return 1.2;
+  if (a === b) return 1;
+  return 0.9;
+}
+
+const dist = (a: Unit, b: Unit) => Math.hypot(a.x - b.x, a.y - b.y);
+
+function move(u: Unit, tx: number, ty: number, speed: number, away = false) {
+  const dx = tx - u.x;
+  const dy = ty - u.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const k = (speed * DT * (away ? -1 : 1)) / len;
+  u.x = Math.min(ARENA.w - 20, Math.max(20, u.x + dx * k));
+  u.y = Math.min(ARENA.h - 20, Math.max(20, u.y + dy * k));
+}
+
+/** 전투를 0.1초 진행한다. state를 직접 바꾸고 이번 스텝의 이벤트를 돌려준다 */
+export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
   const events: BattleEvent[] = [];
+  if (s.over) return events;
+  s.t += DT;
+  for (const u of s.units) {
+    if (!u.alive) continue;
+    u.cd -= DT;
+    u.retreat -= DT;
+    const foes = s.units.filter((o) => o.alive && o.team !== u.team);
+    const allies = s.units.filter((o) => o.alive && o.team === u.team);
+    if (!foes.length) break;
+    const near = foes.reduce((a, b) => (dist(u, a) <= dist(u, b) ? a : b));
+    const speed = 40 + Math.min(80, u.stats.spd * 0.4);
+    const d = dist(u, near);
 
-  for (let t = 0; t < MAX_TICKS; t++) {
-    for (const side of [0, 1] as const) {
-      const me = fighters[side];
-      gauge[side] += 4 + me.stats.spd * 0.25;
-      if (gauge[side] < 100) continue;
+    if (u.personality === '게으름' && !u.wasHit) continue;
+    const fleeing = (u.personality === '겁쟁이' && foes.length > allies.length) || u.retreat > 0;
 
-      const foeSide = (1 - side) as 0 | 1;
-      const foe = fighters[foeSide];
-      const move = chooseMove(me, hp[side] / maxHp[side], rng);
-      gauge[side] -= 100 * move.cost;
-
-      if (move.kind === 'guard') {
-        guarding[side] = true;
-        events.push({ t, type: 'guard', side, move: move.id });
+    if (u.mode === '지원') {
+      const weak = allies.filter((a) => a.hp / a.maxHp < 0.7).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+      if (weak && u.tp >= 15 && u.cd <= 0) {
+        const amount = Math.round(weak.maxHp * 0.12 + u.stats.int * 0.5);
+        weak.hp = Math.min(weak.maxHp, weak.hp + amount);
+        u.tp -= 15;
+        u.cd = 2;
+        events.push({ type: 'heal', from: u.id, to: weak.id, amount });
         continue;
       }
-      guarding[side] = false;
-
-      const missChance = Math.min(0.3, Math.max(0.03, 0.06 + (foe.stats.spd - me.stats.spd) / 400));
-      if (rng() < missChance) {
-        events.push({ t, type: 'miss', side, move: move.id });
+      if (d < 130) {
+        move(u, near.x, near.y, speed, true);
+        if (d > 45) continue;
+      } else if (d > 190) {
+        move(u, near.x, near.y, speed);
         continue;
       }
+    } else if (fleeing && d > 45) {
+      move(u, near.x, near.y, speed, true);
+      continue;
+    }
 
-      const atk = move.kind === 'physical' ? me.stats.atk : me.stats.int;
-      const def = move.kind === 'physical' ? foe.stats.def : (foe.stats.def + foe.stats.int) / 2;
-      const crit = rng() < 0.05 + me.stats.int / 1000;
-      let dmg = move.power * (atk + 5) / (atk + def + 10) * 2 * (1 + atk / 120) * range(rng, 0.85, 1.15);
-      if (crit) dmg *= 1.5;
-      if (guarding[foeSide]) {
-        dmg *= 0.4;
-        guarding[foeSide] = false;
-      }
-      const damage = Math.max(1, Math.round(dmg));
-      hp[foeSide] = Math.max(0, hp[foeSide] - damage);
-      events.push({ t, type: 'attack', side, move: move.id, damage, crit, hp: [hp[0], hp[1]] });
+    // 필살기: 지능이 사용 빈도를 정하고 TP를 쓴다
+    const base = Math.min(0.6, 0.1 + u.stats.int / 600);
+    const pSpecial = base * (u.mode === '특수' ? 3 : u.mode === '일반' ? 0.4 : 0.3) * (u.personality === '쿨' ? 1.6 : u.personality === '솔직' ? 1.2 : 1);
+    const wantsSpecial = u.cd <= 0 && u.tp >= 20 && d <= 150 && rng() < pSpecial;
+    if (!wantsSpecial && d > 42) {
+      if (u.mode !== '지원') move(u, near.x, near.y, speed);
+      continue;
+    }
+    if (u.cd > 0) continue;
 
-      if (hp[foeSide] <= 0) {
-        events.push({ t, type: 'end', winner: side, reason: 'ko' });
-        return { maxHp, events, winner: side };
-      }
+    const special = wantsSpecial;
+    const power = special ? (u.stats.atk + u.stats.int) / 2 : u.stats.atk;
+    let dmg = (8 + power * 0.9) * (100 / (100 + near.stats.def)) * range(rng, 0.85, 1.15) * attrMult(u.attr, near.attr);
+    if (special) dmg *= 2.2;
+    if (u.personality === '열혈') dmg *= 1.2;
+    if (u.personality === '제멋대로') dmg *= 1.1;
+    if (u.mode === '지원') dmg *= 0.6;
+    const damage = Math.max(1, Math.round(dmg));
+    near.hp = Math.max(0, near.hp - damage);
+    near.wasHit = true;
+    if (special) u.tp -= 20;
+    u.cd = (1.3 - Math.min(0.6, u.stats.spd / 400)) * (u.personality === '제멋대로' ? 0.9 : 1);
+    if (u.personality === '성급한') u.retreat = 0.8;
+    events.push({ type: 'hit', from: u.id, to: near.id, damage, special });
+    if (near.hp <= 0) {
+      near.alive = false;
+      events.push({ type: 'ko', id: near.id });
     }
   }
-  const winner: 0 | 1 = hp[0] / maxHp[0] >= hp[1] / maxHp[1] ? 0 : 1;
-  events.push({ t: MAX_TICKS, type: 'end', winner, reason: 'timeout' });
-  return { maxHp, events, winner };
+  const alive = [0, 1].map((t) => s.units.some((u) => u.alive && u.team === t));
+  if (!alive[0] || !alive[1]) {
+    s.over = true;
+    s.winner = alive[0] ? 0 : 1;
+    s.reason = 'ko';
+  } else if (s.t >= TIME_LIMIT) {
+    const ratio = (t: number) => s.units.filter((u) => u.team === t).reduce((a, u) => a + u.hp / u.maxHp, 0);
+    s.over = true;
+    s.winner = ratio(0) >= ratio(1) ? 0 : 1;
+    s.reason = 'timeout';
+  }
+  return events;
 }
 
-export type Rank = 'novice' | 'regular' | 'expert';
-export const RANK_INFO: Record<Rank, { label: string; stage: Stage; base: number }> = {
-  novice: { label: '초급', stage: 'rookie', base: 22 },
-  regular: { label: '중급', stage: 'champion', base: 70 },
-  expert: { label: '상급', stage: 'ultimate', base: 160 },
-};
+export function runBattle(mine: Entrant[], foes: Entrant[], rng: Rng): BattleState {
+  const s = createBattle(mine, foes);
+  while (!s.over) stepBattle(s, rng);
+  return s;
+}
 
-/** 랭크에 맞는 상대 생성 */
-export function makeOpponent(rank: Rank, rng: Rng): Fighter {
-  const info = RANK_INFO[rank];
-  const pool = Object.values(SPECIES).filter((s) => s.stage === info.stage);
-  const sp = pick(rng, pool);
-  const keys = ['atk', 'def', 'spd', 'int'] as const;
-  const top = keys.reduce((best, k) => (sp.baseStats[k] > sp.baseStats[best] ? k : best), keys[0]);
-  const stat = (k: keyof Stats) => Math.round(info.base * range(rng, 0.85, 1.15) * (k === top ? 1.3 : 1));
-  const tactics: Tactic[] = ['aggressive', 'balanced', 'careful'];
+/** 배틀 결과를 디지몬에게 반영: 횟수·승수, 피로, 쓰러진 디지몬의 부상 */
+export function applyBattleResult(d: Digimon, won: boolean, ko: boolean, rng: Rng): Digimon {
+  const injuryChance = ko ? (d.personality === '대담' ? 0.6 : 0.3) : 0;
   return {
-    name: sp.name,
-    speciesId: sp.id,
-    stats: { hp: Math.round(info.base * 0.6), atk: stat('atk'), def: stat('def'), spd: stat('spd'), int: stat('int') },
-    moves: sp.moves,
-    tactic: pick(rng, tactics),
+    ...d,
+    battles: d.battles + 1,
+    wins: d.wins + (won ? 1 : 0),
+    fatigue: Math.min(100, d.fatigue + 20),
+    hunger: Math.max(0, d.hunger - 10),
+    injured: d.injured || rng() < injuryChance,
   };
-}
-
-export function fighterName(speciesId: string) {
-  return getSpecies(speciesId).name;
 }

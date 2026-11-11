@@ -1,34 +1,24 @@
-import { loadDiscovered, loadGame, saveDiscovered, saveGame } from './core/save';
-import type { Monster, SaveData } from './core/types';
+import { loadGame, saveGame } from './core/save';
+import type { SaveData } from './core/types';
 
 /** 씬끼리 공유하는 게임 상태 */
 class GameState {
   save!: SaveData;
-  discovered!: Set<string>;
   offlineMinutes = 0;
   speed = 1;
+  selectedUid = 0;
 
   init() {
     const r = loadGame();
     this.save = r.save;
     this.offlineMinutes = r.offlineMinutes;
-    this.discovered = loadDiscovered();
-    this.discover(this.save.monster.speciesId);
+    this.selectedUid = this.save.digimon[0].uid;
+    this.persist();
+    window.addEventListener('pagehide', () => this.persist());
   }
 
-  get monster(): Monster {
-    return this.save.monster;
-  }
-
-  set monster(m: Monster) {
-    this.save = { ...this.save, monster: m };
-  }
-
-  discover(id: string) {
-    if (!this.discovered.has(id)) {
-      this.discovered.add(id);
-      saveDiscovered(this.discovered);
-    }
+  get selected() {
+    return this.save.digimon.find((d) => d.uid === this.selectedUid) ?? this.save.digimon[0];
   }
 
   persist() {

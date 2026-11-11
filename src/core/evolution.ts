@@ -1,80 +1,79 @@
-import { getSpecies, STAGE_LABEL } from './data';
-import type { EvolutionRequirement, Monster, StatKey } from './types';
+import { getSpecies, LIFESPAN, STAGE_LABEL } from './data';
+import type { ApKey, Cond, Digimon, Stage } from './types';
 
-const STAT_LABEL: Record<StatKey, string> = { hp: 'HP', atk: '공격', def: '방어', spd: '속도', int: '지능' };
-
-export interface RequirementCheck {
+export interface Check {
   label: string;
   met: boolean;
 }
 
-/** 요구 조건 하나하나를 사람이 읽을 수 있는 문장과 충족 여부로 풀어낸다 (힌트 UI용) */
-export function explainRequirement(m: Monster, req: EvolutionRequirement): RequirementCheck[] {
-  const out: RequirementCheck[] = [];
-  if (req.dominant) {
-    const keys: StatKey[] = ['atk', 'def', 'spd', 'int'];
-    const top = Math.max(...keys.map((k) => m.stats[k]));
-    out.push({ label: `${STAT_LABEL[req.dominant]}이(가) 가장 높음`, met: m.stats[req.dominant] >= top });
+/** 디지에그화를 거칠수록 요구 수치가 조금씩 줄어든다 */
+export const reqScale = (d: Digimon) => Math.max(0.7, 1 - 0.05 * d.eggs);
+
+export function explain(d: Digimon, cond: Cond): Check[] {
+  const out: Check[] = [];
+  const k = reqScale(d);
+  for (const [key, v] of Object.entries(cond.ap ?? {}) as [ApKey, number][]) {
+    const need = Math.ceil(v * k);
+    out.push({ label: `${key} ${need} 이상 (현재 ${Math.floor(d.ap[key])})`, met: d.ap[key] >= need });
   }
-  if (req.minStats) {
-    for (const [k, v] of Object.entries(req.minStats) as [StatKey, number][]) {
-      out.push({ label: `${STAT_LABEL[k]} ${v} 이상`, met: m.stats[k] >= v });
-    }
+  if (cond.battles !== undefined) out.push({ label: `배틀 ${cond.battles}회 이상 (현재 ${d.battles})`, met: d.battles >= cond.battles });
+  if (cond.winRate !== undefined) {
+    const rate = d.battles ? Math.round((d.wins / d.battles) * 100) : 0;
+    out.push({ label: `승률 ${cond.winRate}% 이상 (현재 ${rate}%)`, met: rate >= cond.winRate });
   }
-  if (req.maxCareMistakes !== undefined)
-    out.push({ label: `돌봄 실수 ${req.maxCareMistakes}회 이하`, met: m.careMistakes <= req.maxCareMistakes });
-  if (req.minCareMistakes !== undefined)
-    out.push({ label: `돌봄 실수 ${req.minCareMistakes}회 이상`, met: m.careMistakes >= req.minCareMistakes });
-  if (req.minTrainings !== undefined)
-    out.push({ label: `훈련 ${req.minTrainings}회 이상`, met: m.trainings >= req.minTrainings });
-  if (req.minBattles !== undefined)
-    out.push({ label: `배틀 ${req.minBattles}회 이상`, met: m.battles >= req.minBattles });
-  if (req.minWins !== undefined) out.push({ label: `승리 ${req.minWins}회 이상`, met: m.wins >= req.minWins });
-  if (req.minWeight !== undefined) out.push({ label: `체중 ${req.minWeight} 이상`, met: m.weight >= req.minWeight });
-  if (req.maxWeight !== undefined) out.push({ label: `체중 ${req.maxWeight} 이하`, met: m.weight <= req.maxWeight });
+  if (cond.penalties !== undefined) out.push({ label: `페널티(발병) ${cond.penalties}회 이상 (현재 ${d.penalties})`, met: d.penalties >= cond.penalties });
+  if (cond.eggs !== undefined) out.push({ label: `디지에그화 ${cond.eggs}회 이상 (현재 ${d.eggs})`, met: d.eggs >= cond.eggs });
+  if (cond.time) {
+    const life = LIFESPAN[getSpecies(d.speciesId).stage];
+    out.push({ label: '수명이 다할 때까지 다른 조건을 채우지 않음', met: d.stageAge >= life });
+  }
   return out;
 }
 
-export function meets(m: Monster, req: EvolutionRequirement): boolean {
-  return explainRequirement(m, req).every((c) => c.met);
+export const meets = (d: Digimon, cond: Cond) => explain(d, cond).every((c) => c.met);
+
+/** 테이머 랭크로 진화 가능한 최대 세대 */
+export function maxStageForRank(rank: number): Stage {
+  if (rank >= 6) return 6;
+  if (rank >= 4) return 5;
+  if (rank >= 2) return 4;
+  return 3;
 }
 
-/** 진화할 대상 종 id. 진화 시기가 아니거나 조건을 못 맞추면 null */
-export function findEvolution(m: Monster): string | null {
-  const sp = getSpecies(m.speciesId);
-  if (sp.stageMinutes <= 0 || m.stageAge < sp.stageMinutes) return null;
-  for (const opt of sp.evolutions) {
-    if (meets(m, opt.req)) return opt.to;
+export type EvoResult = { kind: 'evolve'; to: string } | { kind: 'blocked'; to: string; reason: 'rank' | 'capacity' } | null;
+
+/** 지금 진화할 대상. freeCapacity는 사육 용량의 남은 G */
+export function findEvolution(d: Digimon, rank: number, freeCapacity: number): EvoResult {
+  if (d.isEgg) return null;
+  const sp = getSpecies(d.speciesId);
+  const life = LIFESPAN[sp.stage];
+  if (d.stageAge < life * 0.2) return null;
+  for (const evo of sp.evos) {
+    if (!meets(d, evo.cond)) continue;
+    const to = getSpecies(evo.to);
+    if (to.stage > maxStageForRank(rank)) return { kind: 'blocked', to: evo.to, reason: 'rank' };
+    if (to.size - sp.size > freeCapacity) return { kind: 'blocked', to: evo.to, reason: 'capacity' };
+    return { kind: 'evolve', to: evo.to };
   }
   return null;
 }
 
-/** 진화 적용: 종 변경, 기본 능력치 추가, 단계 나이 초기화 */
-export function evolve(m: Monster, toId: string): Monster {
-  const to = getSpecies(toId);
-  const stats = { ...m.stats };
-  for (const k of Object.keys(stats) as StatKey[]) stats[k] += to.baseStats[k];
-  return { ...m, speciesId: toId, stats, stageAge: 0, energy: 100, sick: false };
+/** 수명이 다했는데 진화하지 못한 경우: 완전체 이상이거나 배틀 10회 이상이면 디지에그화, 아니면 로스트 */
+export function endOfLife(d: Digimon): 'egg' | 'lost' {
+  return getSpecies(d.speciesId).stage >= 5 || d.battles >= 10 ? 'egg' : 'lost';
 }
 
-export interface EvolutionHint {
-  /** 이미 키워본 종이면 이름, 아니면 ??? */
+export interface Hint {
   name: string;
   stage: string;
-  checks: RequirementCheck[];
+  checks: Check[];
   ready: boolean;
 }
 
-export function evolutionHints(m: Monster, discovered: Set<string>): EvolutionHint[] {
-  const sp = getSpecies(m.speciesId);
-  return sp.evolutions.map((opt) => {
-    const to = getSpecies(opt.to);
-    const checks = explainRequirement(m, opt.req);
-    return {
-      name: discovered.has(to.id) ? to.name : '???',
-      stage: STAGE_LABEL[to.stage],
-      checks: checks.length ? checks : [{ label: '조건 없음 (기본 진화)', met: true }],
-      ready: checks.every((c) => c.met),
-    };
+export function hints(d: Digimon, seen: Set<string>): Hint[] {
+  return getSpecies(d.speciesId).evos.map((evo) => {
+    const to = getSpecies(evo.to);
+    const checks = explain(d, evo.cond);
+    return { name: seen.has(to.id) ? to.name : '???', stage: STAGE_LABEL[to.stage], checks, ready: checks.every((c) => c.met) };
   });
 }

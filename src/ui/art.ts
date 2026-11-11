@@ -1,105 +1,73 @@
 import Phaser from 'phaser';
-import { SPECIES } from '../core/data';
-import type { ArtSpec } from '../core/types';
+import { getSpecies } from '../core/data';
+import type { Family } from '../core/types';
+import { FONT } from './Button';
 
-const TEX = 128;
-const hex = (c: string) => Phaser.Display.Color.HexStringToColor(c).color;
+/**
+ * 그림·소리 끼우는 자리.
+ * - src/assets/sprites/<디지몬 이름>.png (gif, webp 가능)  예: 아구몬.png, 메탈그레이몬(청).png, 디지에그.png
+ * - src/assets/sounds/<이름>.mp3 (ogg, wav 가능)  이름: bgm_farm, bgm_battle, se_hit, se_special, se_evolve, se_capture
+ * 파일이 없으면 색 원 + 이름표로 대신 그린다.
+ */
+const spriteUrls = import.meta.glob('../assets/sprites/*.{png,gif,webp}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
+const soundUrls = import.meta.glob('../assets/sounds/*.{mp3,ogg,wav}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 
-/** 오리지널 임시 그래픽: ArtSpec을 도형으로 그린다. sprite 경로가 생기면 그걸 우선 사용 */
-function drawMonster(g: Phaser.GameObjects.Graphics, art: ArtSpec) {
-  const c = hex(art.color);
-  const a = hex(art.accent);
-  const cx = TEX / 2;
-  const s = 40 * art.size;
-  const cy = TEX / 2 + 10;
-  const outline = 0x22232b;
+const base = (path: string) => path.split('/').pop()!.replace(/\.[^.]+$/, '').normalize('NFC');
 
-  g.lineStyle(3, outline, 1);
-
-  if (art.body === 'round') {
-    // 알
-    g.fillStyle(c).fillEllipse(cx, cy, s * 1.5, s * 1.9).strokeEllipse(cx, cy, s * 1.5, s * 1.9);
-    g.fillStyle(a);
-    for (const [dx, dy, r] of [[-12, -15, 7], [10, 2, 9], [-6, 20, 6]]) g.fillCircle(cx + dx, cy + dy, r);
-    return;
-  }
-
-  if (art.wings) {
-    g.fillStyle(a, 0.85);
-    g.fillTriangle(cx - s * 0.5, cy - s * 0.2, cx - s * 1.5, cy - s * 0.9, cx - s * 1.1, cy + s * 0.4);
-    g.fillTriangle(cx + s * 0.5, cy - s * 0.2, cx + s * 1.5, cy - s * 0.9, cx + s * 1.1, cy + s * 0.4);
-  }
-  if (art.tail) {
-    g.fillStyle(c).fillTriangle(cx + s * 0.6, cy + s * 0.3, cx + s * 1.4, cy - s * 0.1, cx + s * 0.7, cy + s * 0.6);
-    g.fillStyle(a).fillCircle(cx + s * 1.4, cy - s * 0.15, s * 0.18);
-  }
-
-  g.fillStyle(c);
-  switch (art.body) {
-    case 'blob':
-      g.fillEllipse(cx, cy + s * 0.2, s * 2, s * 1.5).strokeEllipse(cx, cy + s * 0.2, s * 2, s * 1.5);
-      break;
-    case 'beast':
-      g.fillEllipse(cx, cy + s * 0.25, s * 1.6, s * 1.3).strokeEllipse(cx, cy + s * 0.25, s * 1.6, s * 1.3);
-      g.fillCircle(cx, cy - s * 0.45, s * 0.6).strokeCircle(cx, cy - s * 0.45, s * 0.6);
-      g.fillRect(cx - s * 0.6, cy + s * 0.7, s * 0.35, s * 0.4).fillRect(cx + s * 0.25, cy + s * 0.7, s * 0.35, s * 0.4);
-      break;
-    case 'drake':
-      g.fillEllipse(cx, cy + s * 0.3, s * 1.5, s * 1.4).strokeEllipse(cx, cy + s * 0.3, s * 1.5, s * 1.4);
-      g.fillEllipse(cx - s * 0.15, cy - s * 0.55, s * 1.2, s * 0.8).strokeEllipse(cx - s * 0.15, cy - s * 0.55, s * 1.2, s * 0.8);
-      g.fillStyle(a).fillEllipse(cx, cy + s * 0.45, s * 0.8, s * 0.8);
-      break;
-    case 'golem':
-      g.fillRoundedRect(cx - s, cy - s * 0.6, s * 2, s * 1.7, 14).strokeRoundedRect(cx - s, cy - s * 0.6, s * 2, s * 1.7, 14);
-      g.fillStyle(a).fillRoundedRect(cx - s * 0.8, cy - s * 0.75, s * 1.6, s * 0.35, 8);
-      break;
-    case 'spirit':
-      g.fillCircle(cx, cy - s * 0.1, s * 0.9).strokeCircle(cx, cy - s * 0.1, s * 0.9);
-      g.fillTriangle(cx - s * 0.6, cy + s * 0.5, cx + s * 0.6, cy + s * 0.5, cx, cy + s * 1.3);
-      break;
-  }
-
-  if (art.spikes) {
-    g.fillStyle(a);
-    for (let i = -2; i <= 2; i++) {
-      const x = cx + i * s * 0.35;
-      g.fillTriangle(x - 7, cy - s * 0.6, x + 7, cy - s * 0.6, x, cy - s * 0.6 - 14);
-    }
-  }
-  if (art.horns) {
-    g.fillStyle(a);
-    const hy = art.body === 'golem' ? cy - s * 0.8 : cy - s * 0.95;
-    for (let i = 0; i < art.horns; i++) {
-      const x = cx + (i - (art.horns - 1) / 2) * s * 0.55;
-      g.fillTriangle(x - 6, hy + 6, x + 6, hy + 6, x, hy - 14);
-    }
-  }
-
-  // 눈
-  const ey = art.body === 'beast' ? cy - s * 0.5 : art.body === 'drake' ? cy - s * 0.6 : cy - s * 0.1;
-  const ex = art.body === 'drake' ? cx - s * 0.35 : cx;
-  g.fillStyle(0xffffff).fillCircle(ex - s * 0.3, ey, s * 0.18).fillCircle(ex + s * 0.3, ey, s * 0.18);
-  g.fillStyle(outline).fillCircle(ex - s * 0.27, ey + 1, s * 0.09).fillCircle(ex + s * 0.33, ey + 1, s * 0.09);
+export function preloadAssets(scene: Phaser.Scene) {
+  for (const [path, url] of Object.entries(spriteUrls)) scene.load.image(`sp:${base(path)}`, url);
+  for (const [path, url] of Object.entries(soundUrls)) scene.load.audio(`snd:${base(path)}`, url);
 }
 
-export function monsterTextureKey(id: string) {
-  return `mon-${id}`;
+const FAMILY_COLOR: Record<Family, number> = {
+  용: 0xe8590c,
+  짐승: 0xc99a5b,
+  물: 0x339af0,
+  새: 0x74c0fc,
+  벌레풀: 0x51a351,
+  기계: 0x868e96,
+  성: 0xffe066,
+  암흑: 0x7048e8,
+};
+
+/** 디지몬 한 마리의 화면 표시. 스프라이트가 있으면 그것을, 없으면 임시 도형을 쓴다 */
+export function digimonView(scene: Phaser.Scene, speciesId: string, isEgg = false, showName = true): Phaser.GameObjects.Container {
+  const c = scene.add.container(0, 0);
+  const name = isEgg ? '디지에그' : getSpecies(speciesId).name;
+  const stage = isEgg ? 1 : getSpecies(speciesId).stage;
+  const size = 26 + stage * 9;
+  const key = `sp:${name.normalize('NFC')}`;
+  if (scene.textures.exists(key)) {
+    const img = scene.add.image(0, 0, key);
+    img.setScale((size * 1.6) / Math.max(img.width, img.height));
+    c.add(img);
+  } else if (isEgg) {
+    c.add(scene.add.ellipse(0, 0, size * 0.9, size * 1.15, 0xf8f0dc).setStrokeStyle(2, 0x22232b));
+  } else {
+    c.add(scene.add.circle(0, 0, size / 2, FAMILY_COLOR[getSpecies(speciesId).family]).setStrokeStyle(2, 0x22232b));
+  }
+  if (showName) {
+    c.add(
+      scene.add
+        .text(0, size / 2 + 4, name, { fontFamily: FONT, fontSize: '12px', color: '#1e2129', backgroundColor: '#ffffffaa', padding: { x: 3, y: 1 } })
+        .setOrigin(0.5, 0),
+    );
+  }
+  c.setSize(size + 10, size + 10);
+  return c;
 }
 
-export function generateMonsterTextures(scene: Phaser.Scene) {
-  for (const sp of Object.values(SPECIES)) {
-    const key = monsterTextureKey(sp.id);
-    if (scene.textures.exists(key)) continue;
-    const g = scene.make.graphics({ x: 0, y: 0 }, false);
-    drawMonster(g, sp.art);
-    g.generateTexture(key, TEX, TEX);
-    g.destroy();
+export function playSound(scene: Phaser.Scene, name: string, config?: Phaser.Types.Sound.SoundConfig) {
+  const key = `snd:${name}`;
+  if (!scene.cache.audio.exists(key)) return;
+  try {
+    scene.sound.play(key, config);
+  } catch {
+    /* 소리 재생 실패는 무시 */
   }
-  // 똥, 아이콘
-  if (!scene.textures.exists('poop')) {
-    const g = scene.make.graphics({ x: 0, y: 0 }, false);
-    g.fillStyle(0x8b5a2b).fillEllipse(16, 24, 28, 12).fillEllipse(16, 16, 20, 10).fillEllipse(16, 9, 10, 8);
-    g.generateTexture('poop', 32, 32);
-    g.destroy();
-  }
+}
+
+export function playBgm(scene: Phaser.Scene, name: string) {
+  scene.sound.stopAll();
+  playSound(scene, name, { loop: true, volume: 0.5 });
 }
