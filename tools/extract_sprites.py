@@ -1,0 +1,89 @@
+"""Decode local Nitro NCBR/NCER/NCLR cells into transparent PNG sheets.
+
+No third-party packages. Original files are read only.
+"""
+import json
+import argparse
+import struct
+import zlib
+from pathlib import Path
+
+PROJECT = Path(__file__).resolve().parents[1]
+ROOT = PROJECT.parent
+OUT = PROJECT / 'web' / 'assets'
+SIZES = (((8,8),(16,16),(32,32),(64,64)),
+         ((16,8),(32,8),(32,16),(64,32)),
+         ((8,16),(8,32),(16,32),(32,64)))
+
+def png(path, w, h, pixels):
+    def chunk(t, b):
+        return struct.pack('>I',len(b))+t+b+struct.pack('>I',zlib.crc32(t+b))
+    raw = b''.join(b'\0'+pixels[y*w*4:(y+1)*w*4] for y in range(h))
+    path.write_bytes(b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',w,h,8,6,0,0,0))+chunk(b'IDAT',zlib.compress(raw))+chunk(b'IEND',b''))
+
+def extract(stem):
+    p = ROOT / 'digimon' / (stem+'_main')
+    c=p.with_suffix('.ncer').read_bytes()
+    g=p.with_suffix('.ncbr').read_bytes()[48:]
+    pal=p.with_suffix('.nclr').read_bytes()[40:]
+    colors=[]
+    for (v,) in struct.iter_unpack('<H',pal):
+        colors.append(bytes(((v&31)*255//31,((v>>5)&31)*255//31,((v>>10)&31)*255//31,255)))
+    count, kind, offset, mapping=struct.unpack_from('<HHII',c,24)
+    stride=16 if kind else 8
+    bank=24+offset
+    oams=bank+count*stride
+    transfer_offset=struct.unpack_from('<I',c,36)[0]
+    transfer=24+transfer_offset if transfer_offset else None
+    frames=[]
+    for i in range(count):
+        n,_,off=struct.unpack_from('<HHI',c,bank+i*stride)
+        objs=[]
+        for j in range(n):
+            a,b,d=struct.unpack_from('<HHH',c,oams+off+j*6)
+            shape=a>>14
+            if shape==3: continue
+            w,h=SIZES[shape][b>>14]
+            x=b&511; y=a&255
+            if x>=256:x-=512
+            if y>=128:y-=256
+            objs.append((x,y,w,h,d,b))
+        frames.append(objs)
+    # A shared origin preserves alignment across all cells.
+    left=min(o[0] for f in frames for o in f); top=min(o[1] for f in frames for o in f)
+    right=max(o[0]+o[2] for f in frames for o in f); bottom=max(o[1]+o[3] for f in frames for o in f)
+    w,h=right-left,bottom-top
+    pixels=bytearray(w*count*h*4)
+    for i,objs in enumerate(frames):
+        graphics_base=struct.unpack_from('<I',c,transfer+8+i*8)[0] if transfer else 0
+        for x,y,ow,oh,d,b in reversed(objs):
+            address=graphics_base+(d&1023)*(32<<mapping)
+            for py in range(oh):
+                for px in range(ow):
+                    sx=ow-1-px if b&4096 else px
+                    sy=oh-1-py if b&8192 else py
+                    q=sy*ow+sx
+                    if address+q//2>=len(g):raise ValueError('Sprite data exceeds graphics bank')
+                    index=(g[address+q//2]>>(4*(q%2)))&15
+                    if not index:continue
+                    color=colors[(d>>12)*16+index]
+                    dest=((y-top+py)*w*count+i*w+x-left+px)*4
+                    pixels[dest:dest+4]=color
+    png(OUT/(stem+'.png'),w*count,h,pixels)
+    return dict(id=stem,width=w,height=h,frames=count,source=str(p.relative_to(ROOT)).replace('\\','/'))
+
+if __name__=='__main__':
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--source-root', type=Path, default=ROOT, help='Directory containing the original digimon folder')
+    parser.add_argument('--output', type=Path, default=OUT)
+    args=parser.parse_args()
+    ROOT=args.source_root.resolve()
+    OUT=args.output.resolve()
+    OUT.mkdir(parents=True,exist_ok=True)
+    chosen=['e000_digitama','m102_koromon','m201_agumon','m208_gabumon','m227_patamon']
+    chosen += ['m320_graymon']
+    data=[extract(s) for s in chosen]
+    (OUT/'sprites.json').write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
+    # JS also works when index.html is opened directly without a server.
+    (OUT/'sprites.js').write_text('window.SPRITES = '+json.dumps(data)+';',encoding='utf-8')
+    print(json.dumps(data,indent=2))

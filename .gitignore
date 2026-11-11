@@ -1,3 +1,16 @@
 node_modules
 dist
 .DS_Store
+
+# Local development and extracted source archives are not website assets.
+__pycache__/
+.openai/
+.sites-local/
+*.tar.gz
+*.nds
+*.sdat
+*.ncbr
+*.ncgr
+*.ncer
+*.nanr
+*.nclr

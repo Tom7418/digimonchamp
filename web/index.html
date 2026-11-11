@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#172a27"><title>디지몬 챔피언십 · 테이머 가든</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><a class="brand" href="./"><span class="brand-mark">D<span>↗</span></span><span>DIGIMON <b>CHAMPIONSHIP</b><small>테이머 가든 · FAN GAME</small></span></a><span class="build">BROWSER EDITION <i>01</i></span><button class="quiet" id="help">플레이 가이드 ↗</button></header>
+<main>
+<div class="intro"><div><div class="eyebrow">YOUR SMALL DIGITAL WORLD</div><h1>함께 자라고, 함께 강해지다.</h1><p>먹이고, 훈련하고, 새로운 가능성을 발견하세요.</p></div><div class="wallet"><span>보유 비트</span><strong><span id="coins">0</span> <small>฿</small></strong></div></div>
+<div class="layout"><section class="world-panel"><div class="world-top"><div><span class="live-dot"></span> <strong id="scene-title">시작의 정원</strong><span class="region">FILE ISLAND / 01</span></div><span id="day">DAY 01</span></div>
+<div class="canvas-wrap"><canvas id="world" width="960" height="560" aria-label="디지몬 육성장. 디지몬을 클릭하거나 아래 파트너 목록으로 선택하세요."></canvas><div class="world-tag"><span>☀</span> 맑음 <i>·</i> 평화로운 육성장</div><div class="scene-note" id="scene-note">디지몬을 클릭해 파트너를 선택하세요</div></div>
+<div class="world-bottom"><span><i class="live-dot"></i> <span id="save-status">자동 저장 준비</span></span><button class="quiet" id="pause">Ⅱ 잠시 쉬기</button></div>
+<div class="section-label"><h2>오늘은 무엇을 할까요?</h2><span>선택한 파트너에게 적용됩니다</span></div>
+<div class="actions"><button data-action="feed"><span class="action-icon orange">♨</span><b>먹이 주기</b><small>포만감 +30 · 15 ฿</small></button><button data-action="train"><span class="action-icon green">↗</span><b>훈련하기</b><small>능력치 · 경험치 성장</small></button><button data-action="rest"><span class="action-icon blue">☾</span><b>휴식하기</b><small>에너지 +35 · 체력 회복</small></button><button data-action="battle"><span class="action-icon pink">⚔</span><b>챔피언십</b><small>자동 전투 · 비트 획득</small></button></div>
+<section class="journal"><div class="section-label"><h2>테이머 일지</h2><span>우리의 작은 기록</span></div><ol id="journal"></ol></section>
+</section>
+<aside><section class="partner card"><div class="section-label"><h2>나의 파트너</h2><span class="pill">육성 중</span></div><div id="partner-tabs" class="partner-tabs" aria-label="파트너 선택"></div><div class="portrait"><canvas id="portrait" width="240" height="150" aria-label="선택한 디지몬"></canvas><span id="stage" class="stage"></span></div><div class="partner-name"><h2 id="name"></h2><span id="level"></span></div><p class="personality" id="mood"></p><div class="xp-row"><span>다음 레벨까지</span><span id="xp-label"></span></div><div class="track xp"><i id="xp-bar"></i></div><div id="vitals"></div><div class="stats" id="stats"></div><button id="evolve" class="evolve" disabled>진화 조건 확인</button><p id="evo-hint" class="hint"></p></section>
+<section class="card objective"><div class="eyebrow">NEXT MILESTONE</div><h2>첫 챔피언을 향해</h2><p>아구몬을 Lv.5까지 훈련하고<br>그레이몬으로 진화시켜 보세요.</p><div class="milestone"><span id="milestone">0 / 5</span><span>성장의 기록 ↗</span></div></section>
+<button class="reset" id="reset">새로운 육성 시작</button>
+</aside></div>
+<footer><span>DIGIMON CHAMPIONSHIP <b> / </b> TAMER GARDEN</span><span>비공식 팬게임 프로토타입 · 원본 그래픽 활용 · 사운드 미구현</span></footer>
+</main>
+<dialog id="modal"><div class="modal-head"><span class="eyebrow" id="modal-kicker">TAMER GUIDE</span><button id="close-modal" class="quiet" aria-label="닫기">✕</button></div><h2 id="modal-title"></h2><div id="modal-body"></div><button class="primary" id="modal-ok">정원으로 돌아가기</button></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="assets/sprites.js"></script><script src="game.js"></script>
+</body></html>

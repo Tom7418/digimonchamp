@@ -22,13 +22,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
+      - name: Validate the browser game
+        run: |
+          node --check web/game.js
+          node --check web/assets/sprites.js
+          python tools/check_web.py
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: web
 
   deploy:
     needs: build
