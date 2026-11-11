@@ -1,0 +1,17 @@
+[
+  { "id": "bubble", "name": "보글보글", "kind": "special", "power": 6, "cost": 0.8 },
+  { "id": "headbutt", "name": "들이받기", "kind": "physical", "power": 9, "cost": 1.0 },
+  { "id": "spark", "name": "불티", "kind": "special", "power": 13, "cost": 1.1 },
+  { "id": "claw", "name": "할퀴기", "kind": "physical", "power": 13, "cost": 1.0 },
+  { "id": "flame", "name": "화염포", "kind": "special", "power": 21, "cost": 1.4 },
+  { "id": "magmafist", "name": "용암주먹", "kind": "physical", "power": 23, "cost": 1.5 },
+  { "id": "lightorb", "name": "빛구슬", "kind": "special", "power": 14, "cost": 1.1 },
+  { "id": "holyray", "name": "성광", "kind": "special", "power": 25, "cost": 1.5 },
+  { "id": "rockthrow", "name": "바위던지기", "kind": "physical", "power": 16, "cost": 1.2 },
+  { "id": "quake", "name": "대지강타", "kind": "physical", "power": 26, "cost": 1.6 },
+  { "id": "mudshot", "name": "진흙던지기", "kind": "special", "power": 12, "cost": 1.0 },
+  { "id": "curl", "name": "웅크리기", "kind": "guard", "power": 0, "cost": 0.7 },
+  { "id": "dragonbreath", "name": "용의 숨결", "kind": "special", "power": 34, "cost": 1.8 },
+  { "id": "celestial", "name": "천상의 빛", "kind": "special", "power": 36, "cost": 1.8 },
+  { "id": "landslide", "name": "산사태", "kind": "physical", "power": 36, "cost": 1.8 }
+]

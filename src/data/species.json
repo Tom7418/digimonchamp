@@ -1,0 +1,128 @@
+[
+  {
+    "id": "egg", "name": "알", "stage": "egg", "stageMinutes": 30,
+    "baseStats": { "hp": 0, "atk": 0, "def": 0, "spd": 0, "int": 0 },
+    "moves": [],
+    "evolutions": [{ "to": "poko", "req": {} }],
+    "art": { "body": "round", "color": "#f3ead2", "accent": "#d9b46a", "size": 1.0, "spikes": false },
+    "description": "따뜻한 알. 곧 무언가 태어날 것 같다."
+  },
+  {
+    "id": "poko", "name": "포코", "stage": "baby1", "stageMinutes": 120,
+    "baseStats": { "hp": 5, "atk": 3, "def": 3, "spd": 3, "int": 3 },
+    "moves": ["bubble"],
+    "evolutions": [{ "to": "pokorong", "req": {} }],
+    "art": { "body": "blob", "color": "#8fd3ff", "accent": "#ffffff", "size": 0.6 },
+    "description": "말랑말랑한 아기 몬스터. 거품을 뿜는다."
+  },
+  {
+    "id": "pokorong", "name": "포코롱", "stage": "baby2", "stageMinutes": 360,
+    "baseStats": { "hp": 3, "atk": 3, "def": 3, "spd": 3, "int": 3 },
+    "moves": ["bubble", "headbutt"],
+    "evolutions": [
+      { "to": "lumi", "req": { "dominant": "int" } },
+      { "to": "gru", "req": { "dominant": "def" } },
+      { "to": "igni", "req": {} }
+    ],
+    "art": { "body": "blob", "color": "#6ec0f0", "accent": "#ffe066", "size": 0.75, "horns": 2 },
+    "description": "작은 뿔이 돋았다. 어떤 훈련을 받느냐에 따라 모습이 바뀐다."
+  },
+  {
+    "id": "igni", "name": "이그니", "stage": "rookie", "stageMinutes": 1440,
+    "baseStats": { "hp": 10, "atk": 18, "def": 8, "spd": 12, "int": 8 },
+    "moves": ["headbutt", "spark"],
+    "evolutions": [
+      { "to": "ignis", "req": { "minStats": { "atk": 60 }, "maxCareMistakes": 2 } },
+      { "to": "volkano", "req": { "minStats": { "atk": 40 }, "maxCareMistakes": 5 } },
+      { "to": "mudbug", "req": {} }
+    ],
+    "art": { "body": "beast", "color": "#ff7a45", "accent": "#ffd23f", "size": 0.85, "tail": true, "horns": 1 },
+    "description": "꼬리 끝에 불티가 맺힌 성장기. 힘 훈련을 좋아한다."
+  },
+  {
+    "id": "lumi", "name": "루미", "stage": "rookie", "stageMinutes": 1440,
+    "baseStats": { "hp": 10, "atk": 8, "def": 8, "spd": 12, "int": 18 },
+    "moves": ["headbutt", "lightorb"],
+    "evolutions": [
+      { "to": "lumiel", "req": { "minStats": { "int": 50 }, "maxCareMistakes": 3 } },
+      { "to": "mudbug", "req": {} }
+    ],
+    "art": { "body": "spirit", "color": "#fff3a8", "accent": "#a78bfa", "size": 0.8, "wings": true },
+    "description": "몸에서 은은한 빛이 나는 성장기. 영리하다."
+  },
+  {
+    "id": "gru", "name": "그루", "stage": "rookie", "stageMinutes": 1440,
+    "baseStats": { "hp": 16, "atk": 10, "def": 18, "spd": 6, "int": 8 },
+    "moves": ["headbutt", "rockthrow", "curl"],
+    "evolutions": [
+      { "to": "stoneguard", "req": { "minStats": { "def": 50 }, "maxCareMistakes": 4 } },
+      { "to": "mudbug", "req": {} }
+    ],
+    "art": { "body": "golem", "color": "#9c8f7a", "accent": "#6fbf73", "size": 0.85 },
+    "description": "등에 이끼가 자라는 단단한 성장기."
+  },
+  {
+    "id": "ignis", "name": "이그니스", "stage": "champion", "stageMinutes": 2880,
+    "baseStats": { "hp": 20, "atk": 35, "def": 18, "spd": 25, "int": 15 },
+    "moves": ["claw", "spark", "flame"],
+    "evolutions": [{ "to": "flaredrake", "req": { "minStats": { "atk": 150 }, "minWins": 10 } }],
+    "art": { "body": "drake", "color": "#ff5a36", "accent": "#ffd23f", "size": 1.0, "tail": true, "horns": 2 },
+    "description": "잘 길러진 이그니가 진화한 모습. 날렵한 화염 짐승."
+  },
+  {
+    "id": "volkano", "name": "볼카노", "stage": "champion", "stageMinutes": 2880,
+    "baseStats": { "hp": 28, "atk": 32, "def": 25, "spd": 12, "int": 10 },
+    "moves": ["claw", "magmafist"],
+    "evolutions": [{ "to": "flaredrake", "req": { "minStats": { "atk": 140 }, "minWins": 15 } }],
+    "art": { "body": "golem", "color": "#c2410c", "accent": "#fb923c", "size": 1.05, "spikes": true },
+    "description": "몸이 용암처럼 끓는 거구. 성미가 급하다."
+  },
+  {
+    "id": "lumiel", "name": "루미엘", "stage": "champion", "stageMinutes": 2880,
+    "baseStats": { "hp": 20, "atk": 12, "def": 18, "spd": 25, "int": 35 },
+    "moves": ["lightorb", "holyray", "curl"],
+    "evolutions": [{ "to": "celestia", "req": { "minStats": { "int": 150 }, "maxCareMistakes": 3, "minWins": 8 } }],
+    "art": { "body": "spirit", "color": "#fde68a", "accent": "#8b5cf6", "size": 1.0, "wings": true, "horns": 1 },
+    "description": "빛의 날개를 펼친 성숙기. 지혜로운 전투를 한다."
+  },
+  {
+    "id": "stoneguard", "name": "스톤가드", "stage": "champion", "stageMinutes": 2880,
+    "baseStats": { "hp": 35, "atk": 20, "def": 35, "spd": 8, "int": 12 },
+    "moves": ["rockthrow", "quake", "curl"],
+    "evolutions": [{ "to": "titanrock", "req": { "minStats": { "def": 150 }, "minWins": 8 } }],
+    "art": { "body": "golem", "color": "#78716c", "accent": "#4ade80", "size": 1.1, "spikes": true },
+    "description": "바위 갑옷을 두른 수호자. 웬만한 공격은 튕겨낸다."
+  },
+  {
+    "id": "mudbug", "name": "머드버그", "stage": "champion", "stageMinutes": 2880,
+    "baseStats": { "hp": 25, "atk": 18, "def": 18, "spd": 15, "int": 10 },
+    "moves": ["headbutt", "mudshot"],
+    "evolutions": [{ "to": "titanrock", "req": { "minWins": 25 } }],
+    "art": { "body": "blob", "color": "#7c5c3b", "accent": "#a3e635", "size": 0.95, "horns": 2 },
+    "description": "돌봄을 제대로 못 받은 몬스터. 그래도 끈질기다."
+  },
+  {
+    "id": "flaredrake", "name": "플레어드레이크", "stage": "ultimate", "stageMinutes": 0,
+    "baseStats": { "hp": 45, "atk": 70, "def": 40, "spd": 45, "int": 35 },
+    "moves": ["claw", "flame", "dragonbreath"],
+    "evolutions": [],
+    "art": { "body": "drake", "color": "#dc2626", "accent": "#fbbf24", "size": 1.25, "wings": true, "tail": true, "horns": 2 },
+    "description": "하늘을 태우는 화염룡. 수많은 승리 끝에 도달한 모습."
+  },
+  {
+    "id": "celestia", "name": "셀레스티아", "stage": "ultimate", "stageMinutes": 0,
+    "baseStats": { "hp": 45, "atk": 30, "def": 40, "spd": 50, "int": 70 },
+    "moves": ["holyray", "celestial", "curl"],
+    "evolutions": [],
+    "art": { "body": "spirit", "color": "#fef9c3", "accent": "#7c3aed", "size": 1.2, "wings": true, "horns": 3 },
+    "description": "별빛을 두른 수호 정령."
+  },
+  {
+    "id": "titanrock", "name": "타이탄록", "stage": "ultimate", "stageMinutes": 0,
+    "baseStats": { "hp": 70, "atk": 50, "def": 70, "spd": 20, "int": 30 },
+    "moves": ["quake", "landslide", "curl"],
+    "evolutions": [],
+    "art": { "body": "golem", "color": "#57534e", "accent": "#22c55e", "size": 1.3, "spikes": true, "horns": 2 },
+    "description": "걸어 다니는 산. 대지를 흔든다."
+  }
+]
