@@ -366,9 +366,23 @@ export class FarmScene extends Phaser.Scene {
     this.tweens.add({ targets: this.msgText, alpha: 0, delay: 2600, duration: 500 });
   }
 
+  private showCredits() {
+    const o = this.openOverlay('크레딧', 460);
+    o.text('비영리 팬게임입니다. 공식 게임과 관계가 없습니다.', COLORS.text, 14);
+    o.gap();
+    o.text('디지몬 및 디지몬 챔피언쉽: © 본고 아키요시 · 토에이 애니메이션 / 반다이남코', COLORS.dim, 12);
+    o.text('진화 루트·진화 조건·시스템 설명: 나무위키 「디지몬 챔피언십」 문서 (CC BY-NC-SA 2.0 KR)', COLORS.dim, 12);
+    o.text('게임 엔진: Phaser 3 (MIT)', COLORS.dim, 12);
+    o.text('이 게임의 소스 코드: MIT (저장소의 LICENSE 파일)', COLORS.dim, 12);
+    o.text('디지몬 그림·소리: 포함되어 있지 않음 (임시 도형 사용)', COLORS.dim, 12);
+    o.gap();
+    o.text('버그 제보 · 문의 · 삭제 요청:\ngithub.com/Tom7418/digimonchamp/issues', COLORS.text, 13);
+  }
+
   private showEtc() {
-    const o = this.openOverlay('기타', 260);
+    const o = this.openOverlay('기타', 300);
     o.gap(10);
+    o.button('크레딧', () => this.showCredits(), 280);
     o.button('선택한 디지몬 놓아주기', () => this.confirm('이 디지몬을 놓아줄까요?', () => this.act(release(state.save, state.selectedUid))), 280);
     o.button('처음부터 다시 시작', () => this.confirm('모든 진행을 지우고 처음부터 시작할까요?', () => this.resetAll()), 280);
   }

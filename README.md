@@ -34,3 +34,10 @@ npm run build    # dist/ 생성
 - `src/core/` 화면과 무관한 게임 규칙: data, care, evolution, battle, titles, save
 - `src/scenes/` Phaser 화면: Boot, Farm(사육장), Battle, Hunt
 - `src/ui/art.ts` 스프라이트·소리 끼우는 자리
+
+## 크레딧
+- 디지몬 및 디지몬 챔피언쉽: © 본고 아키요시 · 토에이 애니메이션 / 반다이남코. 이 프로젝트는 비영리 팬게임이며 공식 게임과 관계가 없다
+- 진화 루트·진화 조건·시스템 설명: 나무위키 「디지몬 챔피언십」, 「디지몬 챔피언십/디지몬 진화 목록」 문서 (CC BY-NC-SA 2.0 KR)
+- 게임 엔진: Phaser 3 (MIT)
+- 소스 코드: MIT (LICENSE)
+- 버그 제보 · 문의 · 삭제 요청: GitHub Issues
