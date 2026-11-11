@@ -17,6 +17,19 @@ const base = (path: string) => path.split('/').pop()!.replace(/\.[^.]+$/, '').no
 export function preloadAssets(scene: Phaser.Scene) {
   for (const [path, url] of Object.entries(spriteUrls)) scene.load.image(`sp:${base(path)}`, url);
   for (const [path, url] of Object.entries(soundUrls)) scene.load.audio(`snd:${base(path)}`, url);
+  // 도트 그림이 확대될 때 흐려지지 않도록 최근접 필터를 쓴다 (글씨는 그대로 부드럽게)
+  scene.load.once(Phaser.Loader.Events.COMPLETE, () => {
+    for (const key of scene.textures.getTextureKeys()) {
+      if (key.startsWith('sp:')) scene.textures.get(key).setFilter(Phaser.Textures.FilterMode.NEAREST);
+    }
+  });
+}
+
+/** 작은 도트(64px 이하)는 정수 배율로 키워 픽셀이 고르게 보이게 한다 */
+export function spriteScale(width: number, height: number, target: number) {
+  const side = Math.max(width, height);
+  const raw = target / side;
+  return side <= 64 ? Math.max(1, Math.round(raw)) : raw;
 }
 
 const FAMILY_COLOR: Record<Family, number> = {
@@ -39,7 +52,7 @@ export function digimonView(scene: Phaser.Scene, speciesId: string, isEgg = fals
   const key = `sp:${name.normalize('NFC')}`;
   if (scene.textures.exists(key)) {
     const img = scene.add.image(0, 0, key);
-    img.setScale((size * 1.6) / Math.max(img.width, img.height));
+    img.setScale(spriteScale(img.width, img.height, size * 1.6));
     c.add(img);
   } else if (isEgg) {
     c.add(scene.add.ellipse(0, 0, size * 0.9, size * 1.15, 0xf8f0dc).setStrokeStyle(2, 0x22232b));

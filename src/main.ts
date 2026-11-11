@@ -10,6 +10,7 @@ const game = new Phaser.Game({
   width: 512,
   height: 768,
   backgroundColor: '#1b1d24',
+  roundPixels: true,
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   scene: [BootScene, FarmScene, BattleScene, HuntScene],
 });

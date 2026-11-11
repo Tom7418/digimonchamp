@@ -34,7 +34,8 @@ describe('evolution', () => {
     expect(only(r.save).speciesId).toBe('코로몬');
   });
   it('AP from a training cage changes the branch', () => {
-    let s = withMon(freshSave(0), { hunger: 100 });
+    // 성격에 따라 훈련 속도가 달라지므로 고정한다
+    let s = withMon(freshSave(0), { hunger: 100, personality: '쿨' });
     s = { ...s, cages: [...s.cages, '미니 묘지'] };
     s = setCage(s, 1, '미니 묘지').save;
     const r = advance(s, 8 * 60, seeded(1));
