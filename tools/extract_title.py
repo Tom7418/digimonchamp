@@ -65,7 +65,8 @@ def screen(base: Path, name: str, height=192):
     print(name, w, h)
 
 
-def cells(base: Path, picks: dict, gfx='.ncbr'):
+def cells(base: Path, picks: dict, gfx='.ncbr', box=None):
+    """box=(left, top, W, H)를 주면 셀 원점 기준 같은 틀에 그려 프레임끼리 위치가 맞는다."""
     c = base.with_suffix('.ncer').read_bytes()
     graphics = base.with_suffix(gfx).read_bytes()
     depth = 8 if struct.unpack_from('<I', graphics, 28)[0] == 4 else 4
@@ -88,8 +89,11 @@ def cells(base: Path, picks: dict, gfx='.ncbr'):
             x -= 512 if x >= 256 else 0
             y -= 256 if y >= 128 else 0
             objs.append((x, y, w, h, d, b))
-        left, top = min(o[0] for o in objs), min(o[1] for o in objs)
-        W, H = max(o[0] + o[2] for o in objs) - left, max(o[1] + o[3] for o in objs) - top
+        if box:
+            left, top, W, H = box
+        else:
+            left, top = min(o[0] for o in objs), min(o[1] for o in objs)
+            W, H = max(o[0] + o[2] for o in objs) - left, max(o[1] + o[3] for o in objs) - top
         out = bytearray(W * H * 4)
         base_addr = struct.unpack_from('<I', c, transfer + 8 + i * 8)[0] if transfer else 0
         for x, y, ow, oh, d, b in reversed(objs):

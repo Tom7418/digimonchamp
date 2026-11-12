@@ -41,6 +41,12 @@ export function newDigimon(uid: number, speciesId: string, rng: Rng = defaultRng
 }
 
 /** 옛 저장을 지금 형식으로: 로프 단계(ropeLevel 1~4) → 로프 목록, 메모리카드 기본값 */
+/** 똥 누는 간격(게임 분). 형규 요청으로 이전(유년기 120 / 그 뒤 240)의 두 배로 줄임 (임시 값) */
+export const POOP_INTERVAL = { baby: 240, grown: 480 };
+export function poopInterval(stage: number): number {
+  return stage <= 2 ? POOP_INTERVAL.baby : POOP_INTERVAL.grown;
+}
+
 export function upgradeSave(save: SaveData): SaveData {
   const s = { ...save, wires: save.wires ?? 0 };
   if (!Array.isArray(s.ropes) || !s.ropes.length) {
@@ -142,7 +148,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
     d.fatigue = Math.max(0, d.fatigue - (cage.rest ? 0.5 : 0.04));
     d.poopTimer += 1;
   }
-  if (d.poopTimer >= (sp.stage <= 2 ? 120 : 240)) {
+  if (d.poopTimer >= poopInterval(sp.stage)) {
     d.poopTimer = 0;
     if (d.poop < 5) {
       d.poop += 1;

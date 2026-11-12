@@ -10,7 +10,10 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  const cam={x:0,y:0};
  let zoom=1; // 휠은 커서 아래 월드 위치를 유지하며 확대·축소한다.
  const clampCam=()=>{cam.x=Math.max(0,Math.min(WORLD.w-VIEW.w/zoom,cam.x));cam.y=Math.max(0,Math.min(WORLD.h-VIEW.h/zoom,cam.y));};
- for(const [kind,t] of Object.entries(L.types)){const im=new Image();if(t.art!==false)im.src=`assets/facilities/${kind}.png`;facilities[kind]=im;}
+ // 원본 시설 그림 중 위쪽이 투명하게 비어 있는 것(미니 운동장 등)은 그대로 늘리면 육각 윗부분이 빈 채로 잘려 보인다.
+ // 불러올 때 실제 그림이 있는 범위를 재 두고, 그 범위가 칸을 덮도록 같은 비율로 키워 그린다.
+ const contentBox=im=>{try{const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext('2d');x.drawImage(im,0,0);const d=x.getImageData(0,0,c.width,c.height).data;let top=c.height,bottom=0,left=c.width,right=0;for(let y=0;y<c.height;y++)for(let i=0;i<c.width;i++)if(d[(y*c.width+i)*4+3]>8){if(y<top)top=y;if(y>bottom)bottom=y;if(i<left)left=i;if(i>right)right=i;}return bottom>=top?{x:left,y:top,w:right-left+1,h:bottom-top+1}:null;}catch{return null;}};
+ for(const [kind,t] of Object.entries(L.types)){const im=new Image();if(t.art!==false){im.onload=()=>{im.content=contentBox(im);};im.src=`assets/facilities/${kind}.png`;}facilities[kind]=im;}
  let editing=false,tool=null,rotation=0,selected=null,drag=null,hover=null;
  const center=(q,r)=>({x:OX+Math.sqrt(3)*R*(q+r/2),y:OY+R*1.5*r});
  const polygon=(ctx,q,r,append=false)=>{const c=center(q,r);if(!append)ctx.beginPath();for(let i=0;i<6;i++){const a=(i*60-30)*Math.PI/180;const x=c.x+R*Math.cos(a),y=c.y+R*Math.sin(a);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();};
@@ -71,9 +74,10 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
        const left=Math.min(...local.map(p=>p.x))-Math.sqrt(3)*R/2,top=Math.min(...local.map(p=>p.y))-R;
        const width=Math.max(...local.map(p=>p.x))-left+Math.sqrt(3)*R/2,height=Math.max(...local.map(p=>p.y))-top+R;
        ctx.translate(anchor.x,anchor.y);ctx.rotate((c.rotation||0)*Math.PI/3);
-       if(im.complete&&im.naturalWidth)ctx.drawImage(im,left,top,width,height);ctx.restore();
+       if(im.complete&&im.naturalWidth){const b=im.content||{x:0,y:0,w:im.naturalWidth,h:im.naturalHeight};if(b.w===im.naturalWidth&&b.h===im.naturalHeight)ctx.drawImage(im,left,top,width,height);else{const k=Math.max(width/b.w,height/b.h),dw=b.w*k,dh=b.h*k;ctx.drawImage(im,b.x,b.y,b.w,b.h,left+(width-dw)/2,top+height-dh,dw,dh);}}ctx.restore();
        ctx.strokeStyle=selected===c.id?'#ffe374':'#8ed3e6';ctx.lineWidth=selected===c.id?4:2;outerBorder(ctx,c);
-       ctx.font='bold 13px sans-serif';const label=`${type.name} · ${cells.length}칸`,lw=ctx.measureText(label).width+16;ctx.fillStyle='#102e3ce8';ctx.fillRect(anchor.x-lw/2,anchor.y+R*0.55,lw,20);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.fillText(label,anchor.x,anchor.y+R*0.55+15);
+       // 시설 이름·칸 수는 케이지 편집 중에만 보인다 (플레이 화면에는 숨김)
+       if(editing){ctx.font='bold 13px sans-serif';const label=`${type.name} · ${cells.length}칸`,lw=ctx.measureText(label).width+16;ctx.fillStyle='#102e3ce8';ctx.fillRect(anchor.x-lw/2,anchor.y+R*0.55,lw,20);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.fillText(label,anchor.x,anchor.y+R*0.55+15);}
      }
      const next=editing&&candidate(hover);if(next){const valid=L.valid(s.layout,next);for(const [q,r] of L.cells(next)){polygon(ctx,q,r);ctx.fillStyle=valid?'#79efa588':'#ff5a6e99';ctx.fill();}}
      // 디지몬은 배치된 시설 안에서만 훈련한다. 같은 시설에서는 점유 칸을 나눠 사용한다.

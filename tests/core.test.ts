@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave } from '../src/core/care';
+import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval } from '../src/core/care';
 import { getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -399,6 +399,12 @@ describe('day flow', () => {
     expect(only(r.save).poop).toBe(0);
     expect(only(r.save).stageAge).toBe(100 + 10 * 60);
     expect(isNight(r.save)).toBe(false);
+  });
+  it('poop comes less often: every 4 game hours for babies, 8 hours after', () => {
+    expect(poopInterval(1)).toBe(240);
+    expect(poopInterval(2)).toBe(240);
+    expect(poopInterval(3)).toBe(480);
+    expect(poopInterval(5)).toBe(480);
   });
   it('training reports what changed, and poop is cleaned one at a time', () => {
     const base = freshSave(0);

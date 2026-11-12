@@ -410,7 +410,7 @@
   }
 
   // ---------- 사육장 바닥: 똥·먹이 ----------
-  // 똥은 하나씩 눌러 치운다. 고기 도구를 선택하면 터치 위치에 바닥 먹이를 놓는다.
+  // 똥은 빗자루 도구로 하나씩 치운다. 고기 도구를 선택하면 터치 위치에 바닥 먹이를 놓는다.
   function dropPoop(uid) {
     const p = view.team.find((x) => x.uid === uid);
     if (!p) return;
@@ -429,6 +429,12 @@
     view.poops = view.poops.filter((x) => alive.has(x.uid));
   }
   function drawPoop(x, y) {
+    // 원작 똥 2프레임 (18틱씩 반복), 원점 (14,19)
+    const im = careImages[`poop_${(Math.floor(performance.now() / 300) % 2) + 1}`];
+    if (im.complete && im.naturalWidth) {
+      ctx.drawImage(im, x - 14 * 2, y - 19 * 2 + 8, im.naturalWidth * 2, im.naturalHeight * 2);
+      return;
+    }
     ctx.fillStyle = '#e57aa9';
     ctx.strokeStyle = '#7a2f52';
     ctx.lineWidth = 1.5;
@@ -456,13 +462,16 @@
     { kind: 'pill', label: '알약', count: () => save.pills },
   ];
   function renderTray() {
+    // 빗자루를 든 동안은 마우스 커서도 원작 빗자루 그림
+    canvas.style.cursor = selectedItem === 'broom' ? 'url(assets/ui/broom_1.png) 6 26, pointer' : '';
     setHtml(
       '#tray',
       // 원작 사육장 아래 도구 줄 아이콘 (ui/UI_Icon_training, tools/extract_ui.py)
       '<button class="tray-item tool" data-item="select" aria-pressed="' + (selectedItem === null) + '" title="선택 / 이동"><img src="assets/ui/icon_hand.png" alt=""><b>선택</b></button>' +
         ITEMS.map((it) => `<button class="tray-item tool" data-item="${it.kind}" aria-pressed="${selectedItem === it.kind}"${it.count() > 0 ? '' : ' disabled'} title="${it.label}"><img src="assets/ui/icon_${it.kind}.png" alt=""><b>${it.label}</b><small>×${Math.max(0, it.count())}</small></button>`).join('') +
+        '<button class="tray-item tool" data-item="broom" aria-pressed="' + (selectedItem === 'broom') + '" title="빗자루: 똥만 눌러 치우기"><img src="assets/ui/broom_1.png" alt=""><b>빗자루</b>' + (view.poops.length ? `<small>${view.poops.length}</small>` : '') + '</button>' +
         '<button class="tray-item tool" data-tool="cage" title="케이지 편집"><img src="assets/ui/icon_cage.png" alt=""><b>케이지</b></button>' +
-        '<span class="tray-hint">' + (selectedItem === 'meat' ? '사육장 바닥을 터치해 고기를 놓으세요 · Esc로 취소' : selectedItem === 'pill' ? '치료할 디지몬을 터치하세요 · Esc로 취소' : '고기 선택 → 바닥 터치 · 알약 선택 → 디지몬 터치') + '</span>',
+        '<span class="tray-hint">' + (selectedItem === 'broom' ? '치울 똥을 터치하세요 · 빗자루를 든 동안은 똥만 눌립니다 · Esc로 취소' : selectedItem === 'meat' ? '사육장 바닥을 터치해 고기를 놓으세요 · Esc로 취소' : selectedItem === 'pill' ? '치료할 디지몬을 터치하세요 · Esc로 취소' : '고기 선택 → 바닥 터치 · 알약 선택 → 디지몬 터치') + '</span>',
     );
   }
   function petAt(pt) {
@@ -478,8 +487,45 @@
     }
     return best;
   }
+  // ---------- 빗자루: 원작 쓸기 2프레임(18틱씩) → 반짝임 7프레임(9틱씩), common/e001_ikusei ----------
+  const SWEEP_FRAME = 18 / 60, SWEEP_LOOPS = 2, SPARKLE_FRAME = 9 / 60;
+  const sweeps = [];
+  const careImages = Object.fromEntries(['poop_1', 'poop_2', 'broom_1', 'broom_2', ...[1, 2, 3, 4, 5, 6, 7].map((i) => `sparkle_${i}`)].map((k) => [k, Object.assign(new Image(), { src: `assets/ui/${k}.png` })]));
+  function sweepAt(pt) {
+    const hit = view.poops.filter((x) => !x.sweeping).sort((a, b) => Math.hypot(pt.x - a.x, pt.y - a.y) - Math.hypot(pt.x - b.x, pt.y - b.y))[0];
+    if (!hit || Math.hypot(pt.x - hit.x, pt.y - (hit.y - 14)) > 40) return;
+    hit.sweeping = true;
+    sweeps.push({ poop: hit, start: performance.now(), done: false });
+  }
+  function updateSweeps(now) {
+    for (const sw of sweeps) {
+      if (!sw.done && now - sw.start >= SWEEP_FRAME * 2 * SWEEP_LOOPS * 1000) {
+        sw.done = true;
+        sw.cleanedAt = now;
+        const res = C.cleanOne(save, sw.poop.uid);
+        if (res.ok) save = res.save;
+        view.poops = view.poops.filter((x) => x !== sw.poop);
+        renderTray();
+        render();
+        persist();
+      }
+    }
+    for (let i = sweeps.length - 1; i >= 0; i--) if (sweeps[i].done && now - sweeps[i].cleanedAt > SPARKLE_FRAME * 7 * 1000) sweeps.splice(i, 1);
+  }
+  function drawSweeps(now) {
+    const put = (key, x, y, ox, oy) => {
+      const im = careImages[key];
+      if (im.complete && im.naturalWidth) ctx.drawImage(im, x - ox * 2, y - oy * 2, im.naturalWidth * 2, im.naturalHeight * 2);
+    };
+    for (const sw of sweeps) {
+      const { x, y } = sw.poop;
+      if (!sw.done) put(`broom_${(Math.floor((now - sw.start) / 1000 / SWEEP_FRAME) % 2) + 1}`, x + 10, y, 16, 28);
+      else put(`sparkle_${Math.min(7, Math.floor((now - sw.cleanedAt) / 1000 / SPARKLE_FRAME) + 1)}`, x, y, 16, 44);
+    }
+  }
   function dropItem(kind, pt) {
     if (farmInputBlocked()) return;
+    if (kind === 'broom') return sweepAt(pt);
     const hit = petAt(pt);
     if (kind === 'pill') {
       if (!hit) return toast('알약을 사용할 디지몬을 터치하세요.');
@@ -535,18 +581,7 @@
         canvas.setPointerCapture?.(e.pointerId);
         return;
       }
-      const pt = farmPoint(e);
-      const hit = pt && view.poops.find((x) => Math.hypot(pt.x - x.x, pt.y - (x.y - 4)) < 16);
-      if (!hit) return;
-      e.stopImmediatePropagation();
-      e.preventDefault();
-      swallowUp = true;
-      const res = C.cleanOne(save, hit.uid);
-      if (res.ok) save = res.save;
-      view.poops = view.poops.filter((x) => x !== hit);
-      effect = { text: '반짝!', color: '#e8fbff', until: performance.now() + 900, uid: hit.uid };
-      render();
-      persist();
+      // 똥은 빗자루 도구로만 치운다 (형규 요청)
     }, true);
     canvas.addEventListener('pointerup', (e) => {
       if (e.pointerId === canceledPress) {
@@ -1047,6 +1082,8 @@
     board.draw(ctx);
     for (const f of view.foods) drawFood(f);
     for (const pp of view.poops) drawPoop(pp.x, pp.y);
+    updateSweeps(performance.now());
+    drawSweeps(performance.now());
     const order = view.team.map((p, i) => ({ p, i })).sort((a, b) => a.p.y - b.p.y);
     for (const { p, i } of order) {
       const d = digi(p.uid);
@@ -1620,7 +1657,7 @@
       '디지몬 챔피언십 웹판',
       `<ol>
         <li>디지에그에서 시작합니다. 현실 1초가 게임 2분이고, 아침 7시부터 밤 9시까지가 하루입니다. 밤 9시가 되면 달력을 보고 다음 날로 넘어갑니다.</li>
-        <li>고기를 선택한 뒤 사육장 바닥을 터치하면 배치됩니다. 배고픈 디지몬은 훈련을 멈추고 걸어와 먹습니다. 알약은 선택 후 치료할 디지몬을 터치하세요. 선택 / 이동 버튼이나 Esc로 도구를 해제합니다. 바닥의 똥은 선택 / 이동 상태에서 눌러 치웁니다.</li>
+        <li>고기를 선택한 뒤 사육장 바닥을 터치하면 배치됩니다. 배고픈 디지몬은 훈련을 멈추고 걸어와 먹습니다. 알약은 선택 후 치료할 디지몬을 터치하세요. 선택 / 이동 버튼이나 Esc로 도구를 해제합니다. 바닥의 똥은 빗자루를 선택한 뒤 눌러 치웁니다(빗자루를 든 동안은 똥만 눌립니다).</li>
         <li>디지몬을 끌어 케이지에 넣으면 1시간마다 정해진 능력치와 종족·속성 수치가 오릅니다. 양호실은 피로와 부상을 회복합니다.</li>
         <li>진화는 자동입니다. 오른쪽 진화 조건표의 위에서부터 먼저 채운 쪽으로 진화하고, 아무것도 채우지 못하면 수명이 다할 때 ‘시간 경과’ 진화를 합니다.</li>
         <li>배고픔·똥 방치·썩은 고기는 병(페널티)이 됩니다. 병·부상을 이틀 방치하면 쓰러져 디지에그로 돌아갑니다.</li>
@@ -1799,6 +1836,9 @@
   window.addEventListener('pagehide', persist);
   // 브라우저 콘솔·자동 테스트에서 상태를 확인할 수 있게 열어 둔다 (읽기용)
   window.ChampGame = {
+    get board() {
+      return board;
+    },
     get save() {
       return save;
     },
