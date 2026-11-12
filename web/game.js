@@ -64,8 +64,7 @@
         save = C.upgradeSave(raw.save);
         view = { ...freshView(), ...raw.view };
         view.farmWorld = raw.view.farmWorld; // 없으면 옛 좌표 → 시작할 때 새 월드 크기로 옮긴다
-        // 기존 예약형 저장을 유지하면서 중복 소비로 생긴 초과 예약만 복구한다.
-        view.foods = C.restoreFloorFood(save, view.foods);
+        // 먹이 좌표 복원은 board 생성과 옛 월드 좌표 변환을 마친 뒤 수행한다.
         // 재접속도 21시에서 멈춘다. 수면은 달력의 '다음 날로'를 누를 때만 진행한다.
         const away = Math.min(C.OFFLINE_CAP_MINUTES, Math.max(0, Math.floor(((Date.now() - save.lastSavedAt) / 1000) * MINUTES_PER_SECOND)));
         if (away > 0) {
@@ -144,9 +143,9 @@
     } else if (e.type === 'egg') log(`${n(e.from)}이(가) 수명을 다해 디지에그로 돌아갔습니다.`);
     else if (e.type === 'lost') log(`${e.name}을(를) 잃었습니다… (${e.reason})`);
     else if (e.type === 'sick') {
-      log(`${e.name}이(가) 병에 걸렸습니다. 알약을 끌어다 주세요. (페널티 +1)`);
+      log(`${e.name}이(가) 병에 걸렸습니다. 알약을 선택하고 디지몬을 터치하세요. (페널티 +1)`);
       toast(`${e.name} 발병!`);
-      tipMail('sick', '디지몬이 병에 걸렸습니다.\n아래 아이템의 알약을 디지몬에게 끌어다 놓으면 낫습니다.\n이틀 동안 방치하면 쓰러져 디지에그로 돌아갑니다.');
+      tipMail('sick', '디지몬이 병에 걸렸습니다.\n아래 알약을 선택한 뒤 디지몬을 터치하면 낫습니다.\n이틀 동안 방치하면 쓰러져 디지에그로 돌아갑니다.');
     } else if (e.type === 'blocked')
       log(
         e.reason === 'rank'
@@ -284,7 +283,7 @@
       );
     }
 
-    $('#inventory').textContent = `고기 ${save.meat} · 알약 ${save.pills} · 썩은 고기 ${save.rotten} · ${C.ropeOf(save.rope).name} · 메모리카드 ${save.memoryCard}G`;
+    $('#inventory').textContent = `고기 ${save.meat} · 알약 ${save.pills} · ${C.ropeOf(save.rope).name} · 메모리카드 ${save.memoryCard}G`;
     const next = C.upcoming(save);
     $('#milestone').textContent = next[0] || '모든 타이틀 획득!';
     setHtml(
@@ -410,7 +409,7 @@
   }
 
   // ---------- 사육장 바닥: 똥·먹이 ----------
-  // 똥은 디지몬이 있던 자리에 떨어지고 하나씩 눌러 치운다. 먹이는 아이템 칸에서 끌어다 바닥이나 디지몬에게 놓는다.
+  // 똥은 하나씩 눌러 치운다. 고기 도구를 선택하면 터치 위치에 바닥 먹이를 놓는다.
   function dropPoop(uid) {
     const p = view.team.find((x) => x.uid === uid);
     if (!p) return;
@@ -439,27 +438,27 @@
       ctx.stroke();
     }
   }
+  const itemImages = Object.fromEntries(['meat', 'pill', 'rotten'].map((kind) => {
+    const image = new Image();
+    image.src = `assets/items/${kind}.png`;
+    return [kind, image];
+  }));
   function drawFood(f) {
-    ctx.fillStyle = f.kind === 'rotten' ? '#7d8a4a' : '#c8553d';
-    ctx.strokeStyle = '#3b2418';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.ellipse(f.x, f.y - 5, 9, 6, -0.3, 0, 7);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#f3ead8';
-    ctx.fillRect(f.x + 6, f.y - 9, 7, 3);
+    const image = itemImages[f.kind];
+    if (image?.complete && image.naturalWidth) ctx.drawImage(image, f.x - 32, f.y - 60, 64, 70);
   }
+  // 선택형 도구: 고기는 바닥 배치만, 알약은 디지몬을 터치해 사용한다.
+  let selectedItem = null;
   const ITEMS = [
-    { kind: 'meat', label: '고기', icon: '🍖', count: () => C.availableFood(save, view.foods, 'meat') },
-    { kind: 'pill', label: '알약', icon: '💊', count: () => save.pills },
-    { kind: 'rotten', label: '썩은 고기', icon: '🦴', count: () => C.availableFood(save, view.foods, 'rotten') },
+    { kind: 'meat', label: '고기', count: () => C.availableFood(save, view.foods, 'meat') },
+    { kind: 'pill', label: '알약', count: () => save.pills },
   ];
   function renderTray() {
     setHtml(
       '#tray',
-      ITEMS.map((it) => `<button class="tray-item" data-item="${it.kind}"${it.count() > 0 ? '' : ' disabled'}><span>${it.icon}</span><b>${it.label}</b><small>×${Math.max(0, it.count())}</small></button>`).join('') +
-        '<span class="tray-hint">디지몬이나 바닥에 끌어 놓기 · Esc/바깥에 놓으면 취소 · 수량은 바닥 예약분 제외</span>',
+      ITEMS.map((it) => `<button class="tray-item" data-item="${it.kind}" aria-pressed="${selectedItem === it.kind}"${it.count() > 0 ? '' : ' disabled'}><img src="assets/items/${it.kind}.png" alt=""><b>${it.label}</b><small>×${Math.max(0, it.count())}</small></button>`).join('') +
+        '<button class="tray-item" data-item="select" aria-pressed="' + (selectedItem === null) + '">선택 / 이동</button>' +
+        '<span class="tray-hint">' + (selectedItem === 'meat' ? '사육장 바닥을 터치해 고기를 놓으세요 · Esc로 취소' : selectedItem === 'pill' ? '치료할 디지몬을 터치하세요 · Esc로 취소' : '고기 선택 → 바닥 터치 · 알약 선택 → 디지몬 터치') + '</span>',
     );
   }
   function petAt(pt) {
@@ -479,102 +478,56 @@
     if (farmInputBlocked()) return;
     const hit = petAt(pt);
     if (kind === 'pill') {
-      if (!hit) return toast('알약은 디지몬에게 놓으세요.');
+      if (!hit) return toast('알약을 사용할 디지몬을 터치하세요.');
       view.selected = view.team.indexOf(hit.p);
       return apply(C.heal(save, hit.d.uid));
     }
-    if (hit) {
-      view.selected = view.team.indexOf(hit.p);
-      if (apply(C.feedFromTray(save, view.foods, hit.d.uid, kind)) && kind === 'meat') fx('♥ 냠냠!', '#ffe4a0');
-      return;
-    }
     const it = ITEMS.find((x) => x.kind === kind);
-    if (it.count() <= 0) return toast(`${it.label}이(가) 없어요. 상점에서 사세요.`);
+    if (!it || it.count() <= 0) return toast('사용 가능한 아이템이 없어요. 상점에서 사세요.');
     const r = board.roam;
     view.foods.push({ kind, x: Math.min(r.x1, Math.max(r.x0, pt.x)), y: Math.min(r.y1, Math.max(r.y0, pt.y)) });
     renderTray();
     persist();
   }
-  // 아이템 끌기 (아이템 칸 → 사육장)
-  // 캔버스 이벤트 → 사육장 월드 좌표 (카메라 이동 반영)
-  function farmPoint(e, r) {
-    if (board.toWorld) return board.toWorld(e);
-    return { x: ((e.clientX - r.left) / r.width) * 960, y: ((e.clientY - r.top) / r.height) * 560 };
-  }
-  let dragItem = null;
-  let canceledItemPointer = null;
+  // 아이템 터치 배치. 같은 포인터의 누르기/떼기를 한 번만 처리하고 케이지 입력은 막는다.
+  let itemPress = null;
+  let canceledPress = null;
   let swallowUp = false;
   function farmInputBlocked() {
-    return !!battle || !!hunt || board.editing || mailOpen || dayEnding || $('#modal').open || document.hidden;
+    return titleOpen || !!battle || !!hunt || board.editing || mailOpen || dayEnding || $('#modal').open || document.hidden;
   }
-  function cancelItemDrag() {
-    if (!dragItem) return;
-    const { ghost, pointerId } = dragItem;
-    canceledItemPointer = pointerId;
-    dragItem = null;
-    ghost.remove();
-    const tray = $('#tray');
-    if (tray.hasPointerCapture?.(pointerId)) tray.releasePointerCapture(pointerId);
+  function clearItemTool() {
+    canceledPress = itemPress?.id ?? canceledPress;
+    itemPress = null;
+    selectedItem = null;
+    renderTray();
+  }
+  function farmPoint(e) {
+    const r = canvas.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return null;
+    return board.toWorld(e);
   }
   function initFarmInput() {
-  $('#tray').addEventListener('pointerdown', (e) => {
-    const b = e.target.closest('[data-item]');
-    if (!b || b.disabled || dragItem || e.button !== 0 || e.isPrimary === false || farmInputBlocked()) return;
-    e.preventDefault();
-    const ghost = document.createElement('div');
-    ghost.className = 'drag-ghost';
-    ghost.textContent = b.querySelector('span').textContent;
-    document.body.append(ghost);
-    dragItem = { kind: b.dataset.item, ghost, pointerId: e.pointerId };
-    canceledItemPointer = null;
-    // 버튼은 매초 다시 그려지므로 고정된 트레이에서 포인터를 유지한다.
-    $('#tray').setPointerCapture?.(e.pointerId);
-    moveGhost(e);
-  });
-  function moveGhost(e) {
-    if (!dragItem || e.pointerId !== dragItem.pointerId) return;
-    dragItem.ghost.style.left = `${e.clientX}px`;
-    dragItem.ghost.style.top = `${e.clientY}px`;
-  }
-  window.addEventListener('pointermove', moveGhost);
-  window.addEventListener('pointerup', (e) => {
-    // Esc 등으로 취소한 뒤 손을 떼도 케이지 클릭으로 해석하지 않는다.
-    if (!dragItem && e.pointerId === canceledItemPointer) {
-      canceledItemPointer = null;
-      e.stopImmediatePropagation();
-      return;
-    }
-    if (!dragItem || e.pointerId !== dragItem.pointerId) return;
-    // 케이지 편집기의 pointerup까지 전달하면 선택한 디지몬도 함께 이동하므로 먼저 소비한다.
-    e.stopImmediatePropagation();
-    e.preventDefault();
-    const { kind } = dragItem;
-    cancelItemDrag();
-    canceledItemPointer = null;
-    if (farmInputBlocked()) return;
-    const r = canvas.getBoundingClientRect();
-    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
-    dropItem(kind, farmPoint(e, r));
-  }, true);
-  window.addEventListener('pointercancel', (e) => {
-    if (e.pointerId === dragItem?.pointerId) cancelItemDrag();
-  });
-  $('#tray').addEventListener('lostpointercapture', (e) => {
-    if (e.pointerId === dragItem?.pointerId) cancelItemDrag();
-  });
-  window.addEventListener('blur', cancelItemDrag);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) cancelItemDrag(); });
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && dragItem) { e.preventDefault(); e.stopImmediatePropagation(); cancelItemDrag(); }
-  }, true);
-  // 똥 치우기: 케이지 편집기보다 먼저 받아서 처리한다 (capture)
-  canvas.addEventListener(
-    'pointerdown',
-    (e) => {
+    $('#tray').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-item]');
+      if (!b || b.disabled || farmInputBlocked()) return;
+      selectedItem = b.dataset.item === 'select' || selectedItem === b.dataset.item ? null : b.dataset.item;
+      itemPress = null;
+      renderTray();
+    });
+    canvas.addEventListener('pointerdown', (e) => {
       if (farmInputBlocked()) return;
-      const r = canvas.getBoundingClientRect();
-      const pt = farmPoint(e, r);
-      const hit = view.poops.find((x) => Math.hypot(pt.x - x.x, pt.y - (x.y - 4)) < 16);
+      if (selectedItem) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        if (e.button !== 0 || e.isPrimary === false || itemPress) return;
+        itemPress = { id: e.pointerId, kind: selectedItem };
+        canceledPress = null;
+        canvas.setPointerCapture?.(e.pointerId);
+        return;
+      }
+      const pt = farmPoint(e);
+      const hit = pt && view.poops.find((x) => Math.hypot(pt.x - x.x, pt.y - (x.y - 4)) < 16);
       if (!hit) return;
       e.stopImmediatePropagation();
       e.preventDefault();
@@ -585,23 +538,40 @@
       effect = { text: '반짝!', color: '#e8fbff', until: performance.now() + 900, uid: hit.uid };
       render();
       persist();
-    },
-    true,
-  );
-  canvas.addEventListener(
-    'pointerup',
-    (e) => {
-      if (!swallowUp) return;
-      swallowUp = false;
-      e.stopImmediatePropagation();
-    },
-    true,
-  );
-  $('#mail').onclick = nextMail;
+    }, true);
+    canvas.addEventListener('pointerup', (e) => {
+      if (e.pointerId === canceledPress) {
+        canceledPress = null;
+        e.stopImmediatePropagation();
+        return;
+      }
+      if (selectedItem || itemPress || swallowUp) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        swallowUp = false;
+        if (itemPress?.id !== e.pointerId) return;
+        const kind = itemPress.kind;
+        itemPress = null;
+        const pt = farmPoint(e);
+        if (pt && !farmInputBlocked()) dropItem(kind, pt);
+      }
+    }, true);
+    canvas.addEventListener('pointercancel', (e) => {
+      if (itemPress?.id === e.pointerId) itemPress = null;
+    });
+    canvas.addEventListener('lostpointercapture', (e) => {
+      if (itemPress?.id === e.pointerId) itemPress = null;
+    });
+    window.addEventListener('blur', clearItemTool);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) clearItemTool(); });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && selectedItem) { e.preventDefault(); clearItemTool(); }
+    });
+    $('#mail').onclick = nextMail;
   }
   // 배고픈 디지몬은 바닥의 먹이로 걸어가 먹는다
   function seekFood(p, d, dt) {
-    if (!view.foods.length || d.isEgg || p.cageId || d.hunger >= 60) return false;
+    if (!view.foods.length || d.isEgg || d.hunger >= 60) return false;
     let best = null;
     for (const f of view.foods) {
       // 병든 디지몬은 썩은 먹이를 거부한다. 먹지 못하는 먹이 앞에서 계속 멈추지 않는다.
@@ -611,6 +581,7 @@
     }
     if (!best) return false;
     const { f, dist } = best;
+    if (p.cageId) { p.cageId = null; p.cage = 'free'; syncTeam(); }
     if (dist < 10) {
       const r = C.eatFloorFood(save, view.foods, d.uid, view.foods.indexOf(f));
       if (r.ok) {
@@ -654,10 +625,6 @@
   function act(action) {
     if (battle) return;
     const d = current();
-    if (action === 'feed') {
-      if (apply(C.feedFromTray(save, view.foods, d.uid, 'meat'))) fx('♥ 냠냠!', '#ffe4a0');
-    }
-    if (action === 'rotten') apply(C.feedFromTray(save, view.foods, d.uid, 'rotten'));
     if (action === 'clean') apply(C.clean(save, d.uid));
     if (action === 'heal') apply(C.heal(save, d.uid));
     if (action === 'battle') battleMenu();
@@ -691,7 +658,7 @@
   }
 
   function shopMenu() {
-    const items = C.shopItems(save);
+    const items = C.shopItems(save).filter((item) => item.id !== 'rotten');
     showModal(
       '상점',
       `<p>소지 비트 ${save.bits.toLocaleString('ko-KR')} ฿</p><div class="menu-list">${items
@@ -1019,7 +986,7 @@
     for (const { p, i } of order) {
       const d = digi(p.uid);
       if (!d) continue;
-      if (!paused && !mailOpen && !dayEnding && !p.cageId && !board.editing && !d.isEgg && !seekFood(p, d, dt)) {
+      if (!titleOpen && !paused && !mailOpen && !dayEnding && !board.editing && !d.isEgg && !seekFood(p, d, dt) && !p.cageId) {
         if (Math.abs(p.target - p.x) < 3) {
           if (Math.random() < 0.008) p.target = Math.max(board.roam.x0, Math.min(board.roam.x1, p.x + (Math.random() - 0.5) * 500));
         } else {
@@ -1363,7 +1330,7 @@
 
   function canvasPoint(e) {
     const r = canvas.getBoundingClientRect();
-    return { x: ((e.clientX - r.left) / r.width) * 960, y: ((e.clientY - r.top) / r.height) * 560 };
+    return board.toWorld(e);
   }
   function huntPointer(type, e) {
     if (!hunt) return;
@@ -1544,12 +1511,14 @@
     }
     view.farmWorld = 2;
   }
+  // 카메라보다 큰 월드의 좌표를 옛 960x560 범위로 잘라내지 않는다.
+  view.foods = C.restoreFloorFood(save, view.foods, board.roam);
   syncTeam();
   { const p = view.team[view.selected]; if (p) board.centerOn(p.x, p.y - 40); }
   // 아이템 칸은 사육장 바로 아래에 둔다 (화면을 내리지 않고 끌어 놓을 수 있게)
   document.querySelector('.canvas-wrap').after($('#tray'));
   initFarmInput();
-  tipMail('welcome', '디지몬 챔피언십에 참가하게 된 것을 환영합니다!\n디지에그가 곧 부화합니다. 고기를 끌어다 먹이고, 똥은 눌러서 치워 주세요.\n밤 9시가 되면 하루가 끝납니다.');
+  tipMail('welcome', '디지몬 챔피언십에 참가하게 된 것을 환영합니다!\n디지에그가 곧 부화합니다. 고기를 선택한 뒤 바닥을 터치해 놓고, 똥은 눌러서 치워 주세요.\n밤 9시가 되면 하루가 끝납니다.');
 
   document.querySelectorAll('[data-action]').forEach((b) => (b.onclick = () => act(b.dataset.action)));
   $('#partner-tabs').onclick = (e) => {
@@ -1581,7 +1550,7 @@
       '디지몬 챔피언십 웹판',
       `<ol>
         <li>디지에그에서 시작합니다. 현실 1초가 게임 2분이고, 아침 7시부터 밤 9시까지가 하루입니다. 밤 9시가 되면 달력을 보고 다음 날로 넘어갑니다.</li>
-        <li>아래 아이템 칸의 고기·알약·썩은 고기를 끌어서 디지몬에게 직접 주거나 바닥에 놓으세요. 배고픈 디지몬은 바닥의 고기로 걸어가 먹습니다. 바닥의 똥은 눌러서 치웁니다.</li>
+        <li>고기를 선택한 뒤 사육장 바닥을 터치하면 배치됩니다. 배고픈 디지몬은 훈련을 멈추고 걸어와 먹습니다. 알약은 선택 후 치료할 디지몬을 터치하세요. 선택 / 이동 버튼이나 Esc로 도구를 해제합니다. 바닥의 똥은 선택 / 이동 상태에서 눌러 치웁니다.</li>
         <li>디지몬을 끌어 케이지에 넣으면 1시간마다 정해진 능력치와 종족·속성 수치가 오릅니다. 양호실은 피로와 부상을 회복합니다.</li>
         <li>진화는 자동입니다. 오른쪽 진화 조건표의 위에서부터 먼저 채운 쪽으로 진화하고, 아무것도 채우지 못하면 수명이 다할 때 ‘시간 경과’ 진화를 합니다.</li>
         <li>배고픔·똥 방치·썩은 고기는 병(페널티)이 됩니다. 병·부상을 이틀 방치하면 쓰러져 디지에그로 돌아갑니다.</li>
@@ -1724,7 +1693,7 @@
 
   function frame(now) {
     if (titleOpen) drawTitleArt(now / 1000);
-    if (dragItem && farmInputBlocked()) cancelItemDrag();
+    if (selectedItem && farmInputBlocked()) clearItemTool();
     const dt = lastTime ? Math.min(0.05, (now - lastTime) / 1000) : 0;
     lastTime = now;
     if (!document.hidden) {

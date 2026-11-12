@@ -21,6 +21,9 @@ for sp in sprites:
 for forbidden in ('*.nds', '*.sdat', '.openai', '.git'):
     assert not list(web.rglob(forbidden)), f'Unexpected deployment file: {forbidden}'
 icon = (web / 'assets/cage_shop_icon.png').read_bytes()
+for name in ('meat', 'pill', 'rotten'):
+    raw = (web / 'assets/items' / f'{name}.png').read_bytes()
+    assert struct.unpack_from('>II', raw, 16) == (32, 35), f'Invalid item sprite: {name}'
 assert struct.unpack_from('>II', icon, 16) == (64 * 36, 48), 'Invalid cage icon sheet'
 for kind, size in {'free': (96,112), 'clinic': (96,112), 'gym': (288,112), 'field': (192,200)}.items():
     raw=(web/'assets/facilities'/f'{kind}.png').read_bytes()

@@ -58,6 +58,9 @@ dialog h3{font-size:13px;margin:10px 0 2px;color:#ffd36a}
 .tray{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 4px;padding:8px;border:1px solid #33515f;border-radius:8px;background:#0f2533}
 .tray-item{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid #4d6f80;border-radius:6px;background:#173447;color:#eef6f8;cursor:grab;touch-action:none;user-select:none}
 .tray-item span{font-size:18px}.tray-item small{color:#ffd36a}
+.tray-item img{width:48px;height:52px;object-fit:contain;image-rendering:pixelated}
+.tray-item[aria-pressed="true"]{outline:2px solid #ffd36a;background:#315367}
+.tray-item{cursor:pointer}
 .tray-item:disabled{opacity:.4;cursor:not-allowed}
 .tray-hint{font-size:11px;color:#8fa6b0}
 .drag-ghost{position:fixed;z-index:50;font-size:28px;pointer-events:none;transform:translate(-50%,-60%)}

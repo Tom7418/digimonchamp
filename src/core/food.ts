@@ -3,6 +3,7 @@ import type { SaveData } from './types';
 
 export type FoodKind = 'meat' | 'rotten';
 export interface FloorFood { kind: FoodKind; x: number; y: number }
+export interface FoodBounds { x0: number; x1: number; y0: number; y1: number }
 
 /** 바닥 먹이는 기존 저장 방식대로 재고 안에서 예약한다. 먹을 때만 재고를 차감한다. */
 export function availableFood(save: SaveData, foods: readonly FloorFood[], kind: FoodKind): number {
@@ -10,12 +11,12 @@ export function availableFood(save: SaveData, foods: readonly FloorFood[], kind:
 }
 
 /** 이전 버전에서 중복 사용한 예약·잘못된 좌표만 정리하며 남은 먹이는 순서대로 보존한다. */
-export function restoreFloorFood(save: SaveData, raw: unknown): FloorFood[] {
+export function restoreFloorFood(save: SaveData, raw: unknown, bounds: FoodBounds = { x0: 60, x1: 900, y0: 120, y1: 520 }): FloorFood[] {
   const foods: FloorFood[] = [];
   if (!Array.isArray(raw)) return foods;
   for (const f of raw) {
     if (!f || (f.kind !== 'meat' && f.kind !== 'rotten') || !Number.isFinite(f.x) || !Number.isFinite(f.y)) continue;
-    if (availableFood(save, foods, f.kind) > 0) foods.push({ kind: f.kind, x: Math.min(900, Math.max(60, f.x)), y: Math.min(520, Math.max(120, f.y)) });
+    if (availableFood(save, foods, f.kind) > 0) foods.push({ kind: f.kind, x: Math.min(bounds.x1, Math.max(bounds.x0, f.x)), y: Math.min(bounds.y1, Math.max(bounds.y0, f.y)) });
   }
   return foods;
 }

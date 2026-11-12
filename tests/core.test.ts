@@ -10,6 +10,14 @@ import type { Digimon, SaveData } from '../src/core/types';
 import { availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
 describe('floor food reservations', () => {
+  it('restores food in the expanded farm without clipping to the old viewport', () => {
+    const s = freshSave(0);
+    const bounds = { x0: 90, x1: 1800, y0: 130, y1: 1110 };
+    const foods = [{ kind: 'meat', x: 1450, y: 900 }];
+    const restored = restoreFloorFood(s, foods, bounds);
+    expect(restored).toEqual(foods);
+    expect(restoreFloorFood(s, JSON.parse(JSON.stringify(restored)), bounds)).toEqual(foods);
+  });
   const foods: FloorFood[] = [{ kind: 'meat', x: 200, y: 300 }];
   it('direct feeding cannot consume the last meat reserved on the floor', () => {
     const s = { ...freshSave(0), meat: 1 };

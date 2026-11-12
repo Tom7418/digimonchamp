@@ -21,9 +21,9 @@ def png(path, w, h, pixels):
     raw = b''.join(b'\0'+pixels[y*w*4:(y+1)*w*4] for y in range(h))
     path.write_bytes(b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',w,h,8,6,0,0,0))+chunk(b'IDAT',zlib.compress(raw))+chunk(b'IEND',b''))
 
-def extract(stem, folder='digimon'):
+def extract(stem, folder='digimon', suffix='_main'):
     # 디지몬과 UI 아이콘은 같은 Nitro 셀 형식을 사용하므로 폴더만 바꿔 재사용한다.
-    p = ROOT / folder / (stem+'_main')
+    p = ROOT / folder / (stem+suffix)
     c=p.with_suffix('.ncer').read_bytes()
     graphics=p.with_suffix('.ncbr').read_bytes()
     depth=8 if struct.unpack_from('<I',graphics,28)[0]==4 else 4
