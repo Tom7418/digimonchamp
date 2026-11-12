@@ -105,9 +105,9 @@ def convert(stem):
     print(stem, w, h, 'anim' if anim.exists() else '')
 
 
-# 게임 필드 → 원본 지도 번호. 지형(풀밭·늪·숲·하수도·사막·용암·정글·눈·유적)을 보고
-# 짝지은 추정값이다(design.md 참고). web/game.js의 HUNT_MAP과 맞춰야 한다.
-USED = ['01', '03', '04', '05', '08', '11', '13', '14', '15', '18']
+# 사냥터 16곳에 쓰는 지도 번호 (짝은 web/game.js HUNT_MAP, 근거는 docs/design.md).
+# 00은 01과 같은 지도(튜토리얼용으로 보임), 07·12는 원본에 없다.
+USED = ['01', '02', '03', '04', '05', '06', '08', '09', '10', '11', '13', '14', '15', '16', '17', '18']
 
 for nbs in sorted(SRC.glob('field_hm*.nbs')):
     if nbs.stem[8:10] in USED:

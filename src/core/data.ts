@@ -1,4 +1,5 @@
 import raw from '../data/evolutions.txt?raw';
+import habitatRaw from '../data/habitats.txt?raw';
 import { ATTRS, FAMILIES, type ApKey, type Attr, type Cond, type Family, type Species, type Stage, type Stats } from './types';
 
 export const STAGE_LABEL: Record<Stage, string> = { 1: '유년기I', 2: '유년기II', 3: '성장기', 4: '성숙기', 5: '완전체', 6: '궁극체' };
@@ -175,24 +176,51 @@ export const CAGES: Cage[] = [
 export const getCage = (id: string) => CAGES.find((c) => c.id === id) ?? CAGES[0];
 export const START_CAGES = ['기본 케이지', '미니 양호실', '공터', '미니 운동장'];
 
-// ---------- 사냥터 (유년기 서식지) ----------
+// ---------- 사냥터 ----------
+// 사냥터 이름·순서: GameFAQs Digimon World Championship FAQ(영문판 14곳 + 잉카 유적)와
+// 나무위키 진화 목록의 출현 장소 칸(한글 이름)을 맞춘 것. 출현 디지몬은 src/data/habitats.txt.
+// minRank·fee는 원작 값을 확인하지 못한 임시 값 (잉카 유적은 FAQ의 '챔피언십 우승 뒤 열림'을 따름).
 export interface Field {
   id: string;
   minRank: number;
   fee: number;
-  /** [이름, 출현 계절(봄여가겨)] */
+  /** [이름, 출현 계절(봄여가겨) + '밤'/'낮'(그 시간대에만) + '드묾'(낮은 확률)] */
   spawns: [string, string][];
 }
-export const FIELDS: Field[] = [
-  { id: '다이나 초원', minRank: 1, fee: 0, spawns: [['새싹몬', '봄'], ['뽀글몬', '가겨'], ['푸니몬', '봄'], ['포요몬', '가겨'], ['뿔몬', '봄'], ['토코몬', '가겨'], ['야옹몬', '봄여'], ['어니몬', '봄여']] },
-  { id: '미끌미끌 늪', minRank: 1, fee: 0, spawns: [['즈루몬', '봄여'], ['뽀글몬', '봄가겨'], ['피치몬', '봄여가겨'], ['포요몬', '봄여겨'], ['시드몬', '봄'], ['둥실몬', '가겨'], ['모티몬', '봄겨']] },
-  { id: '모쥬라의 숲', minRank: 2, fee: 100, spawns: [['즈루몬', '가겨'], ['새싹몬', '봄'], ['뽀글몬', '가겨'], ['유라몬', '가겨'], ['시드몬', '봄'], ['야옹몬', '봄여'], ['퍼그몬', '봄여']] },
-  { id: '하수도', minRank: 2, fee: 100, spawns: [['즈루몬', '여가'], ['뽈뽈몬', '봄여가'], ['포요몬', '봄가'], ['카프리몬', '봄']] },
-  { id: '이글이글 사막', minRank: 3, fee: 200, spawns: [['즈루몬', '가'], ['푸니몬', '봄여'], ['모크몬', '봄여'], ['카프리몬', '가'], ['뿔몬', '봄'], ['쁘띠메라몬', '봄'], ['문몬', '가']] },
-  { id: '대초원', minRank: 3, fee: 200, spawns: [['뽈뽈몬', '여'], ['새싹몬', '봄가'], ['깜몬', '봄가겨']] },
-  { id: '용암지대', minRank: 4, fee: 300, spawns: [['깜몬', '여'], ['모크몬', '봄여가'], ['코로몬', '봄여']] },
-  { id: '부츠 정글', minRank: 4, fee: 300, spawns: [['시드몬', '봄여'], ['어니몬', '가'], ['모티몬', '가']] },
-  { id: '눈의 왕국', minRank: 5, fee: 400, spawns: [['하얀몬', '겨'], ['둥실몬', '여겨']] },
-  { id: '잉카 유적', minRank: 5, fee: 400, spawns: [['산몬', '여'], ['문몬', '가'], ['유라몬', '가']] },
+const FIELD_LIST: Omit<Field, 'spawns'>[] = [
+  { id: '다이나 초원', minRank: 1, fee: 0 },
+  { id: '미끌미끌 늪', minRank: 1, fee: 0 },
+  { id: '파도치는 해변', minRank: 2, fee: 100 },
+  { id: '바위산', minRank: 2, fee: 100 },
+  { id: '모쥬라의 숲', minRank: 2, fee: 100 },
+  { id: '하수도', minRank: 2, fee: 100 },
+  { id: '이글이글 사막', minRank: 3, fee: 200 },
+  { id: '대초원', minRank: 3, fee: 200 },
+  { id: '오아시스', minRank: 3, fee: 200 },
+  { id: '암반 계곡', minRank: 3, fee: 200 },
+  { id: '용암지대', minRank: 4, fee: 300 },
+  { id: '부츠 정글', minRank: 4, fee: 300 },
+  { id: '크롬 광산', minRank: 4, fee: 300 },
+  { id: '기계 공장', minRank: 4, fee: 300 },
+  { id: '눈의 왕국', minRank: 5, fee: 400 },
+  { id: '잉카 유적', minRank: 9, fee: 400 },
 ];
+
+/** habitats.txt: `이름|장소:계절, 장소:계절` */
+export function parseHabitats(text: string): Record<string, [string, string][]> {
+  const out: Record<string, [string, string][]> = {};
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.trim() || line.startsWith('#')) continue;
+    const [name, rest] = line.split('|');
+    for (const part of rest.split(',')) {
+      const [place, when] = part.split(':').map((x) => x.trim());
+      if (!place || !when) continue;
+      (out[place] ??= []).push([name.trim(), when]);
+    }
+  }
+  return out;
+}
+
+const HABITATS = parseHabitats(habitatRaw);
+export const FIELDS: Field[] = FIELD_LIST.map((f) => ({ ...f, spawns: HABITATS[f.id] ?? [] }));
 export const SEASON_CODE = ['봄', '여', '가', '겨'];

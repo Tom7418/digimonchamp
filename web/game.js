@@ -1084,18 +1084,19 @@
     하수도: ['#6d7378', '#545a5e'], '이글이글 사막': ['#d9b46a', '#c49a52'], 대초원: ['#9cc46e', '#86ad5c'],
     용암지대: ['#8a4e3a', '#6e3a2b'], '부츠 정글': ['#3f7a4d', '#2f5f3b'], '눈의 왕국': ['#e4eef2', '#c7d8df'], '잉카 유적': ['#b8a27a', '#9a855f'],
   };
-  // 원본 사냥 지도(tools/extract_hunt_maps.py로 변환). 필드와의 짝은 지형을 보고 정한 추정값.
-  // _01=낮, _02=밤. 하수도는 밤 지도가 없다.
+  // 원본 사냥 지도(tools/extract_hunt_maps.py로 변환한 root/field/field_hmNN). 사냥터와 번호의 짝은
+  // 지형을 보고 정한 추정값(docs/design.md). _01=낮, _02=밤. 실내(크롬 광산·기계 공장·하수도)는 밤 지도가 없다.
   const HUNT_MAP = {
-    '다이나 초원': '01', '미끌미끌 늪': '05', '모쥬라의 숲': '03', 하수도: '11', '이글이글 사막': '08',
-    대초원: '14', 용암지대: '15', '부츠 정글': '04', '눈의 왕국': '13', '잉카 유적': '18',
+    '다이나 초원': '01', '암반 계곡': '02', '모쥬라의 숲': '03', '부츠 정글': '04', '미끌미끌 늪': '05', '파도치는 해변': '06',
+    '이글이글 사막': '08', '크롬 광산': '09', '기계 공장': '10', 하수도: '11', '눈의 왕국': '13', 대초원: '14',
+    용암지대: '15', 바위산: '16', 오아시스: '17', '잉카 유적': '18',
   };
-  const HUNT_NIGHT_HOUR = 18; // 임시: 저녁 6시부터 밤 지도
+  const HUNT_NO_NIGHT = ['09', '10', '11'];
   const huntMaps = {};
   function huntMapImage(field) {
     const no = HUNT_MAP[field.id];
     if (!no) return null;
-    const night = C.dateOf(save.clock).hour >= HUNT_NIGHT_HOUR && no !== '11';
+    const night = C.dateOf(save.clock).hour >= C.HUNT_NIGHT_HOUR && !HUNT_NO_NIGHT.includes(no);
     const key = `${no}_${night ? '02' : '01'}`;
     if (!huntMaps[key]) {
       const img = new Image();
@@ -1121,7 +1122,7 @@
            const pool = C.huntPool(f, save.clock);
            const off = !f.open || !can.ok || save.bits < f.fee;
            const why = !f.open ? f.reason : save.bits < f.fee ? '비트 부족' : '';
-           return `<button data-field="${i}"${off ? ' disabled' : ''}><b>${esc(f.id)}${f.fee ? ` · ${f.fee} ฿` : ''}</b><small>${why ? esc(why) + ' · ' : ''}이번 계절: ${esc(pool.babies.join(', ') || '없음')}${pool.rookies.length ? ` / 성장기 가끔` : ''}</small></button>`;
+           return `<button data-field="${i}"${off ? ' disabled' : ''}><b>${esc(f.id)}${f.fee ? ` · ${f.fee} ฿` : ''}</b><small>${why ? esc(why) + ' · ' : ''}이번 계절: ${esc(pool.babies.join(', ') || '없음')}${pool.rookies.length ? ` / 성장기 ${esc(pool.rookies.join(', '))}` : ''}${pool.strong.length ? ` / 강한 디지몬 ${esc(pool.strong.join(', '))}` : ''}</small></button>`;
          })
          .join('')}</div>
        <p class="hint">드래그로 디지몬을 둘러싸고 처음 위치 근처에서 손을 떼면 로프가 감깁니다. 감긴 디지몬을 눌러 바깥으로 끌었다 놓으면 당겨서 HP가 깎이고, HP를 다 깎으면 포획. 감은 뒤 4초 안에 당기지 않으면 풀립니다. 맞은 디지몬은 맵 밖으로 도망가니 와이어로 길을 막으세요. 성장기는 성장기 로프가 있어야 잡힙니다.</p>`,
@@ -1133,6 +1134,7 @@
 
   function spawnWild(field) {
     const id = C.pickWild(field, save.clock, Math.random);
+    if (!id) return null;
     const side = Math.random();
     return {
       id, x: AREA.x0 + 80 + Math.random() * (AREA.x1 - AREA.x0 - 160), y: AREA.y0 + 60 + Math.random() * (AREA.y1 - AREA.y0 - 100),
@@ -1148,7 +1150,10 @@
     // 1024x1024 원본 지도에서 화면(960x560)만큼 잘라 쓸 위치. 들어갈 때마다 달라진다.
     hunt.map = huntMapImage(field);
     hunt.view = { x: Math.floor(Math.random() * (1024 - 960)), y: Math.floor(Math.random() * (1024 - 560)) };
-    for (let i = 0; i < C.WILD_COUNT; i++) hunt.wilds.push(spawnWild(field));
+    for (let i = 0; i < C.WILD_COUNT; i++) {
+      const w = spawnWild(field);
+      if (w) hunt.wilds.push(w);
+    }
     $('#modal').close();
     document.body.classList.add('hunting');
     setTool('rope');
@@ -1240,7 +1245,8 @@
     hunt.respawn -= dt;
     if (hunt.wilds.length < C.WILD_COUNT && hunt.respawn <= 0) {
       hunt.respawn = 6;
-      hunt.wilds.push(spawnWild(hunt.field));
+      const w = spawnWild(hunt.field);
+      if (w) hunt.wilds.push(w);
     }
     const can = C.canHuntNow(save);
     if (!can.ok) endHunt(can.reason);

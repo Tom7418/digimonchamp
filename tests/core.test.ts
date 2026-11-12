@@ -5,7 +5,7 @@ import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
-import { canHuntNow, huntPool, pickWild, ropeDamage, wildHp } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, wildHp } from '../src/core/hunt';
 import type { Digimon, SaveData } from '../src/core/types';
 import { availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -79,7 +79,7 @@ describe('data', () => {
   });
   it('every evolution target and habitat exists, and stages go up by one', () => {
     for (const s of Object.values(SPECIES)) for (const e of s.evos) expect(getSpecies(e.to).stage, `${s.id}>${e.to}`).toBe(s.stage + 1);
-    for (const f of FIELDS) for (const [name] of f.spawns) expect(getSpecies(name).stage).toBeLessThanOrEqual(2);
+    for (const f of FIELDS) for (const [name] of f.spawns) expect(SPECIES[name], `${f.id}:${name}`).toBeDefined();
   });
   it('calendar', () => {
     expect(dateOf(480)).toMatchObject({ year: 1, seasonName: '봄', day: 1, hour: 8 });
@@ -186,12 +186,42 @@ describe('titles and hunting', () => {
 });
 
 describe('hunting', () => {
-  it('spring pool on 다이나 초원 has babies and the rookies they grow into', () => {
-    const { babies, rookies } = huntPool(FIELDS[0], 0);
-    expect(babies).toContain('뿔몬');
-    expect(rookies).toEqual(expect.arrayContaining(['파피몬', '가오몬']));
+  const field = (id: string) => FIELDS.find((f) => f.id === id)!;
+  const at = (season: number, hour: number) => (season * 8 * 1440) + hour * 60; // 그 계절 1일
+  it('16 hunting fields, each with someone to catch in some season', () => {
+    expect(FIELDS.map((f) => f.id)).toEqual(
+      expect.arrayContaining(['파도치는 해변', '바위산', '오아시스', '암반 계곡', '크롬 광산', '기계 공장', '잉카 유적']),
+    );
+    expect(FIELDS).toHaveLength(16);
+    for (const f of FIELDS) expect([0, 1, 2, 3].some((s) => huntPool(f, at(s, 10)).babies.length + huntPool(f, at(s, 10)).rookies.length > 0), f.id).toBe(true);
+  });
+  it('spring pool on 다이나 초원 follows the wiki habitat table by stage', () => {
+    const { babies, rookies, strong } = huntPool(field('다이나 초원'), at(0, 10));
+    expect(babies).toEqual(expect.arrayContaining(['뿔몬', '새싹몬']));
+    expect(rookies).toEqual(expect.arrayContaining(['가오몬', '에렉몬']));
     expect(babies).not.toContain('뽀글몬'); // 가을·겨울에만 나온다
-    expect([...babies, ...rookies]).toContain(pickWild(FIELDS[0], 0, seeded(3)));
+    expect(strong).toEqual([]);
+    expect([...babies, ...rookies]).toContain(pickWild(field('다이나 초원'), at(0, 10), seeded(3)));
+  });
+  it('beach has strong digimon that the rope cannot catch', () => {
+    const p = huntPool(field('파도치는 해변'), at(3, 10));
+    expect(p.babies).toContain('둥실몬');
+    expect(p.strong).toEqual(expect.arrayContaining(['고래몬']));
+    expect(ropeDamage({ ropeLevel: 2 }, '고래몬')).toBe(0);
+  });
+  it('night-only and rare spawns', () => {
+    expect(huntPool(field('잉카 유적'), at(2, 10)).babies).not.toContain('유라몬');
+    const night = huntPool(field('잉카 유적'), at(2, 19));
+    expect(night.babies).toEqual(expect.arrayContaining(['유라몬', '푸치몬']));
+    expect(night.rare).toEqual(['푸치몬']);
+    expect(huntPool(field('잉카 유적'), at(2, 19)).rookies).not.toContain('코로나몬'); // 가을 낮에만
+  });
+  it('a field with nobody this season is closed, and 잉카 유적 waits for the championship', () => {
+    const s = { ...freshSave(0), clock: at(0, 10) };
+    expect(pickWild(field('눈의 왕국'), at(0, 10), seeded(1))).not.toBeNull();
+    const ruins = huntFields(s).find((f) => f.id === '잉카 유적')!;
+    expect(ruins.open).toBe(false);
+    expect(ruins.reason).toContain('챔피언십');
   });
   it('rookies need the 성장기 로프', () => {
     expect(wildHp('뿔몬')).toBe(2);

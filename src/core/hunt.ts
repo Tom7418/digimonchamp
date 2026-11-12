@@ -5,7 +5,8 @@
 // - 초반 로프로는 유년기만 잡힌다. 성장기는 상점의 '성장기 로프'를 사야 HP가 깎인다.
 // - 와이어를 깔아 길을 막을 수 있고, 맞은 디지몬은 맵 밖·동굴로 도망간다.
 // - 용량이 가득 차면 잡을 수 없다 ('용량이 가득 찼습니다').
-// 임시 값: 세대별 HP(유년기I 1, 유년기II 2, 성장기 3), 성장기 출현 확률 25%, 와이어 가격·개수.
+// 출현표: 나무위키 진화 목록의 출현 장소(src/data/habitats.txt). 성숙기 이상도 돌아다니지만 로프로는 못 잡는다.
+// 임시 값: 세대별 HP(유년기I 1, 유년기II 2, 성장기 3), 성장기 25%·성숙기 이상 10% 출현, 밤 18시~, 드묾 1/5, 와이어 가격·개수.
 import { dateOf, FIELDS, getSpecies, SEASON_CODE, type Field } from './data';
 import { tamerRank } from './titles';
 import type { SaveData } from './types';
@@ -15,6 +16,12 @@ export const HUNT_OPEN_HOUR = 8;
 export const HUNT_CLOSE_HOUR = 22;
 /** 성장기가 출현할 확률 (임시) */
 export const ROOKIE_CHANCE = 0.25;
+/** 성숙기 이상이 출현할 확률 (임시) */
+export const STRONG_CHANCE = 0.1;
+/** 이 시각부터 '밤'에만 나오는 디지몬이 나오고 밤 지도를 쓴다 (임시) */
+export const HUNT_NIGHT_HOUR = 18;
+/** '드묾' 표시 디지몬의 상대 가중치 (임시) */
+export const RARE_WEIGHT = 0.2;
 /** 한 사냥터에 동시에 나오는 야생 디지몬 수 */
 export const WILD_COUNT = 5;
 
@@ -25,7 +32,12 @@ export interface HuntField extends Field {
 
 export function huntFields(save: SaveData): HuntField[] {
   const rank = tamerRank(save);
-  return FIELDS.map((f) => (rank >= f.minRank ? { ...f, open: true } : { ...f, open: false, reason: `테이머 랭크 ${f.minRank} 필요` }));
+  return FIELDS.map((f) => {
+    if (rank < f.minRank) return { ...f, open: false, reason: f.minRank >= 9 ? '챔피언십 우승 뒤 열림' : `테이머 랭크 ${f.minRank} 필요` };
+    const p = huntPool(f, save.clock);
+    if (!p.babies.length && !p.rookies.length && !p.strong.length) return { ...f, open: false, reason: '지금은 디지몬이 없음' };
+    return { ...f, open: true };
+  });
 }
 
 export function canHuntNow(save: SaveData): { ok: boolean; reason?: string } {
@@ -35,23 +47,48 @@ export function canHuntNow(save: SaveData): { ok: boolean; reason?: string } {
   return { ok: true };
 }
 
-/** 이 계절에 이 사냥터에 나오는 유년기와, 그 유년기II가 진화하는 성장기 */
-export function huntPool(field: Field, clock: number): { babies: string[]; rookies: string[] } {
-  const season = SEASON_CODE[dateOf(clock).season];
-  const babies = [...new Set(field.spawns.filter(([, s]) => s.includes(season)).map(([n]) => n))];
-  const rookies = new Set<string>();
-  for (const b of babies) {
-    const sp = getSpecies(b);
-    const stage2 = sp.stage === 2 ? [b] : sp.evos.map((e) => e.to).filter((id) => getSpecies(id).stage === 2);
-    for (const id of stage2) for (const e of getSpecies(id).evos) if (getSpecies(e.to).stage === 3) rookies.add(e.to);
-  }
-  return { babies, rookies: [...rookies] };
+export interface HuntPool {
+  /** 유년기I·II */
+  babies: string[];
+  /** 성장기 */
+  rookies: string[];
+  /** 성숙기 이상 (로프로 못 잡음) */
+  strong: string[];
+  /** '드묾' 표시 */
+  rare: string[];
 }
 
-export function pickWild(field: Field, clock: number, rng: () => number): string {
-  const { babies, rookies } = huntPool(field, clock);
-  const list = rookies.length && rng() < ROOKIE_CHANCE ? rookies : babies;
-  return list[Math.floor(rng() * list.length)];
+/** 이 계절·시간대에 이 사냥터에 나오는 디지몬을 세대별로 나눈다 */
+export function huntPool(field: Field, clock: number): HuntPool {
+  const { season, hour } = dateOf(clock);
+  const code = SEASON_CODE[season];
+  const night = hour >= HUNT_NIGHT_HOUR;
+  const here = field.spawns.filter(([, w]) => w.includes(code) && !(w.includes('밤') && !night) && !(w.includes('낮') && night));
+  const names = [...new Set(here.map(([n]) => n))];
+  const by = (ok: (stage: number) => boolean) => names.filter((n) => ok(getSpecies(n).stage));
+  return {
+    babies: by((s) => s <= 2),
+    rookies: by((s) => s === 3),
+    strong: by((s) => s >= 4),
+    rare: [...new Set(here.filter(([, w]) => w.includes('드묾')).map(([n]) => n))],
+  };
+}
+
+function pickWeighted(list: string[], rare: string[], rng: () => number): string {
+  const weights = list.map((n) => (rare.includes(n) ? RARE_WEIGHT : 1));
+  let r = rng() * weights.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < list.length; i++) if ((r -= weights[i]) < 0) return list[i];
+  return list[list.length - 1];
+}
+
+/** 사냥터에 새로 나타날 디지몬. 나올 디지몬이 없으면 null */
+export function pickWild(field: Field, clock: number, rng: () => number): string | null {
+  const p = huntPool(field, clock);
+  const roll = rng();
+  const order =
+    roll < ROOKIE_CHANCE ? [p.rookies, p.babies, p.strong] : roll < ROOKIE_CHANCE + STRONG_CHANCE ? [p.strong, p.babies, p.rookies] : [p.babies, p.rookies, p.strong];
+  const list = order.find((l) => l.length);
+  return list ? pickWeighted(list, p.rare, rng) : null;
 }
 
 /** 로프로 몇 번 둘러야 잡히는가 */
