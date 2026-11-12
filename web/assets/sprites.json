@@ -4,41 +4,1735 @@
     "width": 32,
     "height": 32,
     "frames": 13,
-    "source": "digimon/e000_digitama_main"
+    "source": "digimon/e000_digitama_main",
+    "name": "디지에그"
+  },
+  {
+    "id": "m001_zurumon",
+    "width": 33,
+    "height": 29,
+    "frames": 65,
+    "source": "digimon/m001_zurumon_main",
+    "name": "즈루몬"
+  },
+  {
+    "id": "m002_choromon",
+    "width": 48,
+    "height": 44,
+    "frames": 65,
+    "source": "digimon/m002_choromon_main",
+    "name": "뽈뽈몬"
+  },
+  {
+    "id": "m003_nyokimon",
+    "width": 48,
+    "height": 42,
+    "frames": 64,
+    "source": "digimon/m003_nyokimon_main",
+    "name": "새싹몬"
+  },
+  {
+    "id": "m004_bubbmon",
+    "width": 48,
+    "height": 43,
+    "frames": 65,
+    "source": "digimon/m004_bubbmon_main",
+    "name": "뽀글몬"
+  },
+  {
+    "id": "m005_pitchmon",
+    "width": 32,
+    "height": 28,
+    "frames": 65,
+    "source": "digimon/m005_pitchmon_main",
+    "name": "피치몬"
+  },
+  {
+    "id": "m006_punimon",
+    "width": 48,
+    "height": 28,
+    "frames": 65,
+    "source": "digimon/m006_punimon_main",
+    "name": "푸니몬"
+  },
+  {
+    "id": "m007_botamon",
+    "width": 48,
+    "height": 36,
+    "frames": 65,
+    "source": "digimon/m007_botamon_main",
+    "name": "깜몬"
+  },
+  {
+    "id": "m008_poyomon",
+    "width": 32,
+    "height": 28,
+    "frames": 65,
+    "source": "digimon/m008_poyomon_main",
+    "name": "포요몬"
+  },
+  {
+    "id": "m009_mokumon",
+    "width": 40,
+    "height": 44,
+    "frames": 62,
+    "source": "digimon/m009_mokumon_main",
+    "name": "모크몬"
+  },
+  {
+    "id": "m010_yukimibotamon",
+    "width": 48,
+    "height": 36,
+    "frames": 65,
+    "source": "digimon/m010_yukimibotamon_main",
+    "name": "하얀몬"
+  },
+  {
+    "id": "m011_yuramon",
+    "width": 48,
+    "height": 37,
+    "frames": 64,
+    "source": "digimon/m011_yuramon_main",
+    "name": "유라몬"
+  },
+  {
+    "id": "m012_petimon",
+    "width": 32,
+    "height": 32,
+    "frames": 64,
+    "source": "digimon/m012_petimon_main",
+    "name": "푸치몬"
+  },
+  {
+    "id": "m101_caprimon",
+    "width": 48,
+    "height": 32,
+    "frames": 65,
+    "source": "digimon/m101_caprimon_main",
+    "name": "카프리몬"
   },
   {
     "id": "m102_koromon",
     "width": 48,
     "height": 44,
     "frames": 64,
-    "source": "digimon/m102_koromon_main"
+    "source": "digimon/m102_koromon_main",
+    "name": "코로몬"
+  },
+  {
+    "id": "m103_tanemon",
+    "width": 48,
+    "height": 45,
+    "frames": 62,
+    "source": "digimon/m103_tanemon_main",
+    "name": "시드몬"
+  },
+  {
+    "id": "m104_tunomon",
+    "width": 48,
+    "height": 37,
+    "frames": 65,
+    "source": "digimon/m104_tunomon_main",
+    "name": "뿔몬"
+  },
+  {
+    "id": "m105_tokomon",
+    "width": 48,
+    "height": 36,
+    "frames": 63,
+    "source": "digimon/m105_tokomon_main",
+    "name": "토코몬"
+  },
+  {
+    "id": "m106_nyaromon",
+    "width": 32,
+    "height": 36,
+    "frames": 65,
+    "source": "digimon/m106_nyaromon_main",
+    "name": "야옹몬"
+  },
+  {
+    "id": "m107_pagumon",
+    "width": 48,
+    "height": 33,
+    "frames": 65,
+    "source": "digimon/m107_pagumon_main",
+    "name": "퍼그몬"
+  },
+  {
+    "id": "m108_pyokomon",
+    "width": 48,
+    "height": 34,
+    "frames": 65,
+    "source": "digimon/m108_pyokomon_main",
+    "name": "어니몬"
+  },
+  {
+    "id": "m109_pukamon",
+    "width": 48,
+    "height": 46,
+    "frames": 58,
+    "source": "digimon/m109_pukamon_main",
+    "name": "둥실몬"
+  },
+  {
+    "id": "m110_petimemramon",
+    "width": 32,
+    "height": 28,
+    "frames": 65,
+    "source": "digimon/m110_petimemramon_main",
+    "name": "쁘띠메라몬"
+  },
+  {
+    "id": "m111_mochimon",
+    "width": 48,
+    "height": 27,
+    "frames": 65,
+    "source": "digimon/m111_mochimon_main",
+    "name": "모티몬"
+  },
+  {
+    "id": "m112_bebydomon",
+    "width": 32,
+    "height": 45,
+    "frames": 57,
+    "source": "digimon/m112_bebydomon_main",
+    "name": "베비도몬"
+  },
+  {
+    "id": "m113_sunmon",
+    "width": 32,
+    "height": 37,
+    "frames": 62,
+    "source": "digimon/m113_sunmon_main",
+    "name": "산몬"
+  },
+  {
+    "id": "m114_moonmon",
+    "width": 33,
+    "height": 45,
+    "frames": 65,
+    "source": "digimon/m114_moonmon_main",
+    "name": "문몬"
   },
   {
     "id": "m201_agumon",
     "width": 40,
     "height": 35,
     "frames": 65,
-    "source": "digimon/m201_agumon_main"
+    "source": "digimon/m201_agumon_main",
+    "name": "아구몬"
+  },
+  {
+    "id": "m202_armadimon",
+    "width": 41,
+    "height": 44,
+    "frames": 62,
+    "source": "digimon/m202_armadimon_main",
+    "name": "아르마몬"
+  },
+  {
+    "id": "m203_elecmon",
+    "width": 41,
+    "height": 44,
+    "frames": 61,
+    "source": "digimon/m203_elecmon_main",
+    "name": "에렉몬"
+  },
+  {
+    "id": "m204_otamamon",
+    "width": 40,
+    "height": 36,
+    "frames": 61,
+    "source": "digimon/m204_otamamon_main",
+    "name": "올챙몬"
+  },
+  {
+    "id": "m205_gaomon",
+    "width": 56,
+    "height": 36,
+    "frames": 68,
+    "source": "digimon/m205_gaomon_main",
+    "name": "가오몬"
+  },
+  {
+    "id": "m206_gazimon",
+    "width": 56,
+    "height": 43,
+    "frames": 57,
+    "source": "digimon/m206_gazimon_main",
+    "name": "가지몬"
   },
   {
     "id": "m208_gabumon",
     "width": 48,
     "height": 35,
     "frames": 59,
-    "source": "digimon/m208_gabumon_main"
+    "source": "digimon/m208_gabumon_main",
+    "name": "파피몬"
+  },
+  {
+    "id": "m209_kamemon",
+    "width": 40,
+    "height": 35,
+    "frames": 65,
+    "source": "digimon/m209_kamemon_main",
+    "name": "거북몬"
+  },
+  {
+    "id": "m210_gizamon",
+    "width": 40,
+    "height": 43,
+    "frames": 61,
+    "source": "digimon/m210_gizamon_main",
+    "name": "기자몬"
+  },
+  {
+    "id": "m211_candmon",
+    "width": 40,
+    "height": 51,
+    "frames": 62,
+    "source": "digimon/m211_candmon_main",
+    "name": "캔들몬"
+  },
+  {
+    "id": "m214_kunemon",
+    "width": 32,
+    "height": 46,
+    "frames": 56,
+    "source": "digimon/m214_kunemon_main",
+    "name": "쿠네몬"
+  },
+  {
+    "id": "m217_gottumon",
+    "width": 45,
+    "height": 35,
+    "frames": 62,
+    "source": "digimon/m217_gottumon_main",
+    "name": "울퉁몬"
+  },
+  {
+    "id": "m218_goburimon",
+    "width": 48,
+    "height": 35,
+    "frames": 62,
+    "source": "digimon/m218_goburimon_main",
+    "name": "고부리몬"
+  },
+  {
+    "id": "m219_gomamon",
+    "width": 48,
+    "height": 43,
+    "frames": 63,
+    "source": "digimon/m219_gomamon_main",
+    "name": "쉬라몬"
+  },
+  {
+    "id": "m221_terriermon",
+    "width": 64,
+    "height": 35,
+    "frames": 62,
+    "source": "digimon/m221_terriermon_main",
+    "name": "테리어몬"
+  },
+  {
+    "id": "m222_tentomon",
+    "width": 48,
+    "height": 49,
+    "frames": 60,
+    "source": "digimon/m222_tentomon_main",
+    "name": "텐타몬"
+  },
+  {
+    "id": "m223_toyagumon",
+    "width": 48,
+    "height": 35,
+    "frames": 63,
+    "source": "digimon/m223_toyagumon_main",
+    "name": "토이아구몬"
+  },
+  {
+    "id": "m224_dracomon",
+    "width": 40,
+    "height": 35,
+    "frames": 63,
+    "source": "digimon/m224_dracomon_main",
+    "name": "드라코몬"
+  },
+  {
+    "id": "m225_bakumon",
+    "width": 41,
+    "height": 44,
+    "frames": 65,
+    "source": "digimon/m225_bakumon_main",
+    "name": "테이파몬"
+  },
+  {
+    "id": "m226_hagurumon",
+    "width": 35,
+    "height": 37,
+    "frames": 65,
+    "source": "digimon/m226_hagurumon_main",
+    "name": "톱니몬"
   },
   {
     "id": "m227_patamon",
     "width": 48,
     "height": 34,
     "frames": 64,
-    "source": "digimon/m227_patamon_main"
+    "source": "digimon/m227_patamon_main",
+    "name": "파닥몬"
+  },
+  {
+    "id": "m228_palmon",
+    "width": 48,
+    "height": 35,
+    "frames": 61,
+    "source": "digimon/m228_palmon_main",
+    "name": "팔몬"
+  },
+  {
+    "id": "m229_picodevimon",
+    "width": 41,
+    "height": 36,
+    "frames": 63,
+    "source": "digimon/m229_picodevimon_main",
+    "name": "피코데블몬"
+  },
+  {
+    "id": "m230_piyomon",
+    "width": 56,
+    "height": 44,
+    "frames": 65,
+    "source": "digimon/m230_piyomon_main",
+    "name": "피요몬"
+  },
+  {
+    "id": "m231_falcomon",
+    "width": 41,
+    "height": 44,
+    "frames": 64,
+    "source": "digimon/m231_falcomon_main",
+    "name": "팔코몬"
+  },
+  {
+    "id": "m232_plotmon",
+    "width": 49,
+    "height": 44,
+    "frames": 63,
+    "source": "digimon/m232_plotmon_main",
+    "name": "플롯트몬"
+  },
+  {
+    "id": "m233_floramon",
+    "width": 40,
+    "height": 34,
+    "frames": 63,
+    "source": "digimon/m233_floramon_main",
+    "name": "플로라몬"
+  },
+  {
+    "id": "m235_mushmon",
+    "width": 40,
+    "height": 36,
+    "frames": 63,
+    "source": "digimon/m235_mushmon_main",
+    "name": "머슈몬"
+  },
+  {
+    "id": "m236_yukiagumon",
+    "width": 40,
+    "height": 35,
+    "frames": 65,
+    "source": "digimon/m236_yukiagumon_main",
+    "name": "스노우아구몬"
+  },
+  {
+    "id": "m237_renamon",
+    "width": 40,
+    "height": 43,
+    "frames": 63,
+    "source": "digimon/m237_renamon_main",
+    "name": "레나몬"
+  },
+  {
+    "id": "m238_coronamon",
+    "width": 56,
+    "height": 43,
+    "frames": 66,
+    "source": "digimon/m238_coronamon_main",
+    "name": "코로나몬"
+  },
+  {
+    "id": "m239_lunamon",
+    "width": 48,
+    "height": 43,
+    "frames": 57,
+    "source": "digimon/m239_lunamon_main",
+    "name": "루나몬"
+  },
+  {
+    "id": "m240_kuroagumon",
+    "width": 40,
+    "height": 35,
+    "frames": 65,
+    "source": "digimon/m240_kuroagumon_main",
+    "name": "크로아구몬"
+  },
+  {
+    "id": "m241_psychemon",
+    "width": 48,
+    "height": 35,
+    "frames": 59,
+    "source": "digimon/m241_psychemon_main",
+    "name": "사이케몬"
+  },
+  {
+    "id": "m242_alraumon",
+    "width": 48,
+    "height": 35,
+    "frames": 61,
+    "source": "digimon/m242_alraumon_main",
+    "name": "오로라몬"
+  },
+  {
+    "id": "m243_tsukaimon",
+    "width": 48,
+    "height": 34,
+    "frames": 64,
+    "source": "digimon/m243_tsukaimon_main",
+    "name": "츄카이몬"
+  },
+  {
+    "id": "m244_vmon",
+    "width": 48,
+    "height": 38,
+    "frames": 69,
+    "source": "digimon/m244_vmon_main",
+    "name": "브이몬"
+  },
+  {
+    "id": "m255_guilmon",
+    "width": 40,
+    "height": 35,
+    "frames": 63,
+    "source": "digimon/m255_guilmon_main",
+    "name": "길몬"
+  },
+  {
+    "id": "m301_ankylomon",
+    "width": 56,
+    "height": 41,
+    "frames": 59,
+    "source": "digimon/m301_ankylomon_main",
+    "name": "황금아르마몬"
+  },
+  {
+    "id": "m303_ikkakumon",
+    "width": 64,
+    "height": 51,
+    "frames": 59,
+    "source": "digimon/m303_ikkakumon_main",
+    "name": "원뿔몬"
+  },
+  {
+    "id": "m304_wizarmon",
+    "width": 56,
+    "height": 39,
+    "frames": 58,
+    "source": "digimon/m304_wizarmon_main",
+    "name": "위자몬"
+  },
+  {
+    "id": "m305_woodmon",
+    "width": 64,
+    "height": 51,
+    "frames": 58,
+    "source": "digimon/m305_woodmon_main",
+    "name": "우드몬"
+  },
+  {
+    "id": "m306_airdramon",
+    "width": 64,
+    "height": 57,
+    "frames": 64,
+    "source": "digimon/m306_airdramon_main",
+    "name": "에어드라몬"
+  },
+  {
+    "id": "m308_angemon",
+    "width": 40,
+    "height": 53,
+    "frames": 55,
+    "source": "digimon/m308_angemon_main",
+    "name": "엔젤몬"
+  },
+  {
+    "id": "m310_orgemon",
+    "width": 64,
+    "height": 62,
+    "frames": 57,
+    "source": "digimon/m310_orgemon_main",
+    "name": "우가몬"
+  },
+  {
+    "id": "m311_gaogamon",
+    "width": 56,
+    "height": 55,
+    "frames": 65,
+    "source": "digimon/m311_gaogamon_main",
+    "name": "가오가몬"
+  },
+  {
+    "id": "m312_kabuterimon",
+    "width": 56,
+    "height": 59,
+    "frames": 62,
+    "source": "digimon/m312_kabuterimon_main",
+    "name": "캅테리몬"
+  },
+  {
+    "id": "m313_gargomon",
+    "width": 48,
+    "height": 59,
+    "frames": 57,
+    "source": "digimon/m313_gargomon_main",
+    "name": "가르고몬"
+  },
+  {
+    "id": "m314_garurumon_va",
+    "width": 54,
+    "height": 46,
+    "frames": 61,
+    "source": "digimon/m314_garurumon_va_main",
+    "name": "가루몬"
+  },
+  {
+    "id": "m315_garurumon_vi",
+    "width": 54,
+    "height": 46,
+    "frames": 61,
+    "source": "digimon/m315_garurumon_vi_main",
+    "name": "가루몬(흑)"
+  },
+  {
+    "id": "m316_guardromon",
+    "width": 64,
+    "height": 60,
+    "frames": 59,
+    "source": "digimon/m316_guardromon_main",
+    "name": "가드로몬"
+  },
+  {
+    "id": "m317_kiwimon",
+    "width": 41,
+    "height": 45,
+    "frames": 56,
+    "source": "digimon/m317_kiwimon_main",
+    "name": "키위몬"
+  },
+  {
+    "id": "m318_kyubimon",
+    "width": 56,
+    "height": 43,
+    "frames": 61,
+    "source": "digimon/m318_kyubimon_main",
+    "name": "구미호몬"
   },
   {
     "id": "m320_graymon",
     "width": 56,
     "height": 50,
     "frames": 59,
-    "source": "digimon/m320_graymon_main"
+    "source": "digimon/m320_graymon_main",
+    "name": "그레이몬"
+  },
+  {
+    "id": "m321_clockmon",
+    "width": 61,
+    "height": 60,
+    "frames": 69,
+    "source": "digimon/m321_clockmon_main",
+    "name": "타임몬"
+  },
+  {
+    "id": "m322_kuwagamon",
+    "width": 56,
+    "height": 51,
+    "frames": 64,
+    "source": "digimon/m322_kuwagamon_main",
+    "name": "쿠가몬"
+  },
+  {
+    "id": "m323_gekomon",
+    "width": 64,
+    "height": 62,
+    "frames": 56,
+    "source": "digimon/m323_gekomon_main",
+    "name": "개굴몬"
+  },
+  {
+    "id": "m324_gesomon",
+    "width": 58,
+    "height": 46,
+    "frames": 57,
+    "source": "digimon/m324_gesomon_main",
+    "name": "연체몬"
+  },
+  {
+    "id": "m325_centalmon",
+    "width": 57,
+    "height": 54,
+    "frames": 57,
+    "source": "digimon/m325_centalmon_main",
+    "name": "켄터스몬"
+  },
+  {
+    "id": "m326_cockatrimon",
+    "width": 56,
+    "height": 68,
+    "frames": 55,
+    "source": "digimon/m326_cockatrimon_main",
+    "name": "꼬끼몬"
+  },
+  {
+    "id": "m328_thanderballmon",
+    "width": 49,
+    "height": 44,
+    "frames": 55,
+    "source": "digimon/m328_thanderballmon_main",
+    "name": "번개콩알몬"
+  },
+  {
+    "id": "m329_shellmon",
+    "width": 56,
+    "height": 43,
+    "frames": 65,
+    "source": "digimon/m329_shellmon_main",
+    "name": "쉘몬"
+  },
+  {
+    "id": "m330_geograymon",
+    "width": 56,
+    "height": 50,
+    "frames": 59,
+    "source": "digimon/m330_geograymon_main",
+    "name": "지오그레이몬"
+  },
+  {
+    "id": "m331_seadramon",
+    "width": 72,
+    "height": 59,
+    "frames": 64,
+    "source": "digimon/m331_seadramon_main",
+    "name": "시드라몬"
+  },
+  {
+    "id": "m333_scumon",
+    "width": 64,
+    "height": 43,
+    "frames": 62,
+    "source": "digimon/m333_scumon_main",
+    "name": "스카몬"
+  },
+  {
+    "id": "m334_starmon",
+    "width": 49,
+    "height": 44,
+    "frames": 57,
+    "source": "digimon/m334_starmon_main",
+    "name": "스타몬"
+  },
+  {
+    "id": "m337_darcmon",
+    "width": 72,
+    "height": 62,
+    "frames": 55,
+    "source": "digimon/m337_darcmon_main",
+    "name": "다르크몬"
+  },
+  {
+    "id": "m338_darktyranomon",
+    "width": 40,
+    "height": 36,
+    "frames": 61,
+    "source": "digimon/m338_darktyranomon_main",
+    "name": "다크티라노몬"
+  },
+  {
+    "id": "m339_tyranomon",
+    "width": 40,
+    "height": 36,
+    "frames": 61,
+    "source": "digimon/m339_tyranomon_main",
+    "name": "티라노몬"
+  },
+  {
+    "id": "m340_tailmon",
+    "width": 64,
+    "height": 35,
+    "frames": 65,
+    "source": "digimon/m340_tailmon_main",
+    "name": "가트몬"
+  },
+  {
+    "id": "m341_devidramon",
+    "width": 64,
+    "height": 56,
+    "frames": 64,
+    "source": "digimon/m341_devidramon_main",
+    "name": "데블드라몬"
+  },
+  {
+    "id": "m342_devimon",
+    "width": 88,
+    "height": 39,
+    "frames": 57,
+    "source": "digimon/m342_devimon_main",
+    "name": "데블몬"
+  },
+  {
+    "id": "m343_togemon",
+    "width": 56,
+    "height": 43,
+    "frames": 57,
+    "source": "digimon/m343_togemon_main",
+    "name": "니드몬"
+  },
+  {
+    "id": "m345_tortamon",
+    "width": 64,
+    "height": 37,
+    "frames": 63,
+    "source": "digimon/m345_tortamon_main",
+    "name": "토타몬"
+  },
+  {
+    "id": "m346_numemon",
+    "width": 56,
+    "height": 53,
+    "frames": 63,
+    "source": "digimon/m346_numemon_main",
+    "name": "옐로우워매몬"
+  },
+  {
+    "id": "m347_bakemon",
+    "width": 48,
+    "height": 32,
+    "frames": 65,
+    "source": "digimon/m347_bakemon_main",
+    "name": "고스몬"
+  },
+  {
+    "id": "m349_bardramon",
+    "width": 48,
+    "height": 53,
+    "frames": 57,
+    "source": "digimon/m349_bardramon_main",
+    "name": "버드라몬"
+  },
+  {
+    "id": "m351_vagimon",
+    "width": 64,
+    "height": 58,
+    "frames": 61,
+    "source": "digimon/m351_vagimon_main",
+    "name": "베지몬"
+  },
+  {
+    "id": "m352_peckmon",
+    "width": 56,
+    "height": 59,
+    "frames": 75,
+    "source": "digimon/m352_peckmon_main",
+    "name": "페크몬"
+  },
+  {
+    "id": "m353_meramon",
+    "width": 53,
+    "height": 48,
+    "frames": 59,
+    "source": "digimon/m353_meramon_main",
+    "name": "메라몬"
+  },
+  {
+    "id": "m354_mojyamon",
+    "width": 56,
+    "height": 58,
+    "frames": 59,
+    "source": "digimon/m354_mojyamon_main",
+    "name": "모털몬"
+  },
+  {
+    "id": "m355_monochromon",
+    "width": 64,
+    "height": 42,
+    "frames": 62,
+    "source": "digimon/m355_monochromon_main",
+    "name": "모노크로몬"
+  },
+  {
+    "id": "m356_yukidarumon",
+    "width": 64,
+    "height": 49,
+    "frames": 61,
+    "source": "digimon/m356_yukidarumon_main",
+    "name": "프리지몬"
+  },
+  {
+    "id": "m357_unimon",
+    "width": 48,
+    "height": 43,
+    "frames": 59,
+    "source": "digimon/m357_unimon_main",
+    "name": "유니몬"
+  },
+  {
+    "id": "m358_youkomon",
+    "width": 56,
+    "height": 43,
+    "frames": 61,
+    "source": "digimon/m358_youkomon_main",
+    "name": "블랙구미호몬"
+  },
+  {
+    "id": "m359_rynxmon",
+    "width": 48,
+    "height": 43,
+    "frames": 62,
+    "source": "digimon/m359_rynxmon_main",
+    "name": "링스몬"
+  },
+  {
+    "id": "m362_raremon",
+    "width": 64,
+    "height": 53,
+    "frames": 63,
+    "source": "digimon/m362_raremon_main",
+    "name": "레어몬"
+  },
+  {
+    "id": "m363_leomon",
+    "width": 64,
+    "height": 54,
+    "frames": 58,
+    "source": "digimon/m363_leomon_main",
+    "name": "레오몬"
+  },
+  {
+    "id": "m364_redvagimon",
+    "width": 64,
+    "height": 58,
+    "frames": 61,
+    "source": "digimon/m364_redvagimon_main",
+    "name": "레드베지몬"
+  },
+  {
+    "id": "m366_coredramon_ten",
+    "width": 64,
+    "height": 45,
+    "frames": 58,
+    "source": "digimon/m366_coredramon_ten_main",
+    "name": "코어드라몬(청)"
+  },
+  {
+    "id": "m367_coredramon_ti",
+    "width": 64,
+    "height": 45,
+    "frames": 58,
+    "source": "digimon/m367_coredramon_ti_main",
+    "name": "코어드라몬(녹)"
+  },
+  {
+    "id": "m368_firamon",
+    "width": 72,
+    "height": 37,
+    "frames": 64,
+    "source": "digimon/m368_firamon_main",
+    "name": "파이라몬"
+  },
+  {
+    "id": "m369_lekismon",
+    "width": 48,
+    "height": 43,
+    "frames": 59,
+    "source": "digimon/m369_lekismon_main",
+    "name": "레키스몬"
+  },
+  {
+    "id": "m370_icedevimon",
+    "width": 88,
+    "height": 38,
+    "frames": 57,
+    "source": "digimon/m370_icedevimon_main",
+    "name": "아이스데블몬"
+  },
+  {
+    "id": "m371_grurumon",
+    "width": 54,
+    "height": 46,
+    "frames": 63,
+    "source": "digimon/m371_grurumon_main",
+    "name": "구루몬"
+  },
+  {
+    "id": "m372_geremon",
+    "width": 56,
+    "height": 53,
+    "frames": 63,
+    "source": "digimon/m372_geremon_main",
+    "name": "워매몬"
+  },
+  {
+    "id": "m373_bluemeramon",
+    "width": 39,
+    "height": 58,
+    "frames": 57,
+    "source": "digimon/m373_bluemeramon_main",
+    "name": "블루메라몬"
+  },
+  {
+    "id": "m374_sorcerimon",
+    "width": 56,
+    "height": 39,
+    "frames": 58,
+    "source": "digimon/m374_sorcerimon_main",
+    "name": "화이트위자몬"
+  },
+  {
+    "id": "m375_akatorimon",
+    "width": 48,
+    "height": 60,
+    "frames": 54,
+    "source": "digimon/m375_akatorimon_main",
+    "name": "레드꼬끼몬"
+  },
+  {
+    "id": "m376_saverdramon",
+    "width": 48,
+    "height": 53,
+    "frames": 57,
+    "source": "digimon/m376_saverdramon_main",
+    "name": "블랙버드라몬"
+  },
+  {
+    "id": "m377_icemon",
+    "width": 45,
+    "height": 35,
+    "frames": 62,
+    "source": "digimon/m377_icemon_main",
+    "name": "아이스몬"
+  },
+  {
+    "id": "m378_vdramon",
+    "width": 64,
+    "height": 45,
+    "frames": 59,
+    "source": "digimon/m378_vdramon_main",
+    "name": "브이드라몬"
+  },
+  {
+    "id": "m379_growmon",
+    "width": 64,
+    "height": 45,
+    "frames": 58,
+    "source": "digimon/m379_growmon_main",
+    "name": "그라우몬"
+  },
+  {
+    "id": "m401_atlurkabuterimon",
+    "width": 64,
+    "height": 65,
+    "frames": 59,
+    "source": "digimon/m401_atlurkabuterimon_main",
+    "name": "아트라캅테리몬"
+  },
+  {
+    "id": "m402_anomalocarimon",
+    "width": 64,
+    "height": 59,
+    "frames": 63,
+    "source": "digimon/m402_anomalocarimon_main",
+    "name": "스콜피온몬"
+  },
+  {
+    "id": "m403_andromon",
+    "width": 64,
+    "height": 62,
+    "frames": 62,
+    "source": "digimon/m403_andromon_main",
+    "name": "안드로몬"
+  },
+  {
+    "id": "m404_etemon",
+    "width": 80,
+    "height": 79,
+    "frames": 56,
+    "source": "digimon/m404_etemon_main",
+    "name": "에테몬"
+  },
+  {
+    "id": "m405_angewomon",
+    "width": 56,
+    "height": 52,
+    "frames": 55,
+    "source": "digimon/m405_angewomon_main",
+    "name": "엔젤우몬"
+  },
+  {
+    "id": "m406_oukuwamon",
+    "width": 76,
+    "height": 63,
+    "frames": 58,
+    "source": "digimon/m406_oukuwamon_main",
+    "name": "오쿠와몬"
+  },
+  {
+    "id": "m407_gurudamon",
+    "width": 64,
+    "height": 62,
+    "frames": 61,
+    "source": "digimon/m407_gurudamon_main",
+    "name": "가루다몬"
+  },
+  {
+    "id": "m408_gerbemon",
+    "width": 64,
+    "height": 65,
+    "frames": 58,
+    "source": "digimon/m408_gerbemon_main",
+    "name": "가비지몬"
+  },
+  {
+    "id": "m410_cyberdramon",
+    "width": 48,
+    "height": 62,
+    "frames": 59,
+    "source": "digimon/m410_cyberdramon_main",
+    "name": "사이버드라몬"
+  },
+  {
+    "id": "m412_jyureimon",
+    "width": 80,
+    "height": 62,
+    "frames": 55,
+    "source": "digimon/m412_jyureimon_main",
+    "name": "쥬레이몬"
+  },
+  {
+    "id": "m413_skullgreymon",
+    "width": 80,
+    "height": 63,
+    "frames": 61,
+    "source": "digimon/m413_skullgreymon_main",
+    "name": "스컬그레이몬"
+  },
+  {
+    "id": "m414_zudomon",
+    "width": 64,
+    "height": 48,
+    "frames": 56,
+    "source": "digimon/m414_zudomon_main",
+    "name": "쥬드몬"
+  },
+  {
+    "id": "m415_dagomon",
+    "width": 96,
+    "height": 73,
+    "frames": 64,
+    "source": "digimon/m415_dagomon_main",
+    "name": "드라고몬"
+  },
+  {
+    "id": "m416_deathmeramon",
+    "width": 57,
+    "height": 68,
+    "frames": 58,
+    "source": "digimon/m416_deathmeramon_main",
+    "name": "데드메라몬"
+  },
+  {
+    "id": "m417_delumon",
+    "width": 58,
+    "height": 69,
+    "frames": 61,
+    "source": "digimon/m417_delumon_main",
+    "name": "뿌띠몬"
+  },
+  {
+    "id": "m418_tonosamagekomon",
+    "width": 100,
+    "height": 73,
+    "frames": 57,
+    "source": "digimon/m418_tonosamagekomon_main",
+    "name": "왕개굴몬"
+  },
+  {
+    "id": "m419_toriceramon",
+    "width": 72,
+    "height": 54,
+    "frames": 59,
+    "source": "digimon/m419_toriceramon_main",
+    "name": "트리세라몬"
+  },
+  {
+    "id": "m420_knightmon",
+    "width": 58,
+    "height": 54,
+    "frames": 57,
+    "source": "digimon/m420_knightmon_main",
+    "name": "나이트몬"
+  },
+  {
+    "id": "m422_parrotmon",
+    "width": 68,
+    "height": 73,
+    "frames": 57,
+    "source": "digimon/m422_parrotmon_main",
+    "name": "패롯몬"
+  },
+  {
+    "id": "m423_hangyomon",
+    "width": 80,
+    "height": 63,
+    "frames": 61,
+    "source": "digimon/m423_hangyomon_main",
+    "name": "다이버몬"
+  },
+  {
+    "id": "m424_pandamon",
+    "width": 64,
+    "height": 58,
+    "frames": 57,
+    "source": "digimon/m424_pandamon_main",
+    "name": "팬더몬"
+  },
+  {
+    "id": "m426_bigmamemon",
+    "width": 56,
+    "height": 52,
+    "frames": 57,
+    "source": "digimon/m426_bigmamemon_main",
+    "name": "왕콩알몬"
+  },
+  {
+    "id": "m427_picklemon",
+    "width": 38,
+    "height": 45,
+    "frames": 55,
+    "source": "digimon/m427_picklemon_main",
+    "name": "피콜몬"
+  },
+  {
+    "id": "m428_fantomon",
+    "width": 64,
+    "height": 62,
+    "frames": 63,
+    "source": "digimon/m428_fantomon_main",
+    "name": "팬텀몬"
+  },
+  {
+    "id": "m430_vademon",
+    "width": 59,
+    "height": 46,
+    "frames": 59,
+    "source": "digimon/m430_vademon_main",
+    "name": "베이더몬"
+  },
+  {
+    "id": "m431_whamon",
+    "width": 96,
+    "height": 86,
+    "frames": 64,
+    "source": "digimon/m431_whamon_main",
+    "name": "고래몬"
+  },
+  {
+    "id": "m432_holyangemon",
+    "width": 56,
+    "height": 61,
+    "frames": 56,
+    "source": "digimon/m432_holyangemon_main",
+    "name": "홀리엔젤몬"
+  },
+  {
+    "id": "m433_machgaogamon",
+    "width": 89,
+    "height": 62,
+    "frames": 69,
+    "source": "digimon/m433_machgaogamon_main",
+    "name": "마하가오가몬"
+  },
+  {
+    "id": "m435_mamemon",
+    "width": 40,
+    "height": 36,
+    "frames": 65,
+    "source": "digimon/m435_mamemon_main",
+    "name": "콩알몬"
+  },
+  {
+    "id": "m437_mammon",
+    "width": 80,
+    "height": 56,
+    "frames": 59,
+    "source": "digimon/m437_mammon_main",
+    "name": "맘모스몬"
+  },
+  {
+    "id": "m438_megaseadramon",
+    "width": 66,
+    "height": 65,
+    "frames": 57,
+    "source": "digimon/m438_megaseadramon_main",
+    "name": "메가시드라몬"
+  },
+  {
+    "id": "m439_megadramon",
+    "width": 64,
+    "height": 63,
+    "frames": 58,
+    "source": "digimon/m439_megadramon_main",
+    "name": "메가드라몬"
+  },
+  {
+    "id": "m440_metalgreymon_vi",
+    "width": 64,
+    "height": 62,
+    "frames": 58,
+    "source": "digimon/m440_metalgreymon_vi_main",
+    "name": "메탈그레이몬(청)"
+  },
+  {
+    "id": "m441_metalgreymon_va",
+    "width": 64,
+    "height": 62,
+    "frames": 58,
+    "source": "digimon/m441_metalgreymon_va_main",
+    "name": "메탈그레이몬"
+  },
+  {
+    "id": "m442_metaltyranomon",
+    "width": 58,
+    "height": 60,
+    "frames": 58,
+    "source": "digimon/m442_metaltyranomon_main",
+    "name": "메탈티라노몬"
+  },
+  {
+    "id": "m444_monzaemon",
+    "width": 64,
+    "height": 57,
+    "frames": 61,
+    "source": "digimon/m444_monzaemon_main",
+    "name": "퍼펫몬"
+  },
+  {
+    "id": "m445_yatagaramon",
+    "width": 64,
+    "height": 61,
+    "frames": 55,
+    "source": "digimon/m445_yatagaramon_main",
+    "name": "야타가라몬"
+  },
+  {
+    "id": "m446_rizegreymon",
+    "width": 72,
+    "height": 62,
+    "frames": 56,
+    "source": "digimon/m446_rizegreymon_main",
+    "name": "라이즈그레이몬"
+  },
+  {
+    "id": "m447_rapidmon",
+    "width": 56,
+    "height": 51,
+    "frames": 57,
+    "source": "digimon/m447_rapidmon_main",
+    "name": "래비드몬"
+  },
+  {
+    "id": "m448_lilimon",
+    "width": 56,
+    "height": 51,
+    "frames": 61,
+    "source": "digimon/m448_lilimon_main",
+    "name": "릴리몬"
+  },
+  {
+    "id": "m449_ladydevimon",
+    "width": 48,
+    "height": 61,
+    "frames": 61,
+    "source": "digimon/m449_ladydevimon_main",
+    "name": "레이디데블몬"
+  },
+  {
+    "id": "m450_warumonzaemon",
+    "width": 64,
+    "height": 50,
+    "frames": 57,
+    "source": "digimon/m450_warumonzaemon_main",
+    "name": "나쁜퍼펫몬"
+  },
+  {
+    "id": "m451_weregarurumon_va",
+    "width": 72,
+    "height": 55,
+    "frames": 57,
+    "source": "digimon/m451_weregarurumon_va_main",
+    "name": "워가루몬"
+  },
+  {
+    "id": "m452_weregarurumon_vi",
+    "width": 72,
+    "height": 55,
+    "frames": 58,
+    "source": "digimon/m452_weregarurumon_vi_main",
+    "name": "워가루몬(흑)"
+  },
+  {
+    "id": "m453_wingdramon",
+    "width": 64,
+    "height": 63,
+    "frames": 67,
+    "source": "digimon/m453_wingdramon_main",
+    "name": "윙드라몬"
+  },
+  {
+    "id": "m454_grondramon",
+    "width": 64,
+    "height": 63,
+    "frames": 63,
+    "source": "digimon/m454_grondramon_main",
+    "name": "그라운드라몬"
+  },
+  {
+    "id": "m455_flaremon",
+    "width": 64,
+    "height": 62,
+    "frames": 69,
+    "source": "digimon/m455_flaremon_main",
+    "name": "플레어몬"
+  },
+  {
+    "id": "m456_crescemon",
+    "width": 64,
+    "height": 62,
+    "frames": 58,
+    "source": "digimon/m456_crescemon_main",
+    "name": "크레세몬"
+  },
+  {
+    "id": "m457_superstarmon",
+    "width": 58,
+    "height": 60,
+    "frames": 57,
+    "source": "digimon/m457_superstarmon_main",
+    "name": "슈퍼스타몬"
+  },
+  {
+    "id": "m458_blackrapidmon",
+    "width": 56,
+    "height": 51,
+    "frames": 57,
+    "source": "digimon/m458_blackrapidmon_main",
+    "name": "블랙래비드몬"
+  },
+  {
+    "id": "m501_vikemon",
+    "width": 80,
+    "height": 63,
+    "frames": 59,
+    "source": "digimon/m501_vikemon_main",
+    "name": "바이킹몬"
+  },
+  {
+    "id": "m502_valkyrimon",
+    "width": 56,
+    "height": 60,
+    "frames": 55,
+    "source": "digimon/m502_valkyrimon_main",
+    "name": "발키리몬"
+  },
+  {
+    "id": "m503_warglaymon",
+    "width": 92,
+    "height": 108,
+    "frames": 63,
+    "source": "digimon/m503_warglaymon_main",
+    "name": "워그레이몬"
+  },
+  {
+    "id": "m504_gigaseadramon",
+    "width": 80,
+    "height": 81,
+    "frames": 55,
+    "source": "digimon/m504_gigaseadramon_main",
+    "name": "기가시드라몬"
+  },
+  {
+    "id": "m505_grankuwagamon",
+    "width": 72,
+    "height": 59,
+    "frames": 53,
+    "source": "digimon/m505_grankuwagamon_main",
+    "name": "그랜쿠가몬"
+  },
+  {
+    "id": "m506_griffomon",
+    "width": 65,
+    "height": 55,
+    "frames": 61,
+    "source": "digimon/m506_griffomon_main",
+    "name": "그리폰몬"
+  },
+  {
+    "id": "m507_crossmon",
+    "width": 64,
+    "height": 59,
+    "frames": 55,
+    "source": "digimon/m507_crossmon_main",
+    "name": "이글몬"
+  },
+  {
+    "id": "m508_saberleomon",
+    "width": 72,
+    "height": 54,
+    "frames": 61,
+    "source": "digimon/m508_saberleomon_main",
+    "name": "샤벨레오몬"
+  },
+  {
+    "id": "m509_shinegraymon",
+    "width": 88,
+    "height": 93,
+    "frames": 65,
+    "source": "digimon/m509_shinegraymon_main",
+    "name": "샤잉레이몬"
+  },
+  {
+    "id": "m510_skullmammon",
+    "width": 88,
+    "height": 66,
+    "frames": 55,
+    "source": "digimon/m510_skullmammon_main",
+    "name": "스컬맘모스몬"
+  },
+  {
+    "id": "m511_saintgargomon",
+    "width": 64,
+    "height": 73,
+    "frames": 58,
+    "source": "digimon/m511_saintgargomon_main",
+    "name": "세인트가르고몬"
+  },
+  {
+    "id": "m512_hiandromon",
+    "width": 80,
+    "height": 88,
+    "frames": 55,
+    "source": "digimon/m512_hiandromon_main",
+    "name": "하이안드로몬"
+  },
+  {
+    "id": "m513_bantyoliomon",
+    "width": 64,
+    "height": 54,
+    "frames": 64,
+    "source": "digimon/m513_bantyoliomon_main",
+    "name": "반쵸레오몬"
+  },
+  {
+    "id": "m514_piemon",
+    "width": 64,
+    "height": 75,
+    "frames": 60,
+    "source": "digimon/m514_piemon_main",
+    "name": "피에몬"
+  },
+  {
+    "id": "m515_pinochimon",
+    "width": 72,
+    "height": 59,
+    "frames": 57,
+    "source": "digimon/m515_pinochimon_main",
+    "name": "피노키몬"
+  },
+  {
+    "id": "m516_pharaohmon",
+    "width": 79,
+    "height": 68,
+    "frames": 58,
+    "source": "digimon/m516_pharaohmon_main",
+    "name": "파라오몬"
+  },
+  {
+    "id": "m517_pukumon",
+    "width": 64,
+    "height": 57,
+    "frames": 57,
+    "source": "digimon/m517_pukumon_main",
+    "name": "푸쿠몬"
+  },
+  {
+    "id": "m518_blackwargreymon",
+    "width": 92,
+    "height": 108,
+    "frames": 63,
+    "source": "digimon/m518_blackwargreymon_main",
+    "name": "블랙워그레이몬"
+  },
+  {
+    "id": "m519_princemamemon",
+    "width": 48,
+    "height": 52,
+    "frames": 56,
+    "source": "digimon/m519_princemamemon_main",
+    "name": "프린스콩알몬"
+  },
+  {
+    "id": "m520_pilesiomon",
+    "width": 63,
+    "height": 40,
+    "frames": 58,
+    "source": "digimon/m520_pilesiomon_main",
+    "name": "프레시오몬"
+  },
+  {
+    "id": "m521_heraklekabuterimon",
+    "width": 88,
+    "height": 92,
+    "frames": 63,
+    "source": "digimon/m521_heraklekabuterimon_main",
+    "name": "헤라크레스캅테리몬"
+  },
+  {
+    "id": "m522_hououmon",
+    "width": 80,
+    "height": 103,
+    "frames": 57,
+    "source": "digimon/m522_hououmon_main",
+    "name": "페닉스몬"
+  },
+  {
+    "id": "m526_miragegaogamon",
+    "width": 72,
+    "height": 87,
+    "frames": 64,
+    "source": "digimon/m526_miragegaogamon_main",
+    "name": "미러지가오몬"
+  },
+  {
+    "id": "m527_mugendramon",
+    "width": 92,
+    "height": 104,
+    "frames": 68,
+    "source": "digimon/m527_mugendramon_main",
+    "name": "파워드라몬"
+  },
+  {
+    "id": "m528_metaletemon",
+    "width": 88,
+    "height": 70,
+    "frames": 55,
+    "source": "digimon/m528_metaletemon_main",
+    "name": "메탈에테몬"
+  },
+  {
+    "id": "m529_metalgarurumon_va",
+    "width": 64,
+    "height": 67,
+    "frames": 64,
+    "source": "digimon/m529_metalgarurumon_va_main",
+    "name": "메탈가루몬"
+  },
+  {
+    "id": "m530_metalgarurumon_vi",
+    "width": 64,
+    "height": 67,
+    "frames": 64,
+    "source": "digimon/m530_metalgarurumon_vi_main",
+    "name": "메탈가루몬(흑)"
+  },
+  {
+    "id": "m531_metalseadramon",
+    "width": 66,
+    "height": 92,
+    "frames": 61,
+    "source": "digimon/m531_metalseadramon_main",
+    "name": "메탈시드라몬"
+  },
+  {
+    "id": "m532_rosemon",
+    "width": 72,
+    "height": 62,
+    "frames": 59,
+    "source": "digimon/m532_rosemon_main",
+    "name": "로제몬"
+  },
+  {
+    "id": "m533_zeedgarurumon",
+    "width": 64,
+    "height": 67,
+    "frames": 60,
+    "source": "digimon/m533_zeedgarurumon_main",
+    "name": "지드가루몬"
+  },
+  {
+    "id": "m534_victorygreymon",
+    "width": 88,
+    "height": 91,
+    "frames": 64,
+    "source": "digimon/m534_victorygreymon_main",
+    "name": "빅토리그레이몬"
+  },
+  {
+    "id": "m535_slayerdramon",
+    "width": 80,
+    "height": 92,
+    "frames": 66,
+    "source": "digimon/m535_slayerdramon_main",
+    "name": "슬레이어드라몬"
+  },
+  {
+    "id": "m536_brakedramon",
+    "width": 96,
+    "height": 90,
+    "frames": 67,
+    "source": "digimon/m536_brakedramon_main",
+    "name": "브레이크드라몬"
+  },
+  {
+    "id": "m538_apollomon",
+    "width": 72,
+    "height": 63,
+    "frames": 63,
+    "source": "digimon/m538_apollomon_main",
+    "name": "아폴로몬"
+  },
+  {
+    "id": "m539_dianamon",
+    "width": 64,
+    "height": 71,
+    "frames": 62,
+    "source": "digimon/m539_dianamon_main",
+    "name": "다이아나몬"
+  },
+  {
+    "id": "m540_imperialdramon_fm",
+    "width": 88,
+    "height": 91,
+    "frames": 63,
+    "source": "digimon/m540_imperialdramon_fm_main",
+    "name": "황제드라몬"
+  },
+  {
+    "id": "m541_dukemon",
+    "width": 72,
+    "height": 91,
+    "frames": 63,
+    "source": "digimon/m541_dukemon_main",
+    "name": "듀크몬"
   }
 ]

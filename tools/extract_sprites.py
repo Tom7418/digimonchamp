@@ -84,10 +84,16 @@ if __name__=='__main__':
     ROOT=args.source_root.resolve()
     OUT=args.output.resolve()
     OUT.mkdir(parents=True,exist_ok=True)
-    chosen=['e000_digitama','m102_koromon','m201_agumon','m208_gabumon','m227_patamon']
-    chosen += ['m320_graymon']
-    data=[extract(s) for s in chosen]
+    # tools/sprite_names.json: 원본 파일명 → 진화표 한글 이름 (디지에그 + 216종)
+    names=json.loads((PROJECT/'tools'/'sprite_names.json').read_text(encoding='utf-8'))
+    names.pop('_note',None)
+    data=[]
+    for stem,name in names.items():
+        try:
+            data.append(dict(extract(stem),name=name))
+        except FileNotFoundError:
+            print('원본 없음, 건너뜀:',stem)
     (OUT/'sprites.json').write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
     # JS also works when index.html is opened directly without a server.
     (OUT/'sprites.js').write_text('window.SPRITES = '+json.dumps(data)+';',encoding='utf-8')
-    print(json.dumps(data,indent=2))
+    print(f'{len(data)}종 변환 완료 → {OUT}')

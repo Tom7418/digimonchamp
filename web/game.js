@@ -11,26 +11,25 @@
   const clamp = (n, a = 0, b = 100) => Math.min(b, Math.max(a, n));
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
-  // 변환된 원본 스프라이트가 있는 종. 없으면 종족 색 원 + 이름으로 그린다.
-  const SPRITE_BY_NAME = {
-    디지에그: 'e000_digitama',
-    코로몬: 'm102_koromon',
-    아구몬: 'm201_agumon',
-    파피몬: 'm208_gabumon',
-    파닥몬: 'm227_patamon',
-    그레이몬: 'm320_graymon',
-  };
+  // 원본에서 변환한 스프라이트(assets/sprites.js, 이름은 tools/sprite_names.json)를 진화표 한글 이름으로 찾는다.
+  // 그림이 없는 종은 종족 색 원 + 이름 첫 글자로 그린다.
+  const SPRITE_BY_NAME = Object.fromEntries(window.SPRITES.filter((m) => m.name).map((m) => [m.name, m.id]));
   const FAMILY_COLOR = { 용: '#d9774b', 짐승: '#c9a35b', 물: '#5b9fd9', 새: '#8fc7e8', 벌레풀: '#7fb35a', 기계: '#9aa3ad', 성: '#f0dc8a', 암흑: '#7a5a9a' };
   const START_LAYOUT = [
     { id: 'start-clinic', kind: 'clinic', q: 0, r: 0, rotation: 0 },
     { id: 'start-field', kind: 'field', q: 2, r: 1, rotation: 0 },
   ];
 
+  // 217장을 한 번에 받지 않도록 처음 그릴 때 불러온다
+  const meta = new Map(window.SPRITES.map((m) => [m.id, m]));
   const assets = new Map();
-  for (const meta of window.SPRITES) {
-    const im = new Image();
-    im.src = `assets/${meta.id}.png`;
-    assets.set(meta.id, { ...meta, image: im });
+  function asset(id) {
+    if (!assets.has(id) && meta.has(id)) {
+      const image = new Image();
+      image.src = `assets/${id}.png`;
+      assets.set(id, { ...meta.get(id), image });
+    }
+    return assets.get(id);
   }
 
   let save,
@@ -567,7 +566,7 @@
 
   // ---------- 그리기 (캔버스) ----------
   function sprite(context, id, x, y, scale, frame, flip) {
-    const a = assets.get(id);
+    const a = asset(id);
     if (!a || !a.image.complete || !a.image.naturalWidth) return false;
     context.save();
     context.translate(Math.round(x), Math.round(y));
