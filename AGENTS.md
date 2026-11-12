@@ -4,6 +4,7 @@
 Codex와 Claude Code가 번갈아 작업하므로 아래 규칙을 지킨다.
 
 ## 먼저 읽을 것
+- `docs/roadmap.md` — 현재 진행 상태와 다음에 할 일 (작업을 마치면 갱신)
 - `docs/design.md` — 원작 규칙, 플레이 영상으로 확인한 값, 임시 값 표, 아직 없는 기능
 - `README.md` — 실행·배포 방법과 파일 구조
 
@@ -22,7 +23,8 @@ Codex와 Claude Code가 번갈아 작업하므로 아래 규칙을 지킨다.
 2. 규칙을 바꾸면 `src/core`를 고치고 `tests/core.test.ts`에 테스트를 추가한 뒤 `npm run build:core`.
 3. 확인: `npm test` (vitest + node:test), `npx tsc --noEmit`, `python tools/check_web.py`
 4. 커밋 메시지는 한국어로, 무엇을 왜 바꿨는지 쓴다. main에 푸시하면 GitHub Actions가 테스트 → core.js 빌드 → Pages 배포를 한다.
-5. 원작 수치를 새로 확인했거나 임시 값을 정했으면 `docs/design.md` 표에 근거(영상·위키·임시)와 함께 적는다.
+5. 작업을 마치면 `docs/roadmap.md`의 상태와 다음 할 일을 갱신한다.
+6. 원작 수치를 새로 확인했거나 임시 값을 정했으면 `docs/design.md` 표에 근거(영상·위키·임시)와 함께 적는다.
 
 ## 규칙
 - 원작에서 확인한 값과 임시로 정한 값을 섞지 말고 주석이나 문서에 구분해 둔다.
