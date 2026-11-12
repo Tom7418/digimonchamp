@@ -65,9 +65,9 @@ def screen(base: Path, name: str, height=192):
     print(name, w, h)
 
 
-def cells(base: Path, picks: dict):
+def cells(base: Path, picks: dict, gfx='.ncbr'):
     c = base.with_suffix('.ncer').read_bytes()
-    graphics = base.with_suffix('.ncbr').read_bytes()
+    graphics = base.with_suffix(gfx).read_bytes()
     depth = 8 if struct.unpack_from('<I', graphics, 28)[0] == 4 else 4
     g, pal = graphics[48:], palette(base.with_suffix('.nclr'))
     count, kind, offset, mapping = struct.unpack_from('<HHII', c, 24)
@@ -109,10 +109,6 @@ def cells(base: Path, picks: dict):
         print(name, W, H)
 
 
-# 높이: 맨 아래 줄이 비어 있는(검정·분홍) 그림은 그만큼 잘라 이어 붙일 때 줄무늬가 생기지 않게 한다
-screen(ROOT / 'title_menu/title_top', 'title_top', 191)     # 로고 (위 화면)
-screen(ROOT / 'ui/common_bg_top', 'bg_top', 184)            # 육각 무늬 공통 배경 (페이지 배경으로 타일)
-cells(ROOT / 'title_menu/parts_main', {4: 'title_orb'})  # 오프닝의 구슬
 
 
 def logo():
@@ -163,4 +159,9 @@ def logo():
     print('logo', x1 - x0, y1 - y0)
 
 
-logo()
+if __name__ == '__main__':
+    # 높이: 맨 아래 줄이 비어 있는(검정·분홍) 그림은 그만큼 잘라 이어 붙일 때 줄무늬가 생기지 않게 한다
+    screen(ROOT / 'title_menu/title_top', 'title_top', 191)     # 로고 (위 화면)
+    screen(ROOT / 'ui/common_bg_top', 'bg_top', 184)            # 육각 무늬 공통 배경 (페이지 배경으로 타일)
+    cells(ROOT / 'title_menu/parts_main', {4: 'title_orb'})  # 오프닝의 구슬
+    logo()

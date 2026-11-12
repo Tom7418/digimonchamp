@@ -458,8 +458,10 @@
   function renderTray() {
     setHtml(
       '#tray',
-      ITEMS.map((it) => `<button class="tray-item" data-item="${it.kind}" aria-pressed="${selectedItem === it.kind}"${it.count() > 0 ? '' : ' disabled'}><img src="assets/items/${it.kind}.png" alt=""><b>${it.label}</b><small>×${Math.max(0, it.count())}</small></button>`).join('') +
-        '<button class="tray-item" data-item="select" aria-pressed="' + (selectedItem === null) + '">선택 / 이동</button>' +
+      // 원작 사육장 아래 도구 줄 아이콘 (ui/UI_Icon_training, tools/extract_ui.py)
+      '<button class="tray-item tool" data-item="select" aria-pressed="' + (selectedItem === null) + '" title="선택 / 이동"><img src="assets/ui/icon_hand.png" alt=""><b>선택</b></button>' +
+        ITEMS.map((it) => `<button class="tray-item tool" data-item="${it.kind}" aria-pressed="${selectedItem === it.kind}"${it.count() > 0 ? '' : ' disabled'} title="${it.label}"><img src="assets/ui/icon_${it.kind}.png" alt=""><b>${it.label}</b><small>×${Math.max(0, it.count())}</small></button>`).join('') +
+        '<button class="tray-item tool" data-tool="cage" title="케이지 편집"><img src="assets/ui/icon_cage.png" alt=""><b>케이지</b></button>' +
         '<span class="tray-hint">' + (selectedItem === 'meat' ? '사육장 바닥을 터치해 고기를 놓으세요 · Esc로 취소' : selectedItem === 'pill' ? '치료할 디지몬을 터치하세요 · Esc로 취소' : '고기 선택 → 바닥 터치 · 알약 선택 → 디지몬 터치') + '</span>',
     );
   }
@@ -511,6 +513,11 @@
   }
   function initFarmInput() {
     $('#tray').addEventListener('click', (e) => {
+      if (e.target.closest?.('[data-tool]')?.dataset?.tool === 'cage' && !farmInputBlocked()) {
+        const b = document.querySelector('#edit-cages');
+        if (b) b.click();
+        return;
+      }
       const b = e.target.closest('[data-item]');
       if (!b || b.disabled || farmInputBlocked()) return;
       selectedItem = b.dataset.item === 'select' || selectedItem === b.dataset.item ? null : b.dataset.item;
@@ -654,6 +661,7 @@
     if (action === 'heal') apply(C.heal(save, d.uid));
     if (action === 'battle') battleMenu();
     if (action === 'shop') shopMenu();
+    if (action === 'tamer') tamerInfo();
     if (action === 'release') releaseMenu();
     if (action === 'hunt') huntMenu();
   }
@@ -662,6 +670,30 @@
   }
 
   // ---------- 모달 ----------
+  // 원작 '테이머 정보'·'달성률' 화면 (tamer_info 그림 위에 값을 얹는다)
+  function tamerInfo() {
+    const d = C.dateOf(save.clock), rank = C.tamerRank(save);
+    const battles = save.digimon.reduce((n, x) => n + (x.battles || 0), 0), wins = save.digimon.reduce((n, x) => n + (x.wins || 0), 0);
+    const open = C.huntFields(save).filter((f) => f.minRank <= rank).length;
+    const field = (x, y, w, text, cls = '') => `<span class="info-field ${cls}" style="left:${(x / 256) * 100}%;top:${(y / 192) * 100}%;width:${(w / 256) * 100}%">${esc(String(text))}</span>`;
+    const body =
+      `<div class="info-screen" style="background-image:url(assets/ui/tamer_info.png)">` +
+      field(10, 40, 112, '테이머', 'name') +
+      field(134, 52, 112, C.rankName(rank)) +
+      field(44, 75, 92, `${save.bits.toLocaleString()} bit`) +
+      field(44, 117, 92, `${d.year}년차 ${d.seasonName} ${d.day}일`) +
+      field(154, 117, 94, `${C.STAGE_LABEL[C.maxStageForRank(rank)]}까지`) +
+      field(44, 157, 92, `${C.usedCapacity(save)} / ${C.capacityOf(save)}G`) +
+      field(154, 157, 94, `${C.cageSpaceOf(save)}칸`) +
+      `</div><div class="info-screen" style="background-image:url(assets/ui/achievement.png)">` +
+      field(118, 23, 100, `${save.titles.length} / ${C.TITLES.length}`) +
+      field(118, 47, 100, `${save.seen.length} / ${Object.keys(C.SPECIES).length}`) +
+      field(118, 68, 100, `${open} / ${C.FIELDS.length}`) +
+      field(118, 111, 100, `${battles}회`) +
+      field(118, 132, 100, battles ? `${Math.round((wins / battles) * 100)}%` : '-') +
+      `</div>`;
+    showModal('테이머 정보', body, 'TAMER INFO');
+  }
   function showModal(title, body, kicker = 'TAMER GUIDE', ok = '사육장으로 돌아가기') {
     $('#modal-title').textContent = title;
     $('#modal-body').innerHTML = body;
