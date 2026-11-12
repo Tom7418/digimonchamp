@@ -267,7 +267,7 @@
       );
     }
 
-    $('#inventory').textContent = `고기 ${save.meat} · 알약 ${save.pills} · 썩은 고기 ${save.rotten} · 로프 Lv.${save.ropeLevel}`;
+    $('#inventory').textContent = `고기 ${save.meat} · 알약 ${save.pills} · 썩은 고기 ${save.rotten} · ${C.ropeOf(save.ropeLevel).name}`;
     const next = C.upcoming(save);
     $('#milestone').textContent = next[0] || '모든 타이틀 획득!';
     setHtml(
@@ -1115,7 +1115,7 @@
     const fields = C.huntFields(save);
     showModal(
       '사냥',
-      `<p>${esc(date.seasonName)} ${date.day}일 ${pad(date.hour)}:${pad(date.minute)} · 로프 ${save.ropeLevel >= 2 ? '성장기용' : '유년기용'} · 와이어 ${save.wires}개 · 용량 ${C.usedCapacity(save)}/${C.capacityOf(save)}G</p>
+      `<p>${esc(date.seasonName)} ${date.day}일 ${pad(date.hour)}:${pad(date.minute)} · ${C.ropeOf(save.ropeLevel).name} · 와이어 ${save.wires}개 · 용량 ${C.usedCapacity(save)}/${C.capacityOf(save)}G</p>
        ${can.ok ? '' : `<p class="warn">${esc(can.reason)}</p>`}
        <div class="menu-list">${fields
          .map((f, i) => {
@@ -1260,7 +1260,8 @@
       any = true;
       const name = C.getSpecies(w.id).name;
       if (!C.ropeDamage(save, w.id)) {
-        huntNote(`${name}: 로프가 약해 감기지 않는다 (성장기 로프 필요)`);
+        const need = C.ropeFor(w.id);
+        huntNote(`${name}: 로프가 약해 감기지 않는다 (${need ? need.name + ' 필요' : '로프로는 잡을 수 없다'})`);
         w.flee = 2;
         w.vx = (w.x - AREA.x0 < AREA.x1 - w.x ? -1 : 1) * 80;
         continue;
@@ -1407,7 +1408,7 @@
       ctx.font = 'bold 11px "Noto Sans KR",sans-serif';
       ctx.textAlign = 'center';
       ctx.fillStyle = weak ? '#ffd0c0' : '#ffffff';
-      ctx.fillText(sp.name + (weak ? ' (로프 부족)' : ''), w.x, w.y + 18);
+      ctx.fillText(sp.name + (weak ? ` (${C.ropeFor(w.id)?.name ?? '포획 불가'} 필요)` : ''), w.x, w.y + 18);
       for (let k = 0; k < w.max; k++) {
         ctx.fillStyle = k < w.hp ? '#e0574b' : '#00000055';
         ctx.fillRect(w.x - w.max * 7 + k * 14, w.y + 22, 12, 5);
@@ -1447,7 +1448,7 @@
     ctx.fillText(`사냥 · ${hunt.field.id}`, 16, 32);
     ctx.fillStyle = '#e6f2f5';
     ctx.font = '13px "Noto Sans KR",sans-serif';
-    ctx.fillText(`${d.seasonName} ${d.day}일 ${pad(d.hour)}:${pad(d.minute)} (22:00 종료) · 로프 ${save.ropeLevel >= 2 ? '성장기용' : '유년기용'} · 와이어 ${save.wires}개 · 용량 ${C.usedCapacity(save)}/${C.capacityOf(save)}G`, 230, 31);
+    ctx.fillText(`${d.seasonName} ${d.day}일 ${pad(d.hour)}:${pad(d.minute)} (22:00 종료) · ${C.ropeOf(save.ropeLevel).name} · 와이어 ${save.wires}개 · 용량 ${C.usedCapacity(save)}/${C.capacityOf(save)}G`, 230, 31);
     const now = performance.now();
     hunt.notes = hunt.notes.filter((n) => n.until > now);
     ctx.textAlign = 'left';
