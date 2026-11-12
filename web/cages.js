@@ -1,7 +1,7 @@
 'use strict';
 window.CageRules = {
   // 시설 종류별 15초 주기 효과. 점유 칸/정원/배치는 CageLayout에서 검사한다.
-  names: { free: '기본 케이지', gym: '미니 체육관', field: '미니 운동장', clinic: '미니 양호실' },
+  names: { free: '기본 케이지', gym: '체육관', field: '운동장', clinic: '양호실' },
   tick(p) {
     // 자유 활동은 시설 훈련 시간을 누적하지 않는다.
     p.cage = this.names[p.cage] ? p.cage : 'free';
