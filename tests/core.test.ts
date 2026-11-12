@@ -7,6 +7,62 @@ import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMa
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntPool, pickWild, ropeDamage, wildHp } from '../src/core/hunt';
 import type { Digimon, SaveData } from '../src/core/types';
+import { availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
+
+describe('floor food reservations', () => {
+  const foods: FloorFood[] = [{ kind: 'meat', x: 200, y: 300 }];
+  it('direct feeding cannot consume the last meat reserved on the floor', () => {
+    const s = { ...freshSave(0), meat: 1 };
+    expect(availableFood(s, foods, 'meat')).toBe(0);
+    expect(feedFromTray(s, foods, 1, 'meat')).toMatchObject({ ok: false, save: s });
+    const r = eatFloorFood(s, foods, 1, 0);
+    expect(r.ok).toBe(true);
+    expect(r.save.meat).toBe(0);
+    expect(r.foods).toHaveLength(0);
+    expect(eatFloorFood(r.save, r.foods, 1, 0).ok).toBe(false);
+  });
+  it('direct feeding and floor feeding each consume exactly one item', () => {
+    const s = { ...freshSave(0), meat: 2, digimon: [{ ...newDigimon(1, '깜몬'), hunger: 0 }] };
+    const direct = feedFromTray(s, foods, 1, 'meat');
+    expect(direct.ok).toBe(true);
+    expect(availableFood(direct.save, foods, 'meat')).toBe(0);
+    const floor = eatFloorFood(direct.save, foods, 1, 0);
+    expect(floor.save.meat).toBe(0);
+    expect(floor.save.digimon[0].hunger).toBe(70);
+    expect(s.meat).toBe(2);
+    expect(foods).toHaveLength(1);
+  });
+  it('refused food stays on the floor without spending inventory', () => {
+    const base = freshSave(0);
+    for (const patch of [{ hunger: 100 }, { isEgg: true }]) {
+      const s = { ...base, digimon: [{ ...base.digimon[0], ...patch }] };
+      const r = eatFloorFood(s, foods, 1, 0);
+      expect(r.ok).toBe(false);
+      expect(r.save).toBe(s);
+      expect(r.foods).toBe(foods);
+    }
+    const s = { ...base, rotten: 1, digimon: [{ ...base.digimon[0], sick: true }] };
+    const rotten: FloorFood[] = [{ kind: 'rotten', x: 200, y: 300 }];
+    expect(eatFloorFood(s, rotten, 1, 0)).toMatchObject({ ok: false, foods: rotten, save: s });
+  });
+  it('rotten food reservations are independent of meat and retain illness rules', () => {
+    const s = { ...freshSave(0), rotten: 2 };
+    const rotten: FloorFood[] = [{ kind: 'rotten', x: 200, y: 300 }];
+    const direct = feedFromTray(s, rotten, 1, 'rotten');
+    expect(feedFromTray(direct.save, rotten, 1, 'rotten').ok).toBe(false);
+    const r = eatFloorFood(direct.save, rotten, 1, 0);
+    expect(r.save.rotten).toBe(0);
+    expect(r.save.digimon[0]).toMatchObject({ sick: true, penalties: 1 });
+    expect(r.save.meat).toBe(s.meat);
+  });
+  it('old saves keep valid reservations and repair excess or invalid entries once', () => {
+    const s = { ...freshSave(0), meat: 1, rotten: 0 };
+    const restored = restoreFloorFood(s, [...foods, ...foods, null, { kind: 'pill', x: 1, y: 1 }, { kind: 'rotten', x: 200, y: 300 }]);
+    expect(restored).toEqual(foods);
+    expect(restoreFloorFood(s, JSON.parse(JSON.stringify(restored)))).toEqual(restored);
+    expect(restoreFloorFood(s, null)).toEqual([]);
+  });
+});
 
 /** 테스트는 부화한 깜몬에서 시작한다 */
 const freshSave = (now: number): SaveData => ({ ...freshEggSave(now), digimon: [newDigimon(1, '깜몬')] });

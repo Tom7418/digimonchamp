@@ -54,6 +54,8 @@
       if (raw && raw.save && raw.save.version === 2 && Array.isArray(raw.save.digimon) && raw.save.digimon.length && raw.view) {
         save = { wires: 0, ...raw.save };
         view = { ...freshView(), ...raw.view };
+        // 기존 예약형 저장을 유지하면서 중복 소비로 생긴 초과 예약만 복구한다.
+        view.foods = C.restoreFloorFood(save, view.foods);
         // 재접속도 21시에서 멈춘다. 수면은 달력의 '다음 날로'를 누를 때만 진행한다.
         const away = Math.min(C.OFFLINE_CAP_MINUTES, Math.max(0, Math.floor(((Date.now() - save.lastSavedAt) / 1000) * MINUTES_PER_SECOND)));
         if (away > 0) {
@@ -425,15 +427,15 @@
     ctx.fillRect(f.x + 6, f.y - 9, 7, 3);
   }
   const ITEMS = [
-    { kind: 'meat', label: '고기', icon: '🍖', count: () => save.meat - view.foods.filter((f) => f.kind === 'meat').length },
+    { kind: 'meat', label: '고기', icon: '🍖', count: () => C.availableFood(save, view.foods, 'meat') },
     { kind: 'pill', label: '알약', icon: '💊', count: () => save.pills },
-    { kind: 'rotten', label: '썩은 고기', icon: '🦴', count: () => save.rotten - view.foods.filter((f) => f.kind === 'rotten').length },
+    { kind: 'rotten', label: '썩은 고기', icon: '🦴', count: () => C.availableFood(save, view.foods, 'rotten') },
   ];
   function renderTray() {
     setHtml(
       '#tray',
       ITEMS.map((it) => `<button class="tray-item" data-item="${it.kind}"${it.count() > 0 ? '' : ' disabled'}><span>${it.icon}</span><b>${it.label}</b><small>×${Math.max(0, it.count())}</small></button>`).join('') +
-        '<span class="tray-hint">아이템을 끌어서 디지몬이나 바닥에 놓으세요 · 똥은 눌러서 치웁니다</span>',
+        '<span class="tray-hint">디지몬이나 바닥에 끌어 놓기 · Esc/바깥에 놓으면 취소 · 수량은 바닥 예약분 제외</span>',
     );
   }
   function petAt(pt) {
@@ -450,15 +452,16 @@
     return best;
   }
   function dropItem(kind, pt) {
+    if (farmInputBlocked()) return;
     const hit = petAt(pt);
     if (kind === 'pill') {
       if (!hit) return toast('알약은 디지몬에게 놓으세요.');
       view.selected = view.team.indexOf(hit.p);
       return apply(C.heal(save, hit.d.uid));
     }
-    if (hit && !hit.d.isEgg) {
+    if (hit) {
       view.selected = view.team.indexOf(hit.p);
-      if (apply(kind === 'meat' ? C.feed(save, hit.d.uid) : C.feedRotten(save, hit.d.uid)) && kind === 'meat') fx('♥ 냠냠!', '#ffe4a0');
+      if (apply(C.feedFromTray(save, view.foods, hit.d.uid, kind)) && kind === 'meat') fx('♥ 냠냠!', '#ffe4a0');
       return;
     }
     const it = ITEMS.find((x) => x.kind === kind);
@@ -469,39 +472,76 @@
   }
   // 아이템 끌기 (아이템 칸 → 사육장)
   let dragItem = null;
+  let canceledItemPointer = null;
   let swallowUp = false;
+  function farmInputBlocked() {
+    return !!battle || !!hunt || board.editing || mailOpen || dayEnding || $('#modal').open || document.hidden;
+  }
+  function cancelItemDrag() {
+    if (!dragItem) return;
+    const { ghost, pointerId } = dragItem;
+    canceledItemPointer = pointerId;
+    dragItem = null;
+    ghost.remove();
+    const tray = $('#tray');
+    if (tray.hasPointerCapture?.(pointerId)) tray.releasePointerCapture(pointerId);
+  }
   function initFarmInput() {
   $('#tray').addEventListener('pointerdown', (e) => {
     const b = e.target.closest('[data-item]');
-    if (!b || b.disabled || battle || hunt) return;
+    if (!b || b.disabled || dragItem || e.button !== 0 || e.isPrimary === false || farmInputBlocked()) return;
     e.preventDefault();
     const ghost = document.createElement('div');
     ghost.className = 'drag-ghost';
     ghost.textContent = b.querySelector('span').textContent;
     document.body.append(ghost);
-    dragItem = { kind: b.dataset.item, ghost };
+    dragItem = { kind: b.dataset.item, ghost, pointerId: e.pointerId };
+    canceledItemPointer = null;
+    // 버튼은 매초 다시 그려지므로 고정된 트레이에서 포인터를 유지한다.
+    $('#tray').setPointerCapture?.(e.pointerId);
     moveGhost(e);
   });
   function moveGhost(e) {
-    if (!dragItem) return;
+    if (!dragItem || e.pointerId !== dragItem.pointerId) return;
     dragItem.ghost.style.left = `${e.clientX}px`;
     dragItem.ghost.style.top = `${e.clientY}px`;
   }
   window.addEventListener('pointermove', moveGhost);
   window.addEventListener('pointerup', (e) => {
-    if (!dragItem) return;
-    const { kind, ghost } = dragItem;
-    dragItem = null;
-    ghost.remove();
+    // Esc 등으로 취소한 뒤 손을 떼도 케이지 클릭으로 해석하지 않는다.
+    if (!dragItem && e.pointerId === canceledItemPointer) {
+      canceledItemPointer = null;
+      e.stopImmediatePropagation();
+      return;
+    }
+    if (!dragItem || e.pointerId !== dragItem.pointerId) return;
+    // 케이지 편집기의 pointerup까지 전달하면 선택한 디지몬도 함께 이동하므로 먼저 소비한다.
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    const { kind } = dragItem;
+    cancelItemDrag();
+    canceledItemPointer = null;
+    if (farmInputBlocked()) return;
     const r = canvas.getBoundingClientRect();
     if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
     dropItem(kind, { x: ((e.clientX - r.left) / r.width) * 960, y: ((e.clientY - r.top) / r.height) * 560 });
+  }, true);
+  window.addEventListener('pointercancel', (e) => {
+    if (e.pointerId === dragItem?.pointerId) cancelItemDrag();
   });
+  $('#tray').addEventListener('lostpointercapture', (e) => {
+    if (e.pointerId === dragItem?.pointerId) cancelItemDrag();
+  });
+  window.addEventListener('blur', cancelItemDrag);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) cancelItemDrag(); });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && dragItem) { e.preventDefault(); e.stopImmediatePropagation(); cancelItemDrag(); }
+  }, true);
   // 똥 치우기: 케이지 편집기보다 먼저 받아서 처리한다 (capture)
   canvas.addEventListener(
     'pointerdown',
     (e) => {
-      if (hunt || battle || board.editing) return;
+      if (farmInputBlocked()) return;
       const r = canvas.getBoundingClientRect();
       const pt = { x: ((e.clientX - r.left) / r.width) * 960, y: ((e.clientY - r.top) / r.height) * 560 };
       const hit = view.poops.find((x) => Math.hypot(pt.x - x.x, pt.y - (x.y - 4)) < 16);
@@ -534,14 +574,17 @@
     if (!view.foods.length || d.isEgg || p.cageId || d.hunger >= 60) return false;
     let best = null;
     for (const f of view.foods) {
+      // 병든 디지몬은 썩은 먹이를 거부한다. 먹지 못하는 먹이 앞에서 계속 멈추지 않는다.
+      if (f.kind === 'rotten' && d.sick) continue;
       const dist = Math.hypot(f.x - p.x, f.y - p.y);
       if (!best || dist < best.dist) best = { f, dist };
     }
+    if (!best) return false;
     const { f, dist } = best;
     if (dist < 10) {
-      view.foods = view.foods.filter((x) => x !== f);
-      const r = f.kind === 'meat' ? C.feed(save, d.uid) : C.feedRotten(save, d.uid);
+      const r = C.eatFloorFood(save, view.foods, d.uid, view.foods.indexOf(f));
       if (r.ok) {
+        view.foods = r.foods;
         save = r.save;
         log(`${nameOf(d)}: ${r.message}`);
         effect = { text: f.kind === 'meat' ? '♥ 냠냠!' : '우웩…', color: '#ffe4a0', until: performance.now() + 1500, uid: d.uid };
@@ -582,9 +625,9 @@
     if (battle) return;
     const d = current();
     if (action === 'feed') {
-      if (apply(C.feed(save, d.uid))) fx('♥ 냠냠!', '#ffe4a0');
+      if (apply(C.feedFromTray(save, view.foods, d.uid, 'meat'))) fx('♥ 냠냠!', '#ffe4a0');
     }
-    if (action === 'rotten') apply(C.feedRotten(save, d.uid));
+    if (action === 'rotten') apply(C.feedFromTray(save, view.foods, d.uid, 'rotten'));
     if (action === 'clean') apply(C.clean(save, d.uid));
     if (action === 'heal') apply(C.heal(save, d.uid));
     if (action === 'battle') battleMenu();
@@ -1450,6 +1493,7 @@
   $('#hunt-leave').onclick = () => endHunt();
 
   function frame(now) {
+    if (dragItem && farmInputBlocked()) cancelItemDrag();
     const dt = lastTime ? Math.min(0.05, (now - lastTime) / 1000) : 0;
     lastTime = now;
     if (!document.hidden) {

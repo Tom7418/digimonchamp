@@ -7,3 +7,4 @@ export * from './core/battle';
 export * from './core/titles';
 export * from './core/hunt';
 export * from './core/rng';
+export * from './core/food';
