@@ -2,7 +2,7 @@ import { CAGES, dateOf, DAY_END_HOUR, DAY_START_HOUR, EGG_MINUTES, evolutionBonu
 import { endOfLife, findEvolution } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, tamerRank } from './titles';
-import { WIRE_PACK } from './hunt';
+import { ROPES, WIRE_PACK } from './hunt';
 import { ATTRS, FAMILIES, PERSONALITIES, STAT_KEYS, STAT_LABEL, type ApKey, type Digimon, type SaveData, type Stats } from './types';
 
 /** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
@@ -366,8 +366,11 @@ export function shopItems(save: SaveData): ShopItem[] {
     { id: 'pill', name: '알약 ×1', price: 80, apply: (s) => ({ ...s, pills: s.pills + 1 }), available: () => true },
     { id: 'rotten', name: '썩은 고기 ×2', price: 20, apply: (s) => ({ ...s, rotten: s.rotten + 2 }), available: () => true },
     { id: 'wire', name: `노멀 와이어 ×${WIRE_PACK.count}`, price: WIRE_PACK.price, apply: (s) => ({ ...s, wires: (s.wires ?? 0) + WIRE_PACK.count }), available: () => true },
-    { id: 'rope2', name: '성장기 로프', price: 1500, apply: (s) => ({ ...s, ropeLevel: 2 }), available: (s) => s.ropeLevel < 2 && rank >= 2 },
   ];
+  // 다음 단계 로프만 상점에 나온다 (단계를 건너뛰지 않음)
+  for (const r of ROPES)
+    if (r.level > 1)
+      items.push({ id: `rope${r.level}`, name: r.name, price: r.price, apply: (s) => ({ ...s, ropeLevel: Math.max(s.ropeLevel, r.level) }), available: (s) => s.ropeLevel === r.level - 1 && rank >= r.minRank });
   for (const c of CAGES) {
     if (c.price > 0)
       items.push({ id: `cage:${c.id}`, name: `케이지: ${c.id}`, price: c.price, apply: (s) => ({ ...s, cages: [...s.cages, c.id] }), available: (s) => !s.cages.includes(c.id) && rank >= c.minRank });

@@ -1059,16 +1059,55 @@ var ChampCore = (function(exports) {
 		]).find((l) => l.length);
 		return list ? pickWeighted(list, p.rare, rng) : null;
 	}
-	/** 로프로 몇 번 둘러야 잡히는가 */
+	/**
+	* 로프 단계. 테이머 랭크가 오르면 상점에 다음 로프가 열리고, 최대 완전체까지 잡을 수 있다 (형규 원작 확인).
+	* 궁극체는 잡을 수 없다. 가격·열리는 랭크는 임시 값.
+	*/
+	var ROPES = [
+		{
+			level: 1,
+			name: "유년기 로프",
+			maxStage: 2,
+			price: 0,
+			minRank: 1
+		},
+		{
+			level: 2,
+			name: "성장기 로프",
+			maxStage: 3,
+			price: 1500,
+			minRank: 2
+		},
+		{
+			level: 3,
+			name: "성숙기 로프",
+			maxStage: 4,
+			price: 3e3,
+			minRank: 4
+		},
+		{
+			level: 4,
+			name: "완전체 로프",
+			maxStage: 5,
+			price: 6e3,
+			minRank: 6
+		}
+	];
+	function ropeOf(level) {
+		return ROPES[Math.max(0, Math.min(ROPES.length - 1, level - 1))];
+	}
+	/** 이 디지몬을 잡으려면 필요한 로프 (없으면 null = 궁극체) */
+	function ropeFor(speciesId) {
+		const stage = getSpecies(speciesId).stage;
+		return ROPES.find((r) => r.maxStage >= stage) ?? null;
+	}
+	/** 로프로 몇 번 둘러야 잡히는가 (임시: 유년기I 1, 유년기II 2, 성장기 3, 성숙기 4, 완전체 5) */
 	function wildHp(speciesId) {
-		return Math.max(1, Math.min(3, getSpecies(speciesId).stage));
+		return Math.max(1, Math.min(5, getSpecies(speciesId).stage));
 	}
 	/** 로프로 한 번 둘렀을 때 깎이는 HP. 0이면 이 로프로는 잡을 수 없다 */
 	function ropeDamage(save, speciesId) {
-		const stage = getSpecies(speciesId).stage;
-		if (stage >= 4) return 0;
-		if (stage === 3 && save.ropeLevel < 2) return 0;
-		return 1;
+		return getSpecies(speciesId).stage <= ropeOf(save.ropeLevel).maxStage ? 1 : 0;
 	}
 	/** 와이어 한 묶음 (상점) */
 	var WIRE_PACK = {
@@ -1578,18 +1617,18 @@ var ChampCore = (function(exports) {
 					wires: (s.wires ?? 0) + WIRE_PACK.count
 				}),
 				available: () => true
-			},
-			{
-				id: "rope2",
-				name: "성장기 로프",
-				price: 1500,
-				apply: (s) => ({
-					...s,
-					ropeLevel: 2
-				}),
-				available: (s) => s.ropeLevel < 2 && rank >= 2
 			}
 		];
+		for (const r of ROPES) if (r.level > 1) items.push({
+			id: `rope${r.level}`,
+			name: r.name,
+			price: r.price,
+			apply: (s) => ({
+				...s,
+				ropeLevel: Math.max(s.ropeLevel, r.level)
+			}),
+			available: (s) => s.ropeLevel === r.level - 1 && rank >= r.minRank
+		});
 		for (const c of CAGES) if (c.price > 0) items.push({
 			id: `cage:${c.id}`,
 			name: `케이지: ${c.id}`,
@@ -1874,6 +1913,7 @@ var ChampCore = (function(exports) {
 	exports.PRELIM_WINS = PRELIM_WINS;
 	exports.RARE_WEIGHT = RARE_WEIGHT;
 	exports.ROOKIE_CHANCE = ROOKIE_CHANCE;
+	exports.ROPES = ROPES;
 	exports.SEASONS = SEASONS;
 	exports.SEASON_CODE = SEASON_CODE;
 	exports.SPECIES = SPECIES;
@@ -1937,6 +1977,8 @@ var ChampCore = (function(exports) {
 	exports.reqScale = reqScale;
 	exports.restoreFloorFood = restoreFloorFood;
 	exports.ropeDamage = ropeDamage;
+	exports.ropeFor = ropeFor;
+	exports.ropeOf = ropeOf;
 	exports.runBattle = runBattle;
 	exports.seeded = seeded;
 	exports.setCage = setCage;

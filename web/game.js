@@ -1122,7 +1122,7 @@
            const pool = C.huntPool(f, save.clock);
            const off = !f.open || !can.ok || save.bits < f.fee;
            const why = !f.open ? f.reason : save.bits < f.fee ? '비트 부족' : '';
-           return `<button data-field="${i}"${off ? ' disabled' : ''}><b>${esc(f.id)}${f.fee ? ` · ${f.fee} ฿` : ''}</b><small>${why ? esc(why) + ' · ' : ''}이번 계절: ${esc(pool.babies.join(', ') || '없음')}${pool.rookies.length ? ` / 성장기 ${esc(pool.rookies.join(', '))}` : ''}${pool.strong.length ? ` / 강한 디지몬 ${esc(pool.strong.join(', '))}` : ''}</small></button>`;
+           return `<button data-field="${i}"${off ? ' disabled' : ''}><b>${esc(f.id)}${f.fee ? ` · ${f.fee} ฿` : ''}</b><small>${why ? esc(why) + ' · ' : ''}이번 계절: ${esc(pool.babies.join(', ') || '없음')}${pool.rookies.length ? ` / 성장기 ${esc(pool.rookies.join(', '))}` : ''}${pool.strong.length ? ` / 성숙기 이상 ${esc(pool.strong.join(', '))}` : ''}</small></button>`;
          })
          .join('')}</div>
        <p class="hint">드래그로 디지몬을 둘러싸고 처음 위치 근처에서 손을 떼면 로프가 감깁니다. 감긴 디지몬을 눌러 바깥으로 끌었다 놓으면 당겨서 HP가 깎이고, HP를 다 깎으면 포획. 감은 뒤 4초 안에 당기지 않으면 풀립니다. 맞은 디지몬은 맵 밖으로 도망가니 와이어로 길을 막으세요. 성장기는 성장기 로프가 있어야 잡힙니다.</p>`,

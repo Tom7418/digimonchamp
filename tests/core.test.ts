@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm } from '../src/core/care';
+import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems } from '../src/core/care';
 import { getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, wildHp } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeFor, wildHp } from '../src/core/hunt';
 import type { Digimon, SaveData } from '../src/core/types';
 import { availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -203,11 +203,25 @@ describe('hunting', () => {
     expect(strong).toEqual([]);
     expect([...babies, ...rookies]).toContain(pickWild(field('다이나 초원'), at(0, 10), seeded(3)));
   });
-  it('beach has strong digimon that the rope cannot catch', () => {
+  it('beach has strong digimon that need the 완전체 로프', () => {
     const p = huntPool(field('파도치는 해변'), at(3, 10));
     expect(p.babies).toContain('둥실몬');
     expect(p.strong).toEqual(expect.arrayContaining(['고래몬']));
-    expect(ropeDamage({ ropeLevel: 2 }, '고래몬')).toBe(0);
+    expect(getSpecies('고래몬').stage).toBe(5);
+    expect(ropeDamage({ ropeLevel: 3 }, '고래몬')).toBe(0);
+    expect(ropeDamage({ ropeLevel: 4 }, '고래몬')).toBe(1);
+    expect(ropeFor('고래몬')?.name).toBe('완전체 로프');
+    expect(ropeFor('워그레이몬')).toBeNull(); // 궁극체는 못 잡는다
+  });
+  it('rope shop opens one step at a time by tamer rank', () => {
+    const base = { ...freshSave(0), bits: 99999 };
+    const ropes = (s: typeof base) => shopItems(s).filter((i) => i.id.startsWith('rope')).map((i) => i.id);
+    expect(ropes(base)).toEqual([]); // 랭크 1
+    const r2 = { ...base, titles: ['t1'] };
+    expect(ropes(r2)).toEqual(['rope2']);
+    expect(ropes({ ...r2, ropeLevel: 2 })).toEqual([]); // 성숙기 로프는 랭크 4부터
+    expect(ropes({ ...base, titles: ['t1', 't2', 't3'], ropeLevel: 2 })).toEqual(['rope3']);
+    expect(ropes({ ...base, titles: ['t1', 't2', 't3', 't4', 't5'], ropeLevel: 3 })).toEqual(['rope4']);
   });
   it('night-only and rare spawns', () => {
     expect(huntPool(field('잉카 유적'), at(2, 10)).babies).not.toContain('유라몬');
