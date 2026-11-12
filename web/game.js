@@ -46,7 +46,7 @@
 
   // ---------- 저장 ----------
   function freshView() {
-    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 2, team: [], selected: 0, logs: [], poops: [], foods: [], tips: {} };
+    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 2, team: [], selected: 0, logs: [], poops: [], foods: [], tips: {}, entryNoticeRead: null };
   }
   function load() {
     try {
@@ -89,6 +89,7 @@
             poops: view.poops,
             foods: view.foods,
             tips: view.tips,
+            entryNoticeRead: view.entryNoticeRead,
           },
         }),
       );
@@ -302,9 +303,10 @@
   // ---------- 안내 편지 (원작: 'From: 안내' 창) ----------
   // 편지가 열려 있는 동안은 시간이 멈춘다. 같은 안내(tip)는 한 번만 보낸다.
   let mailOpen = false;
+  let activeMail = null;
   const mailQueue = [];
-  function mail(text, from = '안내') {
-    mailQueue.push({ text, from });
+  function mail(text, from = '안내', entryKey = null) {
+    mailQueue.push({ text, from, entryKey });
     if (!mailOpen) nextMail();
   }
   function tipMail(key, text) {
@@ -313,7 +315,13 @@
     mail(text);
   }
   function nextMail() {
+    // 경기 안내는 실제로 닫은 뒤에만 읽음 처리한다. 큐에 넣기만 하고 저장하면 안내가 유실된다.
+    if (activeMail?.entryKey) {
+      view.entryNoticeRead = activeMail.entryKey;
+      persist();
+    }
     const m = mailQueue.shift();
+    activeMail = m || null;
     const box = $('#mail');
     if (!m) {
       mailOpen = false;
@@ -328,13 +336,12 @@
 
   // ---------- 하루 흐름 ----------
   // 밤 9시가 되면 하루가 끝나고 달력 화면을 거쳐 다음 날 아침 7시로 넘어간다 (밤에는 잔다).
-  // 아침 8시에 그날 경기가 있으면 엔트리 안내가 온다.
+  // 엔트리 시간 내 재접속에도 안내한다. 이미 읽었거나 대기 중인 같은 날 안내는 중복하지 않는다.
   let dayEnding = false;
   function checkSchedule() {
-    const d = C.dateOf(save.clock);
-    if (d.hour === 8 && d.minute === 0) {
-      const ms = C.todaysMatches(save);
-      if (ms.length) mail(`배틀의 엔트리 시간이 왔습니다.\n오늘은 ${ms.map((m) => m.name).join(', ')}이(가) 열립니다.\n엔트리는 15시까지. 아래 '배틀'에서 출전하세요.`);
+    const notice = C.matchEntryNotice(save, view.entryNoticeRead);
+    if (notice && activeMail?.entryKey !== notice.key && !mailQueue.some((m) => m.entryKey === notice.key)) {
+      mail(`배틀에 참가할 수 있습니다.\n오늘은 ${notice.names.join(', ')}이(가) 열립니다.\n엔트리는 15시 전까지. 아래 '배틀'에서 출전하세요.`, '안내', notice.key);
     }
     if (C.isNight(save) && !battle) openDayEnd();
   }
@@ -1541,7 +1548,7 @@
   };
   render();
   // 저장된 밤에는 첫 tick 전에 달력을 연다. 재접속으로 야간 훈련이 발생하지 않는다.
-  if (C.isNight(save)) openDayEnd();
+  checkSchedule();
   persist();
   requestAnimationFrame(frame);
 })();

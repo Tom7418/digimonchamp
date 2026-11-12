@@ -930,6 +930,19 @@ var ChampCore = (function(exports) {
 		}
 		return lines;
 	}
+	/** 웹판 안내 정책: 접속 시점에도 참가 가능한 경기만 날짜별 한 번 안내한다.
+	* 읽음 표시는 화면에서 편지를 닫았을 때 저장하므로 읽기 전 새로고침으로 유실되지 않는다.
+	*/
+	function matchEntryNotice(save, readKey = null) {
+		const d = dateOf(save.clock);
+		const key = `${d.year}:${d.season}:${d.day}`;
+		const matches = todaysMatches(save);
+		if (readKey === key || !matches.length) return null;
+		return {
+			key,
+			names: matches.map((m) => m.name)
+		};
+	}
 	/** 매치 결과 반영. 타이틀은 이겼을 때만 의미가 있고, 예선·본선은 진 것도 기록한다 */
 	function applyMatch(save, m, won) {
 		const d = dateOf(save.clock);
@@ -1884,6 +1897,7 @@ var ChampCore = (function(exports) {
 	exports.huntPool = huntPool;
 	exports.isNight = isNight;
 	exports.makeEnemies = makeEnemies;
+	exports.matchEntryNotice = matchEntryNotice;
 	exports.maxStageForRank = maxStageForRank;
 	exports.meets = meets;
 	exports.newDigimon = newDigimon;

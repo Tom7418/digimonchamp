@@ -108,6 +108,17 @@ export function upcoming(save: SaveData): string[] {
   return lines;
 }
 
+/** 웹판 안내 정책: 접속 시점에도 참가 가능한 경기만 날짜별 한 번 안내한다.
+ * 읽음 표시는 화면에서 편지를 닫았을 때 저장하므로 읽기 전 새로고침으로 유실되지 않는다.
+ */
+export function matchEntryNotice(save: SaveData, readKey: string | null = null) {
+  const d = dateOf(save.clock);
+  const key = `${d.year}:${d.season}:${d.day}`;
+  const matches = todaysMatches(save);
+  if (readKey === key || !matches.length) return null;
+  return { key, names: matches.map((m) => m.name) };
+}
+
 /** 매치 결과 반영. 타이틀은 이겼을 때만 의미가 있고, 예선·본선은 진 것도 기록한다 */
 export function applyMatch(save: SaveData, m: Match, won: boolean): SaveData {
   const d = dateOf(save.clock);

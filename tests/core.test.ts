@@ -3,7 +3,7 @@ import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, i
 import { getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
-import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming } from '../src/core/titles';
+import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntPool, pickWild, ropeDamage, wildHp } from '../src/core/hunt';
 import type { Digimon, SaveData } from '../src/core/types';
@@ -267,6 +267,31 @@ describe('championship', () => {
 });
 
 describe('day flow', () => {
+  it('entry notices catch up after 08:00 but never invite after closing', () => {
+    const at = (minutes: number) => ({ ...freshSave(0), clock: 2 * 1440 + minutes });
+    expect(matchEntryNotice(at(7 * 60 + 59))).toBeNull();
+    for (const minutes of [8 * 60, 10 * 60 + 23, 14 * 60 + 59]) {
+      expect(matchEntryNotice(at(minutes))).toEqual({ key: '1:0:3', names: ['에이스 오브 링'] });
+    }
+    expect(matchEntryNotice(at(15 * 60))).toBeNull();
+    expect(matchEntryNotice(at(21 * 60))).toBeNull();
+    expect(matchEntryNotice({ ...at(10 * 60), titles: ['t1'] })).toBeNull();
+  });
+  it('read notices are suppressed that day, but can recur next year', () => {
+    const s = { ...freshSave(0), clock: 2 * 1440 + 9 * 60 };
+    const notice = matchEntryNotice(s)!;
+    expect(matchEntryNotice(s, notice.key)).toBeNull();
+    expect(matchEntryNotice({ ...s, clock: s.clock + 32 * 1440 }, notice.key)?.key).toBe('2:0:3');
+    expect(matchEntryNotice(freshSave(0))).toBeNull();
+  });
+  it('championship notices respect rank, played prelims and the final round', () => {
+    const s = { ...freshSave(0), clock: 16 * 1440 + 10 * 60, titles: ['t1', 't2', 't3'] };
+    expect(matchEntryNotice({ ...s, titles: [] })).toBeNull();
+    expect(matchEntryNotice(s)?.names).toEqual(['챔피언십 예선 1전']);
+    expect(matchEntryNotice(applyMatch(s, todaysMatches(s)[0], true))).toBeNull();
+    const finals = { ...s, clock: 52 * 1440 + 10 * 60, qualifiedYear: 1, finalRound: 1 };
+    expect(matchEntryNotice(finals)?.names).toEqual(['챔피언십 본선 4강']);
+  });
   it('offline progress stops at the calendar instead of silently skipping the night', () => {
     const s = { ...freshSave(0), clock: 20 * 60 + 58 };
     const r = advanceOffline(s, 720, seeded(1));
