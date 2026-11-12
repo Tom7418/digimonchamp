@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
-import { buy, CAPACITY, clean, feed, feedRotten, freshSave, heal, release, setCage, shopItems, tickFarm, usedCapacity, type ActionResult, type FarmEvent } from '../core/care';
+import { buy, clean, feed, feedRotten, freshSave, heal, release, setCage, shopItems, tickFarm, usedCapacity, type ActionResult, type FarmEvent } from '../core/care';
 import { CAGES, dateOf, FIELDS, getCage, getSpecies, LIFESPAN, SEASON_CODE, STAGE_LABEL } from '../core/data';
 import { hints, maxStageForRank } from '../core/evolution';
 import { resetGame } from '../core/save';
-import { tamerRank, todaysMatches, upcoming, type Match } from '../core/titles';
+import { capacityOf, tamerRank, todaysMatches, upcoming, type Match } from '../core/titles';
 import { ATTRS, FAMILIES, STAT_KEYS, STAT_LABEL, type AttackMode, type Digimon } from '../core/types';
 import { state } from '../state';
 import { digimonView, playBgm, playSound } from '../ui/art';
@@ -319,7 +319,7 @@ export class FarmScene extends Phaser.Scene {
     const date = dateOf(save.clock);
     const rank = tamerRank(save);
     this.headText.setText(`${date.year}년째 ${date.seasonName} ${date.day}일 ${String(date.hour).padStart(2, '0')}:${String(date.minute).padStart(2, '0')}  랭크 ${rank}  ${save.bits} bit`);
-    this.infoText.setText(`용량 ${usedCapacity(save)}/${CAPACITY}G · 고기 ${save.meat} · 알약 ${save.pills} · 썩은 고기 ${save.rotten}`);
+    this.infoText.setText(`용량 ${usedCapacity(save)}/${capacityOf(save)}G · 고기 ${save.meat} · 알약 ${save.pills} · 썩은 고기 ${save.rotten}`);
     const matches = todaysMatches(save);
     this.noticeText.setText(matches.length ? `★ 오늘의 매치: ${matches.map((m) => m.name).join(', ')} (15시까지 엔트리)` : '');
 

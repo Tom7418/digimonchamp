@@ -7,3 +7,38 @@
 /* 케이지 편집 도구: 실제 사육장 아래에 배치하여 터치에서도 함께 볼 수 있다. */
 .cage-toolbar{padding:12px;background:#132f42;border-top:2px solid #639fae}.cage-toolbar button{background:#2e526a;color:#e6f5ff;border:1px solid #6c9ab3;border-radius:4px;padding:8px}.cage-toolbar-head{display:flex;gap:8px;flex-wrap:wrap}.cage-palette{display:none;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.editing .cage-palette{display:grid}.cage-palette button{display:flex;align-items:center;flex-direction:column;font-size:11px}.cage-palette button.active{outline:2px solid #ffdc75;background:#4d6a73}.cage-palette span{width:64px;height:48px;background-image:url('assets/cage_shop_icon.png');image-rendering:pixelated}.cage-palette small{color:#b9d7e5;margin-top:4px}.cage-toolbar p{font-size:11px;color:#bfd9df;margin:8px 0 0}#world{cursor:grab}.cage-toolbar.editing{border-color:#f7d26d}@media(max-width:500px){.cage-palette{grid-template-columns:repeat(2,1fr)}.cage-toolbar-head button{font-size:10px}}
 .cage-palette img{width:96px;height:68px;object-fit:contain;image-rendering:pixelated}.cage-palette .footprint{width:70px;height:35px;margin:4px}.footprint polygon{fill:#8db7ae;stroke:#e5f5f3;stroke-width:3}#world{max-height:none}
+
+/* ---- 웹판 02: 규칙 엔진 연결 화면 ---- */
+.band{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.band span{padding:3px 9px;border:1px solid #f2b84b66;border-radius:4px;background:#0b1d2a;color:#d8e6ec;font-size:12px}
+.band b{color:#ffd36a}
+.stats.six{grid-template-columns:repeat(3,1fr);display:grid}
+.stats.six > div + div{border-left:0}
+.ap{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+.ap span{font-size:11px;padding:2px 7px;border-radius:10px;background:#2c4a5a;color:#e6f2f5}
+.ap .muted{background:none;color:#8fa6b0;padding:0}
+.evo-head{margin-top:12px}
+.evo-row{border:1px solid #33515f;border-radius:6px;padding:6px 9px;margin-bottom:6px;background:#0f2533}
+.evo-row.ready{border-color:#ffd36a;box-shadow:0 0 0 1px #ffd36a55}
+.evo-row b{color:#f2f6f8}.evo-row small{margin-left:6px;color:#8fa6b0}
+.evo-row ul{margin:4px 0 0;padding-left:16px;font-size:11px;color:#a9bdc6}
+.evo-row li.met{color:#8ef0a0}.evo-row li.met:before{content:'✓ '}
+.warn{color:#ffb37a;font-size:12px;margin:4px 0 8px}
+.schedule{margin:6px 0 0;padding-left:18px;font-size:12px;color:#a9bdc6}
+.objective h2{font-size:15px}
+.actions{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))!important}
+.menu-list{display:grid;gap:6px;margin:6px 0 12px}
+.menu-list.two{grid-template-columns:1fr 1fr}
+.menu-list button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 10px;text-align:left;border:1px solid #33515f;border-radius:6px;background:#132c3b;color:#eef6f8}
+.menu-list button:hover:not(:disabled){border-color:#ffd36a}
+.menu-list small{color:#9fb5bf}
+dialog h3{font-size:13px;margin:10px 0 2px;color:#ffd36a}
+.mode-pick{display:flex;gap:6px;align-items:center;font-size:12px;margin:6px 0}
+.mode-pick button{padding:3px 10px;border:1px solid #33515f;border-radius:4px;background:#132c3b;color:#eef6f8}
+.mode-pick button.active{background:#ffd36a;color:#132c3b}
+#arena{width:100%;image-rendering:pixelated;border-radius:6px;display:block}
+.battle-health{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11px}
+.hp-row{display:grid;grid-template-columns:70px 1fr 34px;gap:5px;align-items:center;margin-top:3px}
+.cage-palette button:disabled{opacity:.35}
+.cage-palette .swatch{display:block;width:34px;height:22px;border-radius:4px;border:1px solid #ffffff55}
+.partner .ap,.partner #evo,.partner .evo-head,.partner .stats.six{grid-column:1/-1}

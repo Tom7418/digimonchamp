@@ -34,9 +34,10 @@ export const meets = (d: Digimon, cond: Cond) => explain(d, cond).every((c) => c
 
 /** 테이머 랭크로 진화 가능한 최대 세대 */
 export function maxStageForRank(rank: number): Stage {
-  if (rank >= 6) return 6;
-  if (rank >= 4) return 5;
-  if (rank >= 2) return 4;
+  // 레드 테이머(랭크 4)에서 성숙기 허용은 영상 확인, 완전체·궁극체 기준은 임시
+  if (rank >= 8) return 6;
+  if (rank >= 6) return 5;
+  if (rank >= 4) return 4;
   return 3;
 }
 
