@@ -78,7 +78,14 @@ export interface SaveData {
   meat: number;
   pills: number;
   rotten: number;
-  ropeLevel: number;
+  /** 가진 로프 id (hunt.ts ROPES) */
+  ropes: string[];
+  /** 사냥에 들고 가는 로프 id */
+  rope: string;
+  /** 메모리카드 용량(G): 한 번 사냥에서 데려올 수 있는 양 */
+  memoryCard: number;
+  /** 옛 저장 형식(로프 단계 1~4). upgradeSave가 ropes로 바꾼다 */
+  ropeLevel?: number;
   /** 사냥에서 길을 막는 와이어 개수 */
   wires: number;
   cages: string[];

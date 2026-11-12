@@ -71,10 +71,14 @@ export function tamerRank(save: Pick<SaveData, 'titles' | 'champion'>): number {
   return Math.min(8, 1 + normal);
 }
 
-/** 오늘 도전할 수 있는 매치 (엔트리는 08:00~15:00) */
+/** 타이틀 매치 엔트리 시간 (원작 텍스트 txt_list #634: 7:00~15:00) */
+export const ENTRY_OPEN_HOUR = 7;
+export const ENTRY_CLOSE_HOUR = 15;
+
+/** 오늘 도전할 수 있는 매치 */
 export function todaysMatches(save: SaveData): Match[] {
   const d = dateOf(save.clock);
-  if (d.hour < 8 || d.hour >= 15) return [];
+  if (d.hour < ENTRY_OPEN_HOUR || d.hour >= ENTRY_CLOSE_HOUR) return [];
   const rank = tamerRank(save);
   const out = TITLES.filter((t) => t.season === d.season && t.day === d.day && rank >= t.minRank && !save.titles.includes(t.id));
   if (d.season === CHAMP_SEASON && !save.champion) {

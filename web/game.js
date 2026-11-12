@@ -8,7 +8,8 @@
   const $ = (s) => document.querySelector(s);
   const KEY = 'champion-web-v2';
   // 시간 흐름: 현실 1초 = 게임 2분 (×1). 하루(07:00~21:00)가 약 7분. 원작 속도는 미확인이라 임시 값
-  const MINUTES_PER_SECOND = 2;
+  // 원작 도움말(help #96): 디지털 월드의 1일은 실제 시간 10분 → 1440분 / 600초
+  const MINUTES_PER_SECOND = 2.4;
   const pad = (n) => String(n).padStart(2, '0');
   const clamp = (n, a = 0, b = 100) => Math.min(b, Math.max(a, n));
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -52,7 +53,7 @@
     try {
       const raw = JSON.parse(localStorage.getItem(KEY));
       if (raw && raw.save && raw.save.version === 2 && Array.isArray(raw.save.digimon) && raw.save.digimon.length && raw.view) {
-        save = { wires: 0, ...raw.save };
+        save = C.upgradeSave(raw.save);
         view = { ...freshView(), ...raw.view };
         // 기존 예약형 저장을 유지하면서 중복 소비로 생긴 초과 예약만 복구한다.
         view.foods = C.restoreFloorFood(save, view.foods);
@@ -267,7 +268,7 @@
       );
     }
 
-    $('#inventory').textContent = `고기 ${save.meat} · 알약 ${save.pills} · 썩은 고기 ${save.rotten} · ${C.ropeOf(save.ropeLevel).name}`;
+    $('#inventory').textContent = `고기 ${save.meat} · 알약 ${save.pills} · 썩은 고기 ${save.rotten} · ${C.ropeOf(save.rope).name} · 메모리카드 ${save.memoryCard}G`;
     const next = C.upcoming(save);
     $('#milestone').textContent = next[0] || '모든 타이틀 획득!';
     setHtml(
@@ -736,7 +737,7 @@
             return `<button data-title="${i}"${eggsOk ? '' : ' disabled'}><b>★ ${esc(m.name)}</b><small>${m.format}:${m.format} · 상대 ${C.STAGE_LABEL[m.stage]} · 상금 ${m.prize.toLocaleString('ko-KR')} ฿${eggsOk ? '' : ` · 디지에그화 ${m.needEggs}회 필요`}</small></button>`;
           })
           .join('')
-      : `<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은 08:00~15:00, 일정: ${esc(C.upcoming(save)[0] || '-')}</p>`;
+      : `<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은 07:00~15:00, 일정: ${esc(C.upcoming(save)[0] || '-')}</p>`;
     const free = [];
     for (const stars of [1, 2, 3])
       for (const format of [1, 3]) free.push({ stars, format, stage: Math.min(6, 2 + stars), prize: 60 * stars * (format === 3 ? 2 : 1) });
@@ -1115,7 +1116,7 @@
     const fields = C.huntFields(save);
     showModal(
       '사냥',
-      `<p>${esc(date.seasonName)} ${date.day}일 ${pad(date.hour)}:${pad(date.minute)} · ${C.ropeOf(save.ropeLevel).name} · 와이어 ${save.wires}개 · 용량 ${C.usedCapacity(save)}/${C.capacityOf(save)}G</p>
+      `<p>${esc(date.seasonName)} ${date.day}일 ${pad(date.hour)}:${pad(date.minute)} · ${C.ropeOf(save.rope).name} · 와이어 ${save.wires}개 · 메모리카드 ${save.memoryCard}G · 용량 ${C.usedCapacity(save)}/${C.capacityOf(save)}G</p>
        ${can.ok ? '' : `<p class="warn">${esc(can.reason)}</p>`}
        <div class="menu-list">${fields
          .map((f, i) => {
@@ -1146,7 +1147,7 @@
     if (!field.open) return;
     if (save.bits < field.fee) return toast('비트가 부족해요.');
     save = { ...save, bits: save.bits - field.fee };
-    hunt = { field, wilds: [], wires: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [] };
+    hunt = { field, wilds: [], wires: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0 };
     // 1024x1024 원본 지도에서 화면(960x560)만큼 잘라 쓸 위치. 들어갈 때마다 달라진다.
     hunt.map = huntMapImage(field);
     hunt.view = { x: Math.floor(Math.random() * (1024 - 960)), y: Math.floor(Math.random() * (1024 - 560)) };
@@ -1272,9 +1273,17 @@
     if (!any) huntNote('둘러싼 디지몬이 없습니다.');
   }
 
-  // 감긴 디지몬을 당긴다: HP 1 감소, 0이면 포획
+  // 감긴 디지몬을 당긴다: 내구력에 따라 끊어지거나, HP 1 감소, 0이면 포획
   function pullRope(w) {
     const name = C.getSpecies(w.id).name;
+    if (Math.random() < C.ropeBreakChance(save, w.id)) {
+      // 원작 도움말: 끊어져도 몇 번이고 다시 쓸 수 있다
+      w.bound = 0;
+      w.flee = 2;
+      w.vx = (w.x - AREA.x0 < AREA.x1 - w.x ? -1 : 1) * 90;
+      huntNote(`로프가 끊어졌다! ${name}이(가) 달아난다 (다시 감을 수 있어요)`);
+      return;
+    }
     w.hp -= C.ropeDamage(save, w.id);
     w.flash = 0.4;
     if (w.hp > 0) {
@@ -1282,9 +1291,10 @@
       huntNote(`당겼다! ${name} HP ${w.hp}/${w.max}`);
       return;
     }
-    const r = C.capture(save, w.id, Math.random);
+    const r = C.capture(save, w.id, Math.random, hunt.carried);
     if (r.ok) {
       save = r.save;
+      hunt.carried += C.getSpecies(w.id).size;
       w.gone = true;
       huntNote(r.message);
       log(r.message);
@@ -1448,7 +1458,7 @@
     ctx.fillText(`사냥 · ${hunt.field.id}`, 16, 32);
     ctx.fillStyle = '#e6f2f5';
     ctx.font = '13px "Noto Sans KR",sans-serif';
-    ctx.fillText(`${d.seasonName} ${d.day}일 ${pad(d.hour)}:${pad(d.minute)} (22:00 종료) · ${C.ropeOf(save.ropeLevel).name} · 와이어 ${save.wires}개 · 용량 ${C.usedCapacity(save)}/${C.capacityOf(save)}G`, 230, 31);
+    ctx.fillText(`${d.seasonName} ${d.day}일 ${pad(d.hour)}:${pad(d.minute)} (22:00 종료) · ${C.ropeOf(save.rope).name} · 와이어 ${save.wires}개 · 카드 ${hunt.carried}/${save.memoryCard}G`, 230, 31);
     const now = performance.now();
     hunt.notes = hunt.notes.filter((n) => n.until > now);
     ctx.textAlign = 'left';
@@ -1510,7 +1520,7 @@
         <li>디지몬을 끌어 케이지에 넣으면 1시간마다 정해진 능력치와 종족·속성 수치가 오릅니다. 양호실은 피로와 부상을 회복합니다.</li>
         <li>진화는 자동입니다. 오른쪽 진화 조건표의 위에서부터 먼저 채운 쪽으로 진화하고, 아무것도 채우지 못하면 수명이 다할 때 ‘시간 경과’ 진화를 합니다.</li>
         <li>배고픔·똥 방치·썩은 고기는 병(페널티)이 됩니다. 병·부상을 이틀 방치하면 쓰러져 디지에그로 돌아갑니다.</li>
-        <li>타이틀 매치(엔트리 08:00~15:00)에서 이기면 테이머 랭크가 올라 사육 용량, 케이지 공간, 진화 가능 세대가 늘어납니다. 첫 타이틀은 봄 3일 ‘에이스 오브 링’입니다.</li>
+        <li>타이틀 매치(엔트리 07:00~15:00)에서 이기면 테이머 랭크가 올라 사육 용량, 케이지 공간, 진화 가능 세대가 늘어납니다. 첫 타이틀은 봄 3일 ‘에이스 오브 링’입니다.</li>
         <li>프리 배틀로 배틀 횟수와 비트를 모으고, 상점에서 고기·알약·케이지를 사세요.</li>
       </ol><p class="hint">비공식 비영리 팬게임입니다. 진행은 이 브라우저에 자동 저장되며, 창을 닫아 둔 시간도 최대 12시간까지 반영됩니다. 사냥은 아직 웹판에 옮기지 않았습니다.</p>`,
     );

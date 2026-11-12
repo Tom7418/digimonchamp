@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems } from '../src/core/care';
+import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave } from '../src/core/care';
 import { getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeFor, wildHp } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp } from '../src/core/hunt';
 import type { Digimon, SaveData } from '../src/core/types';
 import { availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -208,20 +208,40 @@ describe('hunting', () => {
     expect(p.babies).toContain('둥실몬');
     expect(p.strong).toEqual(expect.arrayContaining(['고래몬']));
     expect(getSpecies('고래몬').stage).toBe(5);
-    expect(ropeDamage({ ropeLevel: 3 }, '고래몬')).toBe(0);
-    expect(ropeDamage({ ropeLevel: 4 }, '고래몬')).toBe(1);
-    expect(ropeFor('고래몬')?.name).toBe('완전체 로프');
+    expect(ropeDamage({ rope: 'clone3' }, '고래몬')).toBe(0);
+    expect(ropeDamage({ rope: 'ultima1' }, '고래몬')).toBe(1);
+    expect(ropeFor('고래몬')?.name).toBe('알테마 로프');
     expect(ropeFor('워그레이몬')).toBeNull(); // 궁극체는 못 잡는다
   });
-  it('rope shop opens one step at a time by tamer rank', () => {
+  it('rope shop opens each family (α·β·γ) by tamer rank, durability from the original text', () => {
     const base = { ...freshSave(0), bits: 99999 };
-    const ropes = (s: typeof base) => shopItems(s).filter((i) => i.id.startsWith('rope')).map((i) => i.id);
-    expect(ropes(base)).toEqual([]); // 랭크 1
-    const r2 = { ...base, titles: ['t1'] };
-    expect(ropes(r2)).toEqual(['rope2']);
-    expect(ropes({ ...r2, ropeLevel: 2 })).toEqual([]); // 성숙기 로프는 랭크 4부터
-    expect(ropes({ ...base, titles: ['t1', 't2', 't3'], ropeLevel: 2 })).toEqual(['rope3']);
-    expect(ropes({ ...base, titles: ['t1', 't2', 't3', 't4', 't5'], ropeLevel: 3 })).toEqual(['rope4']);
+    const ropes = (s: typeof base) => shopItems(s).filter((i) => i.id.startsWith('rope:')).map((i) => i.id.slice(5));
+    expect(ropes(base)).toEqual(['digi2', 'digi3']);
+    expect(ropes({ ...base, titles: ['t1'] })).toEqual(['digi2', 'digi3', 'hard1', 'hard2', 'hard3']);
+    expect(ropes({ ...base, titles: ['t1', 't2', 't3', 't4', 't5'] })).toHaveLength(11);
+    expect(ROPES.map((r) => r.durability)).toEqual([10, 15, 20, 32, 44, 56, 60, 80, 100, 150, 150, 250]);
+    // 사면 가장 좋은 로프를 든다
+    const item = shopItems({ ...base, titles: ['t1'] }).find((i) => i.id === 'rope:hard2')!;
+    expect(item.apply(base).rope).toBe('hard2');
+  });
+  it('stronger rope breaks less often', () => {
+    expect(ropeBreakChance({ rope: 'digi1' }, '뿔몬')).toBeGreaterThan(ropeBreakChance({ rope: 'digi3' }, '뿔몬'));
+    expect(ropeBreakChance({ rope: 'ultima3' }, '고래몬')).toBeLessThan(ropeBreakChance({ rope: 'ultima1' }, '고래몬'));
+  });
+  it('memory card limits what one hunt can bring back', () => {
+    const s = freshSave(0);
+    expect(s.memoryCard).toBe(32);
+    const size = getSpecies('뿔몬').size;
+    expect(capture(s, '뿔몬', seeded(1), 32 - size + 1).ok).toBe(false);
+    expect(capture(s, '뿔몬', seeded(1), 0).ok).toBe(true);
+  });
+  it('old saves with ropeLevel are upgraded to the rope list', () => {
+    const old = { ...freshSave(0), ropeLevel: 2, ropes: undefined, rope: undefined, memoryCard: undefined } as unknown as SaveData;
+    const s = upgradeSave(old);
+    expect(s.ropes).toEqual(['digi1', 'hard1']);
+    expect(s.rope).toBe('hard1');
+    expect(s.memoryCard).toBe(32);
+    expect('ropeLevel' in s).toBe(false);
   });
   it('night-only and rare spawns', () => {
     expect(huntPool(field('잉카 유적'), at(2, 10)).babies).not.toContain('유라몬');
@@ -239,9 +259,9 @@ describe('hunting', () => {
   });
   it('rookies need the 성장기 로프', () => {
     expect(wildHp('뿔몬')).toBe(2);
-    expect(ropeDamage({ ropeLevel: 1 }, '뿔몬')).toBe(1);
-    expect(ropeDamage({ ropeLevel: 1 }, '파피몬')).toBe(0);
-    expect(ropeDamage({ ropeLevel: 2 }, '파피몬')).toBe(1);
+    expect(ropeDamage({ rope: 'digi1' }, '뿔몬')).toBe(1);
+    expect(ropeDamage({ rope: 'digi3' }, '파피몬')).toBe(0);
+    expect(ropeDamage({ rope: 'hard1' }, '파피몬')).toBe(1);
   });
   it('no hunting after 22:00', () => {
     const s = freshSave(0);
@@ -311,10 +331,10 @@ describe('championship', () => {
 });
 
 describe('day flow', () => {
-  it('entry notices catch up after 08:00 but never invite after closing', () => {
+  it('entry notices catch up after 07:00 but never invite after closing', () => {
     const at = (minutes: number) => ({ ...freshSave(0), clock: 2 * 1440 + minutes });
-    expect(matchEntryNotice(at(7 * 60 + 59))).toBeNull();
-    for (const minutes of [8 * 60, 10 * 60 + 23, 14 * 60 + 59]) {
+    expect(matchEntryNotice(at(6 * 60 + 59))).toBeNull();
+    for (const minutes of [7 * 60, 10 * 60 + 23, 14 * 60 + 59]) {
       expect(matchEntryNotice(at(minutes))).toEqual({ key: '1:0:3', names: ['에이스 오브 링'] });
     }
     expect(matchEntryNotice(at(15 * 60))).toBeNull();

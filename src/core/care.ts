@@ -2,7 +2,7 @@ import { CAGES, dateOf, DAY_END_HOUR, DAY_START_HOUR, EGG_MINUTES, evolutionBonu
 import { endOfLife, findEvolution } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, tamerRank } from './titles';
-import { ROPES, WIRE_PACK } from './hunt';
+import { bestRope, MEMORY_CARDS, ROPES, START_ROPE, WIRE_PACK } from './hunt';
 import { ATTRS, FAMILIES, PERSONALITIES, STAT_KEYS, STAT_LABEL, type ApKey, type Digimon, type SaveData, type Stats } from './types';
 
 /** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
@@ -40,6 +40,19 @@ export function newDigimon(uid: number, speciesId: string, rng: Rng = defaultRng
   };
 }
 
+/** 옛 저장을 지금 형식으로: 로프 단계(ropeLevel 1~4) → 로프 목록, 메모리카드 기본값 */
+export function upgradeSave(save: SaveData): SaveData {
+  const s = { ...save, wires: save.wires ?? 0 };
+  if (!Array.isArray(s.ropes) || !s.ropes.length) {
+    const level = Math.max(1, Math.min(4, s.ropeLevel ?? 1));
+    s.ropes = ['digi1', 'hard1', 'clone1', 'ultima1'].slice(0, level);
+  }
+  if (!s.ropes.includes(s.rope)) s.rope = bestRope(s.ropes);
+  if (!s.memoryCard) s.memoryCard = MEMORY_CARDS[0].size;
+  delete s.ropeLevel;
+  return s;
+}
+
 export function freshSave(now = Date.now()): SaveData {
   return {
     version: 2,
@@ -48,7 +61,9 @@ export function freshSave(now = Date.now()): SaveData {
     meat: 10,
     pills: 2,
     rotten: 0,
-    ropeLevel: 1,
+    ropes: [START_ROPE],
+    rope: START_ROPE,
+    memoryCard: MEMORY_CARDS[0].size,
     wires: 5,
     cages: [...START_CAGES],
     // 원작처럼 디지에그에서 시작한다 (30분 뒤 깜몬 부화)
@@ -340,8 +355,10 @@ export function release(save: SaveData, uid: number): ActionResult {
   return { ok: true, message: '디지몬을 놓아주었다.', save: { ...save, digimon: save.digimon.filter((d) => d.uid !== uid) } };
 }
 
-export function capture(save: SaveData, speciesId: string, rng: Rng = defaultRng): ActionResult {
+/** 사냥에서 잡기. carried = 이번 사냥에서 이미 메모리카드에 넣은 용량(G) */
+export function capture(save: SaveData, speciesId: string, rng: Rng = defaultRng, carried = 0): ActionResult {
   const size = getSpecies(speciesId).size;
+  if (carried + size > save.memoryCard) return fail(save, `메모리카드 용량이 가득 찼습니다. (${carried}/${save.memoryCard}G)`);
   if (usedCapacity(save) + size > capacityOf(save)) return fail(save, '용량이 가득 찼습니다. 디지몬을 줄여 주세요.');
   const d = newDigimon(save.nextUid, speciesId, rng, true);
   return {
@@ -367,10 +384,22 @@ export function shopItems(save: SaveData): ShopItem[] {
     { id: 'rotten', name: '썩은 고기 ×2', price: 20, apply: (s) => ({ ...s, rotten: s.rotten + 2 }), available: () => true },
     { id: 'wire', name: `노멀 와이어 ×${WIRE_PACK.count}`, price: WIRE_PACK.price, apply: (s) => ({ ...s, wires: (s.wires ?? 0) + WIRE_PACK.count }), available: () => true },
   ];
-  // 다음 단계 로프만 상점에 나온다 (단계를 건너뛰지 않음)
+  // 로프: 랭크가 되면 그 계열(α·β·γ)이 상점에 열린다. 사면 가진 것 중 가장 좋은 로프를 든다.
   for (const r of ROPES)
-    if (r.level > 1)
-      items.push({ id: `rope${r.level}`, name: r.name, price: r.price, apply: (s) => ({ ...s, ropeLevel: Math.max(s.ropeLevel, r.level) }), available: (s) => s.ropeLevel === r.level - 1 && rank >= r.minRank });
+    if (r.price > 0)
+      items.push({
+        id: `rope:${r.id}`,
+        name: `${r.name} (내구력 ${r.durability})`,
+        price: r.price,
+        apply: (s) => {
+          const ropes = [...new Set([...s.ropes, r.id])];
+          return { ...s, ropes, rope: bestRope(ropes) };
+        },
+        available: (s) => !s.ropes.includes(r.id) && rank >= r.minRank,
+      });
+  for (const c of MEMORY_CARDS)
+    if (c.price > 0)
+      items.push({ id: `card:${c.id}`, name: c.name, price: c.price, apply: (s) => ({ ...s, memoryCard: Math.max(s.memoryCard, c.size) }), available: (s) => s.memoryCard < c.size && rank >= c.minRank });
   for (const c of CAGES) {
     if (c.price > 0)
       items.push({ id: `cage:${c.id}`, name: `케이지: ${c.id}`, price: c.price, apply: (s) => ({ ...s, cages: [...s.cages, c.id] }), available: (s) => !s.cages.includes(c.id) && rank >= c.minRank });

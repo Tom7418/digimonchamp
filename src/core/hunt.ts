@@ -92,35 +92,75 @@ export function pickWild(field: Field, clock: number, rng: () => number): string
 }
 
 /**
- * 로프 단계. 테이머 랭크가 오르면 상점에 다음 로프가 열리고, 최대 완전체까지 잡을 수 있다 (형규 원작 확인).
- * 궁극체는 잡을 수 없다. 가격·열리는 랭크는 임시 값.
+ * 로프 12종 (원작 텍스트 txt_list #338~349 이름, #384~395 '○○용의 로프. 내구력 N').
+ * 원작 도움말(help #89): 로프는 묶어서 대미지를 주고, 끊어져도 몇 번이고 다시 쓸 수 있으며
+ * 내구력이 높을수록 끊어질 위험이 적다. 랭크가 오르면 상점에 열린다(형규 확인, 최대 완전체).
+ * 임시 값: 가격, 열리는 랭크, 끊어질 확률 공식, 하위 세대에도 쓸 수 있다는 점.
  */
-export const ROPES = [
-  { level: 1, name: '유년기 로프', maxStage: 2, price: 0, minRank: 1 },
-  { level: 2, name: '성장기 로프', maxStage: 3, price: 1500, minRank: 2 },
-  { level: 3, name: '성숙기 로프', maxStage: 4, price: 3000, minRank: 4 },
-  { level: 4, name: '완전체 로프', maxStage: 5, price: 6000, minRank: 6 },
-] as const;
+export interface Rope {
+  id: string;
+  name: string;
+  /** 이 로프로 잡을 수 있는 가장 높은 세대 */
+  maxStage: number;
+  /** 원작 내구력 */
+  durability: number;
+  price: number;
+  minRank: number;
+}
+const ROPE_FAMILIES = [
+  { key: 'digi', name: '디지 로프', maxStage: 2, durability: [10, 15, 20], price: [0, 300, 600], minRank: 1 },
+  { key: 'hard', name: '하드 로프', maxStage: 3, durability: [32, 44, 56], price: [1500, 2200, 3000], minRank: 2 },
+  { key: 'clone', name: '클론 로프', maxStage: 4, durability: [60, 80, 100], price: [3000, 4000, 5000], minRank: 4 },
+  { key: 'ultima', name: '알테마 로프', maxStage: 5, durability: [150, 150, 250], price: [6000, 7000, 9000], minRank: 6 },
+];
+const GREEK = ['α', 'β', 'γ'];
+export const ROPES: Rope[] = ROPE_FAMILIES.flatMap((f) =>
+  GREEK.map((g, i) => ({ id: `${f.key}${i + 1}`, name: `${f.name}${g}`, maxStage: f.maxStage, durability: f.durability[i], price: f.price[i], minRank: f.minRank })),
+);
+export const START_ROPE = 'digi1';
 
-export function ropeOf(level: number) {
-  return ROPES[Math.max(0, Math.min(ROPES.length - 1, level - 1))];
+export function ropeOf(id: string | undefined): Rope {
+  return ROPES.find((r) => r.id === id) ?? ROPES[0];
 }
 
-/** 이 디지몬을 잡으려면 필요한 로프 (없으면 null = 궁극체) */
-export function ropeFor(speciesId: string) {
+/** 가진 로프 중 가장 좋은 것 (높은 세대, 같으면 높은 내구력) */
+export function bestRope(ids: string[]): string {
+  const own = ROPES.filter((r) => ids.includes(r.id));
+  own.sort((a, b) => b.maxStage - a.maxStage || b.durability - a.durability);
+  return own[0]?.id ?? START_ROPE;
+}
+
+/** 이 디지몬을 잡으려면 필요한 로프 계열 이름 (없으면 null = 궁극체) */
+export function ropeFor(speciesId: string): { name: string } | null {
   const stage = getSpecies(speciesId).stage;
-  return ROPES.find((r) => r.maxStage >= stage) ?? null;
+  const f = ROPE_FAMILIES.find((x) => x.maxStage >= stage);
+  return f ? { name: f.name } : null;
 }
 
-/** 로프로 몇 번 둘러야 잡히는가 (임시: 유년기I 1, 유년기II 2, 성장기 3, 성숙기 4, 완전체 5) */
+/** 로프로 몇 번 당겨야 잡히는가 (임시: 유년기I 1, 유년기II 2, 성장기 3, 성숙기 4, 완전체 5) */
 export function wildHp(speciesId: string): number {
   return Math.max(1, Math.min(5, getSpecies(speciesId).stage));
 }
 
-/** 로프로 한 번 둘렀을 때 깎이는 HP. 0이면 이 로프로는 잡을 수 없다 */
-export function ropeDamage(save: Pick<SaveData, 'ropeLevel'>, speciesId: string): number {
-  return getSpecies(speciesId).stage <= ropeOf(save.ropeLevel).maxStage ? 1 : 0;
+/** 로프로 한 번 당겼을 때 깎이는 HP. 0이면 이 로프로는 잡을 수 없다 */
+export function ropeDamage(save: Pick<SaveData, 'rope'>, speciesId: string): number {
+  return getSpecies(speciesId).stage <= ropeOf(save.rope).maxStage ? 1 : 0;
 }
+
+/** 세대별 버티는 힘 (임시) */
+const PULL_STRENGTH = [0, 2, 4, 16, 40, 100, 250];
+/** 당길 때 로프가 끊어질 확률 = 힘 / (내구력 × 4), 최대 60% (임시 공식) */
+export function ropeBreakChance(save: Pick<SaveData, 'rope'>, speciesId: string): number {
+  const strength = PULL_STRENGTH[getSpecies(speciesId).stage] ?? 250;
+  return Math.min(0.6, strength / (ropeOf(save.rope).durability * 4));
+}
+
+/** 메모리카드 (원작 텍스트 txt_list #430~435: 사냥으로 32G·64G·96G까지 데려올 수 있다). 가격·랭크는 임시 */
+export const MEMORY_CARDS = [
+  { id: 'card32', name: '메모리카드 32', size: 32, price: 0, minRank: 1 },
+  { id: 'card64', name: '메모리카드 64', size: 64, price: 1200, minRank: 2 },
+  { id: 'card96', name: '메모리카드 96', size: 96, price: 3000, minRank: 4 },
+];
 
 /** 와이어 한 묶음 (상점) */
 export const WIRE_PACK = { count: 10, price: 100 };

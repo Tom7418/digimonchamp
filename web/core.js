@@ -877,10 +877,13 @@ var ChampCore = (function(exports) {
 		if (save.champion) return save.titles.length >= TITLES.length ? 10 : 9;
 		return Math.min(8, 1 + normal);
 	}
-	/** 오늘 도전할 수 있는 매치 (엔트리는 08:00~15:00) */
+	/** 타이틀 매치 엔트리 시간 (원작 텍스트 txt_list #634: 7:00~15:00) */
+	var ENTRY_OPEN_HOUR = 7;
+	var ENTRY_CLOSE_HOUR = 15;
+	/** 오늘 도전할 수 있는 매치 */
 	function todaysMatches(save) {
 		const d = dateOf(save.clock);
-		if (d.hour < 8 || d.hour >= 15) return [];
+		if (d.hour < 7 || d.hour >= 15) return [];
 		const rank = tamerRank(save);
 		const out = TITLES.filter((t) => t.season === d.season && t.day === d.day && rank >= t.minRank && !save.titles.includes(t.id));
 		if (d.season === 2 && !save.champion) {
@@ -1059,56 +1062,148 @@ var ChampCore = (function(exports) {
 		]).find((l) => l.length);
 		return list ? pickWeighted(list, p.rare, rng) : null;
 	}
-	/**
-	* 로프 단계. 테이머 랭크가 오르면 상점에 다음 로프가 열리고, 최대 완전체까지 잡을 수 있다 (형규 원작 확인).
-	* 궁극체는 잡을 수 없다. 가격·열리는 랭크는 임시 값.
-	*/
-	var ROPES = [
+	var ROPE_FAMILIES = [
 		{
-			level: 1,
-			name: "유년기 로프",
+			key: "digi",
+			name: "디지 로프",
 			maxStage: 2,
+			durability: [
+				10,
+				15,
+				20
+			],
+			price: [
+				0,
+				300,
+				600
+			],
+			minRank: 1
+		},
+		{
+			key: "hard",
+			name: "하드 로프",
+			maxStage: 3,
+			durability: [
+				32,
+				44,
+				56
+			],
+			price: [
+				1500,
+				2200,
+				3e3
+			],
+			minRank: 2
+		},
+		{
+			key: "clone",
+			name: "클론 로프",
+			maxStage: 4,
+			durability: [
+				60,
+				80,
+				100
+			],
+			price: [
+				3e3,
+				4e3,
+				5e3
+			],
+			minRank: 4
+		},
+		{
+			key: "ultima",
+			name: "알테마 로프",
+			maxStage: 5,
+			durability: [
+				150,
+				150,
+				250
+			],
+			price: [
+				6e3,
+				7e3,
+				9e3
+			],
+			minRank: 6
+		}
+	];
+	var GREEK = [
+		"α",
+		"β",
+		"γ"
+	];
+	var ROPES = ROPE_FAMILIES.flatMap((f) => GREEK.map((g, i) => ({
+		id: `${f.key}${i + 1}`,
+		name: `${f.name}${g}`,
+		maxStage: f.maxStage,
+		durability: f.durability[i],
+		price: f.price[i],
+		minRank: f.minRank
+	})));
+	var START_ROPE = "digi1";
+	function ropeOf(id) {
+		return ROPES.find((r) => r.id === id) ?? ROPES[0];
+	}
+	/** 가진 로프 중 가장 좋은 것 (높은 세대, 같으면 높은 내구력) */
+	function bestRope(ids) {
+		const own = ROPES.filter((r) => ids.includes(r.id));
+		own.sort((a, b) => b.maxStage - a.maxStage || b.durability - a.durability);
+		return own[0]?.id ?? "digi1";
+	}
+	/** 이 디지몬을 잡으려면 필요한 로프 계열 이름 (없으면 null = 궁극체) */
+	function ropeFor(speciesId) {
+		const stage = getSpecies(speciesId).stage;
+		const f = ROPE_FAMILIES.find((x) => x.maxStage >= stage);
+		return f ? { name: f.name } : null;
+	}
+	/** 로프로 몇 번 당겨야 잡히는가 (임시: 유년기I 1, 유년기II 2, 성장기 3, 성숙기 4, 완전체 5) */
+	function wildHp(speciesId) {
+		return Math.max(1, Math.min(5, getSpecies(speciesId).stage));
+	}
+	/** 로프로 한 번 당겼을 때 깎이는 HP. 0이면 이 로프로는 잡을 수 없다 */
+	function ropeDamage(save, speciesId) {
+		return getSpecies(speciesId).stage <= ropeOf(save.rope).maxStage ? 1 : 0;
+	}
+	/** 세대별 버티는 힘 (임시) */
+	var PULL_STRENGTH = [
+		0,
+		2,
+		4,
+		16,
+		40,
+		100,
+		250
+	];
+	/** 당길 때 로프가 끊어질 확률 = 힘 / (내구력 × 4), 최대 60% (임시 공식) */
+	function ropeBreakChance(save, speciesId) {
+		const strength = PULL_STRENGTH[getSpecies(speciesId).stage] ?? 250;
+		return Math.min(.6, strength / (ropeOf(save.rope).durability * 4));
+	}
+	/** 메모리카드 (원작 텍스트 txt_list #430~435: 사냥으로 32G·64G·96G까지 데려올 수 있다). 가격·랭크는 임시 */
+	var MEMORY_CARDS = [
+		{
+			id: "card32",
+			name: "메모리카드 32",
+			size: 32,
 			price: 0,
 			minRank: 1
 		},
 		{
-			level: 2,
-			name: "성장기 로프",
-			maxStage: 3,
-			price: 1500,
+			id: "card64",
+			name: "메모리카드 64",
+			size: 64,
+			price: 1200,
 			minRank: 2
 		},
 		{
-			level: 3,
-			name: "성숙기 로프",
-			maxStage: 4,
+			id: "card96",
+			name: "메모리카드 96",
+			size: 96,
 			price: 3e3,
 			minRank: 4
-		},
-		{
-			level: 4,
-			name: "완전체 로프",
-			maxStage: 5,
-			price: 6e3,
-			minRank: 6
 		}
 	];
-	function ropeOf(level) {
-		return ROPES[Math.max(0, Math.min(ROPES.length - 1, level - 1))];
-	}
-	/** 이 디지몬을 잡으려면 필요한 로프 (없으면 null = 궁극체) */
-	function ropeFor(speciesId) {
-		const stage = getSpecies(speciesId).stage;
-		return ROPES.find((r) => r.maxStage >= stage) ?? null;
-	}
-	/** 로프로 몇 번 둘러야 잡히는가 (임시: 유년기I 1, 유년기II 2, 성장기 3, 성숙기 4, 완전체 5) */
-	function wildHp(speciesId) {
-		return Math.max(1, Math.min(5, getSpecies(speciesId).stage));
-	}
-	/** 로프로 한 번 둘렀을 때 깎이는 HP. 0이면 이 로프로는 잡을 수 없다 */
-	function ropeDamage(save, speciesId) {
-		return getSpecies(speciesId).stage <= ropeOf(save.ropeLevel).maxStage ? 1 : 0;
-	}
 	/** 와이어 한 묶음 (상점) */
 	var WIRE_PACK = {
 		count: 10,
@@ -1147,6 +1242,26 @@ var ChampCore = (function(exports) {
 			poopTimer: 0
 		};
 	}
+	/** 옛 저장을 지금 형식으로: 로프 단계(ropeLevel 1~4) → 로프 목록, 메모리카드 기본값 */
+	function upgradeSave(save) {
+		const s = {
+			...save,
+			wires: save.wires ?? 0
+		};
+		if (!Array.isArray(s.ropes) || !s.ropes.length) {
+			const level = Math.max(1, Math.min(4, s.ropeLevel ?? 1));
+			s.ropes = [
+				"digi1",
+				"hard1",
+				"clone1",
+				"ultima1"
+			].slice(0, level);
+		}
+		if (!s.ropes.includes(s.rope)) s.rope = bestRope(s.ropes);
+		if (!s.memoryCard) s.memoryCard = MEMORY_CARDS[0].size;
+		delete s.ropeLevel;
+		return s;
+	}
 	function freshSave(now = Date.now()) {
 		return {
 			version: 2,
@@ -1155,7 +1270,9 @@ var ChampCore = (function(exports) {
 			meat: 10,
 			pills: 2,
 			rotten: 0,
-			ropeLevel: 1,
+			ropes: [START_ROPE],
+			rope: START_ROPE,
+			memoryCard: MEMORY_CARDS[0].size,
 			wires: 5,
 			cages: [...START_CAGES],
 			digimon: [{
@@ -1560,8 +1677,10 @@ var ChampCore = (function(exports) {
 			}
 		};
 	}
-	function capture(save, speciesId, rng = defaultRng) {
+	/** 사냥에서 잡기. carried = 이번 사냥에서 이미 메모리카드에 넣은 용량(G) */
+	function capture(save, speciesId, rng = defaultRng, carried = 0) {
 		const size = getSpecies(speciesId).size;
+		if (carried + size > save.memoryCard) return fail(save, `메모리카드 용량이 가득 찼습니다. (${carried}/${save.memoryCard}G)`);
 		if (usedCapacity(save) + size > capacityOf(save)) return fail(save, "용량이 가득 찼습니다. 디지몬을 줄여 주세요.");
 		const d = newDigimon(save.nextUid, speciesId, rng, true);
 		return {
@@ -1619,15 +1738,29 @@ var ChampCore = (function(exports) {
 				available: () => true
 			}
 		];
-		for (const r of ROPES) if (r.level > 1) items.push({
-			id: `rope${r.level}`,
-			name: r.name,
+		for (const r of ROPES) if (r.price > 0) items.push({
+			id: `rope:${r.id}`,
+			name: `${r.name} (내구력 ${r.durability})`,
 			price: r.price,
+			apply: (s) => {
+				const ropes = [.../* @__PURE__ */ new Set([...s.ropes, r.id])];
+				return {
+					...s,
+					ropes,
+					rope: bestRope(ropes)
+				};
+			},
+			available: (s) => !s.ropes.includes(r.id) && rank >= r.minRank
+		});
+		for (const c of MEMORY_CARDS) if (c.price > 0) items.push({
+			id: `card:${c.id}`,
+			name: c.name,
+			price: c.price,
 			apply: (s) => ({
 				...s,
-				ropeLevel: Math.max(s.ropeLevel, r.level)
+				memoryCard: Math.max(s.memoryCard, c.size)
 			}),
-			available: (s) => s.ropeLevel === r.level - 1 && rank >= r.minRank
+			available: (s) => s.memoryCard < c.size && rank >= c.minRank
 		});
 		for (const c of CAGES) if (c.price > 0) items.push({
 			id: `cage:${c.id}`,
@@ -1896,6 +2029,8 @@ var ChampCore = (function(exports) {
 	exports.DAY_END_HOUR = DAY_END_HOUR;
 	exports.DAY_START_HOUR = DAY_START_HOUR;
 	exports.EGG_MINUTES = EGG_MINUTES;
+	exports.ENTRY_CLOSE_HOUR = ENTRY_CLOSE_HOUR;
+	exports.ENTRY_OPEN_HOUR = ENTRY_OPEN_HOUR;
 	exports.FAMILIES = FAMILIES;
 	exports.FIELDS = FIELDS;
 	exports.FINAL = FINAL;
@@ -1904,6 +2039,7 @@ var ChampCore = (function(exports) {
 	exports.HUNT_NIGHT_HOUR = HUNT_NIGHT_HOUR;
 	exports.HUNT_OPEN_HOUR = HUNT_OPEN_HOUR;
 	exports.LIFESPAN = LIFESPAN;
+	exports.MEMORY_CARDS = MEMORY_CARDS;
 	exports.MIN_PER_DAY = MIN_PER_DAY;
 	exports.OFFLINE_CAP_MINUTES = OFFLINE_CAP_MINUTES;
 	exports.PERSONALITIES = PERSONALITIES;
@@ -1920,6 +2056,7 @@ var ChampCore = (function(exports) {
 	exports.STAGE_LABEL = STAGE_LABEL;
 	exports.START_CAGES = START_CAGES;
 	exports.START_CLOCK = START_CLOCK;
+	exports.START_ROPE = START_ROPE;
 	exports.STAT_KEYS = STAT_KEYS;
 	exports.STAT_LABEL = STAT_LABEL;
 	exports.STRONG_CHANCE = STRONG_CHANCE;
@@ -1933,6 +2070,7 @@ var ChampCore = (function(exports) {
 	exports.applyMatch = applyMatch;
 	exports.applyWin = applyWin;
 	exports.availableFood = availableFood;
+	exports.bestRope = bestRope;
 	exports.buy = buy;
 	exports.cageSpaceOf = cageSpaceOf;
 	exports.canHuntNow = canHuntNow;
@@ -1976,6 +2114,7 @@ var ChampCore = (function(exports) {
 	exports.release = release;
 	exports.reqScale = reqScale;
 	exports.restoreFloorFood = restoreFloorFood;
+	exports.ropeBreakChance = ropeBreakChance;
 	exports.ropeDamage = ropeDamage;
 	exports.ropeFor = ropeFor;
 	exports.ropeOf = ropeOf;
@@ -1990,6 +2129,7 @@ var ChampCore = (function(exports) {
 	exports.todaysMatches = todaysMatches;
 	exports.typicalStats = typicalStats;
 	exports.upcoming = upcoming;
+	exports.upgradeSave = upgradeSave;
 	exports.usedCapacity = usedCapacity;
 	exports.wildHp = wildHp;
 	return exports;
