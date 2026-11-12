@@ -10,17 +10,14 @@
 <main>
 <div class="intro"><div><div class="eyebrow">DIGIMON CHAMPIONSHIP</div><h1>디지몬 챔피언십</h1><div class="band" id="band"></div></div><div class="wallet"><span>소지금 / BIT</span><strong><span id="coins">0</span> <small>฿</small></strong></div></div>
 <div class="layout"><section class="world-panel"><div class="world-top"><div><span class="live-dot"></span> <strong id="scene-title">사육장</strong><span class="region">TRAINING FARM</span></div><span class="hunt-tools"><button class="quiet" id="tool-rope">로프</button><button class="quiet" id="tool-wire">와이어</button><button class="quiet" id="hunt-leave">사냥 종료</button></span><button class="quiet" id="speed">▶▶ ×1</button></div>
-<div class="canvas-wrap"><canvas id="world" width="960" height="560" aria-label="사육장. 디지몬을 눌러 선택하고 케이지로 끌어 넣으세요."></canvas></div>
+<div class="canvas-wrap"><div id="mail" class="mail" hidden><div class="mail-from"></div><div class="mail-text"></div><div class="mail-next">▼ 눌러서 닫기</div></div><canvas id="world" width="960" height="560" aria-label="사육장. 디지몬을 눌러 선택하고 케이지로 끌어 넣으세요."></canvas></div>
 <div class="world-bottom"><span><i class="live-dot"></i> <span id="save-status">자동 저장 준비</span></span><button class="quiet" id="pause">Ⅱ 일시 정지</button></div>
+<div class="tray" id="tray"></div>
 <div class="section-label"><h2>오늘은 무엇을 할까요?</h2><span id="inventory"></span></div>
 <div class="actions">
-<button data-action="feed"><span class="action-icon orange">♨</span><b>고기 주기</b><small>포만감 +35</small></button>
-<button data-action="clean"><span class="action-icon green">✦</span><b>청소</b><small>똥 치우기</small></button>
-<button data-action="heal"><span class="action-icon blue">✚</span><b>치료</b><small>알약 1개</small></button>
 <button data-action="battle"><span class="action-icon pink">⚔</span><b>배틀</b><small>타이틀 · 프리 배틀</small></button>
 <button data-action="hunt"><span class="action-icon green">⌁</span><b>사냥</b><small>로프로 둘러 포획</small></button>
 <button data-action="shop"><span class="action-icon orange">฿</span><b>상점</b><small>고기 · 알약 · 케이지</small></button>
-<button data-action="rotten"><span class="action-icon green">☠</span><b>썩은 고기</b><small>2개 먹으면 발병</small></button>
 <button data-action="release"><span class="action-icon blue">↩</span><b>놓아주기</b><small>용량 비우기</small></button>
 </div>
 <section class="journal"><div class="section-label"><h2>테이머 일지</h2><span>최근 기록</span></div><ol id="journal"></ol></section>

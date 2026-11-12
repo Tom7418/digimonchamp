@@ -48,3 +48,27 @@ dialog h3{font-size:13px;margin:10px 0 2px;color:#ffd36a}
 .hunting .cage-toolbar{display:none}
 .hunt-tools button.active{background:#ffd36a;color:#132c3b}
 .hunting #world{cursor:crosshair;touch-action:none}
+/* 안내 편지 (원작 'From: 안내' 창) */
+.canvas-wrap{position:relative}
+.mail{position:absolute;left:3%;top:4%;width:46%;z-index:5;background:#f3e6b8;border:3px solid #8a6a2c;border-radius:8px;padding:10px 14px;color:#3a2a10;box-shadow:0 4px 0 #00000055;cursor:pointer;font-size:14px;line-height:1.55}
+.mail-from{font-weight:700;border-bottom:2px solid #8a6a2c;margin-bottom:6px;padding-bottom:2px}
+.mail-text{white-space:pre-line}
+.mail-next{text-align:right;font-size:11px;color:#8a6a2c;margin-top:4px}
+/* 아이템 칸 */
+.tray{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 4px;padding:8px;border:1px solid #33515f;border-radius:8px;background:#0f2533}
+.tray-item{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid #4d6f80;border-radius:6px;background:#173447;color:#eef6f8;cursor:grab;touch-action:none;user-select:none}
+.tray-item span{font-size:18px}.tray-item small{color:#ffd36a}
+.tray-item:disabled{opacity:.4;cursor:not-allowed}
+.tray-hint{font-size:11px;color:#8fa6b0}
+.drag-ghost{position:fixed;z-index:50;font-size:28px;pointer-events:none;transform:translate(-50%,-60%)}
+/* 하루 마감 달력 */
+.calendar{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-top:10px}
+.cal-head{grid-column:1/-1;font-weight:700;color:#8fe39a}
+.cal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:#8fd36a;padding:6px;border-radius:6px}
+.cal-cell{background:#e9f7dc;color:#203020;border-radius:3px;min-height:46px;padding:2px 4px;font-size:11px}
+.cal-cell b{display:block;font-size:16px;text-align:center}
+.cal-cell small{display:block;font-size:9px;line-height:1.2;color:#7a2f2f}
+.cal-cell.past{opacity:.55}
+.cal-cell.today{background:#e45b5b;color:#fff}.cal-cell.today small{color:#fff}
+.cal-today{background:#3b4a55;color:#eef;padding:12px 18px;border-radius:8px;font-size:15px}
+.cal-today b{font-size:22px;margin:0 4px}

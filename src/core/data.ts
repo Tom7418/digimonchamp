@@ -121,7 +121,11 @@ export const speciesByStage = (stage: Stage) => Object.values(SPECIES).filter((s
 
 // ---------- 달력 ----------
 export const SEASONS = ['봄', '여름', '가을', '겨울'] as const;
-export const DAYS_PER_SEASON = 10;
+/** 한 계절 8일 (원작 달력 화면 1~8일 확인) */
+export const DAYS_PER_SEASON = 8;
+/** 하루는 아침 7시에 시작해 밤 9시에 끝난다 (밤 9시 마감은 영상 확인, 7시 시작은 임시) */
+export const DAY_START_HOUR = 7;
+export const DAY_END_HOUR = 21;
 export const MIN_PER_DAY = 1440;
 export const START_CLOCK = 8 * 60;
 

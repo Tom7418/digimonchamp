@@ -269,14 +269,18 @@ var ChampCore = (function(exports) {
 		"가을",
 		"겨울"
 	];
-	var DAYS_PER_SEASON = 10;
+	/** 한 계절 8일 (원작 달력 화면 1~8일 확인) */
+	var DAYS_PER_SEASON = 8;
+	/** 하루는 아침 7시에 시작해 밤 9시에 끝난다 (밤 9시 마감은 영상 확인, 7시 시작은 임시) */
+	var DAY_START_HOUR = 7;
+	var DAY_END_HOUR = 21;
 	var MIN_PER_DAY = 1440;
 	var START_CLOCK = 480;
 	function dateOf(clock) {
 		const dayIndex = Math.floor(clock / MIN_PER_DAY);
-		const year = Math.floor(dayIndex / 40) + 1;
-		const season = Math.floor(dayIndex / 10) % 4;
-		const day = dayIndex % 10 + 1;
+		const year = Math.floor(dayIndex / 32) + 1;
+		const season = Math.floor(dayIndex / 8) % 4;
+		const day = dayIndex % 8 + 1;
 		const hour = Math.floor(clock % MIN_PER_DAY / 60);
 		const minute = clock % 60;
 		return {
@@ -694,7 +698,7 @@ var ChampCore = (function(exports) {
 			name: "오텀 컵",
 			minRank: 3,
 			season: 0,
-			day: 9,
+			day: 8,
 			format: 3,
 			stage: 3,
 			scale: 1,
@@ -1160,9 +1164,12 @@ var ChampCore = (function(exports) {
 		}
 		const sp = getSpecies(d.speciesId);
 		const cage = getCage(d.cage);
-		d.hunger = Math.max(0, d.hunger - (d.personality === "열혈" ? .11 : .08));
-		d.fatigue = Math.max(0, d.fatigue - (cage.rest ? .5 : .04));
-		d.poopTimer += 1;
+		if (ctx.sleep) d.fatigue = Math.max(0, d.fatigue - .3);
+		else {
+			d.hunger = Math.max(0, d.hunger - (d.personality === "열혈" ? .11 : .08));
+			d.fatigue = Math.max(0, d.fatigue - (cage.rest ? .5 : .04));
+			d.poopTimer += 1;
+		}
 		if (d.poopTimer >= (sp.stage <= 2 ? 120 : 240)) {
 			d.poopTimer = 0;
 			if (d.poop < 5) {
@@ -1173,8 +1180,8 @@ var ChampCore = (function(exports) {
 				});
 			}
 		}
-		d.starvingMinutes = d.hunger <= 0 ? d.starvingMinutes + 1 : 0;
-		d.dirtyMinutes = d.poop >= 3 ? d.dirtyMinutes + 1 : 0;
+		d.starvingMinutes = d.hunger <= 0 && !ctx.sleep ? d.starvingMinutes + 1 : 0;
+		d.dirtyMinutes = d.poop >= 3 && !ctx.sleep ? d.dirtyMinutes + 1 : 0;
 		if (d.starvingMinutes >= 240 || d.dirtyMinutes >= 180 || d.fatigue >= 95 && ctx.rng() < .01) {
 			d.starvingMinutes = 0;
 			d.dirtyMinutes = 0;
@@ -1197,10 +1204,24 @@ var ChampCore = (function(exports) {
 			}
 		}
 		if (d.stageAge % 60 === 0) {
-			if (!d.sick && !d.injured && d.hunger > 0 && d.fatigue < 90 && (cage.up || cage.apUp)) {
+			if (!ctx.sleep && !d.sick && !d.injured && d.hunger > 0 && d.fatigue < 90 && (cage.up || cage.apUp)) {
 				const speed = d.personality === "솔직" ? 1.3 : d.personality === "성급한" ? .8 : 1;
-				for (const k of cage.up ?? []) d.stats[k] += Math.max(1, Math.round((1 + ctx.rng() * (sp.stage + 1)) * speed));
-				for (const k of cage.down ?? []) d.stats[k] = Math.max(1, d.stats[k] - 1);
+				const changes = [];
+				for (const k of cage.up ?? []) {
+					const n = Math.max(1, Math.round((1 + ctx.rng() * (sp.stage + 1)) * speed));
+					d.stats[k] += n;
+					changes.push(`${STAT_LABEL[k]} +${n}`);
+				}
+				for (const k of cage.down ?? []) {
+					if (d.stats[k] > 1) changes.push(`${STAT_LABEL[k]} -1`);
+					d.stats[k] = Math.max(1, d.stats[k] - 1);
+				}
+				if (changes.length) events.push({
+					type: "trained",
+					uid: d.uid,
+					name: sp.name,
+					changes: changes.join(", ")
+				});
 				for (const k of cage.apUp ?? []) d.ap[k] = Math.min(99, d.ap[k] + 3 * speed);
 				for (const k of cage.apDown ?? []) d.ap[k] = Math.max(0, d.ap[k] - 1);
 				d.fatigue = Math.min(100, d.fatigue + 5);
@@ -1252,7 +1273,7 @@ var ChampCore = (function(exports) {
 		return d;
 	}
 	/** 사육장 전체의 게임 시간 1분 */
-	function tickFarm(save, rng = defaultRng) {
+	function tickFarm(save, rng = defaultRng, sleep = false) {
 		const events = [];
 		const rank = tamerRank(save);
 		let free = capacityOf(save) - usedCapacity(save);
@@ -1265,7 +1286,8 @@ var ChampCore = (function(exports) {
 				rank,
 				free,
 				isLast,
-				rng
+				rng,
+				sleep
 			}, events);
 			if (!r) {
 				free += before;
@@ -1290,6 +1312,28 @@ var ChampCore = (function(exports) {
 		let cur = save;
 		for (let i = 0; i < minutes; i++) {
 			const r = tickFarm(cur, rng);
+			cur = r.save;
+			events.push(...r.events);
+		}
+		return {
+			save: cur,
+			events
+		};
+	}
+	/** 밤 9시가 지났는가 (하루 마감) */
+	function isNight(save) {
+		const h = dateOf(save.clock).hour;
+		return h >= 21 || h < 7;
+	}
+	/** 하루 마감: 다음 날 아침 7시까지 잠잔다 (수명·병은 흐르고, 배고픔·똥·훈련은 멈춘다) */
+	function endDay(save, rng = defaultRng) {
+		const d = dateOf(save.clock);
+		const startOfDay = save.clock - d.hour * 60 - d.minute;
+		const morning = (d.hour < 7 ? startOfDay : startOfDay + MIN_PER_DAY) + 420;
+		const events = [];
+		let cur = save;
+		while (cur.clock < morning) {
+			const r = tickFarm(cur, rng, true);
 			cur = r.save;
 			events.push(...r.events);
 		}
@@ -1351,6 +1395,20 @@ var ChampCore = (function(exports) {
 				...s,
 				rotten: save.rotten - 1
 			}
+		};
+	}
+	/** 바닥의 똥 하나 치우기 */
+	function cleanOne(save, uid) {
+		const d = find(save, uid);
+		if (!d || d.poop === 0) return fail(save, "치울 것이 없어요.");
+		return {
+			ok: true,
+			message: "똥을 치웠다.",
+			save: update(save, uid, (x) => ({
+				...x,
+				poop: x.poop - 1,
+				dirtyMinutes: x.poop - 1 >= 3 ? x.dirtyMinutes : 0
+			}))
 		};
 	}
 	function clean(save, uid) {
@@ -1700,6 +1758,8 @@ var ChampCore = (function(exports) {
 	exports.CHAMP_DAY = CHAMP_DAY;
 	exports.CHAMP_SEASON = CHAMP_SEASON;
 	exports.DAYS_PER_SEASON = DAYS_PER_SEASON;
+	exports.DAY_END_HOUR = DAY_END_HOUR;
+	exports.DAY_START_HOUR = DAY_START_HOUR;
 	exports.EGG_MINUTES = EGG_MINUTES;
 	exports.FAMILIES = FAMILIES;
 	exports.FIELDS = FIELDS;
@@ -1738,9 +1798,11 @@ var ChampCore = (function(exports) {
 	exports.capacityOf = capacityOf;
 	exports.capture = capture;
 	exports.clean = clean;
+	exports.cleanOne = cleanOne;
 	exports.createBattle = createBattle;
 	exports.dateOf = dateOf;
 	exports.defaultRng = defaultRng;
+	exports.endDay = endDay;
 	exports.endOfLife = endOfLife;
 	exports.entrantOf = entrantOf;
 	exports.evolutionBonus = evolutionBonus;
@@ -1755,6 +1817,7 @@ var ChampCore = (function(exports) {
 	exports.hints = hints;
 	exports.huntFields = huntFields;
 	exports.huntPool = huntPool;
+	exports.isNight = isNight;
 	exports.makeEnemies = makeEnemies;
 	exports.maxStageForRank = maxStageForRank;
 	exports.meets = meets;

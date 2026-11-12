@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, capture, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm } from '../src/core/care';
+import { advance, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm } from '../src/core/care';
 import { getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -27,7 +27,7 @@ describe('data', () => {
   });
   it('calendar', () => {
     expect(dateOf(480)).toMatchObject({ year: 1, seasonName: '봄', day: 1, hour: 8 });
-    expect(dateOf(1440 * 25)).toMatchObject({ seasonName: '가을', day: 6 });
+    expect(dateOf(1440 * 20)).toMatchObject({ seasonName: '가을', day: 5 }); // 계절 8일
   });
 });
 
@@ -166,7 +166,7 @@ describe('illness', () => {
 
 describe('championship', () => {
   // y년차 가을 d일 09:00
-  const at = (y: number, d: number) => (((y - 1) * 40 + 20 + (d - 1)) * 1440) + 9 * 60;
+  const at = (y: number, d: number) => (((y - 1) * 32 + 16 + (d - 1)) * 1440) + 9 * 60;
   const red = (clock: number): SaveData => ({ ...freshSave(0), clock, titles: ['t1', 't2', 't3'] });
 
   it('prelims need 레드 테이머 and run one match a day on autumn days 1-5', () => {
@@ -207,5 +207,27 @@ describe('championship', () => {
     s = applyMatch(s, todaysMatches(s).find((x) => x.id === 'final')!, false);
     expect(s.qualifiedYear).toBeNull();
     expect(todaysMatches(s).some((x) => x.id === 'final')).toBe(false);
+  });
+});
+
+describe('day flow', () => {
+  it('the day ends at 21:00 and the night is slept through to 07:00 without hunger or poop', () => {
+    const base = freshSave(0);
+    const s: SaveData = { ...base, clock: 21 * 60, digimon: [{ ...only(base), hunger: 50, poop: 0, stageAge: 100 }] };
+    expect(isNight(s)).toBe(true);
+    const r = endDay(s, seeded(1));
+    expect(dateOf(r.save.clock)).toMatchObject({ day: 2, hour: 7, minute: 0 });
+    expect(only(r.save).hunger).toBe(50);
+    expect(only(r.save).poop).toBe(0);
+    expect(only(r.save).stageAge).toBe(100 + 10 * 60);
+    expect(isNight(r.save)).toBe(false);
+  });
+  it('training reports what changed, and poop is cleaned one at a time', () => {
+    const base = freshSave(0);
+    const s: SaveData = { ...base, clock: 9 * 60, digimon: [{ ...only(base), cage: '미니 운동장', stageAge: 59, hunger: 80, poop: 2 }] };
+    const r = tickFarm(s, seeded(2));
+    expect(r.events.find((e) => e.type === 'trained')).toMatchObject({ changes: expect.stringContaining('HP +') });
+    const c = cleanOne(r.save, 1);
+    expect(only(c.save).poop).toBe(only(r.save).poop - 1);
   });
 });

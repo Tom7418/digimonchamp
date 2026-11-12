@@ -22,7 +22,7 @@ export interface Match {
 export const TITLES: Match[] = [
   { id: 't1', name: '에이스 오브 링', minRank: 1, season: 0, day: 3, format: 1, stage: 3, scale: 0.8, prize: 1000 },
   { id: 't2', name: '서머 컵', minRank: 2, season: 0, day: 6, format: 3, stage: 3, scale: 0.9, prize: 1500 },
-  { id: 't3', name: '오텀 컵', minRank: 3, season: 0, day: 9, format: 3, stage: 3, scale: 1.0, prize: 2000 },
+  { id: 't3', name: '오텀 컵', minRank: 3, season: 0, day: 8, format: 3, stage: 3, scale: 1.0, prize: 2000 },
   { id: 't4', name: '윈터 컵', minRank: 4, season: 1, day: 3, format: 1, stage: 4, scale: 0.9, prize: 3000 },
   { id: 't5', name: '챔피언 로드', minRank: 5, season: 1, day: 8, format: 3, stage: 4, scale: 1.1, prize: 4000 },
   { id: 't6', name: '얼티밋 컵', minRank: 6, season: 2, day: 3, format: 3, stage: 5, scale: 1.0, prize: 5000 },

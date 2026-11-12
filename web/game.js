@@ -7,6 +7,8 @@
   const L = window.CageLayout;
   const $ = (s) => document.querySelector(s);
   const KEY = 'champion-web-v2';
+  // 시간 흐름: 현실 1초 = 게임 2분 (×1). 하루(07:00~21:00)가 약 7분. 원작 속도는 미확인이라 임시 값
+  const MINUTES_PER_SECOND = 2;
   const pad = (n) => String(n).padStart(2, '0');
   const clamp = (n, a = 0, b = 100) => Math.min(b, Math.max(a, n));
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -44,7 +46,7 @@
 
   // ---------- 저장 ----------
   function freshView() {
-    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 2, team: [], selected: 0, logs: [] };
+    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 2, team: [], selected: 0, logs: [], poops: [], foods: [], tips: {} };
   }
   function load() {
     try {
@@ -52,13 +54,24 @@
       if (raw && raw.save && raw.save.version === 2 && Array.isArray(raw.save.digimon) && raw.save.digimon.length && raw.view) {
         save = { wires: 0, ...raw.save };
         view = { ...freshView(), ...raw.view };
-        // 꺼져 있던 동안의 시간 반영 (최대 12시간)
-        const away = Math.min(C.OFFLINE_CAP_MINUTES, Math.max(0, Math.floor((Date.now() - save.lastSavedAt) / 1000)));
+        // 꺼져 있던 동안의 시간 반영 (게임 시간 최대 12시간, 밤은 자면서 넘어간다)
+        const away = Math.min(C.OFFLINE_CAP_MINUTES, Math.max(0, Math.floor(((Date.now() - save.lastSavedAt) / 1000) * MINUTES_PER_SECOND)));
         if (away > 0) {
-          const r = C.advance(save, away);
-          save = r.save;
-          r.events.forEach(logEvent);
-          if (away >= 5) view.logs.unshift({ time: stamp(), text: `자리를 비운 동안 ${Math.floor(away / 60)}시간 ${away % 60}분이 지났습니다.` });
+          let left = away;
+          while (left > 0) {
+            if (C.isNight(save)) {
+              const r = C.endDay(save);
+              save = r.save;
+              r.events.forEach(logEvent);
+              left -= 600;
+              continue;
+            }
+            const r = C.tickFarm(save);
+            save = r.save;
+            r.events.forEach(logEvent);
+            left -= 1;
+          }
+          if (away >= 5) view.logs.unshift({ time: stamp(), text: `자리를 비운 동안 게임 시간 ${Math.floor(away / 60)}시간 ${away % 60}분이 지났습니다.` });
         }
         return;
       }
@@ -80,7 +93,10 @@
             layoutVersion: view.layoutVersion,
             team: view.team,
             selected: view.selected,
-            logs: view.logs.slice(0, 30),
+            logs: view.logs.slice(0, 40),
+            poops: view.poops,
+            foods: view.foods,
+            tips: view.tips,
           },
         }),
       );
@@ -111,18 +127,22 @@
   }
   function logEvent(e) {
     const n = (id) => C.getSpecies(id).name;
+    if (e.type === 'trained') return log(`${e.name}(은)는 ${e.changes}`);
+    if (e.type === 'poop') return dropPoop(e.uid);
     if (e.type === 'hatched') log(`디지에그가 부화해 ${n(e.to)}이(가) 태어났습니다!`);
     else if (e.type === 'evolved') {
       log(`✦ ${n(e.from)}이(가) ${n(e.to)}(으)로 진화했습니다!`);
       toast(`${n(e.from)} → ${n(e.to)} 진화!`);
+      tipMail('evolve', '디지몬이 진화했습니다.\n스테이터스를 올려 조건을 만족시키거나 시간이 지나면 디지몬은 진화합니다.\n오른쪽 진화 조건표를 확인하세요.');
     } else if (e.type === 'egg' && e.reason === 'sick') {
       log(`${n(e.from)}이(가) 병·부상을 방치해 쓰러졌습니다… 디지에그로 돌아갔습니다.`);
       toast(`${n(e.from)} → 디지에그`);
     } else if (e.type === 'egg') log(`${n(e.from)}이(가) 수명을 다해 디지에그로 돌아갔습니다.`);
     else if (e.type === 'lost') log(`${e.name}을(를) 잃었습니다… (${e.reason})`);
     else if (e.type === 'sick') {
-      log(`${e.name}이(가) 병에 걸렸습니다. 알약으로 치료하세요. (페널티 +1)`);
+      log(`${e.name}이(가) 병에 걸렸습니다. 알약을 끌어다 주세요. (페널티 +1)`);
       toast(`${e.name} 발병!`);
+      tipMail('sick', '디지몬이 병에 걸렸습니다.\n아래 아이템의 알약을 디지몬에게 끌어다 놓으면 낫습니다.\n이틀 동안 방치하면 쓰러져 디지에그로 돌아갑니다.');
     } else if (e.type === 'blocked')
       log(
         e.reason === 'rank'
@@ -162,6 +182,8 @@
   }
   function render() {
     syncTeam();
+    syncPoops();
+    renderTray();
     const d = current();
     const date = C.dateOf(save.clock);
     const rank = C.tamerRank(save);
@@ -264,7 +286,7 @@
     );
 
     $('#journal').replaceChildren(
-      ...view.logs.slice(0, 6).map((l) => {
+      ...view.logs.slice(0, 8).map((l) => {
         const li = document.createElement('li');
         const t = document.createElement('time');
         const span = document.createElement('span');
@@ -282,6 +304,278 @@
       b.disabled = !owned;
       b.title = owned ? '' : '상점에서 구매하면 설치할 수 있습니다';
     });
+  }
+
+
+  // ---------- 안내 편지 (원작: 'From: 안내' 창) ----------
+  // 편지가 열려 있는 동안은 시간이 멈춘다. 같은 안내(tip)는 한 번만 보낸다.
+  let mailOpen = false;
+  const mailQueue = [];
+  function mail(text, from = '안내') {
+    mailQueue.push({ text, from });
+    if (!mailOpen) nextMail();
+  }
+  function tipMail(key, text) {
+    if (view.tips[key]) return;
+    view.tips[key] = true;
+    mail(text);
+  }
+  function nextMail() {
+    const m = mailQueue.shift();
+    const box = $('#mail');
+    if (!m) {
+      mailOpen = false;
+      box.hidden = true;
+      return;
+    }
+    mailOpen = true;
+    box.hidden = false;
+    box.querySelector('.mail-from').textContent = `From: ${m.from}`;
+    box.querySelector('.mail-text').textContent = m.text;
+  }
+
+  // ---------- 하루 흐름 ----------
+  // 밤 9시가 되면 하루가 끝나고 달력 화면을 거쳐 다음 날 아침 7시로 넘어간다 (밤에는 잔다).
+  // 아침 8시에 그날 경기가 있으면 엔트리 안내가 온다.
+  let dayEnding = false;
+  function checkSchedule() {
+    const d = C.dateOf(save.clock);
+    if (d.hour === 8 && d.minute === 0) {
+      const ms = C.todaysMatches(save);
+      if (ms.length) mail(`배틀의 엔트리 시간이 왔습니다.\n오늘은 ${ms.map((m) => m.name).join(', ')}이(가) 열립니다.\n엔트리는 15시까지. 아래 '배틀'에서 출전하세요.`);
+    }
+    if (C.isNight(save) && !battle) openDayEnd();
+  }
+  function matchDays(season, year) {
+    // 이번 계절 달력에 표시할 경기 날짜
+    const rank = C.tamerRank(save);
+    const marks = {};
+    for (const t of C.TITLES) if (t.season === season && rank >= t.minRank && !save.titles.includes(t.id)) (marks[t.day] ??= []).push(t.name);
+    if (season === C.CHAMP_SEASON && !save.champion) {
+      if (save.qualifiedYear !== null && year > save.qualifiedYear) (marks[C.CHAMP_DAY] ??= []).push('챔피언십 본선');
+      else if (save.qualifiedYear === null && rank >= C.PRELIM_MIN_RANK) for (const d of C.PRELIM_DAYS) (marks[d] ??= []).push('예선');
+    }
+    return marks;
+  }
+  function openDayEnd() {
+    if (dayEnding) return;
+    if (hunt) endHunt('밤 9시');
+    dayEnding = true;
+    const d = C.dateOf(save.clock);
+    const nextIdx = d.day >= C.DAYS_PER_SEASON ? 1 : d.day + 1;
+    const nextSeason = d.day >= C.DAYS_PER_SEASON ? (d.season + 1) % 4 : d.season;
+    const nextYear = nextSeason === 0 && d.season === 3 ? d.year + 1 : d.year;
+    const marks = matchDays(nextSeason, nextYear);
+    const seasonName = ['봄', '여름', '가을', '겨울'][nextSeason];
+    const cells = Array.from({ length: C.DAYS_PER_SEASON }, (_, i) => {
+      const day = i + 1;
+      const m = marks[day];
+      return `<div class="cal-cell${day === nextIdx ? ' today' : ''}${day < nextIdx ? ' past' : ''}"><b>${day}</b>${m ? `<small>★ ${esc(m.join(', '))}</small>` : ''}</div>`;
+    }).join('');
+    showModal(
+      '하루가 끝났습니다',
+      `<p>디지몬들이 잠들었습니다. 내일 아침 7시에 다시 시작합니다.</p>
+       <div class="calendar"><div class="cal-head">${seasonName}</div><div class="cal-grid">${cells}</div><div class="cal-today">${seasonName} <b>${nextIdx}</b> 일</div></div>`,
+      'END OF DAY',
+      '다음 날로',
+    );
+    $('#close-modal').disabled = true;
+  }
+  function finishDay() {
+    const r = C.endDay(save);
+    save = r.save;
+    r.events.forEach(logEvent);
+    dayEnding = false;
+    const d = C.dateOf(save.clock);
+    log(`${d.seasonName} ${d.day}일 아침이 밝았습니다.`);
+    toast(`${d.seasonName} ${d.day}일`);
+    render();
+    persist();
+  }
+
+  // ---------- 사육장 바닥: 똥·먹이 ----------
+  // 똥은 디지몬이 있던 자리에 떨어지고 하나씩 눌러 치운다. 먹이는 아이템 칸에서 끌어다 바닥이나 디지몬에게 놓는다.
+  function dropPoop(uid) {
+    const p = view.team.find((x) => x.uid === uid);
+    if (!p) return;
+    view.poops.push({ uid, x: p.x + (Math.random() - 0.5) * 50, y: p.y + 4 + Math.random() * 14 });
+  }
+  function syncPoops() {
+    for (const d of save.digimon) {
+      const mine = view.poops.filter((x) => x.uid === d.uid);
+      for (let k = mine.length; k < d.poop; k++) dropPoop(d.uid);
+      if (mine.length > d.poop) {
+        const extra = new Set(mine.slice(0, mine.length - d.poop));
+        view.poops = view.poops.filter((x) => !extra.has(x));
+      }
+    }
+    const alive = new Set(save.digimon.map((d) => d.uid));
+    view.poops = view.poops.filter((x) => alive.has(x.uid));
+  }
+  function drawPoop(x, y) {
+    ctx.fillStyle = '#e57aa9';
+    ctx.strokeStyle = '#7a2f52';
+    ctx.lineWidth = 1.5;
+    for (const [w, dy] of [[9, 0], [6.5, -5], [4, -9]]) {
+      ctx.beginPath();
+      ctx.ellipse(x, y + dy, w, 3.8, 0, 0, 7);
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
+  function drawFood(f) {
+    ctx.fillStyle = f.kind === 'rotten' ? '#7d8a4a' : '#c8553d';
+    ctx.strokeStyle = '#3b2418';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(f.x, f.y - 5, 9, 6, -0.3, 0, 7);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#f3ead8';
+    ctx.fillRect(f.x + 6, f.y - 9, 7, 3);
+  }
+  const ITEMS = [
+    { kind: 'meat', label: '고기', icon: '🍖', count: () => save.meat - view.foods.filter((f) => f.kind === 'meat').length },
+    { kind: 'pill', label: '알약', icon: '💊', count: () => save.pills },
+    { kind: 'rotten', label: '썩은 고기', icon: '🦴', count: () => save.rotten - view.foods.filter((f) => f.kind === 'rotten').length },
+  ];
+  function renderTray() {
+    setHtml(
+      '#tray',
+      ITEMS.map((it) => `<button class="tray-item" data-item="${it.kind}"${it.count() > 0 ? '' : ' disabled'}><span>${it.icon}</span><b>${it.label}</b><small>×${Math.max(0, it.count())}</small></button>`).join('') +
+        '<span class="tray-hint">아이템을 끌어서 디지몬이나 바닥에 놓으세요 · 똥은 눌러서 치웁니다</span>',
+    );
+  }
+  function petAt(pt) {
+    let best = null;
+    for (const p of view.team) {
+      const d = digi(p.uid);
+      if (!d) continue;
+      const a = spriteOf(d.speciesId, d.isEgg);
+      const h = (a?.baseline ?? 30) * (d.isEgg ? 1.6 : 2);
+      const r = Math.max(28, footprint(d.speciesId, d.isEgg, 2) + 6);
+      const dist = Math.hypot(pt.x - p.x, pt.y - (p.y - h / 2));
+      if (Math.abs(pt.x - p.x) < r && pt.y < p.y + 12 && pt.y > p.y - h - 6 && (!best || dist < best.dist)) best = { p, d, dist };
+    }
+    return best;
+  }
+  function dropItem(kind, pt) {
+    const hit = petAt(pt);
+    if (kind === 'pill') {
+      if (!hit) return toast('알약은 디지몬에게 놓으세요.');
+      view.selected = view.team.indexOf(hit.p);
+      return apply(C.heal(save, hit.d.uid));
+    }
+    if (hit && !hit.d.isEgg) {
+      view.selected = view.team.indexOf(hit.p);
+      if (apply(kind === 'meat' ? C.feed(save, hit.d.uid) : C.feedRotten(save, hit.d.uid)) && kind === 'meat') fx('♥ 냠냠!', '#ffe4a0');
+      return;
+    }
+    const it = ITEMS.find((x) => x.kind === kind);
+    if (it.count() <= 0) return toast(`${it.label}이(가) 없어요. 상점에서 사세요.`);
+    view.foods.push({ kind, x: Math.min(900, Math.max(60, pt.x)), y: Math.min(520, Math.max(120, pt.y)) });
+    renderTray();
+    persist();
+  }
+  // 아이템 끌기 (아이템 칸 → 사육장)
+  let dragItem = null;
+  let swallowUp = false;
+  function initFarmInput() {
+  $('#tray').addEventListener('pointerdown', (e) => {
+    const b = e.target.closest('[data-item]');
+    if (!b || b.disabled || battle || hunt) return;
+    e.preventDefault();
+    const ghost = document.createElement('div');
+    ghost.className = 'drag-ghost';
+    ghost.textContent = b.querySelector('span').textContent;
+    document.body.append(ghost);
+    dragItem = { kind: b.dataset.item, ghost };
+    moveGhost(e);
+  });
+  function moveGhost(e) {
+    if (!dragItem) return;
+    dragItem.ghost.style.left = `${e.clientX}px`;
+    dragItem.ghost.style.top = `${e.clientY}px`;
+  }
+  window.addEventListener('pointermove', moveGhost);
+  window.addEventListener('pointerup', (e) => {
+    if (!dragItem) return;
+    const { kind, ghost } = dragItem;
+    dragItem = null;
+    ghost.remove();
+    const r = canvas.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
+    dropItem(kind, { x: ((e.clientX - r.left) / r.width) * 960, y: ((e.clientY - r.top) / r.height) * 560 });
+  });
+  // 똥 치우기: 케이지 편집기보다 먼저 받아서 처리한다 (capture)
+  canvas.addEventListener(
+    'pointerdown',
+    (e) => {
+      if (hunt || battle || board.editing) return;
+      const r = canvas.getBoundingClientRect();
+      const pt = { x: ((e.clientX - r.left) / r.width) * 960, y: ((e.clientY - r.top) / r.height) * 560 };
+      const hit = view.poops.find((x) => Math.hypot(pt.x - x.x, pt.y - (x.y - 4)) < 16);
+      if (!hit) return;
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      swallowUp = true;
+      const res = C.cleanOne(save, hit.uid);
+      if (res.ok) save = res.save;
+      view.poops = view.poops.filter((x) => x !== hit);
+      effect = { text: '반짝!', color: '#e8fbff', until: performance.now() + 900, uid: hit.uid };
+      render();
+      persist();
+    },
+    true,
+  );
+  canvas.addEventListener(
+    'pointerup',
+    (e) => {
+      if (!swallowUp) return;
+      swallowUp = false;
+      e.stopImmediatePropagation();
+    },
+    true,
+  );
+  $('#mail').onclick = nextMail;
+  }
+  // 배고픈 디지몬은 바닥의 먹이로 걸어가 먹는다
+  function seekFood(p, d, dt) {
+    if (!view.foods.length || d.isEgg || p.cageId || d.hunger >= 60) return false;
+    let best = null;
+    for (const f of view.foods) {
+      const dist = Math.hypot(f.x - p.x, f.y - p.y);
+      if (!best || dist < best.dist) best = { f, dist };
+    }
+    const { f, dist } = best;
+    if (dist < 10) {
+      view.foods = view.foods.filter((x) => x !== f);
+      const r = f.kind === 'meat' ? C.feed(save, d.uid) : C.feedRotten(save, d.uid);
+      if (r.ok) {
+        save = r.save;
+        log(`${nameOf(d)}: ${r.message}`);
+        effect = { text: f.kind === 'meat' ? '♥ 냠냠!' : '우웩…', color: '#ffe4a0', until: performance.now() + 1500, uid: d.uid };
+      }
+      render();
+      persist();
+      return true;
+    }
+    const v = 34 * dt;
+    p.direction = f.x > p.x ? 1 : -1;
+    p.x += ((f.x - p.x) / dist) * v;
+    p.y += ((f.y - p.y) / dist) * v;
+    p.target = p.x;
+    return true;
+  }
+  // 머리 위 상태 말풍선
+  function bubbleOf(d) {
+    if (d.isEgg) return null;
+    if (d.sick) return '🤢';
+    if (d.injured) return '🩹';
+    if (d.hunger < 30) return '🍖';
+    if (d.poop >= 3) return '💩';
+    if (d.fatigue > 80) return '💤';
+    return null;
   }
 
   // ---------- 돌보기 ----------
@@ -325,6 +619,7 @@
   function closeModal() {
     if (battle && !battle.state.over) return;
     $('#modal').close();
+    if (dayEnding) return finishDay();
     if (battle) {
       battle = null;
       render();
@@ -651,11 +946,13 @@
 
   function drawFarm(t, dt) {
     board.draw(ctx);
+    for (const f of view.foods) drawFood(f);
+    for (const pp of view.poops) drawPoop(pp.x, pp.y);
     const order = view.team.map((p, i) => ({ p, i })).sort((a, b) => a.p.y - b.p.y);
     for (const { p, i } of order) {
       const d = digi(p.uid);
       if (!d) continue;
-      if (!paused && !p.cageId && !board.editing && !d.isEgg) {
+      if (!paused && !mailOpen && !dayEnding && !p.cageId && !board.editing && !d.isEgg && !seekFood(p, d, dt)) {
         if (Math.abs(p.target - p.x) < 3) {
           if (Math.random() < 0.008) p.target = 160 + Math.random() * 560;
         } else {
@@ -677,12 +974,20 @@
       }
       const bob = paused ? 0 : Math.sin(t * 2 + i) * 2;
       body(ctx, d.speciesId, d.isEgg, p.x, p.y + bob, scale, Math.floor(t * 4) % 2, p.direction < 0);
-      // 똥과 상태 표시
-      for (let k = 0; k < d.poop; k++) {
-        ctx.fillStyle = '#7a5532';
+      // 머리 위 상태 말풍선 (배고픔·병·부상·똥·피로)
+      const bub = bubbleOf(d);
+      if (bub) {
+        const top = p.y - (spriteOf(d.speciesId, d.isEgg)?.baseline ?? 30) * scale - 6;
+        ctx.fillStyle = '#ffffffe8';
+        ctx.strokeStyle = '#203040';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.arc(p.x - 22 + k * 9, p.y + 12, 3.5, 0, 7);
+        ctx.roundRect(p.x + 6, top - 26, 28, 22, 6);
         ctx.fill();
+        ctx.stroke();
+        ctx.font = '15px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(bub, p.x + 20, top - 9);
       }
       ctx.font = 'bold 11px "Noto Sans KR",sans-serif';
       ctx.textAlign = 'center';
@@ -1086,8 +1391,10 @@
       persist();
     },
     toast,
-    () => !!battle || !!hunt,
+    () => !!battle || !!hunt || mailOpen || dayEnding,
   );
+  initFarmInput();
+  tipMail('welcome', '디지몬 챔피언십에 참가하게 된 것을 환영합니다!\n디지에그가 곧 부화합니다. 고기를 끌어다 먹이고, 똥은 눌러서 치워 주세요.\n밤 9시가 되면 하루가 끝납니다.');
 
   document.querySelectorAll('[data-action]').forEach((b) => (b.onclick = () => act(b.dataset.action)));
   $('#partner-tabs').onclick = (e) => {
@@ -1116,10 +1423,11 @@
     showModal(
       '디지몬 챔피언십 웹판',
       `<ol>
-        <li>디지에그에서 시작합니다. 현실 1초가 게임 1분이며, 밤까지 하루가 흐릅니다.</li>
+        <li>디지에그에서 시작합니다. 현실 1초가 게임 2분이고, 아침 7시부터 밤 9시까지가 하루입니다. 밤 9시가 되면 달력을 보고 다음 날로 넘어갑니다.</li>
+        <li>아래 아이템 칸의 고기·알약·썩은 고기를 끌어서 디지몬에게 직접 주거나 바닥에 놓으세요. 배고픈 디지몬은 바닥의 고기로 걸어가 먹습니다. 바닥의 똥은 눌러서 치웁니다.</li>
         <li>디지몬을 끌어 케이지에 넣으면 1시간마다 정해진 능력치와 종족·속성 수치가 오릅니다. 양호실은 피로와 부상을 회복합니다.</li>
         <li>진화는 자동입니다. 오른쪽 진화 조건표의 위에서부터 먼저 채운 쪽으로 진화하고, 아무것도 채우지 못하면 수명이 다할 때 ‘시간 경과’ 진화를 합니다.</li>
-        <li>배고픔·똥 방치·썩은 고기는 병(페널티)이 됩니다. 페널티 진화를 노릴 때만 일부러 쓰세요.</li>
+        <li>배고픔·똥 방치·썩은 고기는 병(페널티)이 됩니다. 병·부상을 이틀 방치하면 쓰러져 디지에그로 돌아갑니다.</li>
         <li>타이틀 매치(엔트리 08:00~15:00)에서 이기면 테이머 랭크가 올라 사육 용량, 케이지 공간, 진화 가능 세대가 늘어납니다. 첫 타이틀은 봄 3일 ‘에이스 오브 링’입니다.</li>
         <li>프리 배틀로 배틀 횟수와 비트를 모으고, 상점에서 고기·알약·케이지를 사세요.</li>
       </ol><p class="hint">비공식 비영리 팬게임입니다. 진행은 이 브라우저에 자동 저장되며, 창을 닫아 둔 시간도 최대 12시간까지 반영됩니다. 사냥은 아직 웹판에 옮기지 않았습니다.</p>`,
@@ -1156,17 +1464,18 @@
     lastTime = now;
     if (!document.hidden) {
       if (battle) battleTick(dt);
-      else if (!paused && !board.editing) {
+      else if (!paused && !board.editing && !mailOpen && !dayEnding) {
         if (hunt) huntTick(dt);
-        clock += dt * speed;
+        clock += dt * speed * MINUTES_PER_SECOND;
         let changed = false;
-        while (clock >= 1) {
+        while (clock >= 1 && !dayEnding) {
           clock -= 1;
           syncTeam();
           const r = C.tickFarm(save);
           save = r.save;
           r.events.forEach(logEvent);
           changed = true;
+          checkSchedule();
         }
         if (changed) {
           render();
