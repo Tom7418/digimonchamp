@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { advance, capture, feedRotten, freshSave, setCage, tickFarm } from '../src/core/care';
+import { advance, capture, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm } from '../src/core/care';
 import { getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
-import { applyWin, tamerRank, TITLES, todaysMatches } from '../src/core/titles';
+import { applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import type { Digimon, SaveData } from '../src/core/types';
 
+/** 테스트는 부화한 깜몬에서 시작한다 */
+const freshSave = (now: number): SaveData => ({ ...freshEggSave(now), digimon: [newDigimon(1, '깜몬')] });
 const only = (s: SaveData): Digimon => s.digimon[0];
 const withMon = (s: SaveData, patch: Partial<Digimon>): SaveData => ({ ...s, digimon: [{ ...s.digimon[0], ...patch }] });
 
@@ -47,9 +49,10 @@ describe('evolution', () => {
     expect(findEvolution(only(base), 1, 100)).toEqual({ kind: 'evolve', to: '아구몬' });
     const agu = { ...only(base), speciesId: '아구몬', battles: 6, stageAge: 2000 };
     expect(findEvolution(agu, 1, 100)).toEqual({ kind: 'blocked', to: '그레이몬', reason: 'rank' });
-    expect(findEvolution(agu, 2, 100)).toEqual({ kind: 'evolve', to: '그레이몬' });
-    expect(findEvolution(agu, 2, 2)).toEqual({ kind: 'blocked', to: '그레이몬', reason: 'capacity' });
-    expect(maxStageForRank(6)).toBe(6);
+    expect(findEvolution(agu, 3, 100)).toEqual({ kind: 'blocked', to: '그레이몬', reason: 'rank' });
+    expect(findEvolution(agu, 4, 100)).toEqual({ kind: 'evolve', to: '그레이몬' });
+    expect(findEvolution(agu, 4, 2)).toEqual({ kind: 'blocked', to: '그레이몬', reason: 'capacity' });
+    expect(maxStageForRank(8)).toBe(6);
   });
   it('rotten meat causes sickness and a penalty', () => {
     let s = { ...freshSave(0), rotten: 2 };
@@ -101,18 +104,26 @@ describe('titles and hunting', () => {
     expect(tamerRank(s)).toBe(1);
     s = applyWin(s, TITLES[0]);
     expect(tamerRank(s)).toBe(2);
-    expect(s.bits).toBe(1000);
+    expect(s.bits).toBe(1500);
+    s = applyWin(applyWin(s, TITLES[1]), TITLES[2]);
+    expect(rankName(tamerRank(s))).toBe('레드 테이머');
+    expect(capacityOf(s)).toBe(96);
+  });
+  it('a new game starts from a digi-egg that hatches into 깜몬', () => {
+    const s = freshEggSave(0);
+    expect(s.digimon[0].isEgg).toBe(true);
+    expect(advance(s, 30, seeded(1)).save.digimon[0]).toMatchObject({ isEgg: false, speciesId: '깜몬' });
   });
   it('title matches appear on their day before 15:00', () => {
     const s = { ...freshSave(0), clock: 1440 * 2 + 9 * 60 };
-    expect(todaysMatches(s).map((m) => m.name)).toEqual(['루키 컵']);
+    expect(todaysMatches(s).map((m) => m.name)).toEqual(['에이스 오브 링']);
     expect(todaysMatches({ ...s, clock: s.clock + 7 * 60 })).toEqual([]);
   });
   it('capture respects capacity', () => {
     const s = freshSave(0);
     const r = capture(s, '포요몬', seeded(1));
     expect(r.save.digimon.length).toBe(2);
-    const full = { ...s, digimon: Array.from({ length: 50 }, (_, i) => ({ ...s.digimon[0], uid: i + 1 })) };
+    const full = { ...s, digimon: Array.from({ length: 8 }, (_, i) => ({ ...s.digimon[0], uid: i + 1 })) };
     expect(capture(full, '포요몬', seeded(1)).ok).toBe(false);
   });
 });

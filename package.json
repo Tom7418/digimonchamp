@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run && node --test tests/*.cjs",
+    "build:core": "vite build --config vite.core.config.ts"
   },
   "dependencies": {
     "phaser": "^3.90.0"

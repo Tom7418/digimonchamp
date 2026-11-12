@@ -14,18 +14,34 @@ export interface Match {
   needEggs?: number;
 }
 
-/** 타이틀 매치. 원작의 타이틀 이름·일정은 확인하지 못해 '인피니티 소울' 외에는 임시 이름이다 */
+/**
+ * 타이틀 매치. 한 번에 하나씩 순서대로 열린다 (minRank = 순번).
+ * 원작 확인: 첫 타이틀 '에이스 오브 링'(봄 3일, 에이스 1:1), 세 번째 타이틀 승리 시 '레드 테이머'(성숙기 허용),
+ * '인피니티 소울'의 디지에그화 10회 조건. 나머지 이름·날짜·상금은 임시 값이다.
+ */
 export const TITLES: Match[] = [
-  { id: 't1', name: '루키 컵', minRank: 1, season: 0, day: 3, format: 1, stage: 3, scale: 0.8, prize: 500 },
-  { id: 't2', name: '서머 컵', minRank: 1, season: 1, day: 3, format: 3, stage: 3, scale: 1.0, prize: 800 },
-  { id: 't3', name: '오텀 컵', minRank: 2, season: 2, day: 8, format: 1, stage: 4, scale: 0.9, prize: 1200 },
-  { id: 't4', name: '윈터 컵', minRank: 2, season: 3, day: 3, format: 3, stage: 4, scale: 1.0, prize: 1600 },
-  { id: 't5', name: '챔피언 로드', minRank: 3, season: 0, day: 8, format: 3, stage: 4, scale: 1.3, prize: 2200 },
-  { id: 't6', name: '얼티밋 컵', minRank: 4, season: 1, day: 8, format: 3, stage: 5, scale: 1.0, prize: 3000 },
-  { id: 't7', name: '마스터 컵', minRank: 5, season: 3, day: 8, format: 3, stage: 5, scale: 1.3, prize: 4000 },
-  { id: 't8', name: '레전드 컵', minRank: 6, season: 0, day: 5, format: 3, stage: 6, scale: 1.0, prize: 6000 },
+  { id: 't1', name: '에이스 오브 링', minRank: 1, season: 0, day: 3, format: 1, stage: 3, scale: 0.8, prize: 1000 },
+  { id: 't2', name: '서머 컵', minRank: 2, season: 0, day: 6, format: 3, stage: 3, scale: 0.9, prize: 1500 },
+  { id: 't3', name: '오텀 컵', minRank: 3, season: 0, day: 9, format: 3, stage: 3, scale: 1.0, prize: 2000 },
+  { id: 't4', name: '윈터 컵', minRank: 4, season: 1, day: 3, format: 1, stage: 4, scale: 0.9, prize: 3000 },
+  { id: 't5', name: '챔피언 로드', minRank: 5, season: 1, day: 8, format: 3, stage: 4, scale: 1.1, prize: 4000 },
+  { id: 't6', name: '얼티밋 컵', minRank: 6, season: 2, day: 3, format: 3, stage: 5, scale: 1.0, prize: 5000 },
+  { id: 't7', name: '마스터 컵', minRank: 7, season: 3, day: 3, format: 3, stage: 5, scale: 1.2, prize: 6000 },
+  { id: 't8', name: '레전드 컵', minRank: 8, season: 3, day: 8, format: 3, stage: 6, scale: 1.0, prize: 8000 },
   { id: 't9', name: '인피니티 소울', minRank: 9, season: 1, day: 5, format: 3, stage: 6, scale: 1.5, prize: 20000, needEggs: 10 },
 ];
+
+/** 랭크 이름. 레드 테이머(랭크 4 = 타이틀 3개)만 영상으로 확인, 나머지는 임시 */
+export function rankName(rank: number): string {
+  return ['', '루키 테이머', '테이머 랭크 2', '테이머 랭크 3', '레드 테이머', '테이머 랭크 5', '테이머 랭크 6', '테이머 랭크 7', '테이머 랭크 8', '챔피언', '그랜드 챔피언'][rank] ?? `랭크 ${rank}`;
+}
+
+/** 랭크별 최대 사육 용량(G). 레드 테이머 96G만 영상 확인 값 */
+export const CAPACITY_BY_RANK = [0, 32, 48, 74, 96, 120, 144, 172, 200, 200, 200];
+/** 랭크별 케이지 공간(칸). 레드 테이머 16칸만 영상 확인 값 */
+export const CAGE_SPACE_BY_RANK = [0, 8, 10, 12, 16, 20, 24, 28, 30, 30, 30];
+export const capacityOf = (save: Pick<SaveData, 'titles' | 'champion'>) => CAPACITY_BY_RANK[tamerRank(save)] ?? 200;
+export const cageSpaceOf = (save: Pick<SaveData, 'titles' | 'champion'>) => CAGE_SPACE_BY_RANK[tamerRank(save)] ?? 30;
 
 export const CHAMP_SEASON = 2;
 export const CHAMP_DAY = 5;

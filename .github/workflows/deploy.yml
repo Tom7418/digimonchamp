@@ -22,14 +22,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install and test the rules engine
+        run: |
+          npm ci
+          npm test
+      - name: Rebuild web/core.js from src/core
+        run: npm run build:core
       - name: Validate the browser game
         run: |
           node --check web/game.js
-          node --check web/cages.js
+          node --check web/core.js
           node --check web/cage-editor.js
           node --check web/cage-layout.js
-          node --test tests/cages.test.cjs
-          node --test tests/cage-layout.test.cjs
           node --check web/assets/sprites.js
           python tools/check_web.py
       - name: Configure GitHub Pages

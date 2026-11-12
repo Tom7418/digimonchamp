@@ -1,9 +1,10 @@
 import { CAGES, EGG_MINUTES, evolutionBonus, getCage, getSpecies, LIFESPAN, START_CAGES, START_CLOCK, typicalStats } from './data';
 import { endOfLife, findEvolution } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
-import { tamerRank } from './titles';
+import { capacityOf, tamerRank } from './titles';
 import { ATTRS, FAMILIES, PERSONALITIES, STAT_KEYS, type ApKey, type Digimon, type SaveData, type Stats } from './types';
 
+/** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
 export const CAPACITY = 200;
 export const OFFLINE_CAP_MINUTES = 12 * 60;
 
@@ -48,7 +49,8 @@ export function freshSave(now = Date.now()): SaveData {
     rotten: 0,
     ropeLevel: 1,
     cages: [...START_CAGES],
-    digimon: [newDigimon(1, '깜몬')],
+    // 원작처럼 디지에그에서 시작한다 (30분 뒤 깜몬 부화)
+    digimon: [{ ...newDigimon(1, '깜몬'), isEgg: true, stats: { hp: 0, tp: 0, atk: 0, def: 0, int: 0, spd: 0 } }],
     titles: [],
     qualifiedYear: null,
     champion: false,
@@ -179,7 +181,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
 export function tickFarm(save: SaveData, rng: Rng = defaultRng): { save: SaveData; events: FarmEvent[] } {
   const events: FarmEvent[] = [];
   const rank = tamerRank(save);
-  let free = CAPACITY - usedCapacity(save);
+  let free = capacityOf(save) - usedCapacity(save);
   const next: Digimon[] = [];
   const seen = new Set(save.seen);
   save.digimon.forEach((d, i) => {
@@ -275,7 +277,7 @@ export function release(save: SaveData, uid: number): ActionResult {
 
 export function capture(save: SaveData, speciesId: string, rng: Rng = defaultRng): ActionResult {
   const size = getSpecies(speciesId).size;
-  if (usedCapacity(save) + size > CAPACITY) return fail(save, '사육 용량이 부족해요.');
+  if (usedCapacity(save) + size > capacityOf(save)) return fail(save, '용량이 가득 찼습니다. 디지몬을 줄여 주세요.');
   const d = newDigimon(save.nextUid, speciesId, rng, true);
   return {
     ok: true,

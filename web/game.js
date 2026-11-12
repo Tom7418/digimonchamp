@@ -1,79 +1,797 @@
 'use strict';
+// 디지몬 챔피언십 웹판 화면.
+// 게임 규칙(사육·진화·배틀·타이틀·상점)은 web/core.js(ChampCore, src/core에서 빌드)를 그대로 쓰고,
+// 이 파일은 화면 그리기, 입력, 저장만 담당한다. 시간: 현실 1초 = 게임 1분.
 (() => {
-const $=s=>document.querySelector(s), clamp=(n,a=0,b=100)=>Math.min(b,Math.max(a,n));
-const KEY='championship-garden-v1';
-const species={agumon:{name:'아구몬',sprite:'m201_agumon',stage:'성장기'},gabumon:{name:'파피몬',sprite:'m208_gabumon',stage:'성장기'},patamon:{name:'파닥몬',sprite:'m227_patamon',stage:'성장기'},graymon:{name:'그레이몬',sprite:'m320_graymon',stage:'성숙기'}};
-const fresh=()=>({version:1,coins:350,seconds:0,selected:0,wins:0,team:['agumon','gabumon','patamon'].map((kind,i)=>({kind,level:1,xp:0,hp:100,hunger:75,energy:90,attack:12+i*2,defense:10+i*2,speed:12-i,x:300+i*160,y:330+i*36,target:300+i*160,direction:1})),logs:[{time:'DAY 1',text:'세 파트너와 함께 새로운 테이머 생활을 시작했습니다.'}]});
-let state=fresh(),paused=false,battle=null,effect=null,lastTime=0,clock=0,toastTimer;
-try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.version===1&&Array.isArray(s.team)&&s.team.length===3&&s.team.every(p=>species[p.kind]&&Number.isFinite(p.level)&&Number.isFinite(p.hp)&&Number.isFinite(p.hunger)&&Number.isFinite(p.energy))&&Number.isFinite(s.coins)&&Number.isFinite(s.seconds)&&Array.isArray(s.logs)){state=s;state.selected=clamp(Math.trunc(s.selected)||0,0,2);}}catch{}
-const assets=new Map();for(const meta of window.SPRITES){const im=new Image();im.src=`assets/${meta.id}.png`;assets.set(meta.id,{...meta,image:im});}
-const current=()=>state.team[state.selected], info=p=>species[p.kind];
-function toast(t){$('#toast').textContent=t;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),3000);}
-// 시설의 위치·회전과 디지몬의 cageId도 같은 저장 객체에 기록된다.
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));$('#save-status').textContent='브라우저에 자동 저장됨';}catch{$('#save-status').textContent='저장 불가 · 브라우저 저장 설정 확인';}}
-function log(text){state.logs.unshift({time:`DAY ${Math.floor(state.seconds/120)+1}`,text});state.logs=state.logs.slice(0,20);render();save();}
-// 선택한 파트너의 정보만 DOM에 반영한다. 캔버스 장면은 draw에서 별도로 그린다.
-function render(){const p=current(),s=info(p);$('#cage-status').textContent=(CageRules.names[p.cage]||CageRules.names.free)+(p.cage&&p.cage!=='free'?` · 다음 활동 ${15-(p.cageSeconds||0)}초`:' · 자유 활동');$('#coins').textContent=state.coins.toLocaleString('ko-KR');$('#day').textContent=`DAY ${String(Math.floor(state.seconds/120)+1).padStart(2,'0')}`;$('#name').textContent=s.name;$('#stage').textContent=s.stage+' · '+(p.kind==='graymon'?'VACCINE':'PARTNER');$('#level').textContent=`Lv.${p.level}`;$('#mood').textContent=p.energy<25?'조금 지쳤어요. 쉬고 싶어 해요.':p.hunger<25?'배가 고파요. 먹이를 기다리고 있어요.':'기분이 좋아요. 당신과 함께라면 든든해요.';
-$('#xp-label').textContent=`${p.xp} / ${p.level*20} EXP`;$('#xp-bar').style.width=`${clamp(p.xp/(p.level*20)*100)}%`;
-$('#vitals').innerHTML=[['체력',p.hp],['포만감',p.hunger],['에너지',p.energy]].map(([n,v])=>`<div class="vital"><span>${n}</span><div class="track"><i style="width:${clamp(v)}%"></i></div><span>${Math.round(v)} / 100</span></div>`).join('');
-$('#stats').innerHTML=[['공격',p.attack],['방어',p.defense],['민첩',p.speed]].map(([n,v])=>`<div><span>${n}</span><strong>${v}</strong></div>`).join('');
-$('#partner-tabs').innerHTML=state.team.map((p,i)=>`<button class="${i===state.selected?'active':''}" data-partner="${i}" aria-pressed="${i===state.selected}">${info(p).name}</button>`).join('');
-const can=p.kind==='agumon'&&p.level>=5&&p.energy>=50;$('#evolve').disabled=!can||!!battle;$('#evolve').textContent=can?'그레이몬으로 진화 ↗':p.kind==='graymon'?'그레이몬으로 진화 완료':'진화 조건 확인';$('#evo-hint').textContent=p.kind==='agumon'?'아구몬 Lv.5 이상 · 에너지 50 이상':p.kind==='graymon'?'새로운 힘으로 챔피언십에 도전하세요':'첫 버전에서는 아구몬의 진화를 지원합니다';
-$('#milestone').textContent=`${Math.min(state.team[0].level,5)} / 5 LV`;$('#journal').replaceChildren(...state.logs.slice(0,4).map(l=>{const li=document.createElement('li'),t=document.createElement('time'),span=document.createElement('span');t.textContent=l.time;span.textContent=l.text;li.append(t,span);return li;}));
-document.querySelectorAll('[data-action]').forEach(b=>b.disabled=!!battle);
-}
-// 현재 프로토타입의 레벨 성장 규칙. 원작 조건 진화로 교체할 때 분리할 지점이다.
-function xp(p,n){p.xp+=n;while(p.xp>=p.level*20){p.xp-=p.level*20;p.level++;p.attack+=3;p.defense+=2;p.speed++;p.hp=clamp(p.hp+15);toast(`${info(p).name} · Lv.${p.level} 달성!`);}}
-function fx(text,color='#fff'){effect={text,color,until:performance.now()+1500,idx:state.selected};}
-// 돌보기 도구 진입점. 시설 입장과 전투 중 동작 제한을 공통 처리한다.
-function act(action){if(battle)return;const p=current(),name=info(p).name;if(action==='feed'){if(p.hunger>=100)return toast('이미 배가 불러요.');if(state.coins<15)return toast('비트가 부족해요. 챔피언십에서 비트를 획득하세요.');state.coins-=15;p.hunger=clamp(p.hunger+30);p.hp=clamp(p.hp+8);fx('♥ 냠냠!','#ffe4a0');log(`${name}에게 먹이를 주었습니다. 포만감 +30`);}if(action==='rest'){placeCage('clinic');}if(action==='train'){cageMenu();}if(action==='battle')startBattle();render();save();}
-// 빠른 양호실 입장도 실제로 설치된 시설과 정원을 검사한다.
-function placeCage(kind){
- if(battle)return;
- const cage=state.layout.find(c=>c.kind===kind&&CageLayout.assign(state,current(),c.id));
- if(cage){log(`${info(current()).name} → ${CageRules.names[kind]} 입장`);}
- else{toast('비어 있는 양호실을 먼저 설치해 주세요.');board.open();}
-}
-// 예전 종류 선택 팝업 대신 사육장 위의 실제 케이지 편집기를 연다.
-function cageMenu(){board.open();}
-function showModal(title,body,kicker='TAMER GUIDE'){ $('#modal-title').textContent=title;$('#modal-body').innerHTML=body;$('#modal-kicker').textContent=kicker;$('#modal-ok').disabled=false;$('#close-modal').disabled=false;$('#modal').showModal();}
-// 전투 상태를 별도로 만들어 사육장 시간이 동시에 흐르지 않도록 한다.
-function startBattle(){const p=current();if(p.energy<25)return toast('대회에는 에너지 25가 필요해요. 먼저 쉬어 주세요.');if(p.hp<30)return toast('체력이 부족해요. 휴식 후 다시 도전하세요.');p.energy-=25;const rank=Math.min(8,state.wins),enemy={name:rank<3?'파닥몬':'파피몬',kind:rank<3?'patamon':'gabumon',hp:100,max:100,attack:12+rank*3,defense:8+rank*2};battle={partner:state.selected,enemy,hp:p.hp,max:100,turn:0,timer:0,events:[],finished:false};$('#scene-title').textContent='챔피언십 아레나';$('#scene-note').textContent='자동 전투 진행 중 · 능력치에 따라 승부가 결정됩니다';log(`${info(p).name}이 루키 챔피언십에 출전했습니다.`);showModal('루키 챔피언십','<div id="battle-content"></div>','CHAMPIONSHIP / AUTO BATTLE');$('#modal-ok').disabled=true;$('#close-modal').disabled=true;updateBattleUI();}
-function updateBattleUI(){if(!battle)return;const b=battle,p=state.team[b.partner];$('#battle-content').innerHTML=`<div class="battle-health"><div>${info(p).name}<div class="track"><i style="width:${clamp(b.hp)}%"></i></div>${Math.max(0,b.hp)} / 100</div><div>${b.enemy.name}<div class="track"><i style="width:${clamp(b.enemy.hp)}%;background:#d19772"></i></div>${Math.max(0,b.enemy.hp)} / 100</div></div><div class="battle-log">${b.events.map(t=>`<p>${t}</p>`).join('')||'경기 시작! 파트너를 응원해 주세요.'}</div>`;const el=$('.battle-log');el.scrollTop=el.scrollHeight;}
-// 일정 간격으로 공격을 번갈아 처리하고 종료 시 보상을 한 번만 지급한다.
-function battleTick(dt){if(!battle||battle.finished)return;const b=battle,p=state.team[b.partner];b.timer+=dt;if(b.timer<.65)return;b.timer=0;const player=b.turn%2===0;const dmg=player?Math.max(3,Math.round(p.attack*.7-b.enemy.defense*.3+Math.random()*7)):Math.max(2,Math.round(b.enemy.attack*.7-p.defense*.3+Math.random()*7));if(player)b.enemy.hp-=dmg;else b.hp-=dmg;b.events.push(`${player?info(p).name:b.enemy.name}의 공격! ${dmg} 데미지`);b.turn++;updateBattleUI();if(b.hp<=0||b.enemy.hp<=0){b.finished=true;const won=b.enemy.hp<=0;p.hp=Math.max(15,b.hp);state.coins+=won?100:30;xp(p,won?30:12);if(won)state.wins++;b.events.push(won?'승리! 보상 100 ฿ · 경험치 +30':'패배… 참가 보상 30 ฿ · 경험치 +12');updateBattleUI();$('#modal-title').textContent=won?'첫걸음도 챔피언답게!':'다음 경기는 더 강하게';$('#modal-ok').disabled=false;$('#close-modal').disabled=false;log(`${info(p).name} ${won?'승리! 100':'참가 완료. 30'} 비트를 받았습니다.`);render();}}
-function closeModal(){if(battle&&!battle.finished)return;$('#modal').close();if(battle){battle=null;$('#scene-title').textContent='시작의 정원';$('#scene-note').textContent='디지몬을 클릭해 파트너를 선택하세요';render();save();}}
-$('#modal-ok').onclick=closeModal;$('#close-modal').onclick=closeModal;$('#modal').addEventListener('cancel',e=>{e.preventDefault();closeModal();});
-$('#help').onclick=()=>showModal('테이머 가든에 오신 걸 환영해요.','<p>원본 디지몬 그래픽을 활용한 브라우저 육성 팬게임의 첫 버전입니다.</p><ol><li>정원의 디지몬 또는 파트너 탭을 눌러 선택하세요.</li><li>먹이로 포만감을, 휴식으로 체력과 에너지를 회복하세요.</li><li>케이지 편집에서 시설을 배치하고 디지몬을 끌어 넣으세요. 시설은 회전·이동·철거할 수 있습니다. 편집 중에는 육성 시간이 멈춥니다.</li><li>자동 전투에서 비트와 경험치를 획득하세요. 패배해도 참가 보상을 받습니다.</li><li>아구몬은 Lv.5 · 에너지 50 이상일 때 그레이몬으로 진화합니다.</li></ol><p>진행은 현재 브라우저에 자동 저장됩니다. 다른 기기와는 공유되지 않습니다. 창이 비활성화되면 시간이 멈춥니다. 성장·전투·진화 규칙은 프로토타입 전용이며 원작 재현은 아닙니다.</p>');
-document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>act(b.dataset.action));
-$('#partner-tabs').onclick=e=>{const b=e.target.closest('[data-partner]');if(b&&!battle){state.selected=+b.dataset.partner;render();save();}};
-$('#evolve').onclick=()=>{const p=current();if(battle||p.kind!=='agumon'||p.level<5||p.energy<50)return;p.kind='graymon';p.attack+=18;p.defense+=12;p.speed+=5;p.energy-=30;p.hp=100;fx('✦ EVOLUTION ✦','#ffe8a3');log('아구몬이 그레이몬으로 진화했습니다! 새로운 힘이 깨어났습니다.');toast('진화 성공! 그레이몬이 되었습니다.');};
-$('#pause').onclick=()=>{paused=!paused;$('#pause').textContent=paused?'▶ 다시 함께하기':'Ⅱ 잠시 쉬기';toast(paused?'정원의 시간이 멈췄습니다.':'정원의 시간이 다시 흐릅니다.');};
-$('#reset').onclick=()=>{if(battle)return;showModal('새로운 육성을 시작할까요?','<p>현재 브라우저의 육성 기록과 비트가 초기화됩니다.</p><button class="primary" id="confirm-reset" style="background:#ad654d">기록을 초기화하고 다시 시작</button>','NEW GARDEN');$('#confirm-reset').onclick=()=>{state=fresh();board.reset();effect=null;clock=0;save();render();closeModal();toast('새로운 정원에서 모험이 시작됩니다.');};};
-const canvas=$('#world'),ctx=canvas.getContext('2d'),portrait=$('#portrait').getContext('2d');ctx.imageSmoothingEnabled=false;portrait.imageSmoothingEnabled=false;
-// Seeded scenery stays stable across frames and reloads.
-let seed=2468;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};const grass=Array.from({length:230},()=>({x:rand()*960,y:160+rand()*400,c:rand()}));
-function tree(x,y,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle='#79925340';ctx.beginPath();ctx.ellipse(0,17,42,14,0,0,7);ctx.fill();ctx.fillStyle='#776d4d';ctx.fillRect(-6,-35,12,48);ctx.fillStyle='#8d855b';ctx.fillRect(-4,-35,4,46);ctx.fillStyle='#66824d';ctx.fillRect(-34,-72,68,34);ctx.fillRect(-24,-94,48,72);ctx.fillStyle='#789456';ctx.fillRect(-31,-78,60,35);ctx.fillRect(-20,-98,40,65);ctx.fillStyle='#8da564';ctx.fillRect(-15,-94,30,12);ctx.fillRect(-30,-76,21,12);ctx.fillStyle='#526e43';ctx.fillRect(-26,-44,53,8);ctx.restore();}
-function scenery(t){ctx.fillStyle='#d7dec1';ctx.fillRect(0,0,960,560);ctx.fillStyle='#c0cda8';ctx.beginPath();ctx.moveTo(0,125);ctx.lineTo(100,55);ctx.lineTo(220,115);ctx.lineTo(350,50);ctx.lineTo(500,120);ctx.lineTo(700,55);ctx.lineTo(850,100);ctx.lineTo(960,40);ctx.lineTo(960,300);ctx.lineTo(0,300);ctx.fill();ctx.fillStyle='#a9bd8b';ctx.fillRect(0,152,960,408);ctx.fillStyle='#b3c694';ctx.beginPath();ctx.ellipse(460,340,600,200,0,0,7);ctx.fill();ctx.fillStyle='#bacb9d';ctx.beginPath();ctx.ellipse(480,380,340,150,0,0,7);ctx.fill();
-// Winding garden path.
-ctx.strokeStyle='#c6c59c';ctx.lineWidth=66;ctx.beginPath();ctx.moveTo(540,150);ctx.bezierCurveTo(340,230,590,290,475,390);ctx.bezierCurveTo(430,450,390,520,430,580);ctx.stroke();ctx.strokeStyle='#d8d4ad';ctx.lineWidth=52;ctx.stroke();ctx.strokeStyle='#e0dbb5';ctx.lineWidth=38;ctx.stroke();
-// Stream and little bridge.
-ctx.strokeStyle='#91ada1';ctx.lineWidth=54;ctx.beginPath();ctx.moveTo(815,185);ctx.bezierCurveTo(650,280,990,330,905,560);ctx.stroke();ctx.strokeStyle='#a6c7be';ctx.lineWidth=38;ctx.stroke();ctx.fillStyle='#d4e0c9';for(let i=0;i<14;i++){const x=831+Math.sin(i*1.7)*43,y=224+i*23;ctx.fillRect(x+Math.sin(t+i)*3,y,12,2);}ctx.save();ctx.translate(860,385);ctx.rotate(.2);ctx.fillStyle='#827f57';ctx.fillRect(-57,-15,110,43);ctx.fillStyle='#b7a67a';for(let i=0;i<9;i++)ctx.fillRect(-54+i*12,-17,10,38);ctx.fillStyle='#756e50';ctx.fillRect(-60,-25,120,5);ctx.fillRect(-60,20,120,5);ctx.restore();
-for(const g of grass){if(g.x>795&&g.x<943)continue;ctx.fillStyle=g.c>.8?'#d4d7a0':'#9eb780';ctx.fillRect(g.x,g.y,3,2);if(g.c>.88){ctx.fillStyle='#f2e7ac';ctx.fillRect(g.x,g.y-4,3,3);}}
-// Far fence, woodland and shelter.
-ctx.fillStyle='#9b9872';ctx.fillRect(50,186,365,4);ctx.fillRect(50,200,365,4);for(let i=0;i<14;i++)ctx.fillRect(50+i*28,177,5,36);
-for(const [x,y,s] of [[25,170,1.4],[107,150,1.1],[190,162,1.3],[288,152,1],[681,171,1.1],[752,165,1.3],[917,170,1.5],[963,220,1.4]])tree(x,y,s);
-ctx.fillStyle='#9da97b55';ctx.beginPath();ctx.ellipse(600,223,72,18,0,0,7);ctx.fill();ctx.fillStyle='#e5ddba';ctx.fillRect(553,163,94,56);ctx.fillStyle='#d2c59c';ctx.fillRect(553,210,94,9);ctx.fillStyle='#aa7557';ctx.beginPath();ctx.moveTo(537,166);ctx.lineTo(600,120);ctx.lineTo(662,166);ctx.fill();ctx.fillStyle='#bc8966';ctx.beginPath();ctx.moveTo(548,158);ctx.lineTo(600,121);ctx.lineTo(651,158);ctx.fill();ctx.fillStyle='#6a7351';ctx.fillRect(589,184,22,35);ctx.fillStyle='#92ac98';ctx.fillRect(563,179,14,14);ctx.fillRect(623,179,14,14);ctx.fillStyle='#e4d7af';ctx.fillRect(590,135,20,14);ctx.fillStyle='#a87e58';ctx.font='bold 9px monospace';ctx.fillText('D',597,146);
-// Training corner and garden signage.
-ctx.fillStyle='#9cab7c';ctx.fillRect(100,324,135,73);ctx.fillStyle='#c1bc8c';ctx.fillRect(106,329,123,61);ctx.fillStyle='#9a7958';ctx.fillRect(161,304,7,67);ctx.fillStyle='#bf9e6a';ctx.fillRect(144,304,42,34);ctx.fillStyle='#d5be86';ctx.fillRect(149,309,32,23);ctx.fillStyle='#ac7859';ctx.fillRect(159,314,12,12);ctx.fillStyle='#9a845b';ctx.fillRect(292,226,6,47);ctx.fillStyle='#d9c698';ctx.fillRect(271,224,56,25);ctx.fillStyle='#766e4b';ctx.font='bold 9px monospace';ctx.fillText('GARDEN',277,240);
-tree(35,510,1.5);tree(945,550,1.55);ctx.fillStyle='#c8ce9e';for(const [x,y] of [[97,467],[745,484],[659,284]]){ctx.fillRect(x,y,18,9);ctx.fillStyle='#a0ac84';ctx.fillRect(x+3,y-5,13,6);ctx.fillStyle='#c8ce9e';}
-}
-// 변환한 PNG 시트의 한 셀을 최근접 보간으로 그려 픽셀을 유지한다.
-function sprite(context,kind,x,y,scale=3,frame=0,flip=false){const a=assets.get(kind);if(!a||!a.image.complete||!a.image.naturalWidth)return;context.save();context.translate(Math.round(x),Math.round(y));if(flip)context.scale(-1,1);context.drawImage(a.image,(frame%a.frames)*a.width,0,a.width,a.height,-a.width*scale/2,-a.height*scale,a.width*scale,a.height*scale);context.restore();}
-function draw(t,dt){if(battle)scenery(t);else board.draw(ctx);if(battle){ctx.fillStyle='#203a2d55';ctx.fillRect(0,0,960,560);ctx.strokeStyle='#e4e6c9';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(470,365,270,125,0,0,7);ctx.stroke();sprite(ctx,info(state.team[battle.partner]).sprite,340,390,3.8,battle.turn%3,false);sprite(ctx,info({kind:battle.enemy.kind}).sprite,610,390,3.8,battle.turn%3,true);}else{const order=state.team.map((p,i)=>({p,i})).sort((a,b)=>a.p.y-b.p.y);for(const {p,i} of order){if(!paused&&!document.hidden&&!p.cageId&&!board.editing){if(Math.abs(p.target-p.x)<3){if(Math.random()<.008)p.target=260+Math.random()*445;}else{p.direction=p.target>p.x?1:-1;p.x+=p.direction*dt*16;}}const selected=i===state.selected;ctx.fillStyle=selected?'#577b4d44':'#577b4d22';ctx.beginPath();ctx.ellipse(p.x,p.y+2,selected?41:32,11,0,0,7);ctx.fill();if(selected){ctx.strokeStyle='#f8f3d0';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y+2,42,13,0,0,7);ctx.stroke();}const moving=Math.abs(p.target-p.x)>3;const bob=paused?0:Math.sin(t*(moving?7:2)+i)*2;sprite(ctx,info(p).sprite,p.x,p.y+bob,3,(Math.floor(t*4)%2),p.direction<0);ctx.font='bold 11px "Noto Sans KR",sans-serif';ctx.textAlign='center';ctx.fillStyle='#3a573c';ctx.fillText(info(p).name,p.x,p.y+31);ctx.font='9px monospace';ctx.fillStyle='#6c8358';ctx.fillText(`Lv.${p.level}`,p.x,p.y+46);if(selected){ctx.fillStyle='#fff3c2';ctx.beginPath();ctx.moveTo(p.x,p.y-118);ctx.lineTo(p.x-5,p.y-126);ctx.lineTo(p.x+5,p.y-126);ctx.fill();}}}if(effect&&performance.now()<effect.until){const p=state.team[effect.idx];ctx.font='bold 17px sans-serif';ctx.textAlign='center';ctx.fillStyle=effect.color;ctx.shadowColor='#42623e';ctx.shadowBlur=5;ctx.fillText(effect.text,p.x,p.y-110-(1500-(effect.until-performance.now()))/80);ctx.shadowBlur=0;}portrait.clearRect(0,0,240,150);portrait.fillStyle='#b5c99955';portrait.beginPath();portrait.ellipse(120,116,40,9,0,0,7);portrait.fill();sprite(portrait,info(current()).sprite,120,118+Math.sin(t*2),current().kind==='graymon'?2:2.5,Math.floor(t*3)%2);}
-// 편집 중에는 육성 시간을 멈춘다. 이동/회전이 훈련 결과에 영향을 주지 않게 한다.
-const board=createCageEditor(canvas,()=>state,(message)=>{if(message)log(message);else{render();save();}},toast,()=>!!battle);
-// 탭이 보이는 동안만 진행하며 일시 정지·전투·케이지 편집 시 육성 시간을 멈춘다.
-function frame(now){const dt=lastTime?Math.min(.05,(now-lastTime)/1000):0;lastTime=now;if(!document.hidden){if(battle)battleTick(dt);if(!paused&&!battle&&!board.editing){clock+=dt;if(clock>=1){clock-=1;state.seconds++;state.team.forEach(p=>{const result=CageRules.tick(p);if(result==='trained')xp(p,6);});render();if(state.seconds%15===0){state.team.forEach(p=>{p.hunger=clamp(p.hunger-1);p.energy=clamp(p.energy-.5);});render();save();}if(state.seconds%120===0){state.coins+=50;log('새로운 하루! 테이머 지원금 50 비트를 받았습니다.');}}}draw(now/1000,dt);}requestAnimationFrame(frame);}
-document.addEventListener('visibilitychange',()=>{lastTime=0;save();});window.addEventListener('pagehide',save);render();save();requestAnimationFrame(frame);
+  const C = window.ChampCore;
+  const L = window.CageLayout;
+  const $ = (s) => document.querySelector(s);
+  const KEY = 'champion-web-v2';
+  const pad = (n) => String(n).padStart(2, '0');
+  const clamp = (n, a = 0, b = 100) => Math.min(b, Math.max(a, n));
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+  // 변환된 원본 스프라이트가 있는 종. 없으면 종족 색 원 + 이름으로 그린다.
+  const SPRITE_BY_NAME = {
+    디지에그: 'e000_digitama',
+    코로몬: 'm102_koromon',
+    아구몬: 'm201_agumon',
+    파피몬: 'm208_gabumon',
+    파닥몬: 'm227_patamon',
+    그레이몬: 'm320_graymon',
+  };
+  const FAMILY_COLOR = { 용: '#d9774b', 짐승: '#c9a35b', 물: '#5b9fd9', 새: '#8fc7e8', 벌레풀: '#7fb35a', 기계: '#9aa3ad', 성: '#f0dc8a', 암흑: '#7a5a9a' };
+  const START_LAYOUT = [
+    { id: 'start-clinic', kind: 'clinic', q: 0, r: 0, rotation: 0 },
+    { id: 'start-field', kind: 'field', q: 2, r: 1, rotation: 0 },
+  ];
+
+  const assets = new Map();
+  for (const meta of window.SPRITES) {
+    const im = new Image();
+    im.src = `assets/${meta.id}.png`;
+    assets.set(meta.id, { ...meta, image: im });
+  }
+
+  let save,
+    view,
+    battle = null,
+    paused = false,
+    speed = 1,
+    lastTime = 0,
+    clock = 0,
+    toastTimer,
+    effect = null;
+
+  // ---------- 저장 ----------
+  function freshView() {
+    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 2, team: [], selected: 0, logs: [] };
+  }
+  function load() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(KEY));
+      if (raw && raw.save && raw.save.version === 2 && Array.isArray(raw.save.digimon) && raw.save.digimon.length && raw.view) {
+        save = raw.save;
+        view = { ...freshView(), ...raw.view };
+        // 꺼져 있던 동안의 시간 반영 (최대 12시간)
+        const away = Math.min(C.OFFLINE_CAP_MINUTES, Math.max(0, Math.floor((Date.now() - save.lastSavedAt) / 1000)));
+        if (away > 0) {
+          const r = C.advance(save, away);
+          save = r.save;
+          r.events.forEach(logEvent);
+          if (away >= 5) view.logs.unshift({ time: stamp(), text: `자리를 비운 동안 ${Math.floor(away / 60)}시간 ${away % 60}분이 지났습니다.` });
+        }
+        return;
+      }
+    } catch {}
+    save = C.freshSave(Date.now());
+    view = freshView();
+    view.logs.push({ time: stamp(), text: '디지몬 챔피언십 참가 메일이 도착했습니다. 디지에그를 잘 돌봐 주세요.' });
+  }
+  function persist() {
+    try {
+      save = { ...save, lastSavedAt: Date.now() };
+      localStorage.setItem(
+        KEY,
+        JSON.stringify({
+          save,
+          view: {
+            layout: view.layout,
+            storedCages: view.storedCages,
+            layoutVersion: view.layoutVersion,
+            team: view.team,
+            selected: view.selected,
+            logs: view.logs.slice(0, 30),
+          },
+        }),
+      );
+      $('#save-status').textContent = '브라우저에 자동 저장됨';
+    } catch {
+      $('#save-status').textContent = '저장 불가 · 브라우저 저장 설정 확인';
+    }
+  }
+
+  // ---------- 상태 도우미 ----------
+  const nameOf = (d) => (d.isEgg ? '디지에그' : C.getSpecies(d.speciesId).name);
+  const digi = (uid) => save.digimon.find((d) => d.uid === uid);
+  const current = () => digi(view.team[view.selected]?.uid) || save.digimon[0];
+  function stamp() {
+    if (!save) return '';
+    const d = C.dateOf(save.clock);
+    return `${d.seasonName} ${d.day}일 ${pad(d.hour)}:${pad(d.minute)}`;
+  }
+  function log(text) {
+    view.logs.unshift({ time: stamp(), text });
+    view.logs = view.logs.slice(0, 30);
+  }
+  function toast(t) {
+    $('#toast').textContent = t;
+    $('#toast').classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 3000);
+  }
+  function logEvent(e) {
+    const n = (id) => C.getSpecies(id).name;
+    if (e.type === 'hatched') log(`디지에그가 부화해 ${n(e.to)}이(가) 태어났습니다!`);
+    else if (e.type === 'evolved') {
+      log(`✦ ${n(e.from)}이(가) ${n(e.to)}(으)로 진화했습니다!`);
+      toast(`${n(e.from)} → ${n(e.to)} 진화!`);
+    } else if (e.type === 'egg') log(`${n(e.from)}이(가) 수명을 다해 디지에그로 돌아갔습니다.`);
+    else if (e.type === 'lost') log(`${e.name}을(를) 잃었습니다… (${e.reason})`);
+    else if (e.type === 'sick') {
+      log(`${e.name}이(가) 병에 걸렸습니다. 알약으로 치료하세요. (페널티 +1)`);
+      toast(`${e.name} 발병!`);
+    } else if (e.type === 'blocked')
+      log(
+        e.reason === 'rank'
+          ? `${e.name}: 테이머 랭크가 낮아 진화하지 못했습니다. 타이틀 매치에서 이기세요.`
+          : `${e.name}: 사육 용량이 부족해 진화하지 못했습니다.`,
+      );
+  }
+
+  // 화면용 목록(view.team)을 규칙 엔진의 디지몬 목록과 맞추고, 들어간 시설을 엔진의 케이지로 반영한다.
+  function syncTeam() {
+    const old = new Map(view.team.map((p) => [p.uid, p]));
+    view.team = save.digimon.map(
+      (d, i) => old.get(d.uid) || { uid: d.uid, x: 260 + ((i * 97) % 420), y: 330 + ((i * 53) % 120), target: 300, direction: 1, cageId: null, cage: 'free' },
+    );
+    view.selected = clamp(view.selected, 0, view.team.length - 1);
+    const coreCage = new Map(view.team.map((p) => [p.uid, (p.cageId && L.types[p.cage]?.core) || '기본 케이지']));
+    save = { ...save, digimon: save.digimon.map((d) => (d.cage === coreCage.get(d.uid) ? d : { ...d, cage: coreCage.get(d.uid) })) };
+  }
+
+  // ---------- 케이지 규칙 연결 ----------
+  // 케이지 공간은 테이머 랭크에 따라 늘어나고(레드 테이머 16칸), 새 시설은 상점에서 산 것만 한 개씩 설치할 수 있다.
+  L.space = () => C.cageSpaceOf(save);
+  L.canPlace = (item, items) => {
+    const t = L.types[item.kind];
+    if (item.kind === 'free') return true;
+    return save.cages.includes(t.core) && !items.some((c) => c.kind === item.kind);
+  };
+  const usedCells = () => view.layout.reduce((n, c) => n + L.cells(c).length, 0);
+
+  // ---------- 그리기 (DOM) ----------
+  // 매 게임 분마다 다시 그리므로, 내용이 바뀐 경우에만 교체해 누르는 중인 버튼이 사라지지 않게 한다
+  const htmlCache = new Map();
+  function setHtml(sel, html) {
+    if (htmlCache.get(sel) === html) return;
+    htmlCache.set(sel, html);
+    $(sel).innerHTML = html;
+  }
+  function render() {
+    syncTeam();
+    const d = current();
+    const date = C.dateOf(save.clock);
+    const rank = C.tamerRank(save);
+    const capacity = C.capacityOf(save);
+    $('#coins').textContent = save.bits.toLocaleString('ko-KR');
+    setHtml(
+      '#band',
+      [
+        `<b>${date.seasonName}</b>`,
+        `${date.day}일`,
+        `${date.year}년차`,
+        `<b>${battle ? '배틀' : '육성'}</b>`,
+        `${pad(date.hour)}:${pad(date.minute)}`,
+        `${esc(C.rankName(rank))}`,
+        `용량 ${C.usedCapacity(save)} / ${capacity}G`,
+        `케이지 ${usedCells()} / ${C.cageSpaceOf(save)}칸`,
+      ]
+        .map((x) => `<span>${x}</span>`)
+        .join(''),
+    );
+    $('#scene-title').textContent = battle ? '배틀 아레나' : '사육장';
+    $('#speed').textContent = `▶▶ ×${speed}`;
+
+    setHtml(
+      '#partner-tabs',
+      view.team
+        .map((p, i) => {
+          const x = digi(p.uid);
+          const flag = x.sick ? ' ✚' : x.injured ? ' ✚' : x.poop >= 3 ? ' ●' : '';
+          return `<button class="${i === view.selected ? 'active' : ''}" data-partner="${i}" aria-pressed="${i === view.selected}">${esc(nameOf(x))}${flag}</button>`;
+        })
+        .join(''),
+    );
+
+    const sp = C.getSpecies(d.speciesId);
+    $('#name').textContent = nameOf(d);
+    $('#level').textContent = d.isEgg ? '부화 대기' : C.STAGE_LABEL[sp.stage];
+    $('#stage').textContent = d.isEgg ? `디지에그화 ${d.eggs}회` : `${sp.family} · ${sp.attr} · ${sp.size}G`;
+    const life = d.isEgg ? C.EGG_MINUTES : C.LIFESPAN[sp.stage];
+    $('#mood').textContent = d.isEgg
+      ? `${Math.max(0, C.EGG_MINUTES - d.stageAge)}분 뒤 부화합니다.`
+      : `성격: ${d.personality} · 배틀 ${d.battles}회 (승 ${d.wins}) · 페널티 ${d.penalties}${d.sick ? ' · 병' : ''}${d.injured ? ' · 부상' : ''}`;
+    $('#xp-label').textContent = `${Math.floor(d.stageAge / 60)}시간 / ${Math.floor(life / 60)}시간`;
+    $('#xp-bar').style.width = `${clamp((d.stageAge / life) * 100)}%`;
+    const where = view.team[view.selected];
+    $('#cage-status').textContent = where?.cageId ? `${L.types[where.cage]?.name} 안에서 지내는 중` : '자유 활동 (훈련 없음)';
+    setHtml(
+      '#vitals',
+      [
+        ['포만감', d.hunger],
+        ['피로', d.fatigue],
+        ['청결', 100 - d.poop * 20],
+      ]
+        .map(
+          ([n, v]) =>
+            `<div class="vital"><span>${n}</span><div class="track"><i style="width:${clamp(v)}%"></i></div><span>${Math.round(v)} / 100</span></div>`,
+        )
+        .join(''),
+    );
+    setHtml('#stats', C.STAT_KEYS.map((k) => `<div><span>${C.STAT_LABEL[k]}</span><strong>${d.stats[k]}</strong></div>`).join(''));
+    const ap = Object.entries(d.ap).filter(([, v]) => v >= 1);
+    setHtml(
+      '#ap',
+      ap.length
+        ? ap.map(([k, v]) => `<span>${k} ${Math.floor(v)}</span>`).join('')
+        : '<span class="muted">종족·속성 수치 없음 — 훈련 케이지에 넣어 올리세요</span>',
+    );
+
+    // 진화 힌트: 위에서부터 먼저 충족한 쪽으로 진화
+    if (d.isEgg) setHtml('#evo', '<p class="hint">부화하면 진화 조건이 표시됩니다.</p>');
+    else {
+      const seen = new Set(save.seen);
+      const maxStage = C.maxStageForRank(rank);
+      const hs = C.hints(d, seen);
+      setHtml(
+        '#evo',
+        (sp.stage + 1 > maxStage && hs.length
+          ? `<p class="warn">테이머 랭크가 낮아 ${C.STAGE_LABEL[sp.stage + 1]}로 진화할 수 없습니다. 타이틀 매치에서 이기세요.</p>`
+          : '') +
+          (hs.length
+            ? hs
+                .map(
+                  (h) =>
+                    `<div class="evo-row${h.ready ? ' ready' : ''}"><b>${esc(h.name)}</b><small>${h.stage}</small><ul>${h.checks.map((c) => `<li class="${c.met ? 'met' : ''}">${esc(c.label)}</li>`).join('')}</ul></div>`,
+                )
+                .join('')
+            : '<p class="hint">더 이상 진화하지 않습니다.</p>'),
+      );
+    }
+
+    $('#inventory').textContent = `고기 ${save.meat} · 알약 ${save.pills} · 썩은 고기 ${save.rotten} · 로프 Lv.${save.ropeLevel}`;
+    const next = C.upcoming(save);
+    $('#milestone').textContent = next[0] || '모든 타이틀 획득!';
+    setHtml(
+      '#schedule',
+      next
+        .slice(1, 4)
+        .map((t) => `<li>${esc(t)}</li>`)
+        .join(''),
+    );
+
+    $('#journal').replaceChildren(
+      ...view.logs.slice(0, 6).map((l) => {
+        const li = document.createElement('li');
+        const t = document.createElement('time');
+        const span = document.createElement('span');
+        t.textContent = l.time;
+        span.textContent = l.text;
+        li.append(t, span);
+        return li;
+      }),
+    );
+    document.querySelectorAll('[data-action]').forEach((b) => (b.disabled = !!battle));
+    // 상점에서 사지 않은 시설은 설치 목록에서 잠근다
+    document.querySelectorAll('[data-build]').forEach((b) => {
+      const t = L.types[b.dataset.build];
+      const owned = b.dataset.build === 'free' || save.cages.includes(t.core);
+      b.disabled = !owned;
+      b.title = owned ? '' : '상점에서 구매하면 설치할 수 있습니다';
+    });
+  }
+
+  // ---------- 돌보기 ----------
+  function apply(result) {
+    if (result.ok) {
+      save = result.save;
+      log(`${nameOf(current())}: ${result.message}`);
+      render();
+      persist();
+    } else toast(result.message);
+    return result.ok;
+  }
+  function act(action) {
+    if (battle) return;
+    const d = current();
+    if (action === 'feed') {
+      if (apply(C.feed(save, d.uid))) fx('♥ 냠냠!', '#ffe4a0');
+    }
+    if (action === 'rotten') apply(C.feedRotten(save, d.uid));
+    if (action === 'clean') apply(C.clean(save, d.uid));
+    if (action === 'heal') apply(C.heal(save, d.uid));
+    if (action === 'battle') battleMenu();
+    if (action === 'shop') shopMenu();
+    if (action === 'release') releaseMenu();
+  }
+  function fx(text, color = '#fff') {
+    effect = { text, color, until: performance.now() + 1500, uid: current().uid };
+  }
+
+  // ---------- 모달 ----------
+  function showModal(title, body, kicker = 'TAMER GUIDE', ok = '사육장으로 돌아가기') {
+    $('#modal-title').textContent = title;
+    $('#modal-body').innerHTML = body;
+    $('#modal-kicker').textContent = kicker;
+    $('#modal-ok').textContent = ok;
+    $('#modal-ok').disabled = false;
+    $('#close-modal').disabled = false;
+    if (!$('#modal').open) $('#modal').showModal();
+  }
+  function closeModal() {
+    if (battle && !battle.state.over) return;
+    $('#modal').close();
+    if (battle) {
+      battle = null;
+      render();
+      persist();
+    }
+  }
+
+  function shopMenu() {
+    const items = C.shopItems(save);
+    showModal(
+      '상점',
+      `<p>소지 비트 ${save.bits.toLocaleString('ko-KR')} ฿</p><div class="menu-list">${items
+        .map(
+          (it, i) =>
+            `<button data-buy="${i}"${save.bits < it.price ? ' disabled' : ''}><b>${esc(it.name)}</b><small>${it.price.toLocaleString('ko-KR')} ฿</small></button>`,
+        )
+        .join('')}</div><p class="hint">케이지를 사면 사육장 아래 ‘케이지 편집’에서 설치할 수 있습니다. 랭크가 오르면 상품이 늘어납니다.</p>`,
+      'SHOP',
+    );
+    $('#modal-body')
+      .querySelectorAll('[data-buy]')
+      .forEach((b) => {
+        b.onclick = () => {
+          const r = C.buy(save, items[+b.dataset.buy]);
+          if (r.ok) {
+            save = r.save;
+            log(r.message);
+            render();
+            persist();
+            toast(r.message);
+            shopMenu();
+          } else toast(r.message);
+        };
+      });
+  }
+
+  function releaseMenu() {
+    const d = current();
+    showModal(
+      '디지몬을 놓아줄까요?',
+      `<p>${esc(nameOf(d))}을(를) 놓아주면 되돌릴 수 없습니다. 사육 용량이 그만큼 비워집니다.</p><button class="primary" id="confirm-release" style="background:#ad654d">놓아주기</button>`,
+      'RELEASE',
+    );
+    $('#confirm-release').onclick = () => {
+      const r = C.release(save, d.uid);
+      if (r.ok) {
+        save = r.save;
+        log(`${nameOf(d)}을(를) 놓아주었습니다.`);
+        view.selected = 0;
+        render();
+        persist();
+      } else toast(r.message);
+      closeModal();
+    };
+  }
+
+  // ---------- 배틀 ----------
+  const canFight = (d) => !d.isEgg && !d.sick && !d.injured;
+  function members(format) {
+    const first = current();
+    const rest = save.digimon.filter((d) => d.uid !== first.uid && canFight(d));
+    return [first, ...rest].slice(0, format);
+  }
+  function battleMenu() {
+    const date = C.dateOf(save.clock);
+    const titles = C.todaysMatches(save);
+    const d = current();
+    const freeOpen = date.hour >= 8 && date.hour < 21;
+    let mode = '일반';
+    const titleHtml = titles.length
+      ? titles
+          .map((m, i) => {
+            const eggsOk = !m.needEggs || members(m.format).every((x) => x.eggs >= m.needEggs);
+            return `<button data-title="${i}"${eggsOk ? '' : ' disabled'}><b>★ ${esc(m.name)}</b><small>${m.format}:${m.format} · 상대 ${C.STAGE_LABEL[m.stage]} · 상금 ${m.prize.toLocaleString('ko-KR')} ฿${eggsOk ? '' : ` · 디지에그화 ${m.needEggs}회 필요`}</small></button>`;
+          })
+          .join('')
+      : `<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은 08:00~15:00, 일정: ${esc(C.upcoming(save)[0] || '-')}</p>`;
+    const free = [];
+    for (const stars of [1, 2, 3])
+      for (const format of [1, 3]) free.push({ stars, format, stage: Math.min(6, 2 + stars), prize: 60 * stars * (format === 3 ? 2 : 1) });
+    showModal(
+      '배틀',
+      `<p>출전: <b>${esc(nameOf(d))}</b> (3:3은 함께 지내는 디지몬 중 건강한 순서로 둘이 더 나갑니다)</p>
+       <div class="mode-pick">출전 전 공격 방식 ${['일반', '지원', '특수'].map((m) => `<button data-mode="${m}" class="${m === mode ? 'active' : ''}">${m}</button>`).join('')}</div>
+       <h3>타이틀 매치</h3><div class="menu-list">${titleHtml}</div>
+       <h3>프리 배틀 ${freeOpen ? '' : '(08:00~21:00)'}</h3><div class="menu-list two">${free
+         .map(
+           (f, i) =>
+             `<button data-free="${i}"${freeOpen ? '' : ' disabled'}><b>${'★'.repeat(f.stars)} ${f.format}:${f.format}</b><small>상대 ${C.STAGE_LABEL[f.stage]} · ${f.prize} ฿</small></button>`,
+         )
+         .join('')}</div>`,
+      'BATTLE ENTRY',
+      '취소',
+    );
+    const body = $('#modal-body');
+    body.querySelectorAll('[data-mode]').forEach(
+      (b) =>
+        (b.onclick = () => {
+          mode = b.dataset.mode;
+          body.querySelectorAll('[data-mode]').forEach((x) => x.classList.toggle('active', x === b));
+        }),
+    );
+    body.querySelectorAll('[data-title]').forEach(
+      (b) =>
+        (b.onclick = () => {
+          const m = titles[+b.dataset.title];
+          startBattle({ title: m.name, match: m, format: m.format, stage: m.stage, scale: m.scale, prize: m.prize }, mode);
+        }),
+    );
+    body.querySelectorAll('[data-free]').forEach(
+      (b) =>
+        (b.onclick = () => {
+          const f = free[+b.dataset.free];
+          startBattle({ title: `프리 배틀 ${'★'.repeat(f.stars)}`, format: f.format, stage: f.stage, scale: 1, prize: f.prize }, mode);
+        }),
+    );
+  }
+  function startBattle(setup, mode) {
+    const team = members(setup.format);
+    if (!team.length || !canFight(team[0])) return toast('출전할 수 있는 디지몬이 없어요. (알·병·부상은 출전 불가)');
+    if (team.length < setup.format) return toast(`${setup.format}:${setup.format}에는 건강한 디지몬 ${setup.format}마리가 필요해요.`);
+    const foes = C.makeEnemies(setup.stage, setup.format, setup.scale, Math.random);
+    const state = C.createBattle(
+      team.map((d) => C.entrantOf(d, mode)),
+      foes,
+    );
+    battle = { setup, state, acc: 0, flashes: [], done: false };
+    log(`${setup.title} 출전: ${team.map(nameOf).join(', ')}`);
+    showModal(
+      setup.title,
+      '<canvas id="arena" width="480" height="250"></canvas><div class="battle-health" id="battle-hp"></div><div class="battle-log" id="battle-log"></div>',
+      'AUTO BATTLE',
+      '결과 확인',
+    );
+    $('#modal-ok').disabled = true;
+    $('#close-modal').disabled = true;
+    render();
+  }
+  function battleTick(dt) {
+    const b = battle;
+    if (!b || b.done) return;
+    b.acc += dt * 2; // 화면에서는 2배속으로 진행
+    while (b.acc >= 0.1 && !b.state.over) {
+      b.acc -= 0.1;
+      for (const e of C.stepBattle(b.state, Math.random)) {
+        if (e.type === 'hit')
+          b.flashes.push({ id: e.to, text: `-${e.damage}${e.special ? '!' : ''}`, until: performance.now() + 700, color: e.special ? '#ffd36a' : '#fff' });
+        if (e.type === 'heal') b.flashes.push({ id: e.to, text: `+${e.amount}`, until: performance.now() + 700, color: '#8ef0a0' });
+        if (e.type === 'ko') battleLog(`${b.state.units[e.id].name} 쓰러짐!`);
+      }
+    }
+    drawArena();
+    if (b.state.over) finishBattle();
+  }
+  function battleLog(t) {
+    const el = $('#battle-log');
+    if (!el) return;
+    el.insertAdjacentHTML('beforeend', `<p>${esc(t)}</p>`);
+    el.scrollTop = el.scrollHeight;
+  }
+  function finishBattle() {
+    const b = battle;
+    b.done = true;
+    const won = b.state.winner === 0;
+    const ko = new Set(b.state.units.filter((u) => u.team === 0 && !u.alive).map((u) => u.uid));
+    const uids = new Set(b.state.units.filter((u) => u.team === 0).map((u) => u.uid));
+    const before = C.tamerRank(save);
+    save = { ...save, digimon: save.digimon.map((d) => (uids.has(d.uid) ? C.applyBattleResult(d, won, ko.has(d.uid), Math.random) : d)) };
+    if (won && b.setup.match) save = C.applyWin(save, b.setup.match);
+    else if (won) save = { ...save, bits: save.bits + b.setup.prize };
+    const after = C.tamerRank(save);
+    const why = b.state.reason === 'timeout' ? ' (시간 종료 판정)' : '';
+    battleLog(won ? `승리!${why} 상금 ${b.setup.prize.toLocaleString('ko-KR')} ฿` : `패배…${why}`);
+    log(`${b.setup.title} ${won ? '승리' : '패배'}${won ? ` · ${b.setup.prize} ฿` : ''}`);
+    if (won && b.setup.match) log(`타이틀 메달 획득: ${b.setup.match.name}`);
+    if (after > before) {
+      const msg = `${C.rankName(after)}(으)로 랭크 업! 최대 용량 ${C.capacityOf(save)}G, 케이지 공간 ${C.cageSpaceOf(save)}칸, ${C.STAGE_LABEL[C.maxStageForRank(after)]}까지 진화 가능`;
+      battleLog(msg);
+      log(msg);
+      toast('랭크 업!');
+    }
+    for (const d of save.digimon) if (uids.has(d.uid) && d.injured) log(`${nameOf(d)}이(가) 다쳤습니다. 양호실에 넣거나 알약으로 치료하세요.`);
+    $('#modal-title').textContent = won ? 'WIN!' : 'LOSE';
+    $('#modal-ok').disabled = false;
+    $('#close-modal').disabled = false;
+    render();
+    persist();
+  }
+  function drawArena() {
+    const el = $('#arena');
+    if (!el || !battle) return;
+    const ctx = el.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    const s = battle.state;
+    ctx.fillStyle = '#dfe9ee';
+    ctx.fillRect(0, 0, 480, 250);
+    ctx.strokeStyle = '#b7c8d2';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(10, 10, 460, 230);
+    ctx.beginPath();
+    ctx.moveTo(240, 10);
+    ctx.lineTo(240, 240);
+    ctx.stroke();
+    for (const u of s.units) {
+      if (!u.alive) ctx.globalAlpha = 0.3;
+      body(ctx, u.speciesId, false, u.x, u.y + 14, 1.6, Math.floor(performance.now() / 250) % 2, u.team === 1);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#30404a';
+      ctx.fillRect(u.x - 20, u.y + 18, 40, 4);
+      ctx.fillStyle = u.team === 0 ? '#58c27d' : '#e0795b';
+      ctx.fillRect(u.x - 20, u.y + 18, 40 * Math.max(0, u.hp / u.maxHp), 4);
+    }
+    const now = performance.now();
+    battle.flashes = battle.flashes.filter((f) => f.until > now);
+    for (const f of battle.flashes) {
+      const u = s.units[f.id];
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = f.color;
+      ctx.strokeStyle = '#203040';
+      ctx.lineWidth = 3;
+      const y = u.y - 40 - (700 - (f.until - now)) / 25;
+      ctx.strokeText(f.text, u.x, y);
+      ctx.fillText(f.text, u.x, y);
+    }
+    ctx.fillStyle = '#203040';
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`TIME ${Math.max(0, Math.ceil(C.TIME_LIMIT - s.t))}`, 240, 26);
+    const team = (t) => s.units.filter((u) => u.team === t);
+    $('#battle-hp').innerHTML = [0, 1]
+      .map(
+        (t) =>
+          `<div>${t === 0 ? '내 팀' : '상대'}${team(t)
+            .map(
+              (u) =>
+                `<div class="hp-row"><span>${esc(u.name)}</span><div class="track"><i style="width:${clamp((u.hp / u.maxHp) * 100)}%${t ? ';background:#d19772' : ''}"></i></div><span>${Math.max(0, Math.round(u.hp))}</span></div>`,
+            )
+            .join('')}</div>`,
+      )
+      .join('');
+  }
+
+  // ---------- 그리기 (캔버스) ----------
+  function sprite(context, id, x, y, scale, frame, flip) {
+    const a = assets.get(id);
+    if (!a || !a.image.complete || !a.image.naturalWidth) return false;
+    context.save();
+    context.translate(Math.round(x), Math.round(y));
+    if (flip) context.scale(-1, 1);
+    context.drawImage(
+      a.image,
+      (frame % a.frames) * a.width,
+      0,
+      a.width,
+      a.height,
+      (-a.width * scale) / 2,
+      -a.height * scale,
+      a.width * scale,
+      a.height * scale,
+    );
+    context.restore();
+    return true;
+  }
+  // 스프라이트가 없는 종은 종족 색 원과 이름 첫 글자로 표시한다
+  function body(context, speciesId, isEgg, x, y, scale, frame, flip) {
+    const name = isEgg ? '디지에그' : C.getSpecies(speciesId).name;
+    if (sprite(context, SPRITE_BY_NAME[name], x, y, scale, frame, flip)) return;
+    const sp = C.getSpecies(speciesId);
+    const r = (6 + sp.stage * 3) * scale * 0.8;
+    context.fillStyle = FAMILY_COLOR[sp.family] || '#ccc';
+    context.strokeStyle = '#203040';
+    context.lineWidth = 2;
+    context.beginPath();
+    context.arc(x, y - r, r, 0, 7);
+    context.fill();
+    context.stroke();
+    context.fillStyle = '#203040';
+    context.font = `bold ${Math.round(r)}px sans-serif`;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(name[0], x, y - r);
+    context.textBaseline = 'alphabetic';
+  }
+
+  const canvas = $('#world');
+  const ctx = canvas.getContext('2d');
+  const portrait = $('#portrait').getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  portrait.imageSmoothingEnabled = false;
+
+  function drawFarm(t, dt) {
+    board.draw(ctx);
+    const order = view.team.map((p, i) => ({ p, i })).sort((a, b) => a.p.y - b.p.y);
+    for (const { p, i } of order) {
+      const d = digi(p.uid);
+      if (!d) continue;
+      if (!paused && !p.cageId && !board.editing && !d.isEgg) {
+        if (Math.abs(p.target - p.x) < 3) {
+          if (Math.random() < 0.008) p.target = 160 + Math.random() * 560;
+        } else {
+          p.direction = p.target > p.x ? 1 : -1;
+          p.x += p.direction * dt * 16 * (d.fatigue > 80 ? 0.4 : 1);
+        }
+      }
+      const selected = i === view.selected;
+      ctx.fillStyle = selected ? '#ffffff33' : '#00000022';
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y + 2, selected ? 30 : 24, 8, 0, 0, 7);
+      ctx.fill();
+      if (selected) {
+        ctx.strokeStyle = '#f8f3d0';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      const bob = paused ? 0 : Math.sin(t * 2 + i) * 2;
+      body(ctx, d.speciesId, d.isEgg, p.x, p.y + bob, d.isEgg ? 1.6 : 2, Math.floor(t * 4) % 2, p.direction < 0);
+      // 똥과 상태 표시
+      for (let k = 0; k < d.poop; k++) {
+        ctx.fillStyle = '#7a5532';
+        ctx.beginPath();
+        ctx.arc(p.x - 22 + k * 9, p.y + 12, 3.5, 0, 7);
+        ctx.fill();
+      }
+      ctx.font = 'bold 11px "Noto Sans KR",sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#eef6f2';
+      ctx.fillText(nameOf(d) + (d.sick || d.injured ? ' ✚' : ''), p.x, p.y + 28);
+      if (selected) {
+        ctx.fillStyle = '#fff3c2';
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y - 82);
+        ctx.lineTo(p.x - 5, p.y - 90);
+        ctx.lineTo(p.x + 5, p.y - 90);
+        ctx.fill();
+      }
+      if (effect && effect.uid === p.uid && performance.now() < effect.until) {
+        ctx.font = 'bold 17px sans-serif';
+        ctx.fillStyle = effect.color;
+        ctx.fillText(effect.text, p.x, p.y - 95 - (1500 - (effect.until - performance.now())) / 80);
+      }
+    }
+    if (paused) {
+      ctx.fillStyle = '#00000066';
+      ctx.fillRect(0, 0, 960, 560);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('일시 정지', 480, 280);
+    }
+  }
+  function drawPortrait(t) {
+    const d = current();
+    portrait.clearRect(0, 0, 240, 150);
+    portrait.fillStyle = '#b5c99955';
+    portrait.beginPath();
+    portrait.ellipse(120, 116, 40, 9, 0, 0, 7);
+    portrait.fill();
+    body(portrait, d.speciesId, d.isEgg, 120, 118 + Math.sin(t * 2), 2.4, Math.floor(t * 3) % 2, false);
+  }
+
+  // ---------- 시작 ----------
+  load();
+  syncTeam();
+  const board = createCageEditor(
+    canvas,
+    () => view,
+    (message) => {
+      if (message) log(message);
+      render();
+      persist();
+    },
+    toast,
+    () => !!battle,
+  );
+
+  document.querySelectorAll('[data-action]').forEach((b) => (b.onclick = () => act(b.dataset.action)));
+  $('#partner-tabs').onclick = (e) => {
+    const b = e.target.closest('[data-partner]');
+    if (b) {
+      view.selected = +b.dataset.partner;
+      render();
+      persist();
+    }
+  };
+  $('#modal-ok').onclick = closeModal;
+  $('#close-modal').onclick = closeModal;
+  $('#modal').addEventListener('cancel', (e) => {
+    e.preventDefault();
+    closeModal();
+  });
+  $('#pause').onclick = () => {
+    paused = !paused;
+    $('#pause').textContent = paused ? '▶ 다시 진행' : 'Ⅱ 일시 정지';
+  };
+  $('#speed').onclick = () => {
+    speed = speed === 1 ? 5 : speed === 5 ? 20 : 1;
+    render();
+  };
+  $('#help').onclick = () =>
+    showModal(
+      '디지몬 챔피언십 웹판',
+      `<ol>
+        <li>디지에그에서 시작합니다. 현실 1초가 게임 1분이며, 밤까지 하루가 흐릅니다.</li>
+        <li>디지몬을 끌어 케이지에 넣으면 1시간마다 정해진 능력치와 종족·속성 수치가 오릅니다. 양호실은 피로와 부상을 회복합니다.</li>
+        <li>진화는 자동입니다. 오른쪽 진화 조건표의 위에서부터 먼저 채운 쪽으로 진화하고, 아무것도 채우지 못하면 수명이 다할 때 ‘시간 경과’ 진화를 합니다.</li>
+        <li>배고픔·똥 방치·썩은 고기는 병(페널티)이 됩니다. 페널티 진화를 노릴 때만 일부러 쓰세요.</li>
+        <li>타이틀 매치(엔트리 08:00~15:00)에서 이기면 테이머 랭크가 올라 사육 용량, 케이지 공간, 진화 가능 세대가 늘어납니다. 첫 타이틀은 봄 3일 ‘에이스 오브 링’입니다.</li>
+        <li>프리 배틀로 배틀 횟수와 비트를 모으고, 상점에서 고기·알약·케이지를 사세요.</li>
+      </ol><p class="hint">비공식 비영리 팬게임입니다. 진행은 이 브라우저에 자동 저장되며, 창을 닫아 둔 시간도 최대 12시간까지 반영됩니다. 사냥은 아직 웹판에 옮기지 않았습니다.</p>`,
+    );
+  $('#reset').onclick = () => {
+    if (battle) return;
+    showModal(
+      '새로 시작할까요?',
+      '<p>이 브라우저의 육성 기록이 모두 지워집니다.</p><button class="primary" id="confirm-reset" style="background:#ad654d">기록을 지우고 다시 시작</button>',
+      'NEW GAME',
+    );
+    $('#confirm-reset').onclick = () => {
+      save = C.freshSave(Date.now());
+      view = freshView();
+      log('새 테이머 생활을 시작했습니다.');
+      board.reset();
+      closeModal();
+      render();
+      persist();
+    };
+  };
+
+  function frame(now) {
+    const dt = lastTime ? Math.min(0.05, (now - lastTime) / 1000) : 0;
+    lastTime = now;
+    if (!document.hidden) {
+      if (battle) battleTick(dt);
+      else if (!paused && !board.editing) {
+        clock += dt * speed;
+        let changed = false;
+        while (clock >= 1) {
+          clock -= 1;
+          syncTeam();
+          const r = C.tickFarm(save);
+          save = r.save;
+          r.events.forEach(logEvent);
+          changed = true;
+        }
+        if (changed) {
+          render();
+          if (save.clock % 10 === 0) persist();
+        }
+      }
+      drawFarm(now / 1000, dt);
+      drawPortrait(now / 1000);
+    }
+    requestAnimationFrame(frame);
+  }
+  document.addEventListener('visibilitychange', () => {
+    lastTime = 0;
+    persist();
+  });
+  window.addEventListener('pagehide', persist);
+  // 브라우저 콘솔·자동 테스트에서 상태를 확인할 수 있게 열어 둔다 (읽기용)
+  window.ChampGame = {
+    get save() {
+      return save;
+    },
+    get view() {
+      return view;
+    },
+  };
+  render();
+  persist();
+  requestAnimationFrame(frame);
 })();
