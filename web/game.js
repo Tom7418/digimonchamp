@@ -1084,6 +1084,26 @@
     하수도: ['#6d7378', '#545a5e'], '이글이글 사막': ['#d9b46a', '#c49a52'], 대초원: ['#9cc46e', '#86ad5c'],
     용암지대: ['#8a4e3a', '#6e3a2b'], '부츠 정글': ['#3f7a4d', '#2f5f3b'], '눈의 왕국': ['#e4eef2', '#c7d8df'], '잉카 유적': ['#b8a27a', '#9a855f'],
   };
+  // 원본 사냥 지도(tools/extract_hunt_maps.py로 변환). 필드와의 짝은 지형을 보고 정한 추정값.
+  // _01=낮, _02=밤. 하수도는 밤 지도가 없다.
+  const HUNT_MAP = {
+    '다이나 초원': '01', '미끌미끌 늪': '05', '모쥬라의 숲': '03', 하수도: '11', '이글이글 사막': '08',
+    대초원: '14', 용암지대: '15', '부츠 정글': '04', '눈의 왕국': '13', '잉카 유적': '18',
+  };
+  const HUNT_NIGHT_HOUR = 18; // 임시: 저녁 6시부터 밤 지도
+  const huntMaps = {};
+  function huntMapImage(field) {
+    const no = HUNT_MAP[field.id];
+    if (!no) return null;
+    const night = C.dateOf(save.clock).hour >= HUNT_NIGHT_HOUR && no !== '11';
+    const key = `${no}_${night ? '02' : '01'}`;
+    if (!huntMaps[key]) {
+      const img = new Image();
+      img.src = `assets/fields/${key}.png`;
+      huntMaps[key] = img;
+    }
+    return huntMaps[key];
+  }
   let hunt = null;
   const BIND_SECONDS = 4;
   const PULL_DISTANCE = 70;
@@ -1125,6 +1145,9 @@
     if (save.bits < field.fee) return toast('비트가 부족해요.');
     save = { ...save, bits: save.bits - field.fee };
     hunt = { field, wilds: [], wires: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [] };
+    // 1024x1024 원본 지도에서 화면(960x560)만큼 잘라 쓸 위치. 들어갈 때마다 달라진다.
+    hunt.map = huntMapImage(field);
+    hunt.view = { x: Math.floor(Math.random() * (1024 - 960)), y: Math.floor(Math.random() * (1024 - 560)) };
     for (let i = 0; i < C.WILD_COUNT; i++) hunt.wilds.push(spawnWild(field));
     $('#modal').close();
     document.body.classList.add('hunting');
@@ -1323,10 +1346,22 @@
 
   function drawHunt(t) {
     const [c1, c2] = FIELD_LOOK[hunt.field.id] || ['#7fb069', '#6a9a57'];
-    ctx.fillStyle = c2;
-    ctx.fillRect(0, 0, 960, 560);
-    ctx.fillStyle = c1;
-    ctx.fillRect(AREA.x0, AREA.y0, AREA.x1 - AREA.x0, AREA.y1 - AREA.y0);
+    const map = hunt.map;
+    if (map && map.complete && map.naturalWidth) {
+      // 원본 지도는 도트 그대로 1배로 그리고, 사냥 가능 범위 밖은 어둡게 덮는다.
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(map, hunt.view.x, hunt.view.y, 960, 560, 0, 0, 960, 560);
+      ctx.fillStyle = '#00000059';
+      ctx.fillRect(0, 0, 960, AREA.y0);
+      ctx.fillRect(0, AREA.y1, 960, 560 - AREA.y1);
+      ctx.fillRect(0, AREA.y0, AREA.x0, AREA.y1 - AREA.y0);
+      ctx.fillRect(AREA.x1, AREA.y0, 960 - AREA.x1, AREA.y1 - AREA.y0);
+    } else {
+      ctx.fillStyle = c2;
+      ctx.fillRect(0, 0, 960, 560);
+      ctx.fillStyle = c1;
+      ctx.fillRect(AREA.x0, AREA.y0, AREA.x1 - AREA.x0, AREA.y1 - AREA.y0);
+    }
     // 가장자리 = 출구
     ctx.strokeStyle = '#00000044';
     ctx.setLineDash([10, 8]);
