@@ -8,13 +8,14 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  const VIEW={w:960,h:560}, MARGIN=60, OX=MARGIN+Math.sqrt(3)*R/2, OY=MARGIN+R;
  const WORLD={w:Math.ceil(Math.sqrt(3)*R*8+MARGIN*2),h:Math.ceil(R*8+MARGIN*2)};
  const cam={x:0,y:0};
- const clampCam=()=>{cam.x=Math.max(0,Math.min(WORLD.w-VIEW.w,cam.x));cam.y=Math.max(0,Math.min(WORLD.h-VIEW.h,cam.y));};
+ let zoom=1; // 휠은 커서 아래 월드 위치를 유지하며 확대·축소한다.
+ const clampCam=()=>{cam.x=Math.max(0,Math.min(WORLD.w-VIEW.w/zoom,cam.x));cam.y=Math.max(0,Math.min(WORLD.h-VIEW.h/zoom,cam.y));};
  for(const [kind,t] of Object.entries(L.types)){const im=new Image();if(t.art!==false)im.src=`assets/facilities/${kind}.png`;facilities[kind]=im;}
  let editing=false,tool=null,rotation=0,selected=null,drag=null,hover=null;
  const center=(q,r)=>({x:OX+Math.sqrt(3)*R*(q+r/2),y:OY+R*1.5*r});
  const polygon=(ctx,q,r,append=false)=>{const c=center(q,r);if(!append)ctx.beginPath();for(let i=0;i<6;i++){const a=(i*60-30)*Math.PI/180;const x=c.x+R*Math.cos(a),y=c.y+R*Math.sin(a);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();};
  const screenPoint=e=>{const box=canvas.getBoundingClientRect();return {x:(e.clientX-box.left)*VIEW.w/box.width,y:(e.clientY-box.top)*VIEW.h/box.height};};
- const coordinate=e=>{const p=screenPoint(e);return {x:p.x+cam.x,y:p.y+cam.y};};
+ const coordinate=e=>{const p=screenPoint(e);return {x:p.x/zoom+cam.x,y:p.y/zoom+cam.y};};
  const tile=p=>{let best=null,dist=R;for(let q=0;q<6;q++)for(let r=0;r<5;r++){const c=center(q,r),d=Math.hypot(p.x-c.x,p.y-c.y);if(d<dist){dist=d;best={q,r};}}return best;};
  // 팔레트의 작은 모양 미리보기도 실제 배치 좌표에서 생성한다.
  function footprint(kind){const points=L.cells({kind,q:0,r:0,rotation:0}).map(([q,r])=>{const c=center(q,r);return Array.from({length:6},(_,i)=>{const a=(i*60-30)*Math.PI/180;return [c.x+R*Math.cos(a),c.y+R*Math.sin(a)];});});const flat=points.flat(),xs=flat.map(p=>p[0]),ys=flat.map(p=>p[1]);return `<svg class="footprint" viewBox="${Math.min(...xs)-3} ${Math.min(...ys)-3} ${Math.max(...xs)-Math.min(...xs)+6} ${Math.max(...ys)-Math.min(...ys)+6}" aria-label="${L.types[kind].cells.length}칸 점유 모양">${points.map(ps=>`<polygon points="${ps.map(p=>p.join(',')).join(' ')}"/>`).join('')}</svg>`;}
@@ -24,7 +25,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  toolbar.innerHTML='<div class="cage-toolbar-head"><button id="edit-cages">케이지 편집</button><button id="rotate-cage">↻ 회전</button><button id="remove-cage">선택 케이지 철거</button></div><div class="cage-palette">'+Object.entries(L.types).map(([k,t])=>`<button data-build="${k}" draggable="false">${t.art===false?`<i class="swatch" style="background:${t.color}"></i>`:`<img src="assets/facilities/${k}.png" alt="${t.name} 시설">`}${footprint(k)}${t.name}<small>${t.cells.length}칸 · 정원 ${t.capacity}</small></button>`).join('')+'</div><p id="cage-instruction"></p>';
  canvas.closest('.canvas-wrap').after(toolbar);
  const instruction=toolbar.querySelector('#cage-instruction');
- function status(){toolbar.classList.toggle('editing',editing);toolbar.querySelector('#edit-cages').textContent=editing?'✓ 편집 완료':'케이지 편집';instruction.textContent=editing?'종류 선택 → 빈 칸에 배치 · 설치된 케이지는 끌어서 이동 · 회전 후 배치 · 빈 곳을 눌러 선택 해제':'디지몬을 케이지로 끌어 넣으세요. 파트너 선택 후 케이지를 클릭해도 입장합니다.';if(getState().storedCages?.length)instruction.textContent+=` · 보관 시설 ${getState().storedCages.length}개: 해당 종류를 선택해 다시 설치하세요.`;toolbar.querySelector('#rotate-cage').disabled=!editing;toolbar.querySelector('#remove-cage').disabled=!editing||!selected;toolbar.querySelectorAll('[data-build]').forEach(b=>b.classList.toggle('active',b.dataset.build===tool));}
+ function status(){toolbar.classList.toggle('editing',editing);toolbar.querySelector('#edit-cages').textContent=editing?'✓ 편집 완료':'케이지 편집';instruction.textContent=editing?'종류 선택 → 빈 칸에 배치 · 설치된 케이지는 끌어서 이동 · 회전 후 배치 · 빈 곳을 눌러 선택 해제':'디지몬을 케이지로 끌어 넣으세요. 파트너 선택 후 케이지를 클릭해도 입장합니다. 휠: 확대/축소 · 빈 바닥 드래그: 화면 이동.';if(getState().storedCages?.length)instruction.textContent+=` · 보관 시설 ${getState().storedCages.length}개: 해당 종류를 선택해 다시 설치하세요.`;toolbar.querySelector('#rotate-cage').disabled=!editing;toolbar.querySelector('#remove-cage').disabled=!editing||!selected;toolbar.querySelectorAll('[data-build]').forEach(b=>b.classList.toggle('active',b.dataset.build===tool));}
  function init(){const s=getState();if(s.layoutVersion!==2){s.layoutBackup=JSON.parse(JSON.stringify(s.layout||[]));const migrated=L.migrate(s.layout);s.layout=migrated.placed;s.storedCages=migrated.stored;s.layoutVersion=2;}s.layout=L.restore(s.layout);for(const p of s.team){if(!s.layout.some(c=>c.id===p.cageId)){p.cageId=null;p.cage='free';p.cageSeconds=0;}}}
  init();status();
  toolbar.querySelector('#edit-cages').onclick=()=>{if(isBlocked())return;editing=!editing;tool=null;selected=null;drag=null;status();};
@@ -42,8 +43,8 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
    // 디지몬·케이지를 잡지 않았으면 끌어서 사육장을 둘러본다
    if(drag?.click||(editing&&!tool&&!drag)){drag={...(drag||{}),pan:{x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y,moved:false}};}
  };
- canvas.onpointermove=e=>{if(drag?.pan){const box=canvas.getBoundingClientRect(),k=VIEW.w/box.width,dx=(e.clientX-drag.pan.x)*k,dy=(e.clientY-drag.pan.y)*k;if(Math.hypot(dx,dy)>6)drag.pan.moved=true;if(drag.pan.moved){cam.x=drag.pan.cx-dx;cam.y=drag.pan.cy-dy;clampCam();}}hover=tile(coordinate(e));if(drag?.pet!==undefined)drag.point=coordinate(e);};
- canvas.addEventListener('wheel',e=>{if(isBlocked())return;e.preventDefault();cam.x+=e.deltaX||(e.shiftKey?e.deltaY:0);cam.y+=e.shiftKey?0:e.deltaY;clampCam();},{passive:false});
+ canvas.onpointermove=e=>{if(drag?.pan){const box=canvas.getBoundingClientRect(),k=VIEW.w/box.width/zoom,dx=(e.clientX-drag.pan.x)*k,dy=(e.clientY-drag.pan.y)*k;if(Math.hypot(dx,dy)>6)drag.pan.moved=true;if(drag.pan.moved){cam.x=drag.pan.cx-dx;cam.y=drag.pan.cy-dy;clampCam();}}hover=tile(coordinate(e));if(drag?.pet!==undefined)drag.point=coordinate(e);};
+ canvas.addEventListener('wheel',e=>{if(isBlocked())return;e.preventDefault();const before=coordinate(e),p=screenPoint(e);zoom=Math.max(0.5,Math.min(2.5,zoom*Math.exp(-e.deltaY*0.001)));cam.x=before.x-p.x/zoom;cam.y=before.y-p.y/zoom;clampCam();},{passive:false});
  canvas.onpointerup=e=>{if(isBlocked()){drag=null;return;}if(drag?.pan?.moved){drag=null;status();return;}const s=getState(),t=tile(coordinate(e));
    if(editing){const next=candidate(t);if(next){if(L.valid(s.layout,next)){if(drag?.cage)Object.assign(s.layout.find(c=>c.id===drag.cage),next);else{const stored=(s.storedCages||[]).findIndex(c=>c.kind===next.kind);const id=stored>=0?s.storedCages.splice(stored,1)[0].id:crypto.randomUUID();s.layout.push({...next,id});}changed('케이지 배치를 저장했습니다.');}else notify('다른 케이지와 겹치거나 사육장을 벗어납니다.');}}
    else if(t){const cage=L.at(s.layout,t.q,t.r),pet=s.team[drag?.pet??s.selected];if(cage){if(L.assign(s,pet,cage.id))changed(`${L.types[cage.kind].name}에 입장했습니다.`);else notify('이 케이지의 정원이 찼습니다.');}else if(drag?.pet!==undefined){pet.cageId=null;pet.cage='free';pet.cageSeconds=0;const c=center(t.q,t.r);pet.x=c.x;pet.y=c.y;pet.target=c.x;changed('자유 활동으로 전환했습니다.');}}
@@ -52,10 +53,10 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  canvas.onpointercancel=()=>{drag=null;hover=null;};
  return {
    reset(){selected=null;drag=null;tool=null;init();status();},
-   world:WORLD, view:VIEW, cam, center, R,
+   world:WORLD, view:VIEW, cam, center, R, get zoom(){return zoom;},
    // 화면(캔버스) 좌표 이벤트 → 월드 좌표
    toWorld:e=>coordinate(e),
-   centerOn(x,y){cam.x=x-VIEW.w/2;cam.y=y-VIEW.h/2;clampCam();},
+   centerOn(x,y){cam.x=x-VIEW.w/(2*zoom);cam.y=y-VIEW.h/(2*zoom);clampCam();},
    // 자유 활동 디지몬이 돌아다닐 수 있는 범위
    roam:{x0:OX-R*0.6,x1:OX+Math.sqrt(3)*R*7-R*0.4,y0:OY-R*0.5,y1:OY+R*6.5},
    open(){if(isBlocked())return;editing=true;status();toolbar.scrollIntoView({block:'nearest',behavior:'smooth'});},

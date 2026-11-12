@@ -439,13 +439,14 @@
       ctx.stroke();
     }
   }
-  const itemImages = Object.fromEntries(['meat', 'pill', 'rotten'].map((kind) => {
+  const itemImages = Object.fromEntries(['meat', 'meat_1', 'meat_2', 'meat_3', 'pill', 'rotten'].map((kind) => {
     const image = new Image();
     image.src = `assets/items/${kind}.png`;
     return [kind, image];
   }));
   function drawFood(f) {
-    const image = itemImages[f.kind];
+    const stage = Math.min(3, Math.floor((100 - (f.remaining ?? 100)) / 25));
+    const image = itemImages[f.kind === 'meat' && stage ? 'meat_' + stage : f.kind];
     if (image?.complete && image.naturalWidth) ctx.drawImage(image, f.x - 32, f.y - 60, 64, 70);
   }
   // 선택형 도구: 고기는 바닥 배치만, 알약은 디지몬을 터치해 사용한다.
@@ -582,13 +583,18 @@
         return false;
       }
       eating.elapsed += dt;
-      // 임시 연출 정책: 원본 먹기 후보 시퀀스를 두 번 재생한 뒤 한 개를 소비한다.
-      if (eating.elapsed < animations.duration(animationId(d), 'eat') * 2) return true;
-      const r = C.eatFloorFood(save, view.foods, d.uid, view.foods.indexOf(eating.food));
+      // 입 벌림 → 깨물기 한 주기마다 엔진에서 잔량과 포만감을 함께 갱신한다.
+      if (eating.elapsed < animations.duration(animationId(d), 'eat')) return true;
+      const foodIndex = view.foods.indexOf(eating.food), oldCount = view.foods.length;
+      const r = C.biteFloorFood(save, view.foods, d.uid, foodIndex);
       feeding.delete(d.uid);
       if (r.ok) {
         view.foods = r.foods;
         save = r.save;
+        // 부분 섭취는 새 먹이 객체를 예약하고, 배가 차면 남은 고기를 놓아둔다.
+        const left = r.foods[foodIndex], eater = save.digimon.find(x => x.uid === d.uid);
+        if (r.foods.length === oldCount && left && left.x === eating.food.x && left.y === eating.food.y && left.remaining > 0 && eater.hunger < 100)
+          feeding.set(d.uid, {food: left, elapsed: 0, species: d.speciesId});
         log(`${nameOf(d)}: ${r.message}`);
         effect = { text: eating.food.kind === 'meat' ? '♥ 냠냠!' : '우웩…', color: '#ffe4a0', until: performance.now() + 1500, uid: d.uid };
       }
@@ -613,7 +619,7 @@
       feeding.set(d.uid, { food: f, elapsed: 0, species: d.speciesId });
       return true;
     }
-    const v = 34 * dt;
+    const v = Math.min(dist, 34 * dt);
     p.direction = f.x > p.x ? 1 : -1;
     p.x += ((f.x - p.x) / dist) * v;
     p.y += ((f.y - p.y) / dist) * v;
@@ -716,6 +722,10 @@
       const r = C.release(save, d.uid);
       if (r.ok) {
         save = r.save;
+        // 부분 섭취는 새 먹이 객체를 예약하고, 배가 차면 남은 고기를 놓아둔다.
+        const left = r.foods[foodIndex], eater = save.digimon.find(x => x.uid === d.uid);
+        if (r.foods.length === oldCount && left && left.x === eating.food.x && left.y === eating.food.y && left.remaining > 0 && eater.hunger < 100)
+          feeding.set(d.uid, {food: left, elapsed: 0, species: d.speciesId});
         log(`${nameOf(d)}을(를) 놓아주었습니다.`);
         view.selected = 0;
         render();
@@ -895,7 +905,7 @@
     ctx.stroke();
     for (const u of s.units) {
       if (!u.alive) ctx.globalAlpha = 0.3;
-      body(ctx, u.speciesId, false, u.x, u.y + 14, 1.6, Math.floor(performance.now() / 250) % 2, u.team === 1);
+      body(ctx, u.speciesId, false, u.x, u.y + 14, 1.6, Math.floor(performance.now() / 250) % 2, u.team === 0);
       ctx.globalAlpha = 1;
       ctx.fillStyle = '#30404a';
       ctx.fillRect(u.x - 20, u.y + 18, 40, 4);
@@ -1000,7 +1010,8 @@
     ctx.fillStyle = '#163a40';
     ctx.fillRect(0, 0, 960, 560);
     ctx.save();
-    ctx.translate(-Math.round(board.cam.x), -Math.round(board.cam.y));
+    ctx.scale(board.zoom, board.zoom);
+    ctx.translate(-board.cam.x, -board.cam.y);
     board.draw(ctx);
     for (const f of view.foods) drawFood(f);
     for (const pp of view.poops) drawPoop(pp.x, pp.y);
@@ -1032,7 +1043,7 @@
       // 행동별 원본 셀을 재생한다. 인위적인 상하 흔들림은 사용하지 않는다.
       if (animDt > 0) p.motion = feeding.has(d.uid) ? 'eat' : Math.hypot(p.x - oldX, p.y - oldY) > 0.01 ? 'walk' : 'idle';
       const frame = animations.pose(p, animationId(d), p.motion || 'idle', animDt);
-      body(ctx, d.speciesId, d.isEgg, p.x, p.y, scale, frame, p.direction < 0);
+      body(ctx, d.speciesId, d.isEgg, p.x, p.y, scale, frame, p.direction > 0); // 원본 도트는 왼쪽을 향하므로 오른쪽 이동에서만 반전
       // 머리 위 상태 말풍선 (배고픔·병·부상·똥·피로)
       const bub = bubbleOf(d);
       if (bub) {
@@ -1097,7 +1108,7 @@
     }
     ctx.strokeStyle = '#ffffffcc';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(x0 + board.cam.x * k, y0 + board.cam.y * k, 960 * k, 560 * k);
+    ctx.strokeRect(x0 + board.cam.x * k, y0 + board.cam.y * k, 960 / board.zoom * k, 560 / board.zoom * k);
   }
   const portraitActor = {};
   function drawPortrait(dt) {
@@ -1455,7 +1466,7 @@
         ctx.stroke();
       }
       if (w.flash > 0 && Math.floor(w.flash * 20) % 2) ctx.globalAlpha = 0.4;
-      body(ctx, w.id, false, w.x, w.y, 2, Math.floor(t * 4) % 2, w.vx < 0);
+      body(ctx, w.id, false, w.x, w.y, 2, Math.floor(t * 4) % 2, w.vx > 0);
       ctx.globalAlpha = 1;
       const sp = C.getSpecies(w.id);
       const weak = !C.ropeDamage(save, w.id);

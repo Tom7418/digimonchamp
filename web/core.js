@@ -1992,7 +1992,9 @@ var ChampCore = (function(exports) {
 		if (!Array.isArray(raw)) return foods;
 		for (const f of raw) {
 			if (!f || f.kind !== "meat" && f.kind !== "rotten" || !Number.isFinite(f.x) || !Number.isFinite(f.y)) continue;
+			if (f.remaining !== void 0 && (!Number.isFinite(f.remaining) || f.remaining <= 0)) continue;
 			if (availableFood(save, foods, f.kind) > 0) foods.push({
+				...f.remaining === void 0 ? {} : { remaining: Math.min(100, f.remaining) },
 				kind: f.kind,
 				x: Math.min(bounds.x1, Math.max(bounds.x0, f.x)),
 				y: Math.min(bounds.y1, Math.max(bounds.y0, f.y))
@@ -2020,6 +2022,48 @@ var ChampCore = (function(exports) {
 		return {
 			...result,
 			foods: result.ok ? foods.filter((_, i) => i !== index) : foods
+		};
+	}
+	/** 한 입 단위 섭취. 유년기 5/10은 사용자 요청, 이후 세대 잔량 10/20/25/50은 임시 균형값.
+	* 기존 저장의 remaining 누락은 100으로 취급한다. 재고는 완전히 먹은 시점에 한 번 차감한다.
+	*/
+	function biteFloorFood(save, foods, uid, index) {
+		const food = foods[index], d = save.digimon.find((d) => d.uid === uid);
+		if (!food || !d || d.isEgg || d.hunger >= 100 || save[food.kind] <= 0) return {
+			ok: false,
+			save,
+			foods,
+			message: "지금은 먹을 수 없어요."
+		};
+		if (food.kind === "rotten") return eatFloorFood(save, foods, uid, index);
+		const amount = [
+			0,
+			5,
+			5,
+			10,
+			20,
+			25,
+			50
+		][getSpecies(d.speciesId).stage];
+		const remaining = food.remaining ?? 100;
+		const bite = Math.min(amount, remaining, (100 - d.hunger) / 2);
+		const rest = remaining - bite;
+		return {
+			ok: true,
+			save: {
+				...save,
+				meat: save.meat - (rest <= 0 ? 1 : 0),
+				digimon: save.digimon.map((p) => p.uid === uid ? {
+					...p,
+					hunger: p.hunger + bite * 2,
+					starvingMinutes: 0
+				} : p)
+			},
+			foods: rest <= 0 ? foods.filter((_, i) => i !== index) : foods.map((f, i) => i === index ? {
+				...f,
+				remaining: rest
+			} : f),
+			message: "고기를 한 입 먹었다."
 		};
 	}
 	exports.ARENA = ARENA;
@@ -2076,6 +2120,7 @@ var ChampCore = (function(exports) {
 	exports.applyWin = applyWin;
 	exports.availableFood = availableFood;
 	exports.bestRope = bestRope;
+	exports.biteFloorFood = biteFloorFood;
 	exports.buy = buy;
 	exports.cageSpaceOf = cageSpaceOf;
 	exports.canHuntNow = canHuntNow;

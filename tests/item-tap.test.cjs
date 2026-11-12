@@ -32,7 +32,7 @@ test('디지몬 위 터치도 직접 급여하지 않고 바닥에 놓으며 재
   assert.equal(s.ctx.save.digimon[0].hunger,0);assert.equal(s.ctx.view.foods.length,1);assert.equal(s.ctx.save.meat,2);
   s.tap();s.tap();assert.equal(s.ctx.view.foods.length,2);
 });
-test('케이지에서 먹이로 걸어와 먹을 때만 재고를 한 번 소비한다',()=>{
+test('케이지에서 걸어와 한 입씩 먹고 배가 차면 남은 고기를 보존한다',()=>{
   const s=setup();s.choose('meat');s.tap();const p=s.ctx.view.team[0],d=s.ctx.save.digimon[0];p.x=100;
   s.seekFood(p,d,1);assert.equal(p.cageId,null);assert.ok(p.x>100);
   p.x=200;p.y=300;s.seekFood(p,d,0);
@@ -40,7 +40,9 @@ test('케이지에서 먹이로 걸어와 먹을 때만 재고를 한 번 소비
   s.seekFood(p,d,0); // 일시정지에서는 씹기 시간도 흐르지 않는다.
   assert.equal(s.ctx.save.meat,2);
   s.seekFood(p,d,10);
-  assert.equal(s.ctx.view.foods.length,0);assert.equal(s.ctx.save.meat,1);assert.equal(s.ctx.save.digimon[0].hunger,35);
+  assert.equal(s.ctx.view.foods[0].remaining,95);assert.equal(s.ctx.save.meat,2);assert.equal(s.ctx.save.digimon[0].hunger,10);
+  for(let i=0;i<9;i++) s.seekFood(p,s.ctx.save.digimon[0],10);
+  assert.equal(s.ctx.save.digimon[0].hunger,100);assert.equal(s.ctx.view.foods[0].remaining,50);
   assert.equal(s.seekFood(p,s.ctx.save.digimon[0],1),false);
 });
 test('먹는 중 다른 디지몬의 중복 소비와 케이지 이동 후 뒤늦은 소비를 막는다',()=>{

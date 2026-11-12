@@ -7,7 +7,7 @@ import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMa
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp } from '../src/core/hunt';
 import type { Digimon, SaveData } from '../src/core/types';
-import { availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
+import { biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
 describe('floor food reservations', () => {
   it('restores food in the expanded farm without clipping to the old viewport', () => {
@@ -407,5 +407,32 @@ describe('day flow', () => {
     expect(r.events.find((e) => e.type === 'trained')).toMatchObject({ changes: expect.stringContaining('HP +') });
     const c = cleanOne(r.save, 1);
     expect(only(c.save).poop).toBe(only(r.save).poop - 1);
+  });
+});
+
+describe('partial meat bites', () => {
+  it('babies eat 5 remaining for 10 fullness and preserve progress across saves', () => {
+    const s = freshSave(0); s.digimon = [newDigimon(1, '깜몬')]; s.digimon[0].hunger = 0;
+    const r = biteFloorFood(s, [{kind:'meat',x:200,y:300}], 1, 0);
+    expect(r.save.digimon[0].hunger).toBe(10);
+    expect(r.foods[0].remaining).toBe(95);
+    expect(r.save.meat).toBe(s.meat);
+    expect(restoreFloorFood(r.save, JSON.parse(JSON.stringify(r.foods)))).toEqual(r.foods);
+    expect(s.digimon[0].hunger).toBe(0);
+  });
+  it('last fragment consumes stock once and cannot be eaten twice', () => {
+    const s = freshSave(0); s.digimon = [newDigimon(1, '깜몬')]; s.digimon[0].hunger = 0;
+    const r = biteFloorFood(s, [{kind:'meat',x:200,y:300,remaining:2}], 1, 0);
+    expect(r.save.digimon[0].hunger).toBe(4); expect(r.foods).toHaveLength(0);
+    expect(r.save.meat).toBe(s.meat-1);
+    expect(biteFloorFood(r.save,r.foods,1,0).ok).toBe(false);
+  });
+  it('fullness caps proportional consumption and eggs/full digimon refuse', () => {
+    const s = freshSave(0); s.digimon = [newDigimon(1, '아구몬')]; s.digimon[0].hunger=99;
+    const f: FloorFood[]=[{kind:'meat',x:200,y:300,remaining:100}];
+    const r=biteFloorFood(s,f,1,0);
+    expect(r.save.digimon[0].hunger).toBe(100); expect(r.foods[0].remaining).toBe(99.5);
+    expect(biteFloorFood(r.save,r.foods,1,0).ok).toBe(false);
+    s.digimon[0].isEgg=true; expect(biteFloorFood(s,f,1,0).ok).toBe(false);
   });
 });
