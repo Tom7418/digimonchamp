@@ -21,10 +21,13 @@ def png(path, w, h, pixels):
     raw = b''.join(b'\0'+pixels[y*w*4:(y+1)*w*4] for y in range(h))
     path.write_bytes(b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',w,h,8,6,0,0,0))+chunk(b'IDAT',zlib.compress(raw))+chunk(b'IEND',b''))
 
-def extract(stem):
-    p = ROOT / 'digimon' / (stem+'_main')
+def extract(stem, folder='digimon'):
+    # 디지몬과 UI 아이콘은 같은 Nitro 셀 형식을 사용하므로 폴더만 바꿔 재사용한다.
+    p = ROOT / folder / (stem+'_main')
     c=p.with_suffix('.ncer').read_bytes()
-    g=p.with_suffix('.ncbr').read_bytes()[48:]
+    graphics=p.with_suffix('.ncbr').read_bytes()
+    depth=8 if struct.unpack_from('<I',graphics,28)[0]==4 else 4
+    g=graphics[48:]
     pal=p.with_suffix('.nclr').read_bytes()[40:]
     colors=[]
     for (v,) in struct.iter_unpack('<H',pal):
@@ -63,10 +66,11 @@ def extract(stem):
                     sx=ow-1-px if b&4096 else px
                     sy=oh-1-py if b&8192 else py
                     q=sy*ow+sx
-                    if address+q//2>=len(g):raise ValueError('Sprite data exceeds graphics bank')
-                    index=(g[address+q//2]>>(4*(q%2)))&15
+                    byte_offset=address+(q if depth==8 else q//2)
+                    if byte_offset>=len(g):raise ValueError('Sprite data exceeds graphics bank')
+                    index=g[byte_offset] if depth==8 else (g[byte_offset]>>(4*(q%2)))&15
                     if not index:continue
-                    color=colors[(d>>12)*16+index]
+                    color=colors[index if depth==8 else (d>>12)*16+index]
                     dest=((y-top+py)*w*count+i*w+x-left+px)*4
                     pixels[dest:dest+4]=color
     png(OUT/(stem+'.png'),w*count,h,pixels)

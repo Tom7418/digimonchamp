@@ -3,3 +3,6 @@
 
 /* Farm above, selected partner below. */
 .partner{order:1}.world-panel{order:0}.cage-status{grid-column:2;color:#ffe0a0;font-size:11px;margin:5px 0;padding:7px;background:#102738;border:1px solid #49748d}.portrait{grid-row:3/9}.cage-options{display:grid;gap:8px}.cage-options .primary{margin:0;text-align:left}
+
+/* 케이지 편집 도구: 실제 사육장 아래에 배치하여 터치에서도 함께 볼 수 있다. */
+.cage-toolbar{padding:12px;background:#132f42;border-top:2px solid #639fae}.cage-toolbar button{background:#2e526a;color:#e6f5ff;border:1px solid #6c9ab3;border-radius:4px;padding:8px}.cage-toolbar-head{display:flex;gap:8px;flex-wrap:wrap}.cage-palette{display:none;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.editing .cage-palette{display:grid}.cage-palette button{display:flex;align-items:center;flex-direction:column;font-size:11px}.cage-palette button.active{outline:2px solid #ffdc75;background:#4d6a73}.cage-palette span{width:64px;height:48px;background-image:url('assets/cage_shop_icon.png');image-rendering:pixelated}.cage-palette small{color:#b9d7e5;margin-top:4px}.cage-toolbar p{font-size:11px;color:#bfd9df;margin:8px 0 0}#world{cursor:grab}.cage-toolbar.editing{border-color:#f7d26d}@media(max-width:500px){.cage-palette{grid-template-columns:repeat(2,1fr)}.cage-toolbar-head button{font-size:10px}}

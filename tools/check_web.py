@@ -20,4 +20,6 @@ for sp in sprites:
     assert struct.unpack_from('>II', raw, 16) == (sp['width'] * sp['frames'], sp['height'])
 for forbidden in ('*.nds', '*.sdat', '.openai', '.git'):
     assert not list(web.rglob(forbidden)), f'Unexpected deployment file: {forbidden}'
+icon = (web / 'assets/cage_shop_icon.png').read_bytes()
+assert struct.unpack_from('>II', icon, 16) == (64 * 36, 48), 'Invalid cage icon sheet'
 print(f'Pages check passed: {len(sprites)} sprite sheets, relative paths and all entrypoint files verified.')
