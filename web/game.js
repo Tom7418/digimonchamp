@@ -55,7 +55,7 @@
 
   // ---------- 저장 ----------
   function freshView() {
-    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 2, team: [], selected: 0, logs: [], poops: [], foods: [], tips: {}, entryNoticeRead: null };
+    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 2, team: [], selected: 0, logs: [], poops: [], foods: [], tips: {}, entryNoticeRead: null, farmWorld: 2 };
   }
   function load() {
     try {
@@ -63,6 +63,7 @@
       if (raw && raw.save && raw.save.version === 2 && Array.isArray(raw.save.digimon) && raw.save.digimon.length && raw.view) {
         save = C.upgradeSave(raw.save);
         view = { ...freshView(), ...raw.view };
+        view.farmWorld = raw.view.farmWorld; // 없으면 옛 좌표 → 시작할 때 새 월드 크기로 옮긴다
         // 기존 예약형 저장을 유지하면서 중복 소비로 생긴 초과 예약만 복구한다.
         view.foods = C.restoreFloorFood(save, view.foods);
         // 재접속도 21시에서 멈춘다. 수면은 달력의 '다음 날로'를 누를 때만 진행한다.
@@ -99,6 +100,7 @@
             foods: view.foods,
             tips: view.tips,
             entryNoticeRead: view.entryNoticeRead,
+            farmWorld: view.farmWorld,
           },
         }),
       );
@@ -154,10 +156,16 @@
   }
 
   // 화면용 목록(view.team)을 규칙 엔진의 디지몬 목록과 맞추고, 들어간 시설을 엔진의 케이지로 반영한다.
+  // 새 디지몬은 사육장 가운데쯤에 나타난다 (월드 좌표, cage-editor.js)
+  function spawnPet(uid, i) {
+    const r = board.roam, cx = (r.x0 + r.x1) / 2, cy = (r.y0 + r.y1) / 2;
+    const x = cx - 220 + ((i * 97) % 440), y = cy - 60 + ((i * 53) % 140);
+    return { uid, x, y, target: x, direction: 1, cageId: null, cage: 'free' };
+  }
   function syncTeam() {
     const old = new Map(view.team.map((p) => [p.uid, p]));
     view.team = save.digimon.map(
-      (d, i) => old.get(d.uid) || { uid: d.uid, x: 260 + ((i * 97) % 420), y: 330 + ((i * 53) % 120), target: 300, direction: 1, cageId: null, cage: 'free' },
+      (d, i) => old.get(d.uid) || spawnPet(d.uid, i),
     );
     view.selected = clamp(view.selected, 0, view.team.length - 1);
     const coreCage = new Map(view.team.map((p) => [p.uid, (p.cageId && L.types[p.cage]?.core) || '기본 케이지']));
@@ -482,11 +490,17 @@
     }
     const it = ITEMS.find((x) => x.kind === kind);
     if (it.count() <= 0) return toast(`${it.label}이(가) 없어요. 상점에서 사세요.`);
-    view.foods.push({ kind, x: Math.min(900, Math.max(60, pt.x)), y: Math.min(520, Math.max(120, pt.y)) });
+    const r = board.roam;
+    view.foods.push({ kind, x: Math.min(r.x1, Math.max(r.x0, pt.x)), y: Math.min(r.y1, Math.max(r.y0, pt.y)) });
     renderTray();
     persist();
   }
   // 아이템 끌기 (아이템 칸 → 사육장)
+  // 캔버스 이벤트 → 사육장 월드 좌표 (카메라 이동 반영)
+  function farmPoint(e, r) {
+    if (board.toWorld) return board.toWorld(e);
+    return { x: ((e.clientX - r.left) / r.width) * 960, y: ((e.clientY - r.top) / r.height) * 560 };
+  }
   let dragItem = null;
   let canceledItemPointer = null;
   let swallowUp = false;
@@ -540,7 +554,7 @@
     if (farmInputBlocked()) return;
     const r = canvas.getBoundingClientRect();
     if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
-    dropItem(kind, { x: ((e.clientX - r.left) / r.width) * 960, y: ((e.clientY - r.top) / r.height) * 560 });
+    dropItem(kind, farmPoint(e, r));
   }, true);
   window.addEventListener('pointercancel', (e) => {
     if (e.pointerId === dragItem?.pointerId) cancelItemDrag();
@@ -559,7 +573,7 @@
     (e) => {
       if (farmInputBlocked()) return;
       const r = canvas.getBoundingClientRect();
-      const pt = { x: ((e.clientX - r.left) / r.width) * 960, y: ((e.clientY - r.top) / r.height) * 560 };
+      const pt = farmPoint(e, r);
       const hit = view.poops.find((x) => Math.hypot(pt.x - x.x, pt.y - (x.y - 4)) < 16);
       if (!hit) return;
       e.stopImmediatePropagation();
@@ -994,6 +1008,10 @@
   portrait.imageSmoothingEnabled = false;
 
   function drawFarm(t, dt) {
+    ctx.fillStyle = '#163a40';
+    ctx.fillRect(0, 0, 960, 560);
+    ctx.save();
+    ctx.translate(-Math.round(board.cam.x), -Math.round(board.cam.y));
     board.draw(ctx);
     for (const f of view.foods) drawFood(f);
     for (const pp of view.poops) drawPoop(pp.x, pp.y);
@@ -1003,7 +1021,7 @@
       if (!d) continue;
       if (!paused && !mailOpen && !dayEnding && !p.cageId && !board.editing && !d.isEgg && !seekFood(p, d, dt)) {
         if (Math.abs(p.target - p.x) < 3) {
-          if (Math.random() < 0.008) p.target = 160 + Math.random() * 560;
+          if (Math.random() < 0.008) p.target = Math.max(board.roam.x0, Math.min(board.roam.x1, p.x + (Math.random() - 0.5) * 500));
         } else {
           p.direction = p.target > p.x ? 1 : -1;
           p.x += p.direction * dt * 16 * (d.fatigue > 80 ? 0.4 : 1);
@@ -1056,6 +1074,8 @@
         ctx.fillText(effect.text, p.x, p.y - 95 - (1500 - (effect.until - performance.now())) / 80);
       }
     }
+    ctx.restore();
+    drawMinimap();
     if (paused) {
       ctx.fillStyle = '#00000066';
       ctx.fillRect(0, 0, 960, 560);
@@ -1064,6 +1084,28 @@
       ctx.textAlign = 'center';
       ctx.fillText('일시 정지', 480, 280);
     }
+  }
+  // 오른쪽 아래 작은 지도: 사육장 전체와 지금 보는 범위
+  function drawMinimap() {
+    const W = board.world.w, H = board.world.h, k = 150 / W, w = 150, h = H * k, x0 = 960 - w - 12, y0 = 560 - h - 12;
+    ctx.fillStyle = '#081a24c0';
+    ctx.fillRect(x0 - 3, y0 - 3, w + 6, h + 6);
+    for (const c of view.layout) {
+      ctx.fillStyle = L.types[c.kind]?.color || '#c9b98a';
+      for (const [q, r] of L.cells(c)) {
+        const m = board.center(q, r);
+        ctx.beginPath();
+        ctx.arc(x0 + m.x * k, y0 + m.y * k, board.R * k * 0.9, 0, 7);
+        ctx.fill();
+      }
+    }
+    for (const p of view.team) {
+      ctx.fillStyle = view.team.indexOf(p) === view.selected ? '#ffe36e' : '#9fe6ff';
+      ctx.fillRect(x0 + p.x * k - 2, y0 + p.y * k - 2, 4, 4);
+    }
+    ctx.strokeStyle = '#ffffffcc';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x0 + board.cam.x * k, y0 + board.cam.y * k, 960 * k, 560 * k);
   }
   function drawPortrait(t) {
     const d = current();
@@ -1481,7 +1523,6 @@
 
   // ---------- 시작 ----------
   load();
-  syncTeam();
   const board = createCageEditor(
     canvas,
     () => view,
@@ -1493,6 +1534,20 @@
     toast,
     () => !!battle || !!hunt || mailOpen || dayEnding,
   );
+  // 육각 칸을 키우기 전(사육장 960x560)의 저장 좌표를 새 월드 크기로 옮긴다
+  if (view.farmWorld !== 2) {
+    const kx = board.world.w / 960, ky = board.world.h / 560;
+    for (const o of [...view.team, ...view.foods, ...view.poops]) {
+      o.x *= kx;
+      o.y *= ky;
+      if ('target' in o) o.target = o.x;
+    }
+    view.farmWorld = 2;
+  }
+  syncTeam();
+  { const p = view.team[view.selected]; if (p) board.centerOn(p.x, p.y - 40); }
+  // 아이템 칸은 사육장 바로 아래에 둔다 (화면을 내리지 않고 끌어 놓을 수 있게)
+  document.querySelector('.canvas-wrap').after($('#tray'));
   initFarmInput();
   tipMail('welcome', '디지몬 챔피언십에 참가하게 된 것을 환영합니다!\n디지에그가 곧 부화합니다. 고기를 끌어다 먹이고, 똥은 눌러서 치워 주세요.\n밤 9시가 되면 하루가 끝납니다.');
 
@@ -1501,6 +1556,8 @@
     const b = e.target.closest('[data-partner]');
     if (b) {
       view.selected = +b.dataset.partner;
+      const p = view.team[view.selected];
+      if (p) board.centerOn(p.x, p.y - 40);
       render();
       persist();
     }
@@ -1552,36 +1609,97 @@
     persist();
   }
   (function initTitle() {
-    const menu = $('#title-menu'), confirm = $('#title-confirm'), press = $('#title-press');
-    $('#title-continue').disabled = !hadSave;
-    if (!hadSave) press.textContent = '처음부터를 터치하세요';
-    document.querySelectorAll('.ds-btn .txt').forEach((img) => {
-      const off = img.src, on = img.dataset.on, btn = img.parentElement;
-      const set = (v) => () => (img.src = v);
-      btn.addEventListener('pointerenter', set(on));
-      btn.addEventListener('pointerleave', set(off));
-      btn.addEventListener('focus', set(on));
-      btn.addEventListener('blur', set(off));
-    });
+    const menu = $('#title-menu'), confirm = $('#title-confirm');
+    if (!hadSave) {
+      // 저장이 없으면 '이어하기' 자리에 바로 시작
+      $('#title-continue').innerHTML = '<span class="ico">▶</span>시작하기';
+      $('#title-new').hidden = true;
+    }
     $('#title-continue').onclick = closeTitle;
     $('#title-new').onclick = () => {
-      if (!hadSave) return closeTitle();
       menu.hidden = true;
-      press.hidden = true;
       confirm.hidden = false;
       $('#title-no').focus();
     };
     $('#title-no').onclick = () => {
       confirm.hidden = true;
       menu.hidden = false;
-      press.hidden = false;
     };
     $('#title-yes').onclick = () => {
       startNewGame();
       closeTitle();
     };
-    (hadSave ? $('#title-continue') : $('#title-new')).focus();
+    $('#title-help').onclick = () => $('#help').click();
+    $('#title-continue').focus();
   })();
+  // 타이틀 왼쪽 그림: 원작 시설 그림을 떠 있는 육각 섬으로, 그 위에 디지몬, 앞에 오프닝의 구슬
+  const titleArt = $('#title-art').getContext('2d');
+  titleArt.imageSmoothingEnabled = false;
+  const titleImages = Object.fromEntries(['field', 'gym', 'clinic', 'free'].map((k) => [k, Object.assign(new Image(), { src: `assets/facilities/${k}.png` })]));
+  titleImages.orb = Object.assign(new Image(), { src: 'assets/ui/title_orb.png' });
+  const ISLANDS = [
+    { x: 175, y: 175, r: 105, img: 'field', mon: '아구몬', phase: 0 },
+    { x: 470, y: 150, r: 95, img: 'gym', mon: '가오몬', phase: 1.7 },
+    { x: 330, y: 330, r: 125, img: 'free', mon: '파피몬', phase: 3.1 },
+  ];
+  function hexPath(c, x, y, r, squash = 0.62) {
+    c.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = (i * 60 + 30) * (Math.PI / 180);
+      c[i ? 'lineTo' : 'moveTo'](x + r * Math.cos(a), y + r * Math.sin(a) * squash);
+    }
+    c.closePath();
+  }
+  function drawTitleArt(t) {
+    const c = titleArt;
+    c.clearRect(0, 0, 640, 560);
+    for (const is of ISLANDS) {
+      const y = is.y + Math.sin(t * 1.2 + is.phase) * 6;
+      // 섬의 옆면(흙)
+      for (let k = 34; k > 0; k -= 2) {
+        hexPath(c, is.x, y + k, is.r);
+        c.fillStyle = k > 20 ? '#5a3a22' : '#7a5230';
+        c.fill();
+      }
+      // 윗면: 원작 시설 그림
+      c.save();
+      hexPath(c, is.x, y, is.r);
+      c.clip();
+      const im = titleImages[is.img];
+      c.fillStyle = '#6aa04a';
+      c.fill();
+      if (im.complete && im.naturalWidth) c.drawImage(im, is.x - is.r * 1.1, y - is.r * 0.8, is.r * 2.2, is.r * 1.6);
+      c.restore();
+      hexPath(c, is.x, y, is.r);
+      c.strokeStyle = '#ffffff88';
+      c.lineWidth = 2;
+      c.stroke();
+      // 디지몬
+      c.fillStyle = '#0005';
+      c.beginPath();
+      c.ellipse(is.x, y + 12, 26, 7, 0, 0, 7);
+      c.fill();
+      body(c, is.mon, false, is.x, y + 10 + Math.sin(t * 3 + is.phase) * 2, 2.6, Math.floor(t * 3 + is.phase) % 2, is.x > 320);
+    }
+    // 앞쪽 구슬 + 빛
+    const orb = titleImages.orb, ox = 330, oy = 470, pulse = 1 + Math.sin(t * 2) * 0.05;
+    const g = c.createRadialGradient(ox, oy, 10, ox, oy, 120 * pulse);
+    g.addColorStop(0, '#9fe8ff88');
+    g.addColorStop(1, '#9fe8ff00');
+    c.fillStyle = g;
+    c.beginPath();
+    c.arc(ox, oy, 120 * pulse, 0, 7);
+    c.fill();
+    if (orb.complete && orb.naturalWidth) {
+      const w = orb.naturalWidth * 1.3, h = orb.naturalHeight * 1.3;
+      c.save();
+      c.beginPath();
+      c.ellipse(ox, oy, w * 0.36, h * 0.42, 0, 0, 7);
+      c.clip();
+      c.drawImage(orb, ox - w / 2, oy - h / 2, w, h);
+      c.restore();
+    }
+  }
 
   $('#reset').onclick = () => {
     if (battle) return;
@@ -1605,6 +1723,7 @@
   $('#hunt-leave').onclick = () => endHunt();
 
   function frame(now) {
+    if (titleOpen) drawTitleArt(now / 1000);
     if (dragItem && farmInputBlocked()) cancelItemDrag();
     const dt = lastTime ? Math.min(0.05, (now - lastTime) / 1000) : 0;
     lastTime = now;

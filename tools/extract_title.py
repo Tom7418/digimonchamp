@@ -5,7 +5,8 @@
 
 - NSCR(.nscr) 배경: 머리말 0x18에 가로·세로 픽셀, 0x20에 데이터 크기, 0x24부터 16비트 칸
   (타일 번호 10비트, 좌우·상하 뒤집기, 4bpp면 위 4비트가 팔레트 번호). DS 화면 크기 256x192만 자른다.
-- NCER 셀(버튼·글자): extract_sprites.py와 같은 OAM 해석, 셀 하나씩 따로 저장한다.
+- NCER 셀(오프닝 구슬): extract_sprites.py와 같은 OAM 해석, 셀 하나씩 따로 저장한다.
+- logo.png: title_top에서 가장자리와 이어진 파란 배경을 지워 로고만 남긴다.
 """
 import struct
 import sys
@@ -110,11 +111,56 @@ def cells(base: Path, picks: dict):
 
 # 높이: 맨 아래 줄이 비어 있는(검정·분홍) 그림은 그만큼 잘라 이어 붙일 때 줄무늬가 생기지 않게 한다
 screen(ROOT / 'title_menu/title_top', 'title_top', 191)     # 로고 (위 화면)
-screen(ROOT / 'title_menu/title_bg_main', 'title_bottom')   # 디지털 월드 (아래 화면)
 screen(ROOT / 'ui/common_bg_top', 'bg_top', 184)            # 육각 무늬 공통 배경 (페이지 배경으로 타일)
-screen(ROOT / 'ui/common_bg_bottom', 'bg_bottom', 184)
-cells(ROOT / 'title_menu/title_obj', {
-    25: 'btn_frame', 1: 'btn_frame_on',
-    31: 'txt_new', 32: 'txt_new_on', 33: 'txt_continue', 34: 'txt_continue_on',
-    46: 'welcome',
-})
+cells(ROOT / 'title_menu/parts_main', {4: 'title_orb'})  # 오프닝의 구슬
+
+
+def logo():
+    """title_top에서 로고만 남긴다: 가장자리에서 이어진 파란 배경을 투명하게 지운다."""
+    from collections import deque
+    base = ROOT / 'title_menu/title_top'
+    sc = base.with_suffix('.nscr').read_bytes(); g = base.with_suffix('.ncgr').read_bytes()
+    w = struct.unpack_from('<H', sc, 0x18)[0]; size = struct.unpack_from('<I', sc, 0x20)[0]
+    ents = struct.unpack_from('<%dH' % (size // 2), sc, 0x24)
+    depth = 8 if struct.unpack_from('<I', g, 28)[0] == 4 else 4
+    data, pal = g[48:], palette(base.with_suffix('.nclr'))
+    H = 145
+    px = [[(0, 0, 0, 0)] * w for _ in range(H)]
+    for i, e in enumerate(ents):
+        tx, ty = (i % (w // 8)) * 8, (i // (w // 8)) * 8
+        if ty >= H:
+            break
+        t, hf, vf, pl = e & 1023, e & 1024, e & 2048, e >> 12
+        for y in range(8):
+            for x in range(8):
+                if ty + y >= H:
+                    continue
+                sx, sy = (7 - x if hf else x), (7 - y if vf else y)
+                if depth == 8:
+                    c = pal[data[t * 64 + sy * 8 + sx]]
+                else:
+                    n = t * 32 + sy * 4 + sx // 2
+                    c = pal[pl * 16 + ((data[n] >> (4 * (sx % 2))) & 15)]
+                px[ty + y][tx + x] = (*c, 255)
+    bluish = lambda c: c[2] >= c[0] + 40 and c[2] >= c[1] - 10
+    seen = set(); q = deque([(x, y) for x in range(w) for y in (0, H - 1)] + [(x, y) for y in range(H) for x in (0, w - 1)])
+    while q:
+        x, y = q.popleft()
+        if not (0 <= x < w and 0 <= y < H) or (x, y) in seen:
+            continue
+        seen.add((x, y))
+        if not bluish(px[y][x]):
+            continue
+        px[y][x] = (0, 0, 0, 0)
+        q.extend([(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)])
+    xs = [x for y in range(H) for x in range(w) if px[y][x][3]]; ys = [y for y in range(H) for x in range(w) if px[y][x][3]]
+    x0, x1, y0, y1 = min(xs), max(xs) + 1, min(ys), max(ys) + 1
+    out = bytearray()
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            out += bytes(px[y][x])
+    png(OUT / 'logo.png', x1 - x0, y1 - y0, out)
+    print('logo', x1 - x0, y1 - y0)
+
+
+logo()

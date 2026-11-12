@@ -2,12 +2,19 @@
 // 화면 입력과 그리기는 이 모듈이, 충돌/회전 판정은 CageLayout이 담당한다.
 // pointer 이벤트와 capture를 사용하여 마우스 및 터치 드래그를 함께 지원한다.
 window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
- const L=window.CageLayout, R=45, facilities={};
+ // 원작처럼 육각 한 칸을 크게 그린다(디지몬 여러 마리가 들어가는 방 크기). 사육장 전체는 화면보다 커서
+ // 카메라로 끌어 이동한다. 디지몬·먹이·똥 좌표는 모두 이 월드 좌표를 쓴다.
+ const L=window.CageLayout, R=140, facilities={};
+ const VIEW={w:960,h:560}, MARGIN=60, OX=MARGIN+Math.sqrt(3)*R/2, OY=MARGIN+R;
+ const WORLD={w:Math.ceil(Math.sqrt(3)*R*8+MARGIN*2),h:Math.ceil(R*8+MARGIN*2)};
+ const cam={x:0,y:0};
+ const clampCam=()=>{cam.x=Math.max(0,Math.min(WORLD.w-VIEW.w,cam.x));cam.y=Math.max(0,Math.min(WORLD.h-VIEW.h,cam.y));};
  for(const [kind,t] of Object.entries(L.types)){const im=new Image();if(t.art!==false)im.src=`assets/facilities/${kind}.png`;facilities[kind]=im;}
  let editing=false,tool=null,rotation=0,selected=null,drag=null,hover=null;
- const center=(q,r)=>({x:110+Math.sqrt(3)*R*(q+r/2),y:150+R*1.5*r});
+ const center=(q,r)=>({x:OX+Math.sqrt(3)*R*(q+r/2),y:OY+R*1.5*r});
  const polygon=(ctx,q,r,append=false)=>{const c=center(q,r);if(!append)ctx.beginPath();for(let i=0;i<6;i++){const a=(i*60-30)*Math.PI/180;const x=c.x+R*Math.cos(a),y=c.y+R*Math.sin(a);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();};
- const coordinate=e=>{const box=canvas.getBoundingClientRect();return {x:(e.clientX-box.left)*960/box.width,y:(e.clientY-box.top)*560/box.height};};
+ const screenPoint=e=>{const box=canvas.getBoundingClientRect();return {x:(e.clientX-box.left)*VIEW.w/box.width,y:(e.clientY-box.top)*VIEW.h/box.height};};
+ const coordinate=e=>{const p=screenPoint(e);return {x:p.x+cam.x,y:p.y+cam.y};};
  const tile=p=>{let best=null,dist=R;for(let q=0;q<6;q++)for(let r=0;r<5;r++){const c=center(q,r),d=Math.hypot(p.x-c.x,p.y-c.y);if(d<dist){dist=d;best={q,r};}}return best;};
  // 팔레트의 작은 모양 미리보기도 실제 배치 좌표에서 생성한다.
  function footprint(kind){const points=L.cells({kind,q:0,r:0,rotation:0}).map(([q,r])=>{const c=center(q,r);return Array.from({length:6},(_,i)=>{const a=(i*60-30)*Math.PI/180;return [c.x+R*Math.cos(a),c.y+R*Math.sin(a)];});});const flat=points.flat(),xs=flat.map(p=>p[0]),ys=flat.map(p=>p[1]);return `<svg class="footprint" viewBox="${Math.min(...xs)-3} ${Math.min(...ys)-3} ${Math.max(...xs)-Math.min(...xs)+6} ${Math.max(...ys)-Math.min(...ys)+6}" aria-label="${L.types[kind].cells.length}칸 점유 모양">${points.map(ps=>`<polygon points="${ps.map(p=>p.join(',')).join(' ')}"/>`).join('')}</svg>`;}
@@ -32,9 +39,12 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  canvas.onpointerdown=e=>{if(isBlocked())return;const s=getState(),p=coordinate(e),t=tile(p);hover=t;canvas.setPointerCapture(e.pointerId);
    if(editing){const cage=t&&L.at(s.layout,t.q,t.r);if(cage&&!tool){selected=cage.id;drag={cage:cage.id,offsetQ:t.q-cage.q,offsetR:t.r-cage.r};}else if(!tool){selected=null;}status();}
    else{let best=-1,distance=65;s.team.forEach((pet,i)=>{const d=Math.hypot(p.x-pet.x,p.y-(pet.y-25));if(d<distance){best=i;distance=d;}});if(best>=0){s.selected=best;drag={pet:best,start:p,point:p};changed();}else drag={click:true};}
+   // 디지몬·케이지를 잡지 않았으면 끌어서 사육장을 둘러본다
+   if(drag?.click||(editing&&!tool&&!drag)){drag={...(drag||{}),pan:{x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y,moved:false}};}
  };
- canvas.onpointermove=e=>{hover=tile(coordinate(e));if(drag?.pet!==undefined)drag.point=coordinate(e);};
- canvas.onpointerup=e=>{if(isBlocked()){drag=null;return;}const s=getState(),t=tile(coordinate(e));
+ canvas.onpointermove=e=>{if(drag?.pan){const box=canvas.getBoundingClientRect(),k=VIEW.w/box.width,dx=(e.clientX-drag.pan.x)*k,dy=(e.clientY-drag.pan.y)*k;if(Math.hypot(dx,dy)>6)drag.pan.moved=true;if(drag.pan.moved){cam.x=drag.pan.cx-dx;cam.y=drag.pan.cy-dy;clampCam();}}hover=tile(coordinate(e));if(drag?.pet!==undefined)drag.point=coordinate(e);};
+ canvas.addEventListener('wheel',e=>{if(isBlocked())return;e.preventDefault();cam.x+=e.deltaX||(e.shiftKey?e.deltaY:0);cam.y+=e.shiftKey?0:e.deltaY;clampCam();},{passive:false});
+ canvas.onpointerup=e=>{if(isBlocked()){drag=null;return;}if(drag?.pan?.moved){drag=null;status();return;}const s=getState(),t=tile(coordinate(e));
    if(editing){const next=candidate(t);if(next){if(L.valid(s.layout,next)){if(drag?.cage)Object.assign(s.layout.find(c=>c.id===drag.cage),next);else{const stored=(s.storedCages||[]).findIndex(c=>c.kind===next.kind);const id=stored>=0?s.storedCages.splice(stored,1)[0].id:crypto.randomUUID();s.layout.push({...next,id});}changed('케이지 배치를 저장했습니다.');}else notify('다른 케이지와 겹치거나 사육장을 벗어납니다.');}}
    else if(t){const cage=L.at(s.layout,t.q,t.r),pet=s.team[drag?.pet??s.selected];if(cage){if(L.assign(s,pet,cage.id))changed(`${L.types[cage.kind].name}에 입장했습니다.`);else notify('이 케이지의 정원이 찼습니다.');}else if(drag?.pet!==undefined){pet.cageId=null;pet.cage='free';pet.cageSeconds=0;const c=center(t.q,t.r);pet.x=c.x;pet.y=c.y;pet.target=c.x;changed('자유 활동으로 전환했습니다.');}}
    drag=null;status();
@@ -42,9 +52,15 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  canvas.onpointercancel=()=>{drag=null;hover=null;};
  return {
    reset(){selected=null;drag=null;tool=null;init();status();},
+   world:WORLD, view:VIEW, cam, center, R,
+   // 화면(캔버스) 좌표 이벤트 → 월드 좌표
+   toWorld:e=>coordinate(e),
+   centerOn(x,y){cam.x=x-VIEW.w/2;cam.y=y-VIEW.h/2;clampCam();},
+   // 자유 활동 디지몬이 돌아다닐 수 있는 범위
+   roam:{x0:OX-R*0.6,x1:OX+Math.sqrt(3)*R*7-R*0.4,y0:OY-R*0.5,y1:OY+R*6.5},
    open(){if(isBlocked())return;editing=true;status();toolbar.scrollIntoView({block:'nearest',behavior:'smooth'});},
    get editing(){return editing;},
-   draw(ctx){const s=getState();ctx.fillStyle='#214b50';ctx.fillRect(0,0,960,560);ctx.fillStyle='#c0dcd6';ctx.font='bold 16px sans-serif';ctx.textAlign='left';ctx.fillText(editing?'CAGE EDIT / 케이지 배치':'TRAINING FARM / 사육장',40,100);
+   draw(ctx){const s=getState();ctx.fillStyle='#214b50';ctx.fillRect(0,0,WORLD.w,WORLD.h);
      for(let q=0;q<6;q++)for(let r=0;r<5;r++){polygon(ctx,q,r);ctx.fillStyle='#407675';ctx.fill();ctx.strokeStyle='#8eaaa1';ctx.lineWidth=1;ctx.stroke();}
      for(const c of s.layout){
        const type=L.types[c.kind],cells=L.cells(c),anchor=center(c.q,c.r),im=facilities[c.kind];
@@ -56,11 +72,11 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
        ctx.translate(anchor.x,anchor.y);ctx.rotate((c.rotation||0)*Math.PI/3);
        if(im.complete&&im.naturalWidth)ctx.drawImage(im,left,top,width,height);ctx.restore();
        ctx.strokeStyle=selected===c.id?'#ffe374':'#8ed3e6';ctx.lineWidth=selected===c.id?4:2;outerBorder(ctx,c);
-       ctx.fillStyle='#102e3ce8';ctx.fillRect(anchor.x-43,anchor.y+25,86,16);ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText(`${type.name} · ${cells.length}칸`,anchor.x,anchor.y+37);
+       ctx.font='bold 13px sans-serif';const label=`${type.name} · ${cells.length}칸`,lw=ctx.measureText(label).width+16;ctx.fillStyle='#102e3ce8';ctx.fillRect(anchor.x-lw/2,anchor.y+R*0.55,lw,20);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.fillText(label,anchor.x,anchor.y+R*0.55+15);
      }
      const next=editing&&candidate(hover);if(next){const valid=L.valid(s.layout,next);for(const [q,r] of L.cells(next)){polygon(ctx,q,r);ctx.fillStyle=valid?'#79efa588':'#ff5a6e99';ctx.fill();}}
      // 디지몬은 배치된 시설 안에서만 훈련한다. 같은 시설에서는 점유 칸을 나눠 사용한다.
-     for(const p of s.team){const c=s.layout.find(c=>c.id===p.cageId);if(c){const index=s.team.filter(x=>x.cageId===c.id).indexOf(p),cells=L.cells(c),cell=cells[index%cells.length],pos=center(...cell);const group=s.team.filter(x=>x.cageId===c.id),offset=cells.length===1?(index-(group.length-1)/2)*23:0;p.x=pos.x+offset;p.y=pos.y+8;p.target=p.x;p.cage=c.kind;}else if(p.cage!=='free'){p.cage='free';p.cageId=null;}}
+     for(const p of s.team){const c=s.layout.find(c=>c.id===p.cageId);if(c){const index=s.team.filter(x=>x.cageId===c.id).indexOf(p),cells=L.cells(c),cell=cells[index%cells.length],pos=center(...cell);const group=s.team.filter(x=>x.cageId===c.id),offset=cells.length===1?(index-(group.length-1)/2)*60:0;p.x=pos.x+offset;p.y=pos.y+20;p.target=p.x;p.cage=c.kind;}else if(p.cage!=='free'){p.cage='free';p.cageId=null;}}
      if(drag?.pet!==undefined){const p=s.team[drag.pet];p.x=drag.point.x;p.y=drag.point.y+25;p.target=p.x;}
    }
  };
