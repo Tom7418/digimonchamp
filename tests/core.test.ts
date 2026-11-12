@@ -3,7 +3,7 @@ import { advance, capture, feedRotten, freshSave as freshEggSave, newDigimon, se
 import { getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
-import { applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches } from '../src/core/titles';
+import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntPool, pickWild, ropeDamage, wildHp } from '../src/core/hunt';
 import type { Digimon, SaveData } from '../src/core/types';
@@ -161,5 +161,51 @@ describe('illness', () => {
     expect(d.eggs).toBe(1); // 병으로 죽은 것은 디지에그화 횟수로 세지 않는다
     expect(r.events.some((e) => e.type === 'egg' && e.reason === 'sick')).toBe(true);
     expect(r.events.some((e) => e.type === 'lost')).toBe(false);
+  });
+});
+
+describe('championship', () => {
+  // y년차 가을 d일 09:00
+  const at = (y: number, d: number) => (((y - 1) * 40 + 20 + (d - 1)) * 1440) + 9 * 60;
+  const red = (clock: number): SaveData => ({ ...freshSave(0), clock, titles: ['t1', 't2', 't3'] });
+
+  it('prelims need 레드 테이머 and run one match a day on autumn days 1-5', () => {
+    expect(todaysMatches({ ...red(at(1, 1)), titles: ['t1'] }).map((m) => m.id)).not.toContain('prelim');
+    let s = red(at(1, 1));
+    const m = todaysMatches(s).find((x) => x.id === 'prelim')!;
+    expect(m.name).toBe('챔피언십 예선 1전');
+    s = applyMatch(s, m, true);
+    expect(todaysMatches(s).some((x) => x.id === 'prelim')).toBe(false); // 하루 한 경기
+    s = applyMatch({ ...s, clock: at(1, 2) }, m, true);
+    s = applyMatch({ ...s, clock: at(1, 3) }, m, true);
+    expect(s.qualifiedYear).toBe(1);
+    expect(todaysMatches({ ...s, clock: at(1, 4) }).some((x) => x.id === 'prelim')).toBe(false);
+  });
+
+  it('three prelim losses end this year', () => {
+    let s = red(at(1, 1));
+    for (const d of [1, 2, 3]) s = applyMatch({ ...s, clock: at(1, d) }, todaysMatches({ ...s, clock: at(1, d) }).find((x) => x.id === 'prelim')!, false);
+    expect(todaysMatches({ ...s, clock: at(1, 4) }).some((x) => x.id === 'prelim')).toBe(false);
+    expect(todaysMatches({ ...s, clock: at(2, 1) }).some((x) => x.id === 'prelim')).toBe(true); // 다음 해 다시
+  });
+
+  it('finals next year: 8강 → 4강 → 결승, win all to become champion', () => {
+    let s: SaveData = { ...red(at(2, 5)), qualifiedYear: 1 };
+    expect(todaysMatches({ ...s, clock: at(1, 5) }).some((x) => x.id === 'final')).toBe(false);
+    for (const name of ['챔피언십 본선 8강', '챔피언십 본선 4강', '챔피언십 결승']) {
+      const m = todaysMatches(s).find((x) => x.id === 'final')!;
+      expect(m.name).toBe(name);
+      s = applyMatch(s, m, true);
+    }
+    expect(s.champion).toBe(true);
+    expect(tamerRank(s)).toBe(9);
+    expect(upcoming(s).some((l) => l.includes('챔피언십'))).toBe(false);
+  });
+
+  it('losing in the finals means qualifying again', () => {
+    let s: SaveData = { ...red(at(2, 5)), qualifiedYear: 1 };
+    s = applyMatch(s, todaysMatches(s).find((x) => x.id === 'final')!, false);
+    expect(s.qualifiedYear).toBeNull();
+    expect(todaysMatches(s).some((x) => x.id === 'final')).toBe(false);
   });
 });

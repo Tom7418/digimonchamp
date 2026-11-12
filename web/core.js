@@ -815,29 +815,72 @@ var ChampCore = (function(exports) {
 	var capacityOf = (save) => CAPACITY_BY_RANK[tamerRank(save)] ?? 200;
 	var cageSpaceOf = (save) => CAGE_SPACE_BY_RANK[tamerRank(save)] ?? 30;
 	var CHAMP_SEASON = 2;
+	var PRELIM_DAYS = [
+		1,
+		2,
+		3,
+		4,
+		5
+	];
 	var CHAMP_DAY = 5;
+	var PRELIM_MIN_RANK = 4;
+	var PRELIM_WINS = 3;
 	var PRELIM = {
 		id: "prelim",
 		name: "챔피언십 예선",
-		minRank: 1,
+		minRank: 4,
 		season: 2,
-		day: 5,
+		day: 1,
 		format: 3,
-		stage: 5,
-		scale: 1.1,
-		prize: 3e3
+		stage: 4,
+		scale: 1.15,
+		prize: 1500
 	};
-	var FINAL = {
-		id: "final",
-		name: "챔피언십 본선",
-		minRank: 1,
-		season: 2,
-		day: 5,
-		format: 3,
-		stage: 6,
-		scale: 1.2,
-		prize: 1e4
-	};
+	var FINAL_ROUNDS = [
+		{
+			id: "final",
+			name: "챔피언십 본선 8강",
+			minRank: 1,
+			season: 2,
+			day: 5,
+			format: 3,
+			stage: 5,
+			scale: 1,
+			prize: 3e3
+		},
+		{
+			id: "final",
+			name: "챔피언십 본선 4강",
+			minRank: 1,
+			season: 2,
+			day: 5,
+			format: 3,
+			stage: 5,
+			scale: 1.2,
+			prize: 5e3
+		},
+		{
+			id: "final",
+			name: "챔피언십 결승",
+			minRank: 1,
+			season: 2,
+			day: 5,
+			format: 3,
+			stage: 6,
+			scale: 1.1,
+			prize: 1e4
+		}
+	];
+	/** 이전 코드·테스트 호환용: 결승전 */
+	var FINAL = FINAL_ROUNDS[FINAL_ROUNDS.length - 1];
+	/** 올해 예선 기록 (해가 바뀌면 새로 시작) */
+	function prelimOf(save, year) {
+		return save.prelim && save.prelim.year === year ? save.prelim : {
+			year,
+			days: [],
+			wins: 0
+		};
+	}
 	function tamerRank(save) {
 		const normal = TITLES.filter((t) => t.id !== "t9" && save.titles.includes(t.id)).length;
 		if (save.champion) return save.titles.length >= TITLES.length ? 10 : 9;
@@ -849,9 +892,19 @@ var ChampCore = (function(exports) {
 		if (d.hour < 8 || d.hour >= 15) return [];
 		const rank = tamerRank(save);
 		const out = TITLES.filter((t) => t.season === d.season && t.day === d.day && rank >= t.minRank && !save.titles.includes(t.id));
-		if (d.season === 2 && d.day === 5 && !save.champion) {
-			if (save.qualifiedYear !== null && d.year > save.qualifiedYear) out.push(FINAL);
-			else if (save.qualifiedYear === null) out.push(PRELIM);
+		if (d.season === 2 && !save.champion) {
+			if (save.qualifiedYear !== null && d.year > save.qualifiedYear && d.day === 5) {
+				const round = save.finalRound ?? 0;
+				if (round < FINAL_ROUNDS.length) out.push(FINAL_ROUNDS[round]);
+			} else if (save.qualifiedYear === null && rank >= 4 && PRELIM_DAYS.includes(d.day)) {
+				const p = prelimOf(save, d.year);
+				const left = PRELIM_DAYS.filter((x) => x >= d.day).length;
+				if (!p.days.includes(d.day) && p.wins + left >= 3) out.push({
+					...PRELIM,
+					day: d.day,
+					name: `챔피언십 예선 ${p.days.length + 1}전`
+				});
+			}
 		}
 		return out;
 	}
@@ -863,26 +916,58 @@ var ChampCore = (function(exports) {
 			"가을",
 			"겨울"
 		][t.season]} ${t.day}일 (${t.format}:${t.format})`);
-		if (!save.champion) lines.push(`챔피언십 ${save.qualifiedYear === null ? "예선" : "본선"}: 가을 5일`);
+		if (!save.champion) {
+			if (save.qualifiedYear !== null) lines.push(`챔피언십 본선: ${save.qualifiedYear + 1}년차 가을 5일 (8강·4강·결승)`);
+			else if (rank < 4) lines.push(`챔피언십 예선: 가을 1~5일 (${rankName(4)}부터 참가)`);
+			else {
+				const p = save.prelim;
+				lines.push(`챔피언십 예선: 가을 1~5일, 3승 통과${p ? ` (올해 ${p.wins}승 ${p.days.length - p.wins}패)` : ""}`);
+			}
+		}
 		return lines;
 	}
-	function applyWin(save, m) {
+	/** 매치 결과 반영. 타이틀은 이겼을 때만 의미가 있고, 예선·본선은 진 것도 기록한다 */
+	function applyMatch(save, m, won) {
 		const d = dateOf(save.clock);
-		if (m.id === "prelim") return {
-			...save,
-			qualifiedYear: d.year,
-			bits: save.bits + m.prize
-		};
-		if (m.id === "final") return {
-			...save,
-			champion: true,
-			bits: save.bits + m.prize
-		};
-		return {
+		if (m.id === "prelim") {
+			const p = prelimOf(save, d.year);
+			const next = {
+				year: d.year,
+				days: [...p.days, d.day],
+				wins: p.wins + (won ? 1 : 0)
+			};
+			const qualified = next.wins >= 3;
+			return {
+				...save,
+				prelim: next,
+				qualifiedYear: qualified ? d.year : save.qualifiedYear,
+				bits: save.bits + (won ? m.prize : 0)
+			};
+		}
+		if (m.id === "final") {
+			if (!won) return {
+				...save,
+				qualifiedYear: null,
+				finalRound: 0,
+				prelim: null
+			};
+			const round = (save.finalRound ?? 0) + 1;
+			const champion = round >= FINAL_ROUNDS.length;
+			return {
+				...save,
+				finalRound: champion ? 0 : round,
+				champion: save.champion || champion,
+				bits: save.bits + m.prize
+			};
+		}
+		return won ? {
 			...save,
 			titles: [...save.titles, m.id],
 			bits: save.bits + m.prize
-		};
+		} : save;
+	}
+	function applyWin(save, m) {
+		return applyMatch(save, m, true);
 	}
 	// src/core/hunt.ts
 	/** 사냥 가능한 시간: 08:00 ~ 22:00 (22시 이후 불가는 원작, 시작 시각은 영상 화면 08:00 기준) */
@@ -1619,6 +1704,7 @@ var ChampCore = (function(exports) {
 	exports.FAMILIES = FAMILIES;
 	exports.FIELDS = FIELDS;
 	exports.FINAL = FINAL;
+	exports.FINAL_ROUNDS = FINAL_ROUNDS;
 	exports.HUNT_CLOSE_HOUR = HUNT_CLOSE_HOUR;
 	exports.HUNT_OPEN_HOUR = HUNT_OPEN_HOUR;
 	exports.LIFESPAN = LIFESPAN;
@@ -1626,6 +1712,9 @@ var ChampCore = (function(exports) {
 	exports.OFFLINE_CAP_MINUTES = OFFLINE_CAP_MINUTES;
 	exports.PERSONALITIES = PERSONALITIES;
 	exports.PRELIM = PRELIM;
+	exports.PRELIM_DAYS = PRELIM_DAYS;
+	exports.PRELIM_MIN_RANK = PRELIM_MIN_RANK;
+	exports.PRELIM_WINS = PRELIM_WINS;
 	exports.ROOKIE_CHANCE = ROOKIE_CHANCE;
 	exports.SEASONS = SEASONS;
 	exports.SEASON_CODE = SEASON_CODE;
@@ -1641,6 +1730,7 @@ var ChampCore = (function(exports) {
 	exports.WIRE_PACK = WIRE_PACK;
 	exports.advance = advance;
 	exports.applyBattleResult = applyBattleResult;
+	exports.applyMatch = applyMatch;
 	exports.applyWin = applyWin;
 	exports.buy = buy;
 	exports.cageSpaceOf = cageSpaceOf;

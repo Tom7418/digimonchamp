@@ -86,6 +86,10 @@ export interface SaveData {
   titles: string[];
   /** 챔피언십 예선 통과 연도 (본선은 다음 해) */
   qualifiedYear: number | null;
+  /** 올해 챔피언십 예선 진행: 치른 날짜와 승수 */
+  prelim?: { year: number; days: number[]; wins: number } | null;
+  /** 본선에서 이긴 라운드 수 (같은 날 8강 → 4강 → 결승) */
+  finalRound?: number;
   champion: boolean;
   nextUid: number;
   seen: string[];

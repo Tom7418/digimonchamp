@@ -493,13 +493,34 @@
     const uids = new Set(b.state.units.filter((u) => u.team === 0).map((u) => u.uid));
     const before = C.tamerRank(save);
     save = { ...save, digimon: save.digimon.map((d) => (uids.has(d.uid) ? C.applyBattleResult(d, won, ko.has(d.uid), Math.random) : d)) };
-    if (won && b.setup.match) save = C.applyWin(save, b.setup.match);
+    const m = b.setup.match;
+    const wasQualified = save.qualifiedYear;
+    // 타이틀은 이겼을 때만, 챔피언십 예선·본선은 진 것도 기록한다
+    if (m) save = C.applyMatch(save, m, won);
     else if (won) save = { ...save, bits: save.bits + b.setup.prize };
     const after = C.tamerRank(save);
     const why = b.state.reason === 'timeout' ? ' (시간 종료 판정)' : '';
     battleLog(won ? `승리!${why} 상금 ${b.setup.prize.toLocaleString('ko-KR')} ฿` : `패배…${why}`);
     log(`${b.setup.title} ${won ? '승리' : '패배'}${won ? ` · ${b.setup.prize} ฿` : ''}`);
-    if (won && b.setup.match) log(`타이틀 메달 획득: ${b.setup.match.name}`);
+    const champLine = (t) => {
+      battleLog(t);
+      log(t);
+    };
+    if (m?.id === 'prelim') {
+      const p = save.prelim;
+      champLine(`예선 성적 ${p.wins}승 ${p.days.length - p.wins}패 (${C.PRELIM_WINS}승 통과)`);
+      if (wasQualified === null && save.qualifiedYear !== null) {
+        champLine(`예선 통과! 본선은 다음 해 가을 ${C.CHAMP_DAY}일입니다.`);
+        toast('챔피언십 예선 통과!');
+      } else if (save.qualifiedYear === null && p.wins + C.PRELIM_DAYS.filter((x) => x > C.dateOf(save.clock).day).length < C.PRELIM_WINS)
+        champLine('올해 예선 탈락… 내년 가을에 다시 도전하세요.');
+    } else if (m?.id === 'final') {
+      if (save.champion) {
+        champLine('🏆 디지몬 챔피언십 우승! 진정한 디지몬 테이머가 되었습니다.');
+        toast('챔피언십 우승!');
+      } else if (won) champLine(`다음 라운드가 열렸습니다: ${C.FINAL_ROUNDS[save.finalRound].name} (배틀에서 이어서 출전)`);
+      else champLine('본선 탈락… 다시 예선부터 도전해야 합니다.');
+    } else if (won && m) log(`타이틀 메달 획득: ${m.name}`);
     if (after > before) {
       const msg = `${C.rankName(after)}(으)로 랭크 업! 최대 용량 ${C.capacityOf(save)}G, 케이지 공간 ${C.cageSpaceOf(save)}칸, ${C.STAGE_LABEL[C.maxStageForRank(after)]}까지 진화 가능`;
       battleLog(msg);
