@@ -7,6 +7,14 @@
   const L = window.CageLayout;
   const $ = (s) => document.querySelector(s);
   const KEY = 'champion-web-v2';
+  // 타이틀 화면의 '이어서'용: 페이지를 열 때 저장이 있었는가
+  const hadSave = (() => {
+    try {
+      return !!localStorage.getItem(KEY);
+    } catch {
+      return false;
+    }
+  })();
   // 시간 흐름: 현실 1초 = 게임 2분 (×1). 하루(07:00~21:00)가 약 7분. 원작 속도는 미확인이라 임시 값
   // 원작 도움말(help #96): 디지털 월드의 1일은 실제 시간 10분 → 1440분 / 600초
   const MINUTES_PER_SECOND = 2.4;
@@ -1524,6 +1532,57 @@
         <li>프리 배틀로 배틀 횟수와 비트를 모으고, 상점에서 고기·알약·케이지를 사세요.</li>
       </ol><p class="hint">비공식 비영리 팬게임입니다. 진행은 이 브라우저에 자동 저장되며, 창을 닫아 둔 시간도 최대 12시간까지 반영됩니다. 사냥은 아직 웹판에 옮기지 않았습니다.</p>`,
     );
+  // ---------- 타이틀 화면 (원작 title_menu 그림) ----------
+  // 페이지를 열면 먼저 보인다. 닫기 전에는 게임 시간이 흐르지 않는다.
+  let titleOpen = true;
+  function closeTitle() {
+    const el = $('#title-screen');
+    el.classList.add('closing');
+    setTimeout(() => (el.hidden = true), 350);
+    titleOpen = false;
+    lastTime = 0;
+  }
+  function startNewGame() {
+    endHunt();
+    save = C.freshSave(Date.now());
+    view = freshView();
+    log('새 테이머 생활을 시작했습니다.');
+    board.reset();
+    render();
+    persist();
+  }
+  (function initTitle() {
+    const menu = $('#title-menu'), confirm = $('#title-confirm'), press = $('#title-press');
+    $('#title-continue').disabled = !hadSave;
+    if (!hadSave) press.textContent = '처음부터를 터치하세요';
+    document.querySelectorAll('.ds-btn .txt').forEach((img) => {
+      const off = img.src, on = img.dataset.on, btn = img.parentElement;
+      const set = (v) => () => (img.src = v);
+      btn.addEventListener('pointerenter', set(on));
+      btn.addEventListener('pointerleave', set(off));
+      btn.addEventListener('focus', set(on));
+      btn.addEventListener('blur', set(off));
+    });
+    $('#title-continue').onclick = closeTitle;
+    $('#title-new').onclick = () => {
+      if (!hadSave) return closeTitle();
+      menu.hidden = true;
+      press.hidden = true;
+      confirm.hidden = false;
+      $('#title-no').focus();
+    };
+    $('#title-no').onclick = () => {
+      confirm.hidden = true;
+      menu.hidden = false;
+      press.hidden = false;
+    };
+    $('#title-yes').onclick = () => {
+      startNewGame();
+      closeTitle();
+    };
+    (hadSave ? $('#title-continue') : $('#title-new')).focus();
+  })();
+
   $('#reset').onclick = () => {
     if (battle) return;
     showModal(
@@ -1532,14 +1591,8 @@
       'NEW GAME',
     );
     $('#confirm-reset').onclick = () => {
-      endHunt();
-      save = C.freshSave(Date.now());
-      view = freshView();
-      log('새 테이머 생활을 시작했습니다.');
-      board.reset();
+      startNewGame();
       closeModal();
-      render();
-      persist();
     };
   };
 
@@ -1557,7 +1610,7 @@
     lastTime = now;
     if (!document.hidden) {
       if (battle) battleTick(dt);
-      else if (!paused && !board.editing && !mailOpen && !dayEnding) {
+      else if (!titleOpen && !paused && !board.editing && !mailOpen && !dayEnding) {
         if (hunt) huntTick(dt);
         clock += dt * speed * MINUTES_PER_SECOND;
         let changed = false;

@@ -72,3 +72,33 @@ dialog h3{font-size:13px;margin:10px 0 2px;color:#ffd36a}
 .cal-cell.today{background:#e45b5b;color:#fff}.cal-cell.today small{color:#fff}
 .cal-today{background:#3b4a55;color:#eef;padding:12px 18px;border-radius:8px;font-size:15px}
 .cal-today b{font-size:22px;margin:0 4px}
+
+/* ---------- 원작 타이틀 화면·공통 배경 (assets/ui, tools/extract_title.py) ---------- */
+body{background:#0a2a6b url('assets/ui/bg_top.png') 0 0/512px 368px;image-rendering:auto}
+body:before{content:'';position:fixed;inset:0;background:linear-gradient(#06204fcc,#04143acc 60%,#020a20ee);pointer-events:none;z-index:-1}
+header{background:linear-gradient(#0d3f8cf2,#082a63f2);border-bottom:3px solid #f2b13a;box-shadow:0 2px 0 #0b1d4a}
+.brand-logo{width:120px;height:58px;background:url('assets/ui/title_top.png') -2px -6px/124px 93px no-repeat;image-rendering:pixelated;border-radius:6px;box-shadow:0 0 0 2px #7fd2ff66}
+.intro{background:linear-gradient(90deg,#0f3e86e6,#0b2b62e6);border:2px solid #5fb7ee;box-shadow:inset 0 0 0 2px #072056}
+.world-panel,.partner{border-color:#3d8fd0;box-shadow:inset 0 0 0 2px #072056,0 0 18px #2a8be055}
+.title-screen{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#04122e url('assets/ui/bg_bottom.png') 0 0/512px 368px;overflow:auto;padding:12px}
+.title-screen:before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,#0000 30%,#020a1fcc);pointer-events:none}
+.title-screen.closing{animation:title-out .35s forwards}
+@keyframes title-out{to{opacity:0;transform:scale(1.04)}}
+.ds{position:relative;display:flex;flex-direction:column;gap:14px;padding:14px;background:linear-gradient(#2b2f38,#16181d);border-radius:18px;box-shadow:0 0 0 3px #555b66,0 20px 60px #000a}
+.ds-screen{position:relative;width:min(88vw,calc((100vh - 120px) / 2 * 4 / 3),640px);aspect-ratio:4/3;overflow:hidden;border:3px solid #0b0c10;border-radius:3px}
+.ds-screen>img:first-child{width:100%;height:100%;display:block;image-rendering:pixelated}
+.title-welcome{position:absolute;left:0;top:4%;width:100%;image-rendering:pixelated;animation:welcome 3s ease-in-out infinite}
+@keyframes welcome{50%{filter:brightness(1.35)}}
+.title-menu,.title-confirm{position:absolute;left:0;right:0;top:30%;display:flex;flex-direction:column;align-items:center;gap:6%}
+.ds-btn{position:relative;width:34.4%;aspect-ratio:88/32;border:0;padding:0;background:url('assets/ui/btn_frame.png') center/100% 100% no-repeat;image-rendering:pixelated;display:grid;place-items:center;filter:drop-shadow(0 3px 0 #0006)}
+.ds-btn:hover,.ds-btn:focus-visible{background-image:url('assets/ui/btn_frame_on.png');outline:none;transform:translateY(-1px)}
+.ds-btn .txt{width:63.6%;image-rendering:pixelated}
+.ds-btn#title-continue .txt{width:45.5%}
+.ds-btn:disabled{opacity:.45;filter:grayscale(1)}
+.ds-btn.plain{color:#ffd85a;font-weight:900;font-size:clamp(12px,2.6vw,18px);text-shadow:0 2px 0 #8a4b00;width:30%}
+.title-confirm p{margin:0;padding:8px 14px;background:#06224ccc;border:2px solid #5fc8ff;border-radius:6px;color:#fff;font-weight:700;text-align:center;font-size:clamp(11px,2.4vw,16px);line-height:1.5}
+.title-confirm div{display:flex;gap:6%;width:100%;justify-content:center}
+.title-press{position:absolute;left:0;right:0;bottom:3%;margin:0;text-align:center;color:#e8f6ff;font-size:clamp(10px,2vw,13px);font-weight:700;text-shadow:0 1px 2px #000;animation:blink 1.4s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+.title-note{position:relative;margin:0;color:#9fc4e8;font-size:10px;text-align:center}
+.title-screen [hidden],.title-screen[hidden]{display:none!important}

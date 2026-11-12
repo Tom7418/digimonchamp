@@ -6,7 +6,22 @@
 <link rel="stylesheet" href="championship.css">
 </head>
 <body>
-<header><a class="brand" href="./"><span class="brand-mark">D<span>↗</span></span><span>DIGIMON <b>CHAMPIONSHIP</b><small>비공식 팬게임 · 웹판</small></span></a><span class="build">BROWSER EDITION <i>02</i></span><button class="quiet" id="help">플레이 가이드 ↗</button></header>
+<div id="title-screen" class="title-screen" role="dialog" aria-label="타이틀 화면">
+<div class="ds">
+<div class="ds-screen ds-top"><img src="assets/ui/title_top.png" alt="디지몬 챔피언십"></div>
+<div class="ds-screen ds-bottom"><img src="assets/ui/title_bottom.png" alt="">
+<img class="title-welcome" src="assets/ui/welcome.png" alt="Welcome to digital world!">
+<div class="title-menu" id="title-menu">
+<button class="ds-btn" id="title-continue" aria-label="이어서"><img class="txt" src="assets/ui/txt_continue.png" data-on="assets/ui/txt_continue_on.png" alt=""></button>
+<button class="ds-btn" id="title-new" aria-label="처음부터"><img class="txt" src="assets/ui/txt_new.png" data-on="assets/ui/txt_new_on.png" alt=""></button>
+</div>
+<div class="title-confirm" id="title-confirm" hidden><p>기록을 지우고<br>처음부터 시작할까요?</p><div><button class="ds-btn plain" id="title-yes">예</button><button class="ds-btn plain" id="title-no">아니오</button></div></div>
+<p class="title-press" id="title-press">이어서 또는 처음부터를 터치하세요</p>
+</div>
+</div>
+<p class="title-note">비공식 비영리 팬게임 · 디지몬 © 본고 아키요시 · 토에이 애니메이션 / 반다이남코</p>
+</div>
+<header><a class="brand" href="./"><span class="brand-logo" aria-hidden="true"></span><span>DIGIMON <b>CHAMPIONSHIP</b><small>비공식 팬게임 · 웹판</small></span></a><span class="build">BROWSER EDITION <i>02</i></span><button class="quiet" id="help">플레이 가이드 ↗</button></header>
 <main>
 <div class="intro"><div><div class="eyebrow">DIGIMON CHAMPIONSHIP</div><h1>디지몬 챔피언십</h1><div class="band" id="band"></div></div><div class="wallet"><span>소지금 / BIT</span><strong><span id="coins">0</span> <small>฿</small></strong></div></div>
 <div class="layout"><section class="world-panel"><div class="world-top"><div><span class="live-dot"></span> <strong id="scene-title">사육장</strong><span class="region">TRAINING FARM</span></div><span class="hunt-tools"><button class="quiet" id="tool-rope">로프</button><button class="quiet" id="tool-wire">와이어</button><button class="quiet" id="hunt-leave">사냥 종료</button></span><button class="quiet" id="speed">▶▶ ×1</button></div>
