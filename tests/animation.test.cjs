@@ -1,0 +1,32 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const path=require('node:path');
+const ctx=vm.createContext({window:{}});
+for(const file of ['assets/sprites.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../web',file),'utf8'),ctx);
+const data=ctx.window.DIGIMON_ANIMATIONS;
+const player=ctx.window.createAnimationPlayer(data);
+test('217종의 모든 연결 프레임은 실제 스프라이트 범위 안이고 유지 시간이 양수다',()=>{
+  assert.equal(Object.keys(data.sprites).length,217);
+  for(const sp of ctx.window.SPRITES)for(const seq of data.banks[data.sprites[sp.id]]){
+    assert.ok(seq.frames.length>0);
+    for(const [cell,ticks] of seq.frames){assert.ok(cell>=0&&cell<sp.frames);assert.ok(ticks>0);}
+  }
+});
+test('NANR의 서로 다른 유지 시간과 반복 경계를 따른다',()=>{
+  const id='m201_agumon',seq=data.banks[data.sprites[id]][0],first=seq.frames[0][1]/60;
+  assert.equal(player.sample(id,'idle',first-0.001),seq.frames[0][0]);
+  assert.equal(player.sample(id,'idle',first+0.001),seq.frames[1][0]);
+  assert.equal(player.sample(id,'idle',player.duration(id,'idle')+0.001),seq.frames[0][0]);
+});
+test('상태 전환은 처음부터 시작하며 dt=0은 정지 프레임을 유지한다',()=>{
+  const actor={},id='m201_agumon';player.pose(actor,id,'walk',0);
+  const frame=player.pose(actor,id,'walk',0.3);
+  assert.equal(player.pose(actor,id,'walk',0),frame);
+  assert.equal(player.pose(actor,id,'eat',0.3),player.sample(id,'eat',0));
+});
+test('단발 재생은 마지막 셀을 유지하고 없는 종은 안전하게 첫 셀을 쓴다',()=>{
+  const p=ctx.window.createAnimationPlayer({tickRate:60,states:{idle:0},sprites:{a:0},banks:[[{frames:[[2,3],[7,5]],loop:false,start:0}]]});
+  assert.equal(p.sample('a','idle',10),7);assert.equal(p.sample('missing','idle',10),0);
+});

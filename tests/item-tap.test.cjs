@@ -12,6 +12,8 @@ function setup() {
   const ctx=vm.createContext({window,document,canvas,board,titleOpen:false,battle:null,hunt:null,mailOpen:false,dayEnding:false,
     $:id=>({'#tray':tray,'#modal':modal,'#mail':mail})[id],renderTray(){},persist(){},nextMail(){},toast(){},render(){},log(){},syncTeam(){},nameOf:()=> '깜몬',performance:{now:()=>0},effect:null});
   vm.runInContext(fs.readFileSync(path.join(__dirname,'../web/core.js'),'utf8'),ctx);
+  for (const file of ['assets/sprites.js', 'assets/animations.js', 'animation.js']) vm.runInContext(fs.readFileSync(path.join(__dirname,'../web',file),'utf8'),ctx);
+  vm.runInContext('const animations=window.createAnimationPlayer(window.DIGIMON_ANIMATIONS); const SPRITE_BY_NAME=Object.fromEntries(window.SPRITES.map(s=>[s.name,s.id]));',ctx);
   vm.runInContext(`globalThis.C=ChampCore; globalThis.save=C.freshSave(0); save.meat=2; save.digimon=[C.newDigimon(1,'깜몬')];save.digimon[0].hunger=0;
     globalThis.view={foods:[],poops:[],team:[{uid:1,x:200,y:300,cageId:'cage',cage:'field'}],selected:0};
     let selectedItem=null; const ITEMS=[{kind:'meat',count:()=>C.availableFood(save,view.foods,'meat')}];
@@ -34,8 +36,19 @@ test('케이지에서 먹이로 걸어와 먹을 때만 재고를 한 번 소비
   const s=setup();s.choose('meat');s.tap();const p=s.ctx.view.team[0],d=s.ctx.save.digimon[0];p.x=100;
   s.seekFood(p,d,1);assert.equal(p.cageId,null);assert.ok(p.x>100);
   p.x=200;p.y=300;s.seekFood(p,d,0);
+  assert.equal(s.ctx.view.foods.length,1);assert.equal(s.ctx.save.meat,2);
+  s.seekFood(p,d,0); // 일시정지에서는 씹기 시간도 흐르지 않는다.
+  assert.equal(s.ctx.save.meat,2);
+  s.seekFood(p,d,10);
   assert.equal(s.ctx.view.foods.length,0);assert.equal(s.ctx.save.meat,1);assert.equal(s.ctx.save.digimon[0].hunger,35);
   assert.equal(s.seekFood(p,s.ctx.save.digimon[0],1),false);
+});
+test('먹는 중 다른 디지몬의 중복 소비와 케이지 이동 후 뒤늦은 소비를 막는다',()=>{
+  const s=setup();s.choose('meat');s.tap();const p=s.ctx.view.team[0],d=s.ctx.save.digimon[0];p.cageId=null;
+  s.seekFood(p,d,0);
+  const other={...d,uid:2};assert.equal(s.seekFood({...p,uid:2},other,0),false);
+  p.cageId='new-cage';s.seekFood(p,d,10);
+  assert.equal(s.ctx.save.meat,2);assert.equal(s.ctx.view.foods.length,1);
 });
 test('알약은 디지몬 터치로 치료하고 먹이를 만들지 않는다',()=>{
   const s=setup();s.ctx.save.digimon[0].sick=true;s.choose('pill');s.tap();

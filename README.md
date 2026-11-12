@@ -31,6 +31,7 @@ web/game.js             화면 그리기·입력·저장 (규칙은 core.js 호�
 web/core.js             src/core 규칙 엔진 빌드 결과 (npm run build:core, 직접 수정 금지)
 web/cage-layout.js      육각 케이지 배치·회전·정원·케이지 공간
 web/cage-editor.js      케이지 편집 입력과 그리기
+web/animation.js        상태별 원본 프레임 재생기
 web/assets/             PNG 스프라이트 시트와 메타데이터
 tools/extract_sprites.py 원본 Nitro 리소스 변환
 tools/check_web.py       배포 경로·이미지 검사
@@ -42,12 +43,13 @@ tools/check_web.py       배포 경로·이미지 검사
 
 ### 리소스와 검증
 
-현재 게임에 쓰이는 변환 PNG와 변환 도구만 포함합니다. ROM, 원본 DS 바이너리, 대용량 사운드 아카이브, 로컬 저장 데이터와 배포 인증 정보는 업로드하지 않습니다. 그림은 NCER 셀/OAM과 프레임별 VRAM 전송 위치, NCBR 그래픽, NCLR 팔레트를 조합해 생성했습니다. NANR의 원작 애니메이션 시퀀스는 아직 적용하지 않았습니다.
+현재 게임에 쓰이는 변환 PNG와 변환 도구만 포함합니다. ROM, 원본 DS 바이너리, 대용량 사운드 아카이브, 로컬 저장 데이터와 배포 인증 정보는 업로드하지 않습니다. 그림은 NCER 셀/OAM과 프레임별 VRAM 전송 위치, NCBR 그래픽, NCLR 팔레트를 조합해 생성했습니다. NANR에서 추출한 프레임 순서·유지 시간을 사육장 대기·걷기·먹기와 초상화에 적용했습니다. 동작 번호 대응과 60Hz 재생은 임시 해석이며, 사냥·전투·훈련 동작은 후속 작업입니다.
 
 원본 `digimon/` 폴더가 들어 있는 디렉터리를 지정해 다시 변환합니다. Python 표준 라이브러리만 사용합니다.
 
 ```powershell
 python tools/extract_sprites.py --source-root "원본 자료가 있는 폴더"
+python tools/extract_animations.py --source-root "원본 자료가 있는 폴더"
 npm run build:core   # src/core를 바꿨다면 web/core.js 다시 만들기
 npm test             # 규칙 엔진(vitest) + 케이지 배치(node:test)
 python tools/check_web.py
