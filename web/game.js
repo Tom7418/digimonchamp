@@ -578,7 +578,8 @@
       a.width,
       a.height,
       (-a.width * scale) / 2,
-      -a.height * scale,
+      // 칸 맨 아래가 아니라 발끝 줄(baseline)을 y에 맞춰 땅에 붙인다
+      -(a.baseline ?? a.height) * scale,
       a.width * scale,
       a.height * scale,
     );

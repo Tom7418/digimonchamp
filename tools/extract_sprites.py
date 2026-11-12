@@ -74,7 +74,17 @@ def extract(stem, folder='digimon'):
                     dest=((y-top+py)*w*count+i*w+x-left+px)*4
                     pixels[dest:dest+4]=color
     png(OUT/(stem+'.png'),w*count,h,pixels)
-    return dict(id=stem,width=w,height=h,frames=count,source=str(p.relative_to(ROOT)).replace('\\','/'))
+    # 모든 프레임이 같은 칸 크기를 쓰므로(공격·이펙트 프레임 포함) 칸 아래쪽에 빈 공간이 생긴다.
+    # 가장 많은 프레임에서 발끝이 닿는 줄을 baseline으로 기록해 화면에서 그 줄을 땅에 맞춘다.
+    bottoms=[]
+    for i in range(count):
+        low=0
+        for yy in range(h):
+            row=yy*w*count+i*w
+            if any(pixels[(row+xx)*4+3] for xx in range(w)): low=yy+1
+        if low: bottoms.append(low)
+    baseline=max(set(bottoms),key=bottoms.count) if bottoms else h
+    return dict(id=stem,width=w,height=h,frames=count,baseline=baseline,source=str(p.relative_to(ROOT)).replace('\\','/'))
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
