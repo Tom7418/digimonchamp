@@ -5,6 +5,7 @@ import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
+import { canHuntNow, huntPool, pickWild, ropeDamage, wildHp } from '../src/core/hunt';
 import type { Digimon, SaveData } from '../src/core/types';
 
 /** 테스트는 부화한 깜몬에서 시작한다 */
@@ -125,5 +126,26 @@ describe('titles and hunting', () => {
     expect(r.save.digimon.length).toBe(2);
     const full = { ...s, digimon: Array.from({ length: 8 }, (_, i) => ({ ...s.digimon[0], uid: i + 1 })) };
     expect(capture(full, '포요몬', seeded(1)).ok).toBe(false);
+  });
+});
+
+describe('hunting', () => {
+  it('spring pool on 다이나 초원 has babies and the rookies they grow into', () => {
+    const { babies, rookies } = huntPool(FIELDS[0], 0);
+    expect(babies).toContain('뿔몬');
+    expect(rookies).toEqual(expect.arrayContaining(['파피몬', '가오몬']));
+    expect(babies).not.toContain('뽀글몬'); // 가을·겨울에만 나온다
+    expect([...babies, ...rookies]).toContain(pickWild(FIELDS[0], 0, seeded(3)));
+  });
+  it('rookies need the 성장기 로프', () => {
+    expect(wildHp('뿔몬')).toBe(2);
+    expect(ropeDamage({ ropeLevel: 1 }, '뿔몬')).toBe(1);
+    expect(ropeDamage({ ropeLevel: 1 }, '파피몬')).toBe(0);
+    expect(ropeDamage({ ropeLevel: 2 }, '파피몬')).toBe(1);
+  });
+  it('no hunting after 22:00', () => {
+    const s = freshSave(0);
+    expect(canHuntNow({ ...s, clock: 10 * 60 }).ok).toBe(true);
+    expect(canHuntNow({ ...s, clock: 22 * 60 + 5 }).ok).toBe(false);
   });
 });

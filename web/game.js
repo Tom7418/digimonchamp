@@ -50,7 +50,7 @@
     try {
       const raw = JSON.parse(localStorage.getItem(KEY));
       if (raw && raw.save && raw.save.version === 2 && Array.isArray(raw.save.digimon) && raw.save.digimon.length && raw.view) {
-        save = raw.save;
+        save = { wires: 0, ...raw.save };
         view = { ...freshView(), ...raw.view };
         // 꺼져 있던 동안의 시간 반영 (최대 12시간)
         const away = Math.min(C.OFFLINE_CAP_MINUTES, Math.max(0, Math.floor((Date.now() - save.lastSavedAt) / 1000)));
@@ -170,7 +170,7 @@
         `<b>${date.seasonName}</b>`,
         `${date.day}일`,
         `${date.year}년차`,
-        `<b>${battle ? '배틀' : '육성'}</b>`,
+        `<b>${battle ? '배틀' : hunt ? '사냥' : '육성'}</b>`,
         `${pad(date.hour)}:${pad(date.minute)}`,
         `${esc(C.rankName(rank))}`,
         `용량 ${C.usedCapacity(save)} / ${capacity}G`,
@@ -179,7 +179,7 @@
         .map((x) => `<span>${x}</span>`)
         .join(''),
     );
-    $('#scene-title').textContent = battle ? '배틀 아레나' : '사육장';
+    $('#scene-title').textContent = battle ? '배틀 아레나' : hunt ? `사냥터 · ${hunt.field.id}` : '사육장';
     $('#speed').textContent = `▶▶ ×${speed}`;
 
     setHtml(
@@ -271,7 +271,7 @@
         return li;
       }),
     );
-    document.querySelectorAll('[data-action]').forEach((b) => (b.disabled = !!battle));
+    document.querySelectorAll('[data-action]').forEach((b) => (b.disabled = !!battle || !!hunt));
     // 상점에서 사지 않은 시설은 설치 목록에서 잠근다
     document.querySelectorAll('[data-build]').forEach((b) => {
       const t = L.types[b.dataset.build];
@@ -303,6 +303,7 @@
     if (action === 'battle') battleMenu();
     if (action === 'shop') shopMenu();
     if (action === 'release') releaseMenu();
+    if (action === 'hunt') huntMenu();
   }
   function fx(text, color = '#fff') {
     effect = { text, color, until: performance.now() + 1500, uid: current().uid };
@@ -700,6 +701,303 @@
     body(portrait, d.speciesId, d.isEgg, 120, 120 + Math.sin(t * 2), scale, Math.floor(t * 3) % 2, false);
   }
 
+
+  // ---------- 사냥 ----------
+  // 규칙(출현표, HP, 로프 단계, 시간 제한)은 core의 hunt.ts. 여기서는 움직임·입력·그리기만 한다.
+  // 로프 모드: 드래그로 디지몬을 둘러싸 원을 닫으면(시작점 근처에서 손을 떼면) 한 번 '당긴' 것으로 HP가 깎인다.
+  // 와이어 모드: 드래그한 선분에 와이어를 깔아 길을 막는다 (와이어 1개 소모).
+  const AREA = { x0: 40, y0: 70, x1: 920, y1: 530 };
+  const FIELD_LOOK = {
+    '다이나 초원': ['#7fb069', '#6a9a57'], '미끌미끌 늪': ['#6f8f6a', '#4f6d55'], '모쥬라의 숲': ['#4f7f4a', '#3b6438'],
+    하수도: ['#6d7378', '#545a5e'], '이글이글 사막': ['#d9b46a', '#c49a52'], 대초원: ['#9cc46e', '#86ad5c'],
+    용암지대: ['#8a4e3a', '#6e3a2b'], '부츠 정글': ['#3f7a4d', '#2f5f3b'], '눈의 왕국': ['#e4eef2', '#c7d8df'], '잉카 유적': ['#b8a27a', '#9a855f'],
+  };
+  let hunt = null;
+
+  function huntMenu() {
+    const can = C.canHuntNow(save);
+    const date = C.dateOf(save.clock);
+    const fields = C.huntFields(save);
+    showModal(
+      '사냥',
+      `<p>${esc(date.seasonName)} ${date.day}일 ${pad(date.hour)}:${pad(date.minute)} · 로프 ${save.ropeLevel >= 2 ? '성장기용' : '유년기용'} · 와이어 ${save.wires}개 · 용량 ${C.usedCapacity(save)}/${C.capacityOf(save)}G</p>
+       ${can.ok ? '' : `<p class="warn">${esc(can.reason)}</p>`}
+       <div class="menu-list">${fields
+         .map((f, i) => {
+           const pool = C.huntPool(f, save.clock);
+           const off = !f.open || !can.ok || save.bits < f.fee;
+           const why = !f.open ? f.reason : save.bits < f.fee ? '비트 부족' : '';
+           return `<button data-field="${i}"${off ? ' disabled' : ''}><b>${esc(f.id)}${f.fee ? ` · ${f.fee} ฿` : ''}</b><small>${why ? esc(why) + ' · ' : ''}이번 계절: ${esc(pool.babies.join(', ') || '없음')}${pool.rookies.length ? ` / 성장기 가끔` : ''}</small></button>`;
+         })
+         .join('')}</div>
+       <p class="hint">드래그로 디지몬을 둘러싸고 처음 위치 근처에서 손을 떼면 로프를 당겨 HP를 깎습니다. HP를 다 깎으면 포획. 맞은 디지몬은 맵 밖으로 도망가니 와이어로 길을 막으세요. 성장기는 성장기 로프가 있어야 잡힙니다.</p>`,
+      'HUNT',
+      '취소',
+    );
+    $('#modal-body').querySelectorAll('[data-field]').forEach((b) => (b.onclick = () => startHunt(fields[+b.dataset.field])));
+  }
+
+  function spawnWild(field) {
+    const id = C.pickWild(field, save.clock, Math.random);
+    const side = Math.random();
+    return {
+      id, x: AREA.x0 + 80 + Math.random() * (AREA.x1 - AREA.x0 - 160), y: AREA.y0 + 60 + Math.random() * (AREA.y1 - AREA.y0 - 100),
+      vx: (side < 0.5 ? -1 : 1) * (15 + Math.random() * 20), vy: (Math.random() - 0.5) * 30,
+      hp: C.wildHp(id), max: C.wildHp(id), flee: 0, flash: 0, turn: 1 + Math.random() * 3,
+    };
+  }
+  function startHunt(field) {
+    if (!field.open) return;
+    if (save.bits < field.fee) return toast('비트가 부족해요.');
+    save = { ...save, bits: save.bits - field.fee };
+    hunt = { field, wilds: [], wires: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [] };
+    for (let i = 0; i < C.WILD_COUNT; i++) hunt.wilds.push(spawnWild(field));
+    $('#modal').close();
+    document.body.classList.add('hunting');
+    setTool('rope');
+    log(`${field.id}에서 사냥을 시작했습니다.`);
+    render();
+    persist();
+  }
+  function endHunt(reason) {
+    if (!hunt) return;
+    log(`${hunt.field.id} 사냥 종료${reason ? ` (${reason})` : ''}`);
+    hunt = null;
+    document.body.classList.remove('hunting');
+    render();
+    persist();
+  }
+  function huntNote(text) {
+    hunt.notes.unshift({ text, until: performance.now() + 3500 });
+    hunt.notes = hunt.notes.slice(0, 4);
+  }
+  function setTool(tool) {
+    if (hunt) hunt.tool = tool;
+    $('#tool-rope').classList.toggle('active', tool === 'rope');
+    $('#tool-wire').classList.toggle('active', tool === 'wire');
+  }
+
+  // 선분 교차 (와이어 충돌)
+  function crosses(a, b, c, d) {
+    const o = (p, q, r) => Math.sign((q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x));
+    return o(a, b, c) !== o(a, b, d) && o(c, d, a) !== o(c, d, b);
+  }
+  function inside(pt, poly) {
+    let hit = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const a = poly[i], b = poly[j];
+      if (a.y > pt.y !== b.y > pt.y && pt.x < ((b.x - a.x) * (pt.y - a.y)) / (b.y - a.y) + a.x) hit = !hit;
+    }
+    return hit;
+  }
+
+  function huntTick(dt) {
+    if (!hunt) return;
+    const now = performance.now();
+    for (const w of hunt.wilds) {
+      if (w.gone) continue;
+      w.flash = Math.max(0, w.flash - dt);
+      if (w.flee > 0) {
+        w.flee -= dt;
+      } else {
+        w.turn -= dt;
+        if (w.turn <= 0) {
+          w.turn = 1.5 + Math.random() * 3;
+          const a = Math.random() * Math.PI * 2, v = 15 + Math.random() * 25;
+          w.vx = Math.cos(a) * v;
+          w.vy = Math.sin(a) * v * 0.6;
+        }
+      }
+      const next = { x: w.x + w.vx * dt, y: w.y + w.vy * dt };
+      if (hunt.wires.some((l) => crosses(w, next, l.a, l.b))) {
+        w.vx = -w.vx;
+        w.vy = -w.vy;
+        continue;
+      }
+      w.x = next.x;
+      w.y = next.y;
+      const out = w.x < AREA.x0 || w.x > AREA.x1 || w.y < AREA.y0 + 20 || w.y > AREA.y1;
+      if (out && w.flee > 0) {
+        w.gone = true;
+        huntNote(`${C.getSpecies(w.id).name}이(가) 도망쳤다!`);
+      } else if (out) {
+        if (w.x < AREA.x0 || w.x > AREA.x1) w.vx = -w.vx;
+        if (w.y < AREA.y0 + 20 || w.y > AREA.y1) w.vy = -w.vy;
+        w.x = Math.min(AREA.x1, Math.max(AREA.x0, w.x));
+        w.y = Math.min(AREA.y1, Math.max(AREA.y0 + 20, w.y));
+      }
+    }
+    hunt.wilds = hunt.wilds.filter((w) => !w.gone || now < 0);
+    hunt.respawn -= dt;
+    if (hunt.wilds.length < C.WILD_COUNT && hunt.respawn <= 0) {
+      hunt.respawn = 6;
+      hunt.wilds.push(spawnWild(hunt.field));
+    }
+    const can = C.canHuntNow(save);
+    if (!can.ok) endHunt(can.reason);
+  }
+
+  // 로프를 당긴다: 닫힌 고리 안의 디지몬 HP를 깎는다
+  function pullRope(poly) {
+    let any = false;
+    for (const w of hunt.wilds) {
+      if (!inside(w, poly)) continue;
+      any = true;
+      const name = C.getSpecies(w.id).name;
+      const dmg = C.ropeDamage(save, w.id);
+      if (!dmg) {
+        huntNote(`${name}: 로프가 약해 HP가 깎이지 않는다 (성장기 로프 필요)`);
+        continue;
+      }
+      w.hp -= dmg;
+      w.flash = 0.4;
+      if (w.hp > 0) {
+        // 맞은 디지몬은 가까운 가장자리로 도망간다
+        const toLeft = w.x - AREA.x0 < AREA.x1 - w.x;
+        w.vx = (toLeft ? -1 : 1) * 95;
+        w.vy = (Math.random() - 0.5) * 40;
+        w.flee = 3;
+        huntNote(`${name} HP ${w.hp}/${w.max}`);
+        continue;
+      }
+      const r = C.capture(save, w.id, Math.random);
+      if (r.ok) {
+        save = r.save;
+        w.gone = true;
+        huntNote(r.message);
+        log(r.message);
+        toast(r.message);
+        render();
+        persist();
+      } else {
+        w.hp = 1;
+        huntNote(r.message);
+        toast(r.message);
+      }
+    }
+    if (!any) huntNote('둘러싼 디지몬이 없습니다.');
+  }
+
+  function canvasPoint(e) {
+    const r = canvas.getBoundingClientRect();
+    return { x: ((e.clientX - r.left) / r.width) * 960, y: ((e.clientY - r.top) / r.height) * 560 };
+  }
+  function huntPointer(type, e) {
+    if (!hunt) return;
+    e.preventDefault();
+    const p = canvasPoint(e);
+    if (type === 'down') {
+      hunt.drawing = true;
+      hunt.trail = [p];
+      canvas.setPointerCapture?.(e.pointerId);
+    } else if (type === 'move' && hunt.drawing) {
+      const last = hunt.trail[hunt.trail.length - 1];
+      if (Math.hypot(p.x - last.x, p.y - last.y) > 4) hunt.trail.push(p);
+      if (hunt.trail.length > 400) hunt.trail.shift();
+      if (hunt.tool === 'wire' && hunt.trail.length > 2) hunt.trail = [hunt.trail[0], p];
+    } else if (type === 'up' && hunt.drawing) {
+      hunt.drawing = false;
+      const t = hunt.trail;
+      hunt.trail = [];
+      if (hunt.tool === 'wire') {
+        if (t.length < 2) return;
+        if (save.wires <= 0) return huntNote('와이어가 없습니다. 상점에서 사세요.');
+        let b = t[t.length - 1];
+        const len = Math.hypot(b.x - t[0].x, b.y - t[0].y);
+        if (len < 20) return;
+        const k = Math.min(1, 180 / len);
+        b = { x: t[0].x + (b.x - t[0].x) * k, y: t[0].y + (b.y - t[0].y) * k };
+        hunt.wires.push({ a: t[0], b });
+        save = { ...save, wires: save.wires - 1 };
+        render();
+        return;
+      }
+      const closed = t.length > 12 && Math.hypot(t[0].x - t[t.length - 1].x, t[0].y - t[t.length - 1].y) < 70;
+      if (closed) pullRope(t);
+      else if (t.length > 12) huntNote('고리가 닫히지 않았습니다. 처음 위치 근처에서 손을 떼세요.');
+    }
+  }
+
+  function drawHunt(t) {
+    const [c1, c2] = FIELD_LOOK[hunt.field.id] || ['#7fb069', '#6a9a57'];
+    ctx.fillStyle = c2;
+    ctx.fillRect(0, 0, 960, 560);
+    ctx.fillStyle = c1;
+    ctx.fillRect(AREA.x0, AREA.y0, AREA.x1 - AREA.x0, AREA.y1 - AREA.y0);
+    // 가장자리 = 출구
+    ctx.strokeStyle = '#00000044';
+    ctx.setLineDash([10, 8]);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(AREA.x0, AREA.y0, AREA.x1 - AREA.x0, AREA.y1 - AREA.y0);
+    ctx.setLineDash([]);
+    for (const l of hunt.wires) {
+      ctx.strokeStyle = '#d8dde0';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(l.a.x, l.a.y);
+      ctx.lineTo(l.b.x, l.b.y);
+      ctx.stroke();
+      ctx.fillStyle = '#7a5532';
+      for (const p of [l.a, l.b]) ctx.fillRect(p.x - 3, p.y - 8, 6, 12);
+    }
+    const order = [...hunt.wilds].sort((a, b) => a.y - b.y);
+    for (const w of order) {
+      const rx = footprint(w.id, false, 2);
+      ctx.fillStyle = '#00000033';
+      ctx.beginPath();
+      ctx.ellipse(w.x, w.y + 1, rx, Math.max(5, rx * 0.3), 0, 0, 7);
+      ctx.fill();
+      if (w.flash > 0 && Math.floor(w.flash * 20) % 2) ctx.globalAlpha = 0.4;
+      body(ctx, w.id, false, w.x, w.y, 2, Math.floor(t * 4) % 2, w.vx < 0);
+      ctx.globalAlpha = 1;
+      const sp = C.getSpecies(w.id);
+      const weak = !C.ropeDamage(save, w.id);
+      ctx.font = 'bold 11px "Noto Sans KR",sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = weak ? '#ffd0c0' : '#ffffff';
+      ctx.fillText(sp.name + (weak ? ' (로프 부족)' : ''), w.x, w.y + 18);
+      for (let k = 0; k < w.max; k++) {
+        ctx.fillStyle = k < w.hp ? '#e0574b' : '#00000055';
+        ctx.fillRect(w.x - w.max * 7 + k * 14, w.y + 22, 12, 5);
+      }
+    }
+    if (hunt.trail.length > 1) {
+      ctx.strokeStyle = hunt.tool === 'wire' ? '#d8dde0' : '#f5e6a8';
+      ctx.lineWidth = hunt.tool === 'wire' ? 4 : 3;
+      ctx.beginPath();
+      ctx.moveTo(hunt.trail[0].x, hunt.trail[0].y);
+      for (const p of hunt.trail) ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      if (hunt.tool === 'rope') {
+        ctx.strokeStyle = '#f5e6a888';
+        ctx.beginPath();
+        ctx.arc(hunt.trail[0].x, hunt.trail[0].y, 70, 0, 7);
+        ctx.stroke();
+      }
+    }
+    // 상단 정보
+    const d = C.dateOf(save.clock);
+    ctx.fillStyle = '#0b1d2acc';
+    ctx.fillRect(0, 0, 960, 52);
+    ctx.fillStyle = '#ffd36a';
+    ctx.font = 'bold 16px "Noto Sans KR",sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`사냥 · ${hunt.field.id}`, 16, 32);
+    ctx.fillStyle = '#e6f2f5';
+    ctx.font = '13px "Noto Sans KR",sans-serif';
+    ctx.fillText(`${d.seasonName} ${d.day}일 ${pad(d.hour)}:${pad(d.minute)} (22:00 종료) · 로프 ${save.ropeLevel >= 2 ? '성장기용' : '유년기용'} · 와이어 ${save.wires}개 · 용량 ${C.usedCapacity(save)}/${C.capacityOf(save)}G`, 230, 31);
+    const now = performance.now();
+    hunt.notes = hunt.notes.filter((n) => n.until > now);
+    ctx.textAlign = 'left';
+    hunt.notes.forEach((n, i) => {
+      ctx.fillStyle = '#0b1d2abb';
+      const w = ctx.measureText(n.text).width + 20;
+      ctx.fillRect(16, 520 - i * 26 - 18, w, 22);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(n.text, 26, 520 - i * 26 - 2);
+    });
+  }
+
   // ---------- 시작 ----------
   load();
   syncTeam();
@@ -712,7 +1010,7 @@
       persist();
     },
     toast,
-    () => !!battle,
+    () => !!battle || !!hunt,
   );
 
   document.querySelectorAll('[data-action]').forEach((b) => (b.onclick = () => act(b.dataset.action)));
@@ -758,6 +1056,7 @@
       'NEW GAME',
     );
     $('#confirm-reset').onclick = () => {
+      endHunt();
       save = C.freshSave(Date.now());
       view = freshView();
       log('새 테이머 생활을 시작했습니다.');
@@ -768,12 +1067,21 @@
     };
   };
 
+  canvas.addEventListener('pointerdown', (e) => huntPointer('down', e));
+  canvas.addEventListener('pointermove', (e) => huntPointer('move', e));
+  canvas.addEventListener('pointerup', (e) => huntPointer('up', e));
+  canvas.addEventListener('pointercancel', (e) => huntPointer('up', e));
+  $('#tool-rope').onclick = () => setTool('rope');
+  $('#tool-wire').onclick = () => setTool('wire');
+  $('#hunt-leave').onclick = () => endHunt();
+
   function frame(now) {
     const dt = lastTime ? Math.min(0.05, (now - lastTime) / 1000) : 0;
     lastTime = now;
     if (!document.hidden) {
       if (battle) battleTick(dt);
       else if (!paused && !board.editing) {
+        if (hunt) huntTick(dt);
         clock += dt * speed;
         let changed = false;
         while (clock >= 1) {
@@ -789,7 +1097,8 @@
           if (save.clock % 10 === 0) persist();
         }
       }
-      drawFarm(now / 1000, dt);
+      if (hunt) drawHunt(now / 1000);
+      else drawFarm(now / 1000, dt);
       drawPortrait(now / 1000);
     }
     requestAnimationFrame(frame);
@@ -806,6 +1115,9 @@
     },
     get view() {
       return view;
+    },
+    get hunt() {
+      return hunt;
     },
   };
   render();

@@ -884,6 +884,73 @@ var ChampCore = (function(exports) {
 			bits: save.bits + m.prize
 		};
 	}
+	// src/core/hunt.ts
+	/** 사냥 가능한 시간: 08:00 ~ 22:00 (22시 이후 불가는 원작, 시작 시각은 영상 화면 08:00 기준) */
+	var HUNT_OPEN_HOUR = 8;
+	var HUNT_CLOSE_HOUR = 22;
+	/** 성장기가 출현할 확률 (임시) */
+	var ROOKIE_CHANCE = .25;
+	/** 한 사냥터에 동시에 나오는 야생 디지몬 수 */
+	var WILD_COUNT = 5;
+	function huntFields(save) {
+		const rank = tamerRank(save);
+		return FIELDS.map((f) => rank >= f.minRank ? {
+			...f,
+			open: true
+		} : {
+			...f,
+			open: false,
+			reason: `테이머 랭크 ${f.minRank} 필요`
+		});
+	}
+	function canHuntNow(save) {
+		const { hour } = dateOf(save.clock);
+		if (hour < 8) return {
+			ok: false,
+			reason: `사냥은 8시부터 할 수 있어요.`
+		};
+		if (hour >= 22) return {
+			ok: false,
+			reason: "22시 이후에는 사냥할 수 없어요."
+		};
+		return { ok: true };
+	}
+	/** 이 계절에 이 사냥터에 나오는 유년기와, 그 유년기II가 진화하는 성장기 */
+	function huntPool(field, clock) {
+		const season = SEASON_CODE[dateOf(clock).season];
+		const babies = [...new Set(field.spawns.filter(([, s]) => s.includes(season)).map(([n]) => n))];
+		const rookies = /* @__PURE__ */ new Set();
+		for (const b of babies) {
+			const sp = getSpecies(b);
+			const stage2 = sp.stage === 2 ? [b] : sp.evos.map((e) => e.to).filter((id) => getSpecies(id).stage === 2);
+			for (const id of stage2) for (const e of getSpecies(id).evos) if (getSpecies(e.to).stage === 3) rookies.add(e.to);
+		}
+		return {
+			babies,
+			rookies: [...rookies]
+		};
+	}
+	function pickWild(field, clock, rng) {
+		const { babies, rookies } = huntPool(field, clock);
+		const list = rookies.length && rng() < .25 ? rookies : babies;
+		return list[Math.floor(rng() * list.length)];
+	}
+	/** 로프로 몇 번 둘러야 잡히는가 */
+	function wildHp(speciesId) {
+		return Math.max(1, Math.min(3, getSpecies(speciesId).stage));
+	}
+	/** 로프로 한 번 둘렀을 때 깎이는 HP. 0이면 이 로프로는 잡을 수 없다 */
+	function ropeDamage(save, speciesId) {
+		const stage = getSpecies(speciesId).stage;
+		if (stage >= 4) return 0;
+		if (stage === 3 && save.ropeLevel < 2) return 0;
+		return 1;
+	}
+	/** 와이어 한 묶음 (상점) */
+	var WIRE_PACK = {
+		count: 10,
+		price: 100
+	};
 	// src/core/care.ts
 	/** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
 	var CAPACITY = 200;
@@ -926,6 +993,7 @@ var ChampCore = (function(exports) {
 			pills: 2,
 			rotten: 0,
 			ropeLevel: 1,
+			wires: 5,
 			cages: [...START_CAGES],
 			digimon: [{
 				...newDigimon(1, "깜몬"),
@@ -1303,6 +1371,16 @@ var ChampCore = (function(exports) {
 				available: () => true
 			},
 			{
+				id: "wire",
+				name: `노멀 와이어 ×${WIRE_PACK.count}`,
+				price: WIRE_PACK.price,
+				apply: (s) => ({
+					...s,
+					wires: (s.wires ?? 0) + WIRE_PACK.count
+				}),
+				available: () => true
+			},
+			{
 				id: "rope2",
 				name: "성장기 로프",
 				price: 1500,
@@ -1540,11 +1618,14 @@ var ChampCore = (function(exports) {
 	exports.FAMILIES = FAMILIES;
 	exports.FIELDS = FIELDS;
 	exports.FINAL = FINAL;
+	exports.HUNT_CLOSE_HOUR = HUNT_CLOSE_HOUR;
+	exports.HUNT_OPEN_HOUR = HUNT_OPEN_HOUR;
 	exports.LIFESPAN = LIFESPAN;
 	exports.MIN_PER_DAY = MIN_PER_DAY;
 	exports.OFFLINE_CAP_MINUTES = OFFLINE_CAP_MINUTES;
 	exports.PERSONALITIES = PERSONALITIES;
 	exports.PRELIM = PRELIM;
+	exports.ROOKIE_CHANCE = ROOKIE_CHANCE;
 	exports.SEASONS = SEASONS;
 	exports.SEASON_CODE = SEASON_CODE;
 	exports.SPECIES = SPECIES;
@@ -1555,11 +1636,14 @@ var ChampCore = (function(exports) {
 	exports.STAT_LABEL = STAT_LABEL;
 	exports.TIME_LIMIT = TIME_LIMIT;
 	exports.TITLES = TITLES;
+	exports.WILD_COUNT = WILD_COUNT;
+	exports.WIRE_PACK = WIRE_PACK;
 	exports.advance = advance;
 	exports.applyBattleResult = applyBattleResult;
 	exports.applyWin = applyWin;
 	exports.buy = buy;
 	exports.cageSpaceOf = cageSpaceOf;
+	exports.canHuntNow = canHuntNow;
 	exports.capacityOf = capacityOf;
 	exports.capture = capture;
 	exports.clean = clean;
@@ -1578,16 +1662,20 @@ var ChampCore = (function(exports) {
 	exports.getSpecies = getSpecies;
 	exports.heal = heal;
 	exports.hints = hints;
+	exports.huntFields = huntFields;
+	exports.huntPool = huntPool;
 	exports.makeEnemies = makeEnemies;
 	exports.maxStageForRank = maxStageForRank;
 	exports.meets = meets;
 	exports.newDigimon = newDigimon;
 	exports.parseCond = parseCond;
 	exports.pick = pick;
+	exports.pickWild = pickWild;
 	exports.range = range;
 	exports.rankName = rankName;
 	exports.release = release;
 	exports.reqScale = reqScale;
+	exports.ropeDamage = ropeDamage;
 	exports.runBattle = runBattle;
 	exports.seeded = seeded;
 	exports.setCage = setCage;
@@ -1600,5 +1688,6 @@ var ChampCore = (function(exports) {
 	exports.typicalStats = typicalStats;
 	exports.upcoming = upcoming;
 	exports.usedCapacity = usedCapacity;
+	exports.wildHp = wildHp;
 	return exports;
 })({});

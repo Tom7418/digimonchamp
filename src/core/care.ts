@@ -2,6 +2,7 @@ import { CAGES, EGG_MINUTES, evolutionBonus, getCage, getSpecies, LIFESPAN, STAR
 import { endOfLife, findEvolution } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, tamerRank } from './titles';
+import { WIRE_PACK } from './hunt';
 import { ATTRS, FAMILIES, PERSONALITIES, STAT_KEYS, type ApKey, type Digimon, type SaveData, type Stats } from './types';
 
 /** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
@@ -48,6 +49,7 @@ export function freshSave(now = Date.now()): SaveData {
     pills: 2,
     rotten: 0,
     ropeLevel: 1,
+    wires: 5,
     cages: [...START_CAGES],
     // 원작처럼 디지에그에서 시작한다 (30분 뒤 깜몬 부화)
     digimon: [{ ...newDigimon(1, '깜몬'), isEgg: true, stats: { hp: 0, tp: 0, atk: 0, def: 0, int: 0, spd: 0 } }],
@@ -300,6 +302,7 @@ export function shopItems(save: SaveData): ShopItem[] {
     { id: 'meat', name: '고기 ×5', price: 50, apply: (s) => ({ ...s, meat: s.meat + 5 }), available: () => true },
     { id: 'pill', name: '알약 ×1', price: 80, apply: (s) => ({ ...s, pills: s.pills + 1 }), available: () => true },
     { id: 'rotten', name: '썩은 고기 ×2', price: 20, apply: (s) => ({ ...s, rotten: s.rotten + 2 }), available: () => true },
+    { id: 'wire', name: `노멀 와이어 ×${WIRE_PACK.count}`, price: WIRE_PACK.price, apply: (s) => ({ ...s, wires: (s.wires ?? 0) + WIRE_PACK.count }), available: () => true },
     { id: 'rope2', name: '성장기 로프', price: 1500, apply: (s) => ({ ...s, ropeLevel: 2 }), available: (s) => s.ropeLevel < 2 && rank >= 2 },
   ];
   for (const c of CAGES) {

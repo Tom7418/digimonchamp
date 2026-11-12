@@ -79,6 +79,8 @@ export interface SaveData {
   pills: number;
   rotten: number;
   ropeLevel: number;
+  /** 사냥에서 길을 막는 와이어 개수 */
+  wires: number;
   cages: string[];
   digimon: Digimon[];
   titles: string[];

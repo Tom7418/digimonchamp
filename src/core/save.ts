@@ -21,6 +21,8 @@ export function loadGame(now = Date.now()): { save: SaveData; offlineMinutes: nu
     save = null;
   }
   if (!save || save.version !== 2 || !save.digimon?.length) return { save: freshSave(now), offlineMinutes: 0 };
+  // 사냥 와이어가 생기기 전 저장 데이터
+  save = { ...save, wires: save.wires ?? 0 };
   const offlineMinutes = Math.min(OFFLINE_CAP_MINUTES, Math.max(0, Math.floor((now - save.lastSavedAt) / 1000)));
   if (offlineMinutes > 0) save = advance(save, offlineMinutes).save;
   return { save: { ...save, lastSavedAt: now }, offlineMinutes };
