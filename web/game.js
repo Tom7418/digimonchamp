@@ -1,7 +1,7 @@
 'use strict';
 // 디지몬 챔피언십 웹판 화면.
 // 게임 규칙(사육·진화·배틀·타이틀·상점)은 web/core.js(ChampCore, src/core에서 빌드)를 그대로 쓰고,
-// 이 파일은 화면 그리기, 입력, 저장만 담당한다. 시간: 현실 1초 = 게임 1분.
+// 이 파일은 화면 그리기, 입력, 저장만 담당한다. 시간: 현실 1초 = 게임 2분 (임시).
 (() => {
   const C = window.ChampCore;
   const L = window.CageLayout;
@@ -54,24 +54,14 @@
       if (raw && raw.save && raw.save.version === 2 && Array.isArray(raw.save.digimon) && raw.save.digimon.length && raw.view) {
         save = { wires: 0, ...raw.save };
         view = { ...freshView(), ...raw.view };
-        // 꺼져 있던 동안의 시간 반영 (게임 시간 최대 12시간, 밤은 자면서 넘어간다)
+        // 재접속도 21시에서 멈춘다. 수면은 달력의 '다음 날로'를 누를 때만 진행한다.
         const away = Math.min(C.OFFLINE_CAP_MINUTES, Math.max(0, Math.floor(((Date.now() - save.lastSavedAt) / 1000) * MINUTES_PER_SECOND)));
         if (away > 0) {
-          let left = away;
-          while (left > 0) {
-            if (C.isNight(save)) {
-              const r = C.endDay(save);
-              save = r.save;
-              r.events.forEach(logEvent);
-              left -= 600;
-              continue;
-            }
-            const r = C.tickFarm(save);
-            save = r.save;
-            r.events.forEach(logEvent);
-            left -= 1;
-          }
-          if (away >= 5) view.logs.unshift({ time: stamp(), text: `자리를 비운 동안 게임 시간 ${Math.floor(away / 60)}시간 ${away % 60}분이 지났습니다.` });
+          const r = C.advanceOffline(save, away);
+          save = r.save;
+          r.events.forEach(logEvent);
+          const elapsed = r.elapsedMinutes;
+          if (elapsed >= 5) view.logs.unshift({ time: stamp(), text: `자리를 비운 동안 게임 시간 ${Math.floor(elapsed / 60)}시간 ${elapsed % 60}분이 지났습니다.` });
         }
         return;
       }
@@ -361,10 +351,10 @@
     if (dayEnding) return;
     if (hunt) endHunt('밤 9시');
     dayEnding = true;
-    const d = C.dateOf(save.clock);
-    const nextIdx = d.day >= C.DAYS_PER_SEASON ? 1 : d.day + 1;
-    const nextSeason = d.day >= C.DAYS_PER_SEASON ? (d.season + 1) % 4 : d.season;
-    const nextYear = nextSeason === 0 && d.season === 3 ? d.year + 1 : d.year;
+    const morning = C.dateOf(C.nextMorningClock(save));
+    const nextIdx = morning.day;
+    const nextSeason = morning.season;
+    const nextYear = morning.year;
     const marks = matchDays(nextSeason, nextYear);
     const seasonName = ['봄', '여름', '가을', '겨울'][nextSeason];
     const cells = Array.from({ length: C.DAYS_PER_SEASON }, (_, i) => {
@@ -1506,6 +1496,8 @@
     },
   };
   render();
+  // 저장된 밤에는 첫 tick 전에 달력을 연다. 재접속으로 야간 훈련이 발생하지 않는다.
+  if (C.isNight(save)) openDayEnd();
   persist();
   requestAnimationFrame(frame);
 })();

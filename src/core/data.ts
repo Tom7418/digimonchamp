@@ -47,7 +47,8 @@ function build(): Record<string, Species> {
     }
   };
 
-  for (const line of raw.split('\n')) {
+  // Windows 체크아웃의 CRLF도 처리한다. 궁극체의 빈 진화칸에 '\r'이 남으면 조건 파싱이 실패한다.
+  for (const line of raw.split(/\r?\n/)) {
     if (!line.trim() || line.startsWith('#')) continue;
     const [stageText, name, evoText] = line.split('|');
     const stage = Number(stageText) as Stage;

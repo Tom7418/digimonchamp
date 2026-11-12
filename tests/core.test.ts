@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm } from '../src/core/care';
+import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm } from '../src/core/care';
 import { getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -211,6 +211,31 @@ describe('championship', () => {
 });
 
 describe('day flow', () => {
+  it('offline progress stops at the calendar instead of silently skipping the night', () => {
+    const s = { ...freshSave(0), clock: 20 * 60 + 58 };
+    const r = advanceOffline(s, 720, seeded(1));
+    expect(r.elapsedMinutes).toBe(2);
+    expect(r.save.clock).toBe(21 * 60);
+    expect(s.clock).toBe(20 * 60 + 58);
+    expect(advanceOffline(r.save, 720).elapsedMinutes).toBe(0);
+    expect(advanceOffline(r.save, 1).save).toBe(r.save);
+  });
+  it('offline progress respects elapsed minutes and the twelve-hour cap', () => {
+    const s = { ...freshSave(0), clock: 7 * 60 };
+    expect(advanceOffline(s, 3.9, seeded(1)).elapsedMinutes).toBe(3);
+    expect(advanceOffline(s, 10000, seeded(1)).elapsedMinutes).toBe(720);
+    for (const minutes of [-1, NaN, Infinity]) expect(advanceOffline(s, minutes).save).toBe(s);
+  });
+  it.each([
+    [21 * 60, 1440 + 7 * 60],
+    [1440 + 2 * 60, 1440 + 7 * 60],
+    [7 * 1440 + 21 * 60, 8 * 1440 + 7 * 60],
+    [31 * 1440 + 21 * 60, 32 * 1440 + 7 * 60],
+  ])('calendar and sleep agree across dawn, season and year boundaries (%i)', (clock, morning) => {
+    const s = { ...freshSave(0), clock };
+    expect(nextMorningClock(s)).toBe(morning);
+    expect(endDay(s, seeded(1)).save.clock).toBe(morning);
+  });
   it('the day ends at 21:00 and the night is slept through to 07:00 without hunger or poop', () => {
     const base = freshSave(0);
     const s: SaveData = { ...base, clock: 21 * 60, digimon: [{ ...only(base), hunger: 50, poop: 0, stageAge: 100 }] };

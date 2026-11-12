@@ -235,11 +235,29 @@ export function isNight(save: SaveData): boolean {
   return h >= DAY_END_HOUR || h < DAY_START_HOUR;
 }
 
-/** 하루 마감: 다음 날 아침 7시까지 잠잔다 (수명·병은 흐르고, 배고픔·똥·훈련은 멈춘다) */
-export function endDay(save: SaveData, rng: Rng = defaultRng) {
+/** 달력 예고와 실제 수면 종료가 같은 날짜를 사용한다. 새벽이면 그날 아침이다. */
+export function nextMorningClock(save: SaveData): number {
   const d = dateOf(save.clock);
   const startOfDay = save.clock - d.hour * 60 - d.minute;
-  const morning = (d.hour < DAY_START_HOUR ? startOfDay : startOfDay + MIN_PER_DAY) + DAY_START_HOUR * 60;
+  return (d.hour < DAY_START_HOUR ? startOfDay : startOfDay + MIN_PER_DAY) + DAY_START_HOUR * 60;
+}
+
+/** 웹판 임시 정책: 오프라인 진행도 하루 마감에서 멈춰 달력과 경기 날을 건너뛰지 않는다. */
+export function advanceOffline(save: SaveData, minutes: number, rng: Rng = defaultRng) {
+  const limit = Number.isFinite(minutes) ? Math.min(OFFLINE_CAP_MINUTES, Math.max(0, Math.floor(minutes))) : 0;
+  const events: FarmEvent[] = [];
+  let cur = save;
+  for (let i = 0; i < limit && !isNight(cur); i++) {
+    const r = tickFarm(cur, rng);
+    cur = r.save;
+    events.push(...r.events);
+  }
+  return { save: cur, events, elapsedMinutes: cur.clock - save.clock };
+}
+
+/** 하루 마감: 다음 날 아침 7시까지 잠잔다 (수명·병은 흐르고, 배고픔·똥·훈련은 멈춘다) */
+export function endDay(save: SaveData, rng: Rng = defaultRng) {
+  const morning = nextMorningClock(save);
   const events: FarmEvent[] = [];
   let cur = save;
   while (cur.clock < morning) {
