@@ -5,6 +5,8 @@
     "height": 32,
     "frames": 13,
     "baseline": 29,
+    "cx": 16.0,
+    "body": 15,
     "source": "digimon/e000_digitama_main",
     "name": "디지에그"
   },
@@ -14,6 +16,8 @@
     "height": 29,
     "frames": 65,
     "baseline": 22,
+    "cx": 18.5,
+    "body": 19,
     "source": "digimon/m001_zurumon_main",
     "name": "즈루몬"
   },
@@ -23,6 +27,8 @@
     "height": 44,
     "frames": 65,
     "baseline": 30,
+    "cx": 16.5,
+    "body": 17,
     "source": "digimon/m002_choromon_main",
     "name": "뽈뽈몬"
   },
@@ -32,6 +38,8 @@
     "height": 42,
     "frames": 64,
     "baseline": 29,
+    "cx": 17.0,
+    "body": 16,
     "source": "digimon/m003_nyokimon_main",
     "name": "새싹몬"
   },
@@ -41,6 +49,8 @@
     "height": 43,
     "frames": 65,
     "baseline": 30,
+    "cx": 17.0,
+    "body": 16,
     "source": "digimon/m004_bubbmon_main",
     "name": "뽀글몬"
   },
@@ -50,6 +60,8 @@
     "height": 28,
     "frames": 65,
     "baseline": 20,
+    "cx": 15.5,
+    "body": 11,
     "source": "digimon/m005_pitchmon_main",
     "name": "피치몬"
   },
@@ -59,6 +71,8 @@
     "height": 28,
     "frames": 65,
     "baseline": 21,
+    "cx": 16.5,
+    "body": 13,
     "source": "digimon/m006_punimon_main",
     "name": "푸니몬"
   },
@@ -68,6 +82,8 @@
     "height": 36,
     "frames": 65,
     "baseline": 29,
+    "cx": 16.5,
+    "body": 12,
     "source": "digimon/m007_botamon_main",
     "name": "깜몬"
   },
@@ -77,6 +93,8 @@
     "height": 28,
     "frames": 65,
     "baseline": 19,
+    "cx": 16.0,
+    "body": 10,
     "source": "digimon/m008_poyomon_main",
     "name": "포요몬"
   },
@@ -86,6 +104,8 @@
     "height": 44,
     "frames": 62,
     "baseline": 29,
+    "cx": 15.5,
+    "body": 14,
     "source": "digimon/m009_mokumon_main",
     "name": "모크몬"
   },
@@ -95,6 +115,8 @@
     "height": 36,
     "frames": 65,
     "baseline": 29,
+    "cx": 16.0,
+    "body": 13,
     "source": "digimon/m010_yukimibotamon_main",
     "name": "하얀몬"
   },
@@ -104,6 +126,8 @@
     "height": 37,
     "frames": 64,
     "baseline": 27,
+    "cx": 17.0,
+    "body": 16,
     "source": "digimon/m011_yuramon_main",
     "name": "유라몬"
   },
@@ -113,6 +137,8 @@
     "height": 32,
     "frames": 64,
     "baseline": 26,
+    "cx": 18.5,
+    "body": 17,
     "source": "digimon/m012_petimon_main",
     "name": "푸치몬"
   },
@@ -122,6 +148,8 @@
     "height": 32,
     "frames": 65,
     "baseline": 30,
+    "cx": 18.0,
+    "body": 21,
     "source": "digimon/m101_caprimon_main",
     "name": "카프리몬"
   },
@@ -131,6 +159,8 @@
     "height": 44,
     "frames": 64,
     "baseline": 30,
+    "cx": 17.0,
+    "body": 17,
     "source": "digimon/m102_koromon_main",
     "name": "코로몬"
   },
@@ -140,6 +170,8 @@
     "height": 45,
     "frames": 62,
     "baseline": 31,
+    "cx": 15.0,
+    "body": 18,
     "source": "digimon/m103_tanemon_main",
     "name": "시드몬"
   },
@@ -149,6 +181,8 @@
     "height": 37,
     "frames": 65,
     "baseline": 22,
+    "cx": 15.0,
+    "body": 14,
     "source": "digimon/m104_tunomon_main",
     "name": "뿔몬"
   },
@@ -158,6 +192,8 @@
     "height": 36,
     "frames": 63,
     "baseline": 30,
+    "cx": 17.5,
+    "body": 15,
     "source": "digimon/m105_tokomon_main",
     "name": "토코몬"
   },
@@ -167,6 +203,8 @@
     "height": 36,
     "frames": 65,
     "baseline": 30,
+    "cx": 19.5,
+    "body": 23,
     "source": "digimon/m106_nyaromon_main",
     "name": "야옹몬"
   },
@@ -176,6 +214,8 @@
     "height": 33,
     "frames": 65,
     "baseline": 26,
+    "cx": 18.0,
+    "body": 16,
     "source": "digimon/m107_pagumon_main",
     "name": "퍼그몬"
   },
@@ -185,6 +225,8 @@
     "height": 34,
     "frames": 65,
     "baseline": 31,
+    "cx": 16.5,
+    "body": 18,
     "source": "digimon/m108_pyokomon_main",
     "name": "어니몬"
   },
@@ -194,6 +236,8 @@
     "height": 46,
     "frames": 58,
     "baseline": 28,
+    "cx": 17.0,
+    "body": 20,
     "source": "digimon/m109_pukamon_main",
     "name": "둥실몬"
   },
@@ -203,6 +247,8 @@
     "height": 28,
     "frames": 65,
     "baseline": 21,
+    "cx": 16.5,
+    "body": 17,
     "source": "digimon/m110_petimemramon_main",
     "name": "쁘띠메라몬"
   },
@@ -212,6 +258,8 @@
     "height": 27,
     "frames": 65,
     "baseline": 21,
+    "cx": 15.0,
+    "body": 14,
     "source": "digimon/m111_mochimon_main",
     "name": "모티몬"
   },
@@ -221,6 +269,8 @@
     "height": 45,
     "frames": 57,
     "baseline": 28,
+    "cx": 17.0,
+    "body": 16,
     "source": "digimon/m112_bebydomon_main",
     "name": "베비도몬"
   },
@@ -230,6 +280,8 @@
     "height": 37,
     "frames": 62,
     "baseline": 27,
+    "cx": 16.5,
+    "body": 15,
     "source": "digimon/m113_sunmon_main",
     "name": "산몬"
   },
@@ -239,6 +291,8 @@
     "height": 45,
     "frames": 65,
     "baseline": 35,
+    "cx": 16.0,
+    "body": 12,
     "source": "digimon/m114_moonmon_main",
     "name": "문몬"
   },
@@ -248,6 +302,8 @@
     "height": 35,
     "frames": 65,
     "baseline": 29,
+    "cx": 16.0,
+    "body": 16,
     "source": "digimon/m201_agumon_main",
     "name": "아구몬"
   },
@@ -257,6 +313,8 @@
     "height": 44,
     "frames": 62,
     "baseline": 29,
+    "cx": 17.5,
+    "body": 26,
     "source": "digimon/m202_armadimon_main",
     "name": "아르마몬"
   },
@@ -266,6 +324,8 @@
     "height": 44,
     "frames": 61,
     "baseline": 29,
+    "cx": 17.5,
+    "body": 27,
     "source": "digimon/m203_elecmon_main",
     "name": "에렉몬"
   },
@@ -275,6 +335,8 @@
     "height": 36,
     "frames": 61,
     "baseline": 30,
+    "cx": 16.0,
+    "body": 26,
     "source": "digimon/m204_otamamon_main",
     "name": "올챙몬"
   },
@@ -284,6 +346,8 @@
     "height": 36,
     "frames": 68,
     "baseline": 29,
+    "cx": 25.0,
+    "body": 20,
     "source": "digimon/m205_gaomon_main",
     "name": "가오몬"
   },
@@ -293,6 +357,8 @@
     "height": 43,
     "frames": 57,
     "baseline": 30,
+    "cx": 24.5,
+    "body": 28,
     "source": "digimon/m206_gazimon_main",
     "name": "가지몬"
   },
@@ -302,6 +368,8 @@
     "height": 35,
     "frames": 59,
     "baseline": 29,
+    "cx": 16.5,
+    "body": 19,
     "source": "digimon/m208_gabumon_main",
     "name": "파피몬"
   },
@@ -311,6 +379,8 @@
     "height": 35,
     "frames": 65,
     "baseline": 29,
+    "cx": 15.5,
+    "body": 18,
     "source": "digimon/m209_kamemon_main",
     "name": "거북몬"
   },
@@ -320,6 +390,8 @@
     "height": 43,
     "frames": 61,
     "baseline": 30,
+    "cx": 26.0,
+    "body": 24,
     "source": "digimon/m210_gizamon_main",
     "name": "기자몬"
   },
@@ -329,6 +401,8 @@
     "height": 51,
     "frames": 62,
     "baseline": 38,
+    "cx": 17.0,
+    "body": 19,
     "source": "digimon/m211_candmon_main",
     "name": "캔들몬"
   },
@@ -338,6 +412,8 @@
     "height": 46,
     "frames": 56,
     "baseline": 38,
+    "cx": 16.5,
+    "body": 25,
     "source": "digimon/m214_kunemon_main",
     "name": "쿠네몬"
   },
@@ -347,6 +423,8 @@
     "height": 35,
     "frames": 62,
     "baseline": 31,
+    "cx": 17.5,
+    "body": 15,
     "source": "digimon/m217_gottumon_main",
     "name": "울퉁몬"
   },
@@ -356,6 +434,8 @@
     "height": 35,
     "frames": 62,
     "baseline": 29,
+    "cx": 16.5,
+    "body": 22,
     "source": "digimon/m218_goburimon_main",
     "name": "고부리몬"
   },
@@ -365,6 +445,8 @@
     "height": 43,
     "frames": 63,
     "baseline": 31,
+    "cx": 24.0,
+    "body": 22,
     "source": "digimon/m219_gomamon_main",
     "name": "쉬라몬"
   },
@@ -374,6 +456,8 @@
     "height": 35,
     "frames": 62,
     "baseline": 30,
+    "cx": 34.5,
+    "body": 25,
     "source": "digimon/m221_terriermon_main",
     "name": "테리어몬"
   },
@@ -383,6 +467,8 @@
     "height": 49,
     "frames": 60,
     "baseline": 38,
+    "cx": 26.5,
+    "body": 24,
     "source": "digimon/m222_tentomon_main",
     "name": "텐타몬"
   },
@@ -392,6 +478,8 @@
     "height": 35,
     "frames": 63,
     "baseline": 29,
+    "cx": 16.0,
+    "body": 16,
     "source": "digimon/m223_toyagumon_main",
     "name": "토이아구몬"
   },
@@ -401,6 +489,8 @@
     "height": 35,
     "frames": 63,
     "baseline": 29,
+    "cx": 16.5,
+    "body": 17,
     "source": "digimon/m224_dracomon_main",
     "name": "드라코몬"
   },
@@ -410,6 +500,8 @@
     "height": 44,
     "frames": 65,
     "baseline": 31,
+    "cx": 17.0,
+    "body": 20,
     "source": "digimon/m225_bakumon_main",
     "name": "테이파몬"
   },
@@ -419,6 +511,8 @@
     "height": 37,
     "frames": 65,
     "baseline": 18,
+    "cx": 17.0,
+    "body": 18,
     "source": "digimon/m226_hagurumon_main",
     "name": "톱니몬"
   },
@@ -428,6 +522,8 @@
     "height": 34,
     "frames": 64,
     "baseline": 28,
+    "cx": 16.5,
+    "body": 16,
     "source": "digimon/m227_patamon_main",
     "name": "파닥몬"
   },
@@ -437,6 +533,8 @@
     "height": 35,
     "frames": 61,
     "baseline": 29,
+    "cx": 15.0,
+    "body": 16,
     "source": "digimon/m228_palmon_main",
     "name": "팔몬"
   },
@@ -446,6 +544,8 @@
     "height": 36,
     "frames": 63,
     "baseline": 26,
+    "cx": 18.0,
+    "body": 18,
     "source": "digimon/m229_picodevimon_main",
     "name": "피코데블몬"
   },
@@ -455,6 +555,8 @@
     "height": 44,
     "frames": 65,
     "baseline": 30,
+    "cx": 24.0,
+    "body": 16,
     "source": "digimon/m230_piyomon_main",
     "name": "피요몬"
   },
@@ -464,6 +566,8 @@
     "height": 44,
     "frames": 64,
     "baseline": 30,
+    "cx": 17.0,
+    "body": 16,
     "source": "digimon/m231_falcomon_main",
     "name": "팔코몬"
   },
@@ -473,6 +577,8 @@
     "height": 44,
     "frames": 63,
     "baseline": 30,
+    "cx": 17.0,
+    "body": 22,
     "source": "digimon/m232_plotmon_main",
     "name": "플롯트몬"
   },
@@ -482,6 +588,8 @@
     "height": 34,
     "frames": 63,
     "baseline": 29,
+    "cx": 16.0,
+    "body": 16,
     "source": "digimon/m233_floramon_main",
     "name": "플로라몬"
   },
@@ -491,6 +599,8 @@
     "height": 36,
     "frames": 63,
     "baseline": 29,
+    "cx": 16.5,
+    "body": 16,
     "source": "digimon/m235_mushmon_main",
     "name": "머슈몬"
   },
@@ -500,6 +610,8 @@
     "height": 35,
     "frames": 65,
     "baseline": 29,
+    "cx": 16.0,
+    "body": 16,
     "source": "digimon/m236_yukiagumon_main",
     "name": "스노우아구몬"
   },
@@ -509,6 +621,8 @@
     "height": 43,
     "frames": 63,
     "baseline": 30,
+    "cx": 17.5,
+    "body": 18,
     "source": "digimon/m237_renamon_main",
     "name": "레나몬"
   },
@@ -518,6 +632,8 @@
     "height": 43,
     "frames": 66,
     "baseline": 29,
+    "cx": 26.0,
+    "body": 18,
     "source": "digimon/m238_coronamon_main",
     "name": "코로나몬"
   },
@@ -527,6 +643,8 @@
     "height": 43,
     "frames": 57,
     "baseline": 29,
+    "cx": 15.5,
+    "body": 22,
     "source": "digimon/m239_lunamon_main",
     "name": "루나몬"
   },
@@ -536,6 +654,8 @@
     "height": 35,
     "frames": 65,
     "baseline": 29,
+    "cx": 16.0,
+    "body": 16,
     "source": "digimon/m240_kuroagumon_main",
     "name": "크로아구몬"
   },
@@ -545,6 +665,8 @@
     "height": 35,
     "frames": 59,
     "baseline": 29,
+    "cx": 16.0,
+    "body": 20,
     "source": "digimon/m241_psychemon_main",
     "name": "사이케몬"
   },
@@ -554,6 +676,8 @@
     "height": 35,
     "frames": 61,
     "baseline": 29,
+    "cx": 15.0,
+    "body": 16,
     "source": "digimon/m242_alraumon_main",
     "name": "오로라몬"
   },
@@ -563,6 +687,8 @@
     "height": 34,
     "frames": 64,
     "baseline": 28,
+    "cx": 16.5,
+    "body": 17,
     "source": "digimon/m243_tsukaimon_main",
     "name": "츄카이몬"
   },
@@ -572,6 +698,8 @@
     "height": 38,
     "frames": 69,
     "baseline": 29,
+    "cx": 18.5,
+    "body": 19,
     "source": "digimon/m244_vmon_main",
     "name": "브이몬"
   },
@@ -581,6 +709,8 @@
     "height": 35,
     "frames": 63,
     "baseline": 29,
+    "cx": 16.5,
+    "body": 17,
     "source": "digimon/m255_guilmon_main",
     "name": "길몬"
   },
@@ -590,6 +720,8 @@
     "height": 41,
     "frames": 59,
     "baseline": 31,
+    "cx": 32.0,
+    "body": 30,
     "source": "digimon/m301_ankylomon_main",
     "name": "황금아르마몬"
   },
@@ -599,6 +731,8 @@
     "height": 51,
     "frames": 59,
     "baseline": 38,
+    "cx": 31.5,
+    "body": 26,
     "source": "digimon/m303_ikkakumon_main",
     "name": "원뿔몬"
   },
@@ -608,6 +742,8 @@
     "height": 39,
     "frames": 58,
     "baseline": 29,
+    "cx": 24.0,
+    "body": 20,
     "source": "digimon/m304_wizarmon_main",
     "name": "위자몬"
   },
@@ -617,6 +753,8 @@
     "height": 51,
     "frames": 58,
     "baseline": 39,
+    "cx": 32.0,
+    "body": 28,
     "source": "digimon/m305_woodmon_main",
     "name": "우드몬"
   },
@@ -626,6 +764,8 @@
     "height": 57,
     "frames": 64,
     "baseline": 47,
+    "cx": 33.0,
+    "body": 28,
     "source": "digimon/m306_airdramon_main",
     "name": "에어드라몬"
   },
@@ -635,6 +775,8 @@
     "height": 53,
     "frames": 55,
     "baseline": 40,
+    "cx": 26.5,
+    "body": 27,
     "source": "digimon/m308_angemon_main",
     "name": "엔젤몬"
   },
@@ -644,6 +786,8 @@
     "height": 62,
     "frames": 57,
     "baseline": 47,
+    "cx": 32.0,
+    "body": 31,
     "source": "digimon/m310_orgemon_main",
     "name": "우가몬"
   },
@@ -653,6 +797,8 @@
     "height": 55,
     "frames": 65,
     "baseline": 39,
+    "cx": 32.0,
+    "body": 31,
     "source": "digimon/m311_gaogamon_main",
     "name": "가오가몬"
   },
@@ -662,6 +808,8 @@
     "height": 59,
     "frames": 62,
     "baseline": 48,
+    "cx": 32.0,
+    "body": 32,
     "source": "digimon/m312_kabuterimon_main",
     "name": "캅테리몬"
   },
@@ -671,6 +819,8 @@
     "height": 59,
     "frames": 57,
     "baseline": 48,
+    "cx": 25.0,
+    "body": 29,
     "source": "digimon/m313_gargomon_main",
     "name": "가르고몬"
   },
@@ -680,6 +830,8 @@
     "height": 46,
     "frames": 61,
     "baseline": 31,
+    "cx": 25.0,
+    "body": 30,
     "source": "digimon/m314_garurumon_va_main",
     "name": "가루몬"
   },
@@ -689,6 +841,8 @@
     "height": 46,
     "frames": 61,
     "baseline": 31,
+    "cx": 25.0,
+    "body": 30,
     "source": "digimon/m315_garurumon_vi_main",
     "name": "가루몬(흑)"
   },
@@ -698,6 +852,8 @@
     "height": 60,
     "frames": 59,
     "baseline": 47,
+    "cx": 31.5,
+    "body": 28,
     "source": "digimon/m316_guardromon_main",
     "name": "가드로몬"
   },
@@ -707,6 +863,8 @@
     "height": 45,
     "frames": 56,
     "baseline": 31,
+    "cx": 16.0,
+    "body": 22,
     "source": "digimon/m317_kiwimon_main",
     "name": "키위몬"
   },
@@ -716,6 +874,8 @@
     "height": 43,
     "frames": 61,
     "baseline": 32,
+    "cx": 33.0,
+    "body": 31,
     "source": "digimon/m318_kyubimon_main",
     "name": "구미호몬"
   },
@@ -725,6 +885,8 @@
     "height": 50,
     "frames": 59,
     "baseline": 38,
+    "cx": 27.0,
+    "body": 26,
     "source": "digimon/m320_graymon_main",
     "name": "그레이몬"
   },
@@ -734,6 +896,8 @@
     "height": 60,
     "frames": 69,
     "baseline": 48,
+    "cx": 28.0,
+    "body": 28,
     "source": "digimon/m321_clockmon_main",
     "name": "타임몬"
   },
@@ -743,6 +907,8 @@
     "height": 51,
     "frames": 64,
     "baseline": 40,
+    "cx": 32.0,
+    "body": 32,
     "source": "digimon/m322_kuwagamon_main",
     "name": "쿠가몬"
   },
@@ -752,6 +918,8 @@
     "height": 62,
     "frames": 56,
     "baseline": 47,
+    "cx": 30.0,
+    "body": 25,
     "source": "digimon/m323_gekomon_main",
     "name": "개굴몬"
   },
@@ -761,6 +929,8 @@
     "height": 46,
     "frames": 57,
     "baseline": 32,
+    "cx": 26.5,
+    "body": 31,
     "source": "digimon/m324_gesomon_main",
     "name": "연체몬"
   },
@@ -770,6 +940,8 @@
     "height": 54,
     "frames": 57,
     "baseline": 40,
+    "cx": 32.0,
+    "body": 33,
     "source": "digimon/m325_centalmon_main",
     "name": "켄터스몬"
   },
@@ -779,6 +951,8 @@
     "height": 68,
     "frames": 55,
     "baseline": 48,
+    "cx": 31.0,
+    "body": 31,
     "source": "digimon/m326_cockatrimon_main",
     "name": "꼬끼몬"
   },
@@ -788,6 +962,8 @@
     "height": 44,
     "frames": 55,
     "baseline": 31,
+    "cx": 17.5,
+    "body": 26,
     "source": "digimon/m328_thanderballmon_main",
     "name": "번개콩알몬"
   },
@@ -797,6 +973,8 @@
     "height": 43,
     "frames": 65,
     "baseline": 31,
+    "cx": 23.5,
+    "body": 33,
     "source": "digimon/m329_shellmon_main",
     "name": "쉘몬"
   },
@@ -806,6 +984,8 @@
     "height": 50,
     "frames": 59,
     "baseline": 38,
+    "cx": 27.0,
+    "body": 26,
     "source": "digimon/m330_geograymon_main",
     "name": "지오그레이몬"
   },
@@ -815,6 +995,8 @@
     "height": 59,
     "frames": 64,
     "baseline": 46,
+    "cx": 40.5,
+    "body": 27,
     "source": "digimon/m331_seadramon_main",
     "name": "시드라몬"
   },
@@ -824,6 +1006,8 @@
     "height": 43,
     "frames": 62,
     "baseline": 32,
+    "cx": 31.5,
+    "body": 19,
     "source": "digimon/m333_scumon_main",
     "name": "스카몬"
   },
@@ -833,6 +1017,8 @@
     "height": 44,
     "frames": 57,
     "baseline": 30,
+    "cx": 18.0,
+    "body": 24,
     "source": "digimon/m334_starmon_main",
     "name": "스타몬"
   },
@@ -842,6 +1028,8 @@
     "height": 62,
     "frames": 55,
     "baseline": 48,
+    "cx": 34.0,
+    "body": 29,
     "source": "digimon/m337_darcmon_main",
     "name": "다르크몬"
   },
@@ -851,6 +1039,8 @@
     "height": 36,
     "frames": 61,
     "baseline": 30,
+    "cx": 16.0,
+    "body": 19,
     "source": "digimon/m338_darktyranomon_main",
     "name": "다크티라노몬"
   },
@@ -860,6 +1050,8 @@
     "height": 36,
     "frames": 61,
     "baseline": 30,
+    "cx": 16.0,
+    "body": 19,
     "source": "digimon/m339_tyranomon_main",
     "name": "티라노몬"
   },
@@ -869,6 +1061,8 @@
     "height": 35,
     "frames": 65,
     "baseline": 29,
+    "cx": 33.5,
+    "body": 23,
     "source": "digimon/m340_tailmon_main",
     "name": "가트몬"
   },
@@ -878,6 +1072,8 @@
     "height": 56,
     "frames": 64,
     "baseline": 48,
+    "cx": 33.0,
+    "body": 34,
     "source": "digimon/m341_devidramon_main",
     "name": "데블드라몬"
   },
@@ -887,6 +1083,8 @@
     "height": 39,
     "frames": 57,
     "baseline": 30,
+    "cx": 57.0,
+    "body": 24,
     "source": "digimon/m342_devimon_main",
     "name": "데블몬"
   },
@@ -896,6 +1094,8 @@
     "height": 43,
     "frames": 57,
     "baseline": 29,
+    "cx": 31.0,
+    "body": 19,
     "source": "digimon/m343_togemon_main",
     "name": "니드몬"
   },
@@ -905,6 +1105,8 @@
     "height": 37,
     "frames": 63,
     "baseline": 31,
+    "cx": 32.0,
+    "body": 28,
     "source": "digimon/m345_tortamon_main",
     "name": "토타몬"
   },
@@ -914,6 +1116,8 @@
     "height": 53,
     "frames": 63,
     "baseline": 38,
+    "cx": 31.0,
+    "body": 20,
     "source": "digimon/m346_numemon_main",
     "name": "옐로우워매몬"
   },
@@ -923,6 +1127,8 @@
     "height": 32,
     "frames": 65,
     "baseline": 20,
+    "cx": 23.5,
+    "body": 17,
     "source": "digimon/m347_bakemon_main",
     "name": "고스몬"
   },
@@ -932,6 +1138,8 @@
     "height": 53,
     "frames": 57,
     "baseline": 37,
+    "cx": 24.0,
+    "body": 30,
     "source": "digimon/m349_bardramon_main",
     "name": "버드라몬"
   },
@@ -941,6 +1149,8 @@
     "height": 58,
     "frames": 61,
     "baseline": 44,
+    "cx": 31.5,
+    "body": 21,
     "source": "digimon/m351_vagimon_main",
     "name": "베지몬"
   },
@@ -950,6 +1160,8 @@
     "height": 59,
     "frames": 75,
     "baseline": 48,
+    "cx": 32.0,
+    "body": 30,
     "source": "digimon/m352_peckmon_main",
     "name": "페크몬"
   },
@@ -959,6 +1171,8 @@
     "height": 48,
     "frames": 59,
     "baseline": 32,
+    "cx": 27.0,
+    "body": 20,
     "source": "digimon/m353_meramon_main",
     "name": "메라몬"
   },
@@ -968,6 +1182,8 @@
     "height": 58,
     "frames": 59,
     "baseline": 47,
+    "cx": 24.0,
+    "body": 23,
     "source": "digimon/m354_mojyamon_main",
     "name": "모털몬"
   },
@@ -977,6 +1193,8 @@
     "height": 42,
     "frames": 62,
     "baseline": 31,
+    "cx": 32.0,
+    "body": 28,
     "source": "digimon/m355_monochromon_main",
     "name": "모노크로몬"
   },
@@ -986,6 +1204,8 @@
     "height": 49,
     "frames": 61,
     "baseline": 39,
+    "cx": 32.0,
+    "body": 16,
     "source": "digimon/m356_yukidarumon_main",
     "name": "프리지몬"
   },
@@ -995,6 +1215,8 @@
     "height": 43,
     "frames": 59,
     "baseline": 31,
+    "cx": 24.5,
+    "body": 29,
     "source": "digimon/m357_unimon_main",
     "name": "유니몬"
   },
@@ -1004,6 +1226,8 @@
     "height": 43,
     "frames": 61,
     "baseline": 32,
+    "cx": 33.0,
+    "body": 31,
     "source": "digimon/m358_youkomon_main",
     "name": "블랙구미호몬"
   },
@@ -1013,6 +1237,8 @@
     "height": 43,
     "frames": 62,
     "baseline": 31,
+    "cx": 24.5,
+    "body": 30,
     "source": "digimon/m359_rynxmon_main",
     "name": "링스몬"
   },
@@ -1022,6 +1248,8 @@
     "height": 53,
     "frames": 63,
     "baseline": 38,
+    "cx": 33.0,
+    "body": 19,
     "source": "digimon/m362_raremon_main",
     "name": "레어몬"
   },
@@ -1031,6 +1259,8 @@
     "height": 54,
     "frames": 58,
     "baseline": 40,
+    "cx": 34.5,
+    "body": 27,
     "source": "digimon/m363_leomon_main",
     "name": "레오몬"
   },
@@ -1040,6 +1270,8 @@
     "height": 58,
     "frames": 61,
     "baseline": 44,
+    "cx": 31.5,
+    "body": 22,
     "source": "digimon/m364_redvagimon_main",
     "name": "레드베지몬"
   },
@@ -1049,6 +1281,8 @@
     "height": 45,
     "frames": 58,
     "baseline": 31,
+    "cx": 32.5,
+    "body": 27,
     "source": "digimon/m366_coredramon_ten_main",
     "name": "코어드라몬(청)"
   },
@@ -1058,6 +1292,8 @@
     "height": 45,
     "frames": 58,
     "baseline": 31,
+    "cx": 32.5,
+    "body": 27,
     "source": "digimon/m367_coredramon_ti_main",
     "name": "코어드라몬(녹)"
   },
@@ -1067,6 +1303,8 @@
     "height": 37,
     "frames": 64,
     "baseline": 32,
+    "cx": 32.0,
+    "body": 32,
     "source": "digimon/m368_firamon_main",
     "name": "파이라몬"
   },
@@ -1076,6 +1314,8 @@
     "height": 43,
     "frames": 59,
     "baseline": 31,
+    "cx": 17.0,
+    "body": 24,
     "source": "digimon/m369_lekismon_main",
     "name": "레키스몬"
   },
@@ -1085,6 +1325,8 @@
     "height": 38,
     "frames": 57,
     "baseline": 30,
+    "cx": 56.5,
+    "body": 24,
     "source": "digimon/m370_icedevimon_main",
     "name": "아이스데블몬"
   },
@@ -1094,6 +1336,8 @@
     "height": 46,
     "frames": 63,
     "baseline": 31,
+    "cx": 24.5,
+    "body": 30,
     "source": "digimon/m371_grurumon_main",
     "name": "구루몬"
   },
@@ -1103,6 +1347,8 @@
     "height": 53,
     "frames": 63,
     "baseline": 38,
+    "cx": 31.0,
+    "body": 20,
     "source": "digimon/m372_geremon_main",
     "name": "워매몬"
   },
@@ -1112,6 +1358,8 @@
     "height": 58,
     "frames": 57,
     "baseline": 32,
+    "cx": 20.0,
+    "body": 19,
     "source": "digimon/m373_bluemeramon_main",
     "name": "블루메라몬"
   },
@@ -1121,6 +1369,8 @@
     "height": 39,
     "frames": 58,
     "baseline": 29,
+    "cx": 24.0,
+    "body": 22,
     "source": "digimon/m374_sorcerimon_main",
     "name": "화이트위자몬"
   },
@@ -1130,6 +1380,8 @@
     "height": 60,
     "frames": 54,
     "baseline": 40,
+    "cx": 24.0,
+    "body": 31,
     "source": "digimon/m375_akatorimon_main",
     "name": "레드꼬끼몬"
   },
@@ -1139,6 +1391,8 @@
     "height": 53,
     "frames": 57,
     "baseline": 37,
+    "cx": 24.0,
+    "body": 30,
     "source": "digimon/m376_saverdramon_main",
     "name": "블랙버드라몬"
   },
@@ -1148,6 +1402,8 @@
     "height": 35,
     "frames": 62,
     "baseline": 31,
+    "cx": 17.5,
+    "body": 15,
     "source": "digimon/m377_icemon_main",
     "name": "아이스몬"
   },
@@ -1157,6 +1413,8 @@
     "height": 45,
     "frames": 59,
     "baseline": 31,
+    "cx": 32.0,
+    "body": 26,
     "source": "digimon/m378_vdramon_main",
     "name": "브이드라몬"
   },
@@ -1166,6 +1424,8 @@
     "height": 45,
     "frames": 58,
     "baseline": 31,
+    "cx": 32.0,
+    "body": 26,
     "source": "digimon/m379_growmon_main",
     "name": "그라우몬"
   },
@@ -1175,6 +1435,8 @@
     "height": 65,
     "frames": 59,
     "baseline": 48,
+    "cx": 30.0,
+    "body": 39,
     "source": "digimon/m401_atlurkabuterimon_main",
     "name": "아트라캅테리몬"
   },
@@ -1184,6 +1446,8 @@
     "height": 59,
     "frames": 63,
     "baseline": 46,
+    "cx": 32.0,
+    "body": 48,
     "source": "digimon/m402_anomalocarimon_main",
     "name": "스콜피온몬"
   },
@@ -1193,6 +1457,8 @@
     "height": 62,
     "frames": 62,
     "baseline": 48,
+    "cx": 32.5,
+    "body": 19,
     "source": "digimon/m403_andromon_main",
     "name": "안드로몬"
   },
@@ -1202,6 +1468,8 @@
     "height": 79,
     "frames": 56,
     "baseline": 56,
+    "cx": 49.0,
+    "body": 28,
     "source": "digimon/m404_etemon_main",
     "name": "에테몬"
   },
@@ -1211,6 +1479,8 @@
     "height": 52,
     "frames": 55,
     "baseline": 40,
+    "cx": 32.5,
+    "body": 31,
     "source": "digimon/m405_angewomon_main",
     "name": "엔젤우몬"
   },
@@ -1220,6 +1490,8 @@
     "height": 63,
     "frames": 58,
     "baseline": 48,
+    "cx": 41.5,
+    "body": 40,
     "source": "digimon/m406_oukuwamon_main",
     "name": "오쿠와몬"
   },
@@ -1229,6 +1501,8 @@
     "height": 62,
     "frames": 61,
     "baseline": 48,
+    "cx": 34.0,
+    "body": 29,
     "source": "digimon/m407_gurudamon_main",
     "name": "가루다몬"
   },
@@ -1238,6 +1512,8 @@
     "height": 65,
     "frames": 58,
     "baseline": 47,
+    "cx": 39.0,
+    "body": 27,
     "source": "digimon/m408_gerbemon_main",
     "name": "가비지몬"
   },
@@ -1247,6 +1523,8 @@
     "height": 62,
     "frames": 59,
     "baseline": 48,
+    "cx": 31.0,
+    "body": 30,
     "source": "digimon/m410_cyberdramon_main",
     "name": "사이버드라몬"
   },
@@ -1256,6 +1534,8 @@
     "height": 62,
     "frames": 55,
     "baseline": 48,
+    "cx": 44.0,
+    "body": 34,
     "source": "digimon/m412_jyureimon_main",
     "name": "쥬레이몬"
   },
@@ -1265,6 +1545,8 @@
     "height": 63,
     "frames": 61,
     "baseline": 48,
+    "cx": 32.0,
+    "body": 32,
     "source": "digimon/m413_skullgreymon_main",
     "name": "스컬그레이몬"
   },
@@ -1274,6 +1556,8 @@
     "height": 48,
     "frames": 56,
     "baseline": 48,
+    "cx": 32.0,
+    "body": 32,
     "source": "digimon/m414_zudomon_main",
     "name": "쥬드몬"
   },
@@ -1283,6 +1567,8 @@
     "height": 73,
     "frames": 64,
     "baseline": 55,
+    "cx": 58.0,
+    "body": 39,
     "source": "digimon/m415_dagomon_main",
     "name": "드라고몬"
   },
@@ -1292,6 +1578,8 @@
     "height": 68,
     "frames": 58,
     "baseline": 48,
+    "cx": 32.0,
+    "body": 29,
     "source": "digimon/m416_deathmeramon_main",
     "name": "데드메라몬"
   },
@@ -1301,6 +1589,8 @@
     "height": 69,
     "frames": 61,
     "baseline": 40,
+    "cx": 25.0,
+    "body": 34,
     "source": "digimon/m417_delumon_main",
     "name": "뿌띠몬"
   },
@@ -1310,6 +1600,8 @@
     "height": 73,
     "frames": 57,
     "baseline": 56,
+    "cx": 60.5,
+    "body": 35,
     "source": "digimon/m418_tonosamagekomon_main",
     "name": "왕개굴몬"
   },
@@ -1319,6 +1611,8 @@
     "height": 54,
     "frames": 59,
     "baseline": 40,
+    "cx": 32.0,
+    "body": 32,
     "source": "digimon/m419_toriceramon_main",
     "name": "트리세라몬"
   },
@@ -1328,6 +1622,8 @@
     "height": 54,
     "frames": 57,
     "baseline": 40,
+    "cx": 36.5,
+    "body": 25,
     "source": "digimon/m420_knightmon_main",
     "name": "나이트몬"
   },
@@ -1337,6 +1633,8 @@
     "height": 73,
     "frames": 57,
     "baseline": 47,
+    "cx": 34.5,
+    "body": 33,
     "source": "digimon/m422_parrotmon_main",
     "name": "패롯몬"
   },
@@ -1346,6 +1644,8 @@
     "height": 63,
     "frames": 61,
     "baseline": 48,
+    "cx": 47.5,
+    "body": 31,
     "source": "digimon/m423_hangyomon_main",
     "name": "다이버몬"
   },
@@ -1355,6 +1655,8 @@
     "height": 58,
     "frames": 57,
     "baseline": 48,
+    "cx": 33.5,
+    "body": 28,
     "source": "digimon/m424_pandamon_main",
     "name": "팬더몬"
   },
@@ -1364,6 +1666,8 @@
     "height": 52,
     "frames": 57,
     "baseline": 39,
+    "cx": 32.0,
+    "body": 32,
     "source": "digimon/m426_bigmamemon_main",
     "name": "왕콩알몬"
   },
@@ -1373,6 +1677,8 @@
     "height": 45,
     "frames": 55,
     "baseline": 30,
+    "cx": 19.5,
+    "body": 25,
     "source": "digimon/m427_picklemon_main",
     "name": "피콜몬"
   },
@@ -1382,6 +1688,8 @@
     "height": 62,
     "frames": 63,
     "baseline": 48,
+    "cx": 32.0,
+    "body": 31,
     "source": "digimon/m428_fantomon_main",
     "name": "팬텀몬"
   },
@@ -1391,6 +1699,8 @@
     "height": 46,
     "frames": 59,
     "baseline": 32,
+    "cx": 25.0,
+    "body": 23,
     "source": "digimon/m430_vademon_main",
     "name": "베이더몬"
   },
@@ -1400,6 +1710,8 @@
     "height": 86,
     "frames": 64,
     "baseline": 62,
+    "cx": 55.5,
+    "body": 73,
     "source": "digimon/m431_whamon_main",
     "name": "고래몬"
   },
@@ -1409,6 +1721,8 @@
     "height": 61,
     "frames": 56,
     "baseline": 48,
+    "cx": 33.0,
+    "body": 30,
     "source": "digimon/m432_holyangemon_main",
     "name": "홀리엔젤몬"
   },
@@ -1418,6 +1732,8 @@
     "height": 62,
     "frames": 69,
     "baseline": 47,
+    "cx": 57.5,
+    "body": 25,
     "source": "digimon/m433_machgaogamon_main",
     "name": "마하가오가몬"
   },
@@ -1427,6 +1743,8 @@
     "height": 36,
     "frames": 65,
     "baseline": 29,
+    "cx": 16.0,
+    "body": 12,
     "source": "digimon/m435_mamemon_main",
     "name": "콩알몬"
   },
@@ -1436,6 +1754,8 @@
     "height": 56,
     "frames": 59,
     "baseline": 48,
+    "cx": 38.5,
+    "body": 44,
     "source": "digimon/m437_mammon_main",
     "name": "맘모스몬"
   },
@@ -1445,6 +1765,8 @@
     "height": 65,
     "frames": 57,
     "baseline": 47,
+    "cx": 34.0,
+    "body": 32,
     "source": "digimon/m438_megaseadramon_main",
     "name": "메가시드라몬"
   },
@@ -1454,6 +1776,8 @@
     "height": 63,
     "frames": 58,
     "baseline": 48,
+    "cx": 32.0,
+    "body": 30,
     "source": "digimon/m439_megadramon_main",
     "name": "메가드라몬"
   },
@@ -1463,6 +1787,8 @@
     "height": 62,
     "frames": 58,
     "baseline": 48,
+    "cx": 32.5,
+    "body": 31,
     "source": "digimon/m440_metalgreymon_vi_main",
     "name": "메탈그레이몬(청)"
   },
@@ -1472,6 +1798,8 @@
     "height": 62,
     "frames": 58,
     "baseline": 48,
+    "cx": 32.5,
+    "body": 31,
     "source": "digimon/m441_metalgreymon_va_main",
     "name": "메탈그레이몬"
   },
@@ -1481,6 +1809,8 @@
     "height": 60,
     "frames": 58,
     "baseline": 48,
+    "cx": 33.5,
+    "body": 31,
     "source": "digimon/m442_metaltyranomon_main",
     "name": "메탈티라노몬"
   },
@@ -1490,6 +1820,8 @@
     "height": 57,
     "frames": 61,
     "baseline": 48,
+    "cx": 30.5,
+    "body": 21,
     "source": "digimon/m444_monzaemon_main",
     "name": "퍼펫몬"
   },
@@ -1499,6 +1831,8 @@
     "height": 61,
     "frames": 55,
     "baseline": 43,
+    "cx": 33.0,
+    "body": 32,
     "source": "digimon/m445_yatagaramon_main",
     "name": "야타가라몬"
   },
@@ -1508,6 +1842,8 @@
     "height": 62,
     "frames": 56,
     "baseline": 48,
+    "cx": 33.0,
+    "body": 28,
     "source": "digimon/m446_rizegreymon_main",
     "name": "라이즈그레이몬"
   },
@@ -1517,6 +1853,8 @@
     "height": 51,
     "frames": 57,
     "baseline": 40,
+    "cx": 32.5,
+    "body": 28,
     "source": "digimon/m447_rapidmon_main",
     "name": "래비드몬"
   },
@@ -1526,6 +1864,8 @@
     "height": 51,
     "frames": 61,
     "baseline": 40,
+    "cx": 25.0,
+    "body": 26,
     "source": "digimon/m448_lilimon_main",
     "name": "릴리몬"
   },
@@ -1535,6 +1875,8 @@
     "height": 61,
     "frames": 61,
     "baseline": 47,
+    "cx": 27.0,
+    "body": 25,
     "source": "digimon/m449_ladydevimon_main",
     "name": "레이디데블몬"
   },
@@ -1544,6 +1886,8 @@
     "height": 50,
     "frames": 57,
     "baseline": 40,
+    "cx": 32.0,
+    "body": 23,
     "source": "digimon/m450_warumonzaemon_main",
     "name": "나쁜퍼펫몬"
   },
@@ -1553,6 +1897,8 @@
     "height": 55,
     "frames": 57,
     "baseline": 40,
+    "cx": 32.5,
+    "body": 26,
     "source": "digimon/m451_weregarurumon_va_main",
     "name": "워가루몬"
   },
@@ -1562,6 +1908,8 @@
     "height": 55,
     "frames": 58,
     "baseline": 40,
+    "cx": 33.0,
+    "body": 25,
     "source": "digimon/m452_weregarurumon_vi_main",
     "name": "워가루몬(흑)"
   },
@@ -1571,6 +1919,8 @@
     "height": 63,
     "frames": 67,
     "baseline": 48,
+    "cx": 32.0,
+    "body": 46,
     "source": "digimon/m453_wingdramon_main",
     "name": "윙드라몬"
   },
@@ -1580,6 +1930,8 @@
     "height": 63,
     "frames": 63,
     "baseline": 48,
+    "cx": 32.0,
+    "body": 48,
     "source": "digimon/m454_grondramon_main",
     "name": "그라운드라몬"
   },
@@ -1589,6 +1941,8 @@
     "height": 62,
     "frames": 69,
     "baseline": 48,
+    "cx": 33.5,
+    "body": 29,
     "source": "digimon/m455_flaremon_main",
     "name": "플레어몬"
   },
@@ -1598,6 +1952,8 @@
     "height": 62,
     "frames": 58,
     "baseline": 48,
+    "cx": 32.0,
+    "body": 31,
     "source": "digimon/m456_crescemon_main",
     "name": "크레세몬"
   },
@@ -1607,6 +1963,8 @@
     "height": 60,
     "frames": 57,
     "baseline": 47,
+    "cx": 30.5,
+    "body": 25,
     "source": "digimon/m457_superstarmon_main",
     "name": "슈퍼스타몬"
   },
@@ -1616,6 +1974,8 @@
     "height": 51,
     "frames": 57,
     "baseline": 40,
+    "cx": 32.5,
+    "body": 28,
     "source": "digimon/m458_blackrapidmon_main",
     "name": "블랙래비드몬"
   },
@@ -1625,6 +1985,8 @@
     "height": 63,
     "frames": 59,
     "baseline": 48,
+    "cx": 46.0,
+    "body": 36,
     "source": "digimon/m501_vikemon_main",
     "name": "바이킹몬"
   },
@@ -1634,6 +1996,8 @@
     "height": 60,
     "frames": 55,
     "baseline": 48,
+    "cx": 34.0,
+    "body": 28,
     "source": "digimon/m502_valkyrimon_main",
     "name": "발키리몬"
   },
@@ -1643,6 +2007,8 @@
     "height": 108,
     "frames": 63,
     "baseline": 79,
+    "cx": 52.0,
+    "body": 37,
     "source": "digimon/m503_warglaymon_main",
     "name": "워그레이몬"
   },
@@ -1652,6 +2018,8 @@
     "height": 81,
     "frames": 55,
     "baseline": 56,
+    "cx": 36.0,
+    "body": 40,
     "source": "digimon/m504_gigaseadramon_main",
     "name": "기가시드라몬"
   },
@@ -1661,6 +2029,8 @@
     "height": 59,
     "frames": 53,
     "baseline": 48,
+    "cx": 32.5,
+    "body": 47,
     "source": "digimon/m505_grankuwagamon_main",
     "name": "그랜쿠가몬"
   },
@@ -1670,6 +2040,8 @@
     "height": 55,
     "frames": 61,
     "baseline": 48,
+    "cx": 30.5,
+    "body": 43,
     "source": "digimon/m506_griffomon_main",
     "name": "그리폰몬"
   },
@@ -1679,6 +2051,8 @@
     "height": 59,
     "frames": 55,
     "baseline": 48,
+    "cx": 31.5,
+    "body": 32,
     "source": "digimon/m507_crossmon_main",
     "name": "이글몬"
   },
@@ -1688,6 +2062,8 @@
     "height": 54,
     "frames": 61,
     "baseline": 47,
+    "cx": 36.0,
+    "body": 38,
     "source": "digimon/m508_saberleomon_main",
     "name": "샤벨레오몬"
   },
@@ -1697,6 +2073,8 @@
     "height": 93,
     "frames": 65,
     "baseline": 64,
+    "cx": 49.5,
+    "body": 47,
     "source": "digimon/m509_shinegraymon_main",
     "name": "샤잉레이몬"
   },
@@ -1706,6 +2084,8 @@
     "height": 66,
     "frames": 55,
     "baseline": 55,
+    "cx": 40.0,
+    "body": 40,
     "source": "digimon/m510_skullmammon_main",
     "name": "스컬맘모스몬"
   },
@@ -1715,6 +2095,8 @@
     "height": 73,
     "frames": 58,
     "baseline": 56,
+    "cx": 33.0,
+    "body": 28,
     "source": "digimon/m511_saintgargomon_main",
     "name": "세인트가르고몬"
   },
@@ -1724,6 +2106,8 @@
     "height": 88,
     "frames": 55,
     "baseline": 64,
+    "cx": 48.0,
+    "body": 31,
     "source": "digimon/m512_hiandromon_main",
     "name": "하이안드로몬"
   },
@@ -1733,6 +2117,8 @@
     "height": 54,
     "frames": 64,
     "baseline": 40,
+    "cx": 32.5,
+    "body": 31,
     "source": "digimon/m513_bantyoliomon_main",
     "name": "반쵸레오몬"
   },
@@ -1742,6 +2128,8 @@
     "height": 75,
     "frames": 60,
     "baseline": 52,
+    "cx": 32.5,
+    "body": 29,
     "source": "digimon/m514_piemon_main",
     "name": "피에몬"
   },
@@ -1751,6 +2139,8 @@
     "height": 59,
     "frames": 57,
     "baseline": 47,
+    "cx": 39.0,
+    "body": 31,
     "source": "digimon/m515_pinochimon_main",
     "name": "피노키몬"
   },
@@ -1760,6 +2150,8 @@
     "height": 68,
     "frames": 58,
     "baseline": 56,
+    "cx": 46.5,
+    "body": 31,
     "source": "digimon/m516_pharaohmon_main",
     "name": "파라오몬"
   },
@@ -1769,6 +2161,8 @@
     "height": 57,
     "frames": 57,
     "baseline": 47,
+    "cx": 32.5,
+    "body": 31,
     "source": "digimon/m517_pukumon_main",
     "name": "푸쿠몬"
   },
@@ -1778,6 +2172,8 @@
     "height": 108,
     "frames": 63,
     "baseline": 79,
+    "cx": 52.0,
+    "body": 37,
     "source": "digimon/m518_blackwargreymon_main",
     "name": "블랙워그레이몬"
   },
@@ -1787,6 +2183,8 @@
     "height": 52,
     "frames": 56,
     "baseline": 40,
+    "cx": 26.0,
+    "body": 26,
     "source": "digimon/m519_princemamemon_main",
     "name": "프린스콩알몬"
   },
@@ -1796,6 +2194,8 @@
     "height": 40,
     "frames": 58,
     "baseline": 40,
+    "cx": 26.5,
+    "body": 35,
     "source": "digimon/m520_pilesiomon_main",
     "name": "프레시오몬"
   },
@@ -1805,6 +2205,8 @@
     "height": 92,
     "frames": 63,
     "baseline": 64,
+    "cx": 48.5,
+    "body": 61,
     "source": "digimon/m521_heraklekabuterimon_main",
     "name": "헤라크레스캅테리몬"
   },
@@ -1814,6 +2216,8 @@
     "height": 103,
     "frames": 57,
     "baseline": 47,
+    "cx": 34.5,
+    "body": 43,
     "source": "digimon/m522_hououmon_main",
     "name": "페닉스몬"
   },
@@ -1823,6 +2227,8 @@
     "height": 87,
     "frames": 64,
     "baseline": 64,
+    "cx": 31.0,
+    "body": 32,
     "source": "digimon/m526_miragegaogamon_main",
     "name": "미러지가오몬"
   },
@@ -1832,6 +2238,8 @@
     "height": 104,
     "frames": 68,
     "baseline": 75,
+    "cx": 47.0,
+    "body": 52,
     "source": "digimon/m527_mugendramon_main",
     "name": "파워드라몬"
   },
@@ -1841,6 +2249,8 @@
     "height": 70,
     "frames": 55,
     "baseline": 48,
+    "cx": 48.5,
+    "body": 34,
     "source": "digimon/m528_metaletemon_main",
     "name": "메탈에테몬"
   },
@@ -1850,6 +2260,8 @@
     "height": 67,
     "frames": 64,
     "baseline": 47,
+    "cx": 32.0,
+    "body": 32,
     "source": "digimon/m529_metalgarurumon_va_main",
     "name": "메탈가루몬"
   },
@@ -1859,6 +2271,8 @@
     "height": 67,
     "frames": 64,
     "baseline": 47,
+    "cx": 32.0,
+    "body": 32,
     "source": "digimon/m530_metalgarurumon_vi_main",
     "name": "메탈가루몬(흑)"
   },
@@ -1868,6 +2282,8 @@
     "height": 92,
     "frames": 61,
     "baseline": 62,
+    "cx": 42.5,
+    "body": 47,
     "source": "digimon/m531_metalseadramon_main",
     "name": "메탈시드라몬"
   },
@@ -1877,6 +2293,8 @@
     "height": 62,
     "frames": 59,
     "baseline": 48,
+    "cx": 33.0,
+    "body": 28,
     "source": "digimon/m532_rosemon_main",
     "name": "로제몬"
   },
@@ -1886,6 +2304,8 @@
     "height": 67,
     "frames": 60,
     "baseline": 47,
+    "cx": 33.0,
+    "body": 34,
     "source": "digimon/m533_zeedgarurumon_main",
     "name": "지드가루몬"
   },
@@ -1895,6 +2315,8 @@
     "height": 91,
     "frames": 64,
     "baseline": 64,
+    "cx": 56.5,
+    "body": 43,
     "source": "digimon/m534_victorygreymon_main",
     "name": "빅토리그레이몬"
   },
@@ -1904,6 +2326,8 @@
     "height": 92,
     "frames": 66,
     "baseline": 64,
+    "cx": 48.0,
+    "body": 61,
     "source": "digimon/m535_slayerdramon_main",
     "name": "슬레이어드라몬"
   },
@@ -1913,6 +2337,8 @@
     "height": 90,
     "frames": 67,
     "baseline": 64,
+    "cx": 49.5,
+    "body": 57,
     "source": "digimon/m536_brakedramon_main",
     "name": "브레이크드라몬"
   },
@@ -1922,6 +2348,8 @@
     "height": 63,
     "frames": 63,
     "baseline": 48,
+    "cx": 33.0,
+    "body": 28,
     "source": "digimon/m538_apollomon_main",
     "name": "아폴로몬"
   },
@@ -1931,6 +2359,8 @@
     "height": 71,
     "frames": 62,
     "baseline": 48,
+    "cx": 31.5,
+    "body": 32,
     "source": "digimon/m539_dianamon_main",
     "name": "다이아나몬"
   },
@@ -1940,6 +2370,8 @@
     "height": 91,
     "frames": 63,
     "baseline": 63,
+    "cx": 48.0,
+    "body": 57,
     "source": "digimon/m540_imperialdramon_fm_main",
     "name": "황제드라몬"
   },
@@ -1949,6 +2381,8 @@
     "height": 91,
     "frames": 63,
     "baseline": 63,
+    "cx": 39.5,
+    "body": 63,
     "source": "digimon/m541_dukemon_main",
     "name": "듀크몬"
   }

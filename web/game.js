@@ -577,7 +577,8 @@
       0,
       a.width,
       a.height,
-      (-a.width * scale) / 2,
+      // 칸 가운데가 아니라 몸의 가로 중심(cx)을 x에 맞춘다
+      -(a.cx ?? a.width / 2) * scale,
       // 칸 맨 아래가 아니라 발끝 줄(baseline)을 y에 맞춰 땅에 붙인다
       -(a.baseline ?? a.height) * scale,
       a.width * scale,
@@ -607,6 +608,16 @@
     context.textBaseline = 'alphabetic';
   }
 
+  // 그림자(발밑 하이라이트) 가로 반지름: 서 있는 몸 폭에 맞춘다
+  function spriteOf(speciesId, isEgg) {
+    return asset(SPRITE_BY_NAME[isEgg ? '디지에그' : C.getSpecies(speciesId).name]);
+  }
+  function footprint(speciesId, isEgg, scale) {
+    const a = spriteOf(speciesId, isEgg);
+    const width = a?.body ?? (6 + C.getSpecies(speciesId).stage * 3) * 1.6;
+    return Math.max(9, width * scale * 0.55);
+  }
+
   const canvas = $('#world');
   const ctx = canvas.getContext('2d');
   const portrait = $('#portrait').getContext('2d');
@@ -628,9 +639,11 @@
         }
       }
       const selected = i === view.selected;
+      const scale = d.isEgg ? 1.6 : 2;
+      const rx = footprint(d.speciesId, d.isEgg, scale) + (selected ? 4 : 0);
       ctx.fillStyle = selected ? '#ffffff33' : '#00000022';
       ctx.beginPath();
-      ctx.ellipse(p.x, p.y + 2, selected ? 30 : 24, 8, 0, 0, 7);
+      ctx.ellipse(p.x, p.y + 1, rx, Math.max(5, rx * 0.3), 0, 0, 7);
       ctx.fill();
       if (selected) {
         ctx.strokeStyle = '#f8f3d0';
@@ -638,7 +651,7 @@
         ctx.stroke();
       }
       const bob = paused ? 0 : Math.sin(t * 2 + i) * 2;
-      body(ctx, d.speciesId, d.isEgg, p.x, p.y + bob, d.isEgg ? 1.6 : 2, Math.floor(t * 4) % 2, p.direction < 0);
+      body(ctx, d.speciesId, d.isEgg, p.x, p.y + bob, scale, Math.floor(t * 4) % 2, p.direction < 0);
       // 똥과 상태 표시
       for (let k = 0; k < d.poop; k++) {
         ctx.fillStyle = '#7a5532';
@@ -676,11 +689,15 @@
   function drawPortrait(t) {
     const d = current();
     portrait.clearRect(0, 0, 240, 150);
+    // 큰 디지몬도 액자(240x150) 안에 들어오도록 배율을 줄인다
+    const a = spriteOf(d.speciesId, d.isEgg);
+    const scale = a ? Math.min(2.4, 100 / a.baseline, 200 / a.body) : 2.4;
+    const rx = footprint(d.speciesId, d.isEgg, scale);
     portrait.fillStyle = '#b5c99955';
     portrait.beginPath();
-    portrait.ellipse(120, 116, 40, 9, 0, 0, 7);
+    portrait.ellipse(120, 119, rx, Math.max(5, rx * 0.28), 0, 0, 7);
     portrait.fill();
-    body(portrait, d.speciesId, d.isEgg, 120, 118 + Math.sin(t * 2), 2.4, Math.floor(t * 3) % 2, false);
+    body(portrait, d.speciesId, d.isEgg, 120, 120 + Math.sin(t * 2), scale, Math.floor(t * 3) % 2, false);
   }
 
   // ---------- 시작 ----------

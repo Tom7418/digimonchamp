@@ -76,15 +76,22 @@ def extract(stem, folder='digimon'):
     png(OUT/(stem+'.png'),w*count,h,pixels)
     # 모든 프레임이 같은 칸 크기를 쓰므로(공격·이펙트 프레임 포함) 칸 아래쪽에 빈 공간이 생긴다.
     # 가장 많은 프레임에서 발끝이 닿는 줄을 baseline으로 기록해 화면에서 그 줄을 땅에 맞춘다.
-    bottoms=[]
+    boxes=[]
     for i in range(count):
-        low=0
+        left,right,low=w,0,0
         for yy in range(h):
             row=yy*w*count+i*w
-            if any(pixels[(row+xx)*4+3] for xx in range(w)): low=yy+1
-        if low: bottoms.append(low)
+            for xx in range(w):
+                if pixels[(row+xx)*4+3]:
+                    left=min(left,xx); right=max(right,xx+1); low=yy+1
+        if low: boxes.append((left,right,low))
+    bottoms=[b[2] for b in boxes]
     baseline=max(set(bottoms),key=bottoms.count) if bottoms else h
-    return dict(id=stem,width=w,height=h,frames=count,baseline=baseline,source=str(p.relative_to(ROOT)).replace('\\','/'))
+    # 서 있는 프레임(발끝이 baseline)의 몸 가로 중심과 폭: 그림 위치와 그림자 크기를 몸에 맞춘다
+    standing=[b for b in boxes if b[2]==baseline] or [(0,w,h)]
+    centers=sorted((b[0]+b[1])/2 for b in standing); widths=sorted(b[1]-b[0] for b in standing)
+    cx=centers[len(centers)//2]; body=widths[len(widths)//2]
+    return dict(id=stem,width=w,height=h,frames=count,baseline=baseline,cx=cx,body=body,source=str(p.relative_to(ROOT)).replace('\\','/'))
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
