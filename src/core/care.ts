@@ -66,7 +66,7 @@ export const usedCapacity = (save: SaveData) => save.digimon.reduce((s, d) => s 
 
 export type FarmEvent =
   | { type: 'hatched' | 'evolved'; uid: number; from: string; to: string }
-  | { type: 'egg'; uid: number; from: string }
+  | { type: 'egg'; uid: number; from: string; reason?: 'sick' }
   | { type: 'lost'; uid: number; name: string; reason: string }
   | { type: 'sick'; uid: number; name: string }
   | { type: 'poop'; uid: number }
@@ -80,11 +80,12 @@ function makeSick(d: Digimon, events: FarmEvent[]) {
   events.push({ type: 'sick', uid: d.uid, name: getSpecies(d.speciesId).name });
 }
 
-function toEgg(d: Digimon): Digimon {
+/** countEgg=false: 병·부상 방치로 죽어 알로 돌아간 경우. 디지에그화 횟수(진화 조건)는 늘지 않는다 */
+function toEgg(d: Digimon, countEgg = true): Digimon {
   return {
     ...d,
     isEgg: true,
-    eggs: d.eggs + 1,
+    eggs: countEgg ? d.eggs + 1 : d.eggs,
     stageAge: 0,
     // 디지에그화하면 능력치 일부를 이어받는다
     stats: Object.fromEntries(STAT_KEYS.map((k) => [k, Math.round(d.stats[k] * 0.15)])) as Stats,
@@ -140,9 +141,10 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
       d.injured = false;
       d.sickMinutes = d.sick ? d.sickMinutes : 0;
     }
-    if (d.sickMinutes >= 2880 && !ctx.isLast) {
-      events.push({ type: 'lost', uid: d.uid, name: sp.name, reason: '병·부상 방치' });
-      return null;
+    // 병·부상을 이틀 방치하면 죽어서 디지에그(디지타마)로 돌아간다 (로스트되지 않음)
+    if (d.sickMinutes >= 2880) {
+      events.push({ type: 'egg', uid: d.uid, from: sp.id, reason: 'sick' });
+      return toEgg(d, false);
     }
   }
 

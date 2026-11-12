@@ -149,3 +149,17 @@ describe('hunting', () => {
     expect(canHuntNow({ ...s, clock: 22 * 60 + 5 }).ok).toBe(false);
   });
 });
+
+describe('illness', () => {
+  it('a digimon left sick for two days returns to a digi-egg instead of being lost', () => {
+    const base = freshSave(0);
+    const sick = { ...base, digimon: [{ ...only(base), sick: true, eggs: 1 }, newDigimon(2, '깜몬')], nextUid: 3 };
+    const r = advance(sick, 2880, seeded(1));
+    const d = r.save.digimon.find((x) => x.uid === 1)!;
+    expect(d.isEgg).toBe(true);
+    expect(d.sick).toBe(false);
+    expect(d.eggs).toBe(1); // 병으로 죽은 것은 디지에그화 횟수로 세지 않는다
+    expect(r.events.some((e) => e.type === 'egg' && e.reason === 'sick')).toBe(true);
+    expect(r.events.some((e) => e.type === 'lost')).toBe(false);
+  });
+});

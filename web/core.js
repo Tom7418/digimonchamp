@@ -1027,11 +1027,12 @@ var ChampCore = (function(exports) {
 			name: getSpecies(d.speciesId).name
 		});
 	}
-	function toEgg(d) {
+	/** countEgg=false: 병·부상 방치로 죽어 알로 돌아간 경우. 디지에그화 횟수(진화 조건)는 늘지 않는다 */
+	function toEgg(d, countEgg = true) {
 		return {
 			...d,
 			isEgg: true,
-			eggs: d.eggs + 1,
+			eggs: countEgg ? d.eggs + 1 : d.eggs,
 			stageAge: 0,
 			stats: Object.fromEntries(STAT_KEYS.map((k) => [k, Math.round(d.stats[k] * .15)])),
 			ap: zeroAp(),
@@ -1100,14 +1101,14 @@ var ChampCore = (function(exports) {
 				d.injured = false;
 				d.sickMinutes = d.sick ? d.sickMinutes : 0;
 			}
-			if (d.sickMinutes >= 2880 && !ctx.isLast) {
+			if (d.sickMinutes >= 2880) {
 				events.push({
-					type: "lost",
+					type: "egg",
 					uid: d.uid,
-					name: sp.name,
-					reason: "병·부상 방치"
+					from: sp.id,
+					reason: "sick"
 				});
-				return null;
+				return toEgg(d, false);
 			}
 		}
 		if (d.stageAge % 60 === 0) {
