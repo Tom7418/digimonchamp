@@ -104,7 +104,14 @@ describe('evolution', () => {
     // 성격에 따라 훈련 속도가 달라지므로 고정한다
     let s = withMon(freshSave(0), { hunger: 100, personality: '쿨' });
     s = { ...s, cages: [...s.cages, '미니 묘지'] };
-    s = setCage(s, 1, '미니 묘지').save;
+    // 훈련은 넣을 때마다 한 번(15분)뿐이라, 꺼냈다 다시 넣기를 일곱 번 해야 암흑 20이 넘는다
+    for (let i = 0; i < 7; i++) {
+      s = setCage(s, 1, '미니 묘지').save;
+      s = advance(s, 20, seeded(1)).save;
+      if (i === 0) expect(only(advance(s, 60, seeded(1)).save).ap['암흑']).toBe(3); // 그대로 두면 더 훈련하지 않는다
+      s = setCage(s, 1, '기본 케이지').save;
+      s = advance(s, 1, seeded(1)).save;
+    }
     const r = advance(s, 8 * 60, seeded(1));
     expect(only(r.save).speciesId).toBe('퍼그몬');
     expect(only(r.save).ap['암흑']).toBeLessThan(20);
@@ -408,7 +415,7 @@ describe('day flow', () => {
   });
   it('training reports what changed, and poop is cleaned one at a time', () => {
     const base = freshSave(0);
-    const s: SaveData = { ...base, clock: 9 * 60, digimon: [{ ...only(base), cage: '미니 운동장', stageAge: 59, hunger: 80, poop: 2 }] };
+    const s: SaveData = { ...base, clock: 9 * 60, digimon: [{ ...only(base), cage: '미니 운동장', trainMinutes: 14, hunger: 80, poop: 2 }] };
     const r = tickFarm(s, seeded(2));
     expect(r.events.find((e) => e.type === 'trained')).toMatchObject({ changes: expect.stringContaining('HP +') });
     const c = cleanOne(r.save, 1);
@@ -517,22 +524,22 @@ describe('스트레스 (형규가 정한 값)', () => {
   });
   it('정원 초과로 하루가 지나면 +20, 그냥 지나면 그대로', () => {
     const night = { ...one({ stress: 50 }), clock: 21 * 60 };
-    expect(endDay(night, seeded(1), [1]).save.digimon[0].stress).toBe(70);
-    expect(endDay(night, seeded(1)).save.digimon[0].stress).toBe(50);
+    // 밤 10시간 동안 시간당 -1
+    expect(endDay(night, seeded(1), [1]).save.digimon[0].stress).toBe(60);
+    expect(endDay(night, seeded(1)).save.digimon[0].stress).toBe(40);
   });
   it('100이 되면 병에 걸린다 (한 번만)', () => {
     const s = tickFarm(one({ stress: 100 }), seeded(1)).save;
     expect(s.digimon[0]).toMatchObject({ sick: true, stress: 100, penalties: 1 });
-    expect(STRESS.show).toBe(60);
+    expect(STRESS.show).toBe(70);
   });
-  it('훈련 한 번마다 +5, 미니 양호실에서는 1시간마다 -5', () => {
-    const hour = (cage: string, stress: number) => {
-      let s = one({ cage, stress, stageAge: 59 });
-      s = tickFarm(s, seeded(1)).save;
-      return s.digimon[0].stress;
-    };
-    expect(hour('미니 운동장', 10)).toBe(15);
-    expect(hour('미니 양호실', 10)).toBe(5);
-    expect(hour('기본 케이지', 10)).toBe(10);
+  it('훈련 한 번에 +5, 1시간마다 -1, 미니 양호실에서는 -5', () => {
+    const tick = (patch: Partial<Digimon>) => tickFarm(one({ stress: 10, ...patch }), seeded(1)).save.digimon[0];
+    const trained = tick({ cage: '미니 운동장', trainMinutes: 14 });
+    expect(trained).toMatchObject({ stress: 15, trainDone: true });
+    expect(tick({ cage: '미니 운동장', trainDone: true, trainMinutes: 0 }).stress).toBe(10); // 다시 넣기 전에는 훈련 없음
+    expect(tick({ cage: '기본 케이지', trainDone: true }).trainDone).toBe(false);
+    expect(tick({ cage: '미니 양호실', stageAge: 59 }).stress).toBe(5);
+    expect(tick({ cage: '기본 케이지', stageAge: 59 }).stress).toBe(9);
   });
 });

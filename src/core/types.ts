@@ -76,6 +76,10 @@ export interface Digimon {
   hungerStress?: number;
   /** 스트레스 100으로 이미 병이 났는가 (100 아래로 내려가면 풀림) */
   stressSick?: boolean;
+  /** 이번 배치에서 훈련한 게임 분 */
+  trainMinutes?: number;
+  /** 이번 배치의 훈련을 마쳤는가. 훈련 케이지 밖에 두면 풀린다 */
+  trainDone?: boolean;
 }
 
 export interface SaveData {
