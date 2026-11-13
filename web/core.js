@@ -1513,6 +1513,225 @@ var ChampCore = (function(exports) {
 			}
 		} : null;
 	}
+	var GEARS = [
+		{
+			id: "wire2",
+			name: "노멀 와이어β",
+			kind: "wire",
+			length: 48,
+			price: 300,
+			minRank: 2,
+			pack: 5
+		},
+		{
+			id: "magnet1",
+			name: "마그넷 와이어α",
+			kind: "wire",
+			length: 24,
+			sticky: true,
+			price: 400,
+			minRank: 2,
+			pack: 5
+		},
+		{
+			id: "magnet2",
+			name: "마그넷 와이어β",
+			kind: "wire",
+			length: 48,
+			sticky: true,
+			price: 800,
+			minRank: 4,
+			pack: 5
+		},
+		{
+			id: "spark1",
+			name: "스파크 와이어α",
+			kind: "wire",
+			length: 24,
+			power: 10,
+			price: 500,
+			minRank: 3,
+			pack: 5
+		},
+		{
+			id: "spark2",
+			name: "스파크 와이어β",
+			kind: "wire",
+			length: 48,
+			power: 20,
+			price: 1e3,
+			minRank: 5,
+			pack: 5
+		},
+		{
+			id: "bait3",
+			name: "독 고기",
+			kind: "bait",
+			effect: "독",
+			range: 200,
+			seconds: 12,
+			price: 400,
+			minRank: 3,
+			pack: 5
+		},
+		{
+			id: "bait4",
+			name: "마비 고기",
+			kind: "bait",
+			effect: "마비",
+			range: 200,
+			seconds: 12,
+			price: 400,
+			minRank: 3,
+			pack: 5
+		},
+		{
+			id: "toy1",
+			name: "미끼",
+			kind: "toy",
+			range: 220,
+			seconds: 15,
+			speed: 30,
+			price: 300,
+			minRank: 2,
+			pack: 3
+		},
+		{
+			id: "toy2",
+			name: "미끼EV",
+			kind: "toy",
+			range: 330,
+			seconds: 20,
+			speed: 40,
+			price: 700,
+			minRank: 4,
+			pack: 3
+		},
+		{
+			id: "light1",
+			name: "옐로우 라이트",
+			kind: "light",
+			range: 350,
+			seconds: 15,
+			nightOnly: true,
+			price: 400,
+			minRank: 2,
+			pack: 3
+		},
+		{
+			id: "light2",
+			name: "블루 라이트",
+			kind: "light",
+			range: 600,
+			seconds: 15,
+			nightOnly: true,
+			price: 800,
+			minRank: 4,
+			pack: 3
+		},
+		{
+			id: "bomb1",
+			name: "일반 폭탄",
+			kind: "bomb",
+			power: 40,
+			range: 110,
+			price: 400,
+			minRank: 3,
+			pack: 3
+		},
+		{
+			id: "bomb2",
+			name: "슬립 폭탄",
+			kind: "bomb",
+			power: 40,
+			effect: "수면",
+			range: 110,
+			price: 600,
+			minRank: 4,
+			pack: 3
+		},
+		{
+			id: "bomb3",
+			name: "스턴 폭탄",
+			kind: "bomb",
+			power: 40,
+			effect: "마비",
+			range: 110,
+			price: 600,
+			minRank: 4,
+			pack: 3
+		},
+		{
+			id: "bomb4",
+			name: "플래시 폭탄",
+			kind: "bomb",
+			power: 40,
+			effect: "눈가리기",
+			range: 160,
+			price: 600,
+			minRank: 5,
+			pack: 3
+		},
+		{
+			id: "mine1",
+			name: "일반 마인",
+			kind: "mine",
+			power: 50,
+			range: 70,
+			price: 500,
+			minRank: 4,
+			pack: 3
+		},
+		{
+			id: "mine2",
+			name: "휴즈 마인",
+			kind: "mine",
+			power: 70,
+			range: 120,
+			price: 900,
+			minRank: 6,
+			pack: 3
+		},
+		{
+			id: "trap1",
+			name: "디지 캐치",
+			kind: "trap",
+			range: 30,
+			seconds: 15,
+			holds: 1,
+			price: 600,
+			minRank: 3,
+			pack: 2
+		},
+		{
+			id: "trap2",
+			name: "디지 프리즌",
+			kind: "trap",
+			range: 60,
+			seconds: 15,
+			holds: 4,
+			price: 1500,
+			minRank: 6,
+			pack: 2
+		}
+	];
+	var gearOf = (id) => GEARS.find((g) => g.id === id);
+	/** 원작 길이 1이 화면에서 차지하는 px (임시) */
+	var WIRE_UNIT = 7.5;
+	/** 위력에 따른 HP 감소 (임시): 20당 1, 장비만으로는 잡히지 않게 HP 1은 남긴다 */
+	var gearDamage = (power, hp) => Math.max(0, Math.min(hp - 1, Math.floor(power / 20)));
+	/** 효과로 멈추는 초 (임시). 눈가리기는 달아나지 못하고 제자리에서 헤맨다 */
+	var EFFECT_SECONDS = {
+		수면: 12,
+		마비: 8,
+		눈가리기: 6,
+		독: 0
+	};
+	/** 독: 이 초마다 HP 1 감소, HP 1에서 멈춘다 (임시) */
+	var POISON_TICK = 3;
+	/** 마그넷 와이어에 달라붙는 초, 다시 걸리기까지의 초 (임시) */
+	var WIRE_STICK = 4;
+	var WIRE_COOLDOWN = 3;
 	// src/core/care.ts
 	/** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
 	var CAPACITY = 200;
@@ -2316,6 +2535,13 @@ var ChampCore = (function(exports) {
 			apply: addGear(b.id, 5),
 			available: () => rank >= b.minRank
 		});
+		for (const g of GEARS) items.push({
+			id: `gear:${g.id}`,
+			name: `${g.name} ×${g.pack}${g.power ? ` (위력 ${g.power})` : ""}${g.effect ? ` · ${g.effect}` : ""}${g.nightOnly ? " · 밤 전용" : ""}`,
+			price: g.price,
+			apply: addGear(g.id, g.pack),
+			available: () => rank >= g.minRank
+		});
 		for (const r of ROPES) if (r.price > 0) items.push({
 			id: `rope:${r.id}`,
 			name: `${r.name} (내구력 ${r.durability})`,
@@ -2732,6 +2958,7 @@ var ChampCore = (function(exports) {
 	exports.DAYS_PER_SEASON = DAYS_PER_SEASON;
 	exports.DAY_END_HOUR = DAY_END_HOUR;
 	exports.DAY_START_HOUR = DAY_START_HOUR;
+	exports.EFFECT_SECONDS = EFFECT_SECONDS;
 	exports.EGG_MINUTES = EGG_MINUTES;
 	exports.ENTRY_CLOSE_HOUR = ENTRY_CLOSE_HOUR;
 	exports.ENTRY_OPEN_HOUR = ENTRY_OPEN_HOUR;
@@ -2739,6 +2966,7 @@ var ChampCore = (function(exports) {
 	exports.FIELDS = FIELDS;
 	exports.FINAL = FINAL;
 	exports.FINAL_ROUNDS = FINAL_ROUNDS;
+	exports.GEARS = GEARS;
 	exports.HUNT_CLOSE_HOUR = HUNT_CLOSE_HOUR;
 	exports.HUNT_NIGHT_HOUR = HUNT_NIGHT_HOUR;
 	exports.HUNT_OPEN_HOUR = HUNT_OPEN_HOUR;
@@ -2749,6 +2977,7 @@ var ChampCore = (function(exports) {
 	exports.OFFLINE_CAP_MINUTES = OFFLINE_CAP_MINUTES;
 	exports.PERSONALITIES = PERSONALITIES;
 	exports.PET = PET;
+	exports.POISON_TICK = POISON_TICK;
 	exports.POOP_INTERVAL = POOP_INTERVAL;
 	exports.PRELIM = PRELIM;
 	exports.PRELIM_DAYS = PRELIM_DAYS;
@@ -2786,7 +3015,10 @@ var ChampCore = (function(exports) {
 	exports.WILD_COUNT = WILD_COUNT;
 	exports.WINTER = WINTER;
 	exports.WINTER_INJURY = WINTER_INJURY;
+	exports.WIRE_COOLDOWN = WIRE_COOLDOWN;
 	exports.WIRE_PACK = WIRE_PACK;
+	exports.WIRE_STICK = WIRE_STICK;
+	exports.WIRE_UNIT = WIRE_UNIT;
 	exports.addStress = addStress;
 	exports.advance = advance;
 	exports.advanceOffline = advanceOffline;
@@ -2821,6 +3053,8 @@ var ChampCore = (function(exports) {
 	exports.findEvolution = findEvolution;
 	exports.freshSave = freshSave;
 	exports.gearCount = gearCount;
+	exports.gearDamage = gearDamage;
+	exports.gearOf = gearOf;
 	exports.getCage = getCage;
 	exports.getSpecies = getSpecies;
 	exports.heal = heal;

@@ -5,7 +5,7 @@ import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData } from '../src/core/types';
 import { ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -364,6 +364,17 @@ describe('사냥 장비', () => {
     expect(shotDamage(shotOf('hand2')!, 3)).toBe(1);
     expect(shotDamage(shotOf('hand2')!, 1)).toBe(0); // 샷만으로는 잡히지 않는다
     expect(BAITS[1].range).toBe(BAITS[0].range * 2);
+  });
+  it('나머지 장비 19종: 원작 이름·길이·위력, 위력 20당 HP 1이고 HP 1은 남긴다', () => {
+    expect(GEARS.length).toBe(19);
+    expect(gearOf('spark2')).toMatchObject({ name: '스파크 와이어β', length: 48, power: 20 });
+    expect(gearOf('mine2')!.power).toBe(70);
+    expect(gearOf('light1')!.nightOnly).toBe(true);
+    expect(gearDamage(40, 5)).toBe(2);
+    expect(gearDamage(70, 5)).toBe(3);
+    expect(gearDamage(70, 2)).toBe(1);
+    expect(gearDamage(10, 5)).toBe(0);
+    expect(shopItems({ ...freshSave(0), bits: 99999, titles: ['t1', 't2'] }).some((i) => i.id === 'gear:bomb1')).toBe(true);
   });
   it('장비는 쓸 때마다 줄고, 상점에서 묶음으로 산다. 예전 저장에는 빈 장비 칸이 생긴다', () => {
     const s = freshSave(0);

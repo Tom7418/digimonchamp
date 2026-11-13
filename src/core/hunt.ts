@@ -228,3 +228,66 @@ export function useGear<T extends { gear?: Record<string, number> }>(save: T, id
   const n = gearCount(save, id);
   return n > 0 ? { ...save, gear: { ...save.gear, [id]: n - 1 } } : null;
 }
+
+// ---------- 사냥 장비: 와이어·특수 고기·미끼·라이트·폭탄·마인·함정 ----------
+// 이름·길이·위력·효과·'밤에만'은 원작 글(txt_list 362~383번, 설명 408~429번).
+// 임시 값: 가격·해금 랭크·묶음 수, 길이 1 = 7.5px(노멀 와이어α 24 = 지금까지의 180px),
+//   위력 20당 HP 1 감소(HP 1은 남김), 효과 지속 시간, 범위. 원작 계산식은 확인하지 못했다.
+export type GearKind = 'wire' | 'bait' | 'toy' | 'light' | 'bomb' | 'mine' | 'trap';
+export type GearEffect = '수면' | '마비' | '독' | '눈가리기';
+export interface Gear {
+  id: string;
+  name: string;
+  kind: GearKind;
+  power?: number;
+  effect?: GearEffect;
+  /** 와이어 길이 (원작 수치) */
+  length?: number;
+  /** 달라붙는 와이어 */
+  sticky?: boolean;
+  /** 영향 범위(px) */
+  range?: number;
+  /** 놓여 있는 초 */
+  seconds?: number;
+  nightOnly?: boolean;
+  /** 움직이는 장난감의 속도(px/초) */
+  speed?: number;
+  /** 함정이 붙잡는 마릿수 */
+  holds?: number;
+  price: number;
+  minRank: number;
+  pack: number;
+}
+export const GEARS: Gear[] = [
+  { id: 'wire2', name: '노멀 와이어β', kind: 'wire', length: 48, price: 300, minRank: 2, pack: 5 },
+  { id: 'magnet1', name: '마그넷 와이어α', kind: 'wire', length: 24, sticky: true, price: 400, minRank: 2, pack: 5 },
+  { id: 'magnet2', name: '마그넷 와이어β', kind: 'wire', length: 48, sticky: true, price: 800, minRank: 4, pack: 5 },
+  { id: 'spark1', name: '스파크 와이어α', kind: 'wire', length: 24, power: 10, price: 500, minRank: 3, pack: 5 },
+  { id: 'spark2', name: '스파크 와이어β', kind: 'wire', length: 48, power: 20, price: 1000, minRank: 5, pack: 5 },
+  { id: 'bait3', name: '독 고기', kind: 'bait', effect: '독', range: 200, seconds: 12, price: 400, minRank: 3, pack: 5 },
+  { id: 'bait4', name: '마비 고기', kind: 'bait', effect: '마비', range: 200, seconds: 12, price: 400, minRank: 3, pack: 5 },
+  { id: 'toy1', name: '미끼', kind: 'toy', range: 220, seconds: 15, speed: 30, price: 300, minRank: 2, pack: 3 },
+  { id: 'toy2', name: '미끼EV', kind: 'toy', range: 330, seconds: 20, speed: 40, price: 700, minRank: 4, pack: 3 },
+  { id: 'light1', name: '옐로우 라이트', kind: 'light', range: 350, seconds: 15, nightOnly: true, price: 400, minRank: 2, pack: 3 },
+  { id: 'light2', name: '블루 라이트', kind: 'light', range: 600, seconds: 15, nightOnly: true, price: 800, minRank: 4, pack: 3 },
+  { id: 'bomb1', name: '일반 폭탄', kind: 'bomb', power: 40, range: 110, price: 400, minRank: 3, pack: 3 },
+  { id: 'bomb2', name: '슬립 폭탄', kind: 'bomb', power: 40, effect: '수면', range: 110, price: 600, minRank: 4, pack: 3 },
+  { id: 'bomb3', name: '스턴 폭탄', kind: 'bomb', power: 40, effect: '마비', range: 110, price: 600, minRank: 4, pack: 3 },
+  { id: 'bomb4', name: '플래시 폭탄', kind: 'bomb', power: 40, effect: '눈가리기', range: 160, price: 600, minRank: 5, pack: 3 },
+  { id: 'mine1', name: '일반 마인', kind: 'mine', power: 50, range: 70, price: 500, minRank: 4, pack: 3 },
+  { id: 'mine2', name: '휴즈 마인', kind: 'mine', power: 70, range: 120, price: 900, minRank: 6, pack: 3 },
+  { id: 'trap1', name: '디지 캐치', kind: 'trap', range: 30, seconds: 15, holds: 1, price: 600, minRank: 3, pack: 2 },
+  { id: 'trap2', name: '디지 프리즌', kind: 'trap', range: 60, seconds: 15, holds: 4, price: 1500, minRank: 6, pack: 2 },
+];
+export const gearOf = (id: string) => GEARS.find((g) => g.id === id);
+/** 원작 길이 1이 화면에서 차지하는 px (임시) */
+export const WIRE_UNIT = 7.5;
+/** 위력에 따른 HP 감소 (임시): 20당 1, 장비만으로는 잡히지 않게 HP 1은 남긴다 */
+export const gearDamage = (power: number, hp: number) => Math.max(0, Math.min(hp - 1, Math.floor(power / 20)));
+/** 효과로 멈추는 초 (임시). 눈가리기는 달아나지 못하고 제자리에서 헤맨다 */
+export const EFFECT_SECONDS: Record<GearEffect, number> = { 수면: 12, 마비: 8, 눈가리기: 6, 독: 0 };
+/** 독: 이 초마다 HP 1 감소, HP 1에서 멈춘다 (임시) */
+export const POISON_TICK = 3;
+/** 마그넷 와이어에 달라붙는 초, 다시 걸리기까지의 초 (임시) */
+export const WIRE_STICK = 4;
+export const WIRE_COOLDOWN = 3;

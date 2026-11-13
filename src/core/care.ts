@@ -2,7 +2,7 @@ import { CAGE_RENAMES, CAGES, dateOf, DAY_END_HOUR, DAY_START_HOUR, EGG_MINUTES,
 import { endOfLife, findEvolution } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, tamerRank } from './titles';
-import { bestRope, MEMORY_CARDS, ROPES, START_ROPE, WIRE_PACK, BAIT_PACK, BAITS, gearCount, SHOT_PACK, SHOTS } from './hunt';
+import { bestRope, MEMORY_CARDS, ROPES, START_ROPE, WIRE_PACK, BAIT_PACK, BAITS, GEARS, gearCount, SHOT_PACK, SHOTS } from './hunt';
 import { ATTRS, FAMILIES, PERSONALITIES, STAT_KEYS, STAT_LABEL, type ApKey, type Digimon, type SaveData, type Stats } from './types';
 
 /** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
@@ -555,6 +555,7 @@ export function shopItems(save: SaveData): ShopItem[] {
   const addGear = (id: string, n: number) => (s: SaveData) => ({ ...s, gear: { ...s.gear, [id]: gearCount(s, id) + n } });
   for (const g of SHOTS) items.push({ id: `gear:${g.id}`, name: `${g.name} ×${SHOT_PACK} (위력 ${g.power}${g.spread ? '×6' : ''}${g.effect ? ' · ' + g.effect : ''})`, price: g.price, apply: addGear(g.id, SHOT_PACK), available: () => rank >= g.minRank });
   for (const b of BAITS) items.push({ id: `gear:${b.id}`, name: `${b.name} ×${BAIT_PACK} (사냥 미끼)`, price: b.price, apply: addGear(b.id, BAIT_PACK), available: () => rank >= b.minRank });
+  for (const g of GEARS) items.push({ id: `gear:${g.id}`, name: `${g.name} ×${g.pack}${g.power ? ` (위력 ${g.power})` : ''}${g.effect ? ` · ${g.effect}` : ''}${g.nightOnly ? ' · 밤 전용' : ''}`, price: g.price, apply: addGear(g.id, g.pack), available: () => rank >= g.minRank });
   for (const r of ROPES)
     if (r.price > 0)
       items.push({

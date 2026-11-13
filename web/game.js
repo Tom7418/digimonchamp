@@ -1436,7 +1436,7 @@
     if (!field.open) return;
     if (save.bits < field.fee) return toast('비트가 부족해요.');
     save = { ...save, bits: save.bits - field.fee };
-    hunt = { field, wilds: [], wires: [], baits: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0 };
+    hunt = { field, wilds: [], wires: [], baits: [], traps: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0 };
     // 1024x1024 원본 지도에서 화면(960x560)만큼 잘라 쓸 위치. 들어갈 때마다 달라진다.
     hunt.map = huntMapImage(field);
     hunt.view = { x: Math.floor(Math.random() * (1024 - 960)), y: Math.floor(Math.random() * (1024 - 560)) };
@@ -1471,7 +1471,32 @@
     if (tool === 'gear') refreshGear();
   }
   // 사냥 장비(샷·고기) 선택 목록. 가진 것만 수량과 함께 보여 준다
-  const GEAR = [...C.SHOTS, ...C.BAITS];
+  const GEAR = [...C.SHOTS, ...C.BAITS, ...C.GEARS];
+  // 장비 목록에서 고른 것이 와이어 종류면 그 장비 (끌어서 설치한다)
+  const wireGear = () => (hunt && hunt.tool === 'gear' ? [C.gearOf($('#gear-select').value)].find((x) => x && x.kind === 'wire') : null);
+  const wireMode = () => hunt.tool === 'wire' || !!wireGear();
+  const huntIsNight = () => C.dateOf(save.clock).hour >= C.HUNT_NIGHT_HOUR;
+  // 효과(수면·마비·눈가리기·독)를 디지몬에게 건다
+  function applyEffect(w, effect) {
+    if (effect === '독') w.poison = C.POISON_TICK;
+    else if (effect) {
+      w.stun = Math.max(w.stun || 0, C.EFFECT_SECONDS[effect]);
+      w.stunKind = effect;
+      w.flee = 0;
+    }
+  }
+  // 폭발: 범위 안 디지몬에게 대미지와 효과
+  function blast(x, y, g) {
+    hunt.fx.push({ x, y, r: g.range, left: 0.35 });
+    const hits = hunt.wilds.filter((w) => !w.gone && Math.hypot(x - w.x, y - (w.y - 15)) < g.range);
+    for (const w of hits) {
+      w.hp -= C.gearDamage(g.power || 0, w.hp);
+      w.flash = 0.4;
+      applyEffect(w, g.effect);
+      if (!g.effect) w.stun = Math.max(w.stun || 0, 1.5);
+    }
+    huntNote(hits.length ? `${g.name} 폭발! ${hits.length}마리에게 명중${g.effect ? ` · ${g.effect}` : ''}` : `${g.name}이(가) 터졌지만 아무도 없었다.`);
+  }
   function refreshGear() {
     const sel = $('#gear-select'), keep = sel.value;
     const owned = GEAR.filter((x) => C.gearCount(save, x.id) > 0);
@@ -1481,8 +1506,9 @@
   }
   // 장비 사용: 샷은 맞은 디지몬을 멈추고(위력 20 이상은 HP 1 감소), 고기는 근처 디지몬을 끌어들인다
   function useGearAt(p) {
-    const id = $('#gear-select').value, shot = C.shotOf(id), bait = C.baitOf(id);
-    if (!shot && !bait) return huntNote('쓸 장비가 없습니다. 상점에서 사세요.');
+    const id = $('#gear-select').value, shot = C.shotOf(id), bait = C.baitOf(id), gear = C.gearOf(id);
+    if (!shot && !bait && !gear) return huntNote('쓸 장비가 없습니다. 상점에서 사세요.');
+    if (gear && gear.nightOnly && !huntIsNight()) return huntNote(`${gear.name}는 밤에만 쓸 수 있습니다.`);
     const now = performance.now() / 1000;
     if (shot && now < (hunt.shotReady || 0)) return;
     const next = C.useGear(save, id);
@@ -1492,6 +1518,18 @@
     if (bait) {
       hunt.baits.push({ x: p.x, y: p.y, range: bait.range, left: bait.seconds, big: bait.id === 'bait2' });
       return huntNote(`${bait.name}를 놓았다. 냄새에 디지몬이 모여든다.`);
+    }
+    if (gear) {
+      if (gear.kind === 'bomb') return blast(p.x, p.y, gear);
+      if (gear.kind === 'mine' || gear.kind === 'trap') {
+        hunt.traps.push({ x: p.x, y: p.y, g: gear, left: gear.kind === 'trap' ? 60 : 1e9, held: 0 });
+        return huntNote(`${gear.name}을(를) 설치했다.`);
+      }
+      // 특수 고기·미끼 장난감·라이트: 디지몬을 끌어들인다. 장난감은 스스로 걸어 다닌다
+      const a = Math.random() * Math.PI * 2;
+      hunt.baits.push({ x: p.x, y: p.y, range: gear.range, left: gear.seconds, kind: gear.kind, effect: gear.effect, name: gear.name,
+        vx: gear.speed ? Math.cos(a) * gear.speed : 0, vy: gear.speed ? Math.sin(a) * gear.speed * 0.6 : 0 });
+      return huntNote(`${gear.name}을(를) 놓았다.`);
     }
     hunt.shotReady = now + C.shotCooldown(shot);
     hunt.fx.push({ x: p.x, y: p.y, r: shot.spread ? C.SHOT_SPREAD_RADIUS : 14, left: 0.25 });
@@ -1544,9 +1582,34 @@
         }
         continue;
       }
+      if (w.poison > 0) {
+        // 독: 일정 시간마다 HP 1, HP 1에서 멈춘다
+        w.poison -= dt;
+        if (w.poison <= 0) {
+          if (w.hp > 1) { w.hp -= 1; w.flash = 0.3; w.poison = C.POISON_TICK; }
+          else w.poison = 0;
+        }
+      }
+      w.wireCd = Math.max(0, (w.wireCd || 0) - dt);
       if (w.stun > 0) {
-        // 샷에 맞아 멈춘 동안은 움직이지 않는다
+        // 샷·폭탄·함정에 걸려 멈춘 동안은 움직이지 않는다
         w.stun -= dt;
+        continue;
+      }
+      // 마인은 밟으면 터지고, 함정은 밟은 디지몬을 붙잡는다
+      const trap = hunt.traps.find((t) => Math.hypot(t.x - w.x, t.y - w.y) < (t.g.kind === 'mine' ? 26 : t.g.range));
+      if (trap && trap.g.kind === 'mine') {
+        trap.left = 0;
+        blast(trap.x, trap.y, trap.g);
+        continue;
+      }
+      if (trap && trap.held < trap.g.holds) {
+        trap.held += 1;
+        if (trap.held >= trap.g.holds) trap.left = Math.min(trap.left, trap.g.seconds);
+        w.stun = trap.g.seconds;
+        w.stunKind = '포획';
+        w.flee = 0;
+        huntNote(`${C.getSpecies(w.id).name}이(가) ${trap.g.name}에 걸렸다! 로프로 감으세요.`);
         continue;
       }
       const lure = !(w.flee > 0) && hunt.baits.find((b) => Math.hypot(b.x - w.x, b.y - w.y) < b.range);
@@ -1556,6 +1619,12 @@
         w.vx = dist > 14 ? ((lure.x - w.x) / dist) * 45 : 0;
         w.vy = dist > 14 ? ((lure.y - w.y) / dist) * 45 : 0;
         w.turn = 1;
+        // 독·마비 고기는 다가와 먹은 디지몬에게 효과를 건다 (한 마리가 먹으면 사라진다)
+        if (dist <= 14 && lure.effect) {
+          applyEffect(w, lure.effect);
+          lure.left = 0;
+          huntNote(`${C.getSpecies(w.id).name}이(가) ${lure.name}를 먹었다! ${lure.effect}`);
+        }
       } else if (w.flee > 0) {
         w.flee -= dt;
       } else {
@@ -1568,9 +1637,16 @@
         }
       }
       const next = { x: w.x + w.vx * dt, y: w.y + w.vy * dt };
-      if (hunt.wires.some((l) => crosses(w, next, l.a, l.b))) {
+      const wire = hunt.wires.find((l) => crosses(w, next, l.a, l.b));
+      if (wire) {
         w.vx = -w.vx;
         w.vy = -w.vy;
+        if (wire.g && !w.wireCd) {
+          // 마그넷은 달라붙고, 스파크는 전격 대미지
+          w.wireCd = C.WIRE_COOLDOWN + (wire.g.sticky ? C.WIRE_STICK : 0);
+          if (wire.g.sticky) { w.stun = C.WIRE_STICK; w.stunKind = '달라붙음'; w.flee = 0; }
+          else if (wire.g.power) { w.hp -= C.gearDamage(Math.max(20, wire.g.power * 2), w.hp); w.flash = 0.4; w.stun = 1; w.stunKind = ''; }
+        }
         continue;
       }
       w.x = next.x;
@@ -1588,7 +1664,18 @@
       w.movedX = w.x - oldX;
       w.movedY = w.y - oldY;
     }
-    for (const b of hunt.baits) b.left -= dt;
+    for (const b of hunt.baits) {
+      b.left -= dt;
+      if (b.vx || b.vy) {
+        // 장난감은 걸어 다니다 가장자리에서 돌아선다
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        if (b.x < AREA.x0 + 20 || b.x > AREA.x1 - 20) b.vx = -b.vx;
+        if (b.y < AREA.y0 + 40 || b.y > AREA.y1 - 10) b.vy = -b.vy;
+      }
+    }
+    for (const t of hunt.traps) t.left -= dt;
+    hunt.traps = hunt.traps.filter((t) => t.left > 0);
     hunt.baits = hunt.baits.filter((b) => b.left > 0);
     for (const f of hunt.fx) f.left -= dt;
     hunt.fx = hunt.fx.filter((f) => f.left > 0);
@@ -1671,8 +1758,8 @@
     if (!hunt) return;
     e.preventDefault();
     const p = canvasPoint(e);
-    if (type === 'down' && hunt.tool === 'gear') return useGearAt(p);
-    if (hunt.tool === 'gear') return;
+    if (type === 'down' && hunt.tool === 'gear' && !wireGear()) return useGearAt(p);
+    if (hunt.tool === 'gear' && !wireGear()) return;
     if (type === 'down') {
       const target = hunt.tool === 'rope' && hunt.wilds.find((w) => !w.gone && w.bound > 0 && Math.hypot(p.x - w.x, p.y - (w.y - 15)) < 50);
       hunt.pull = target ? { w: target, to: p } : null;
@@ -1691,21 +1778,31 @@
       const last = hunt.trail[hunt.trail.length - 1];
       if (Math.hypot(p.x - last.x, p.y - last.y) > 4) hunt.trail.push(p);
       if (hunt.trail.length > 400) hunt.trail.shift();
-      if (hunt.tool === 'wire' && hunt.trail.length > 2) hunt.trail = [hunt.trail[0], p];
+      if (wireMode() && hunt.trail.length > 2) hunt.trail = [hunt.trail[0], p];
     } else if (type === 'up' && hunt.drawing) {
       hunt.drawing = false;
       const t = hunt.trail;
       hunt.trail = [];
-      if (hunt.tool === 'wire') {
+      if (wireMode()) {
+        const g = wireGear();
         if (t.length < 2) return;
-        if (save.wires <= 0) return huntNote('와이어가 없습니다. 상점에서 사세요.');
+        if (!g && save.wires <= 0) return huntNote('와이어가 없습니다. 상점에서 사세요.');
         let b = t[t.length - 1];
         const len = Math.hypot(b.x - t[0].x, b.y - t[0].y);
         if (len < 20) return;
-        const k = Math.min(1, 180 / len);
+        // 길이는 원작 수치(노멀α 24) × WIRE_UNIT
+        const k = Math.min(1, ((g ? g.length : 24) * C.WIRE_UNIT) / len);
         b = { x: t[0].x + (b.x - t[0].x) * k, y: t[0].y + (b.y - t[0].y) * k };
-        hunt.wires.push({ a: t[0], b });
-        save = { ...save, wires: save.wires - 1 };
+        if (g) {
+          const next = C.useGear(save, g.id);
+          if (!next) return huntNote('남은 수량이 없습니다.');
+          save = next;
+          refreshGear();
+          hunt.wires.push({ a: t[0], b, g });
+        } else {
+          hunt.wires.push({ a: t[0], b });
+          save = { ...save, wires: save.wires - 1 };
+        }
         render();
         return;
       }
@@ -1739,8 +1836,19 @@
     ctx.lineWidth = 2;
     ctx.strokeRect(AREA.x0, AREA.y0, AREA.x1 - AREA.x0, AREA.y1 - AREA.y0);
     ctx.setLineDash([]);
+    for (const t of hunt.traps) {
+      // 마인·함정 (원작 그림을 넣기 전의 임시 표시)
+      const mine = t.g.kind === 'mine';
+      ctx.fillStyle = mine ? '#5b2a2a' : '#2a4a5b';
+      ctx.strokeStyle = mine ? '#ff8a6a' : '#8fe0ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(t.x, t.y, mine ? 12 : t.g.range, mine ? 7 : t.g.range * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
     for (const l of hunt.wires) {
-      ctx.strokeStyle = '#d8dde0';
+      ctx.strokeStyle = !l.g ? '#d8dde0' : l.g.sticky ? '#e58bd8' : l.g.power ? '#ffe36a' : '#d8dde0';
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.moveTo(l.a.x, l.a.y);
@@ -1751,7 +1859,20 @@
     }
     for (const b of hunt.baits) {
       const im = itemImages.meat, k = b.big ? 1.5 : 1;
-      if (im?.complete && im.naturalWidth) ctx.drawImage(im, b.x - 32 * k, b.y - 50 * k, 64 * k, 70 * k);
+      if (b.kind === 'toy' || b.kind === 'light') {
+        // 장난감·라이트 (원작 그림을 넣기 전의 임시 표시)
+        ctx.fillStyle = b.kind === 'light' ? (b.name.startsWith('블루') ? '#8fd0ff' : '#ffe36a') : '#ff9a3c';
+        ctx.globalAlpha = b.kind === 'light' ? 0.35 : 1;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y - 12, b.kind === 'light' ? 34 : 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        if (b.kind === 'light') { ctx.beginPath(); ctx.arc(b.x, b.y - 12, 8, 0, Math.PI * 2); ctx.fill(); }
+      } else if (im?.complete && im.naturalWidth) {
+        if (b.effect) ctx.filter = b.effect === '독' ? 'hue-rotate(250deg)' : 'hue-rotate(40deg) saturate(2)';
+        ctx.drawImage(im, b.x - 32 * k, b.y - 50 * k, 64 * k, 70 * k);
+        ctx.filter = 'none';
+      }
     }
     const order = [...hunt.wilds].sort((a, b) => a.y - b.y);
     for (const w of order) {
@@ -1788,7 +1909,7 @@
       if (w.stun > 0) {
         ctx.font = 'bold 14px "Noto Sans KR",sans-serif';
         ctx.fillStyle = w.stunKind === '수면' ? '#bfe3ff' : '#ffe36a';
-        ctx.fillText(w.stunKind === '수면' ? 'Zzz' : w.stunKind === '마비' ? '마비' : '멈춤', w.x, w.y - 62);
+        ctx.fillText(w.stunKind === '수면' ? 'Zzz' : w.stunKind || '멈춤', w.x, w.y - 62);
       }
     }
     for (const f of hunt.fx) {
@@ -1811,8 +1932,8 @@
       ctx.stroke();
     }
     if (hunt.trail.length > 1) {
-      ctx.strokeStyle = hunt.tool === 'wire' ? '#d8dde0' : '#f5e6a8';
-      ctx.lineWidth = hunt.tool === 'wire' ? 4 : 3;
+      ctx.strokeStyle = wireMode() ? '#d8dde0' : '#f5e6a8';
+      ctx.lineWidth = wireMode() ? 4 : 3;
       ctx.beginPath();
       ctx.moveTo(hunt.trail[0].x, hunt.trail[0].y);
       for (const p of hunt.trail) ctx.lineTo(p.x, p.y);
