@@ -39,7 +39,7 @@ dialog h3{font-size:13px;margin:10px 0 2px;color:#ffd36a}
 #arena{width:100%;image-rendering:pixelated;border-radius:6px;display:block}
 .battle-health{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11px}
 .hp-row{display:grid;grid-template-columns:70px 1fr 34px;gap:5px;align-items:center;margin-top:3px}
-.cage-palette button:disabled{opacity:.35}
+.cage-palette button:disabled{opacity:.35}.cage-palette button[hidden]{display:none}
 .cage-palette .swatch{display:block;width:34px;height:22px;border-radius:4px;border:1px solid #ffffff55}
 .partner .ap,.partner #evo,.partner .evo-head,.partner .stats.six{grid-column:1/-1}
 /* 사냥 */

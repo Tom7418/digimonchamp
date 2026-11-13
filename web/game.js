@@ -56,7 +56,7 @@
 
   // ---------- 저장 ----------
   function freshView() {
-    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 2, team: [], selected: 0, logs: [], poops: [], foods: [], tips: {}, entryNoticeRead: null, farmWorld: 2 };
+    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 3, team: [], selected: 0, logs: [], poops: [], foods: [], tips: {}, entryNoticeRead: null, farmWorld: 2 };
   }
   function load() {
     try {
@@ -311,8 +311,9 @@
     document.querySelectorAll('[data-build]').forEach((b) => {
       const t = L.types[b.dataset.build];
       const owned = b.dataset.build === 'free' || save.cages.includes(t.core);
+      // 원작 시설이 40종 가까이 되므로 가진 것만 보여 준다
+      b.hidden = !owned;
       b.disabled = !owned;
-      b.title = owned ? '' : '상점에서 구매하면 설치할 수 있습니다';
     });
   }
 

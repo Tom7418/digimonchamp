@@ -28,4 +28,7 @@ assert struct.unpack_from('>II', icon, 16) == (64 * 36, 48), 'Invalid cage icon 
 for kind, size in {'free': (96,112), 'clinic': (96,112), 'gym': (288,112), 'field': (192,200), 'clinic-hex': (104,120), 'field-hex': (208,210)}.items():
     raw=(web/'assets/facilities'/f'{kind}.png').read_bytes()
     assert struct.unpack_from('>II',raw,16)==size, f'Invalid facility background: {kind}'
+import re
+for img in set(re.findall(r"img:'([^']+)'", (web/'cage-layout.js').read_text(encoding='utf-8'))):
+    assert (web/'assets/facilities'/f'{img}.png').exists(), f'Missing facility art: {img}'
 print(f'Pages check passed: {len(sprites)} sprite sheets, relative paths and all entrypoint files verified.')

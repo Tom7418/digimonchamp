@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS } from '../src/core/care';
-import { getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
+import { CAGES, getCage, getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
@@ -103,18 +103,44 @@ describe('evolution', () => {
   it('AP from a training cage changes the branch', () => {
     // 성격에 따라 훈련 속도가 달라지므로 고정한다
     let s = withMon(freshSave(0), { hunger: 100, personality: '쿨' });
-    s = { ...s, cages: [...s.cages, '미니 묘지'] };
-    // 훈련은 넣을 때마다 한 번(15분)뿐이라, 꺼냈다 다시 넣기를 일곱 번 해야 암흑 20이 넘는다
-    for (let i = 0; i < 7; i++) {
-      s = setCage(s, 1, '미니 묘지').save;
+    s = { ...s, cages: [...s.cages, '묘지'] };
+    // 훈련은 넣을 때마다 한 번(15분)뿐이라, 큰 시설(상승 2배)인 묘지에서도 꺼냈다 다시 넣기를 네 번 해야 암흑 20이 넘는다
+    for (let i = 0; i < 4; i++) {
+      s = setCage(s, 1, '묘지').save;
       s = advance(s, 20, seeded(1)).save;
-      if (i === 0) expect(only(advance(s, 60, seeded(1)).save).ap['암흑']).toBe(3); // 그대로 두면 더 훈련하지 않는다
+      if (i === 0) expect(only(advance(s, 60, seeded(1)).save).ap['암흑']).toBe(6); // 그대로 두면 더 훈련하지 않는다
       s = setCage(s, 1, '기본 케이지').save;
       s = advance(s, 1, seeded(1)).save;
     }
     const r = advance(s, 8 * 60, seeded(1));
     expect(only(r.save).speciesId).toBe('퍼그몬');
     expect(only(r.save).ap['암흑']).toBeLessThan(20);
+  });
+  it('원작 케이지: 큰 시설은 미니보다 많이 오르고, 목장은 먹이·똥을 알아서 처리, 링은 배틀 수를 올린다', () => {
+    const train = (cage: string) => {
+      let s = withMon(freshSave(0), { hunger: 100, personality: '쿨' });
+      s = { ...s, cages: [...s.cages, cage] };
+      s = setCage(s, 1, cage).save;
+      return only(advance(s, 20, seeded(1)).save);
+    };
+    expect(train('미니 화산').ap['용']).toBe(3);
+    expect(train('화산').ap['용']).toBe(6);
+    expect(train('링').battles).toBe(1);
+    let s = withMon(freshSave(0), { hunger: 55 });
+    s = { ...s, cages: [...s.cages, '목장'] };
+    s = setCage(s, 1, '목장').save;
+    const r = advance(s, 8 * 60, seeded(1));
+    expect(only(r.save).hunger).toBeGreaterThan(50);
+    expect(only(r.save).poop).toBe(0);
+    expect(CAGES.filter((c) => c.no > 0).length).toBe(38);
+    expect(getCage('경기장').capacity).toBe(10);
+  });
+  it('예전 임시 케이지 이름은 원작 이름으로 옮겨진다', () => {
+    const old = withMon(freshSave(0), { cage: '미니 수영장' });
+    const s = upgradeSave({ ...old, cages: [...old.cages, '미니 수영장', '백신 연구실', '미니 묘지'] });
+    expect(s.cages).toEqual(expect.arrayContaining(['미니 해변', '병원', '묘지']));
+    expect(s.cages).not.toContain('미니 수영장');
+    expect(only(s).cage).toBe('미니 해변');
   });
   it('battle count evolves 코로몬 into 아구몬, and rank gates the next stage', () => {
     const base = withMon(freshSave(0), { speciesId: '코로몬', battles: 3, stageAge: 600 });

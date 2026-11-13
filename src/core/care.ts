@@ -1,4 +1,4 @@
-import { CAGES, dateOf, DAY_END_HOUR, DAY_START_HOUR, EGG_MINUTES, evolutionBonus, getCage, getSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK, typicalStats } from './data';
+import { CAGE_RENAMES, CAGES, dateOf, DAY_END_HOUR, DAY_START_HOUR, EGG_MINUTES, evolutionBonus, getCage, getSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK, typicalStats } from './data';
 import { endOfLife, findEvolution } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, tamerRank } from './titles';
@@ -63,6 +63,10 @@ export function upgradeSave(save: SaveData): SaveData {
   }
   if (s.salve == null) s.salve = 0;
   delete s.ropeLevel;
+  // 예전 임시 케이지 이름을 원작 이름으로 옮긴다
+  const renamed = (id: string) => CAGE_RENAMES[id] ?? id;
+  if (s.cages.some((c) => CAGE_RENAMES[c])) s.cages = [...new Set(s.cages.map(renamed))];
+  if (s.digimon.some((d) => CAGE_RENAMES[d.cage])) s.digimon = s.digimon.map((d) => (CAGE_RENAMES[d.cage] ? { ...d, cage: renamed(d.cage) } : d));
   return s;
 }
 
@@ -114,6 +118,8 @@ export type FarmEvent =
 export const STRESS = { crowdedPerDay: 20, rotten: 50, sick: 40, training: 5, hungerBelow: 20, perHunger: 1.5, show: 70, reliefPerHour: 5, restPerHour: 1 };
 /** 훈련 한 번에 걸리는 게임 분 */
 export const TRAINING_MINUTES = 15;
+/** 동물원·목장이 먹이를 주는 배고픔 기준 (임시) */
+export const AUTO_FEED_BELOW = 50;
 /** 스트레스가 풀리는 케이지. 온천·양호실·동물원·미니 동물원은 아직 게임에 없지만 추가되면 바로 적용된다 */
 export const STRESS_RELIEF_CAGES = ['온천', '미니 양호실', '양호실', '동물원', '미니 동물원'];
 export function addStress(d: Digimon, amount: number) {
@@ -177,6 +183,11 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
     d.fatigue = Math.max(0, d.fatigue - (cage.rest ? 0.5 : 0.04));
     d.poopTimer += 1;
   }
+  // 동물원·목장: 먹이와 배설물을 알아서 처리한다 (원작 설명). 고기는 쓰지 않는다 (임시)
+  if (cage.autoCare) {
+    d.poopTimer = 0;
+    if (d.hunger < AUTO_FEED_BELOW) d.hunger = 100;
+  }
   if (d.poopTimer >= poopInterval(sp.stage)) {
     d.poopTimer = 0;
     if (d.poop < 5) {
@@ -219,16 +230,17 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
 
   // 훈련: 테이머가 훈련 케이지에 넣으면 15분 훈련을 한 번 한다. 끝나면 훈련 케이지가 아닌 곳에
   // 두었다가 다시 넣기 전에는 훈련하지 않는다 (형규가 정함. 15분은 게임 시간)
-  if (cage.up || cage.apUp) {
+  if (cage.up || cage.apUp || cage.battleUp) {
     if (!d.trainDone && !ctx.sleep && !d.sick && !d.injured && d.hunger > 0 && d.fatigue < 90) {
       d.trainMinutes = (d.trainMinutes ?? 0) + 1;
       if (d.trainMinutes >= TRAINING_MINUTES) {
         d.trainMinutes = 0;
         d.trainDone = true;
         const speed = d.personality === '솔직' ? 1.3 : d.personality === '성급한' ? 0.8 : 1;
+        const gain = cage.gain ?? 1;
         const changes: string[] = [];
         for (const k of cage.up ?? []) {
-          const n = Math.max(1, Math.round((1 + ctx.rng() * (sp.stage + 1)) * speed));
+          const n = Math.max(1, Math.round((1 + ctx.rng() * (sp.stage + 1)) * speed * gain));
           d.stats[k] += n;
           changes.push(`${STAT_LABEL[k]} +${n}`);
         }
@@ -236,8 +248,15 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
           if (d.stats[k] > 1) changes.push(`${STAT_LABEL[k]} -1`);
           d.stats[k] = Math.max(1, d.stats[k] - 1);
         }
+        for (const k of cage.apUp ?? []) {
+          d.ap[k] = Math.min(99, d.ap[k] + 3 * speed * gain);
+          changes.push(`${k} 수치 ↑`);
+        }
+        if (cage.battleUp) {
+          d.battles += cage.battleUp;
+          changes.push(`배틀 수 +${cage.battleUp}`);
+        }
         if (changes.length) events.push({ type: 'trained', uid: d.uid, name: sp.name, changes: changes.join(', ') });
-        for (const k of cage.apUp ?? []) d.ap[k] = Math.min(99, d.ap[k] + 3 * speed);
         for (const k of cage.apDown ?? []) d.ap[k] = Math.max(0, d.ap[k] - 1);
         d.fatigue = Math.min(100, d.fatigue + 5);
         addStress(d, STRESS.training);

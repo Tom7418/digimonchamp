@@ -152,27 +152,76 @@ export interface Cage {
   apUp?: ApKey[];
   apDown?: ApKey[];
   rest?: boolean;
+  /** 원작 번호 (0은 이 게임에만 있는 자유 활동 구역) */
+  no: number;
+  /** 훈련 한 번의 상승 배수 (임시) */
+  gain?: number;
+  /** 먹이·배설물을 알아서 처리 (동물원·목장) */
+  autoCare?: boolean;
+  /** 훈련 한 번에 늘어나는 배틀 수 (링) */
+  battleUp?: number;
+  /** 올려 주는 내성 (규칙 미구현) */
+  resist?: string;
   /** 위키에 표가 없어 이 프로젝트에서 채워 넣은 케이지 */
   supplemental?: boolean;
 }
 type StatKey2 = keyof Stats;
 
+// 케이지 40종: 이름·순서·효과·수용 수는 원작 글(root/ui/txt txt_list 487~566번)에서 확인.
+//   no는 원작 번호이자 그림 번호(root/training/field_cmNN_01).
+// 임시 값: price·minRank, gain(훈련 한 번의 상승 배수: 미니·1칸 1, 큰 시설 2),
+//   down·apDown(원작 글에는 내려가는 값이 없다. 예전 임시 규칙을 미니 시설에만 남김).
+// 내성(빛·열·추위·천둥·어둠) 시설은 내성 규칙이 아직 없어 팔지 않는다(price 0). 대기실(28)·덮개(29)는 설명이 없어 뺐다.
 export const CAGES: Cage[] = [
-  { id: '기본 케이지', price: 0, minRank: 1, capacity: 99 },
-  { id: '미니 양호실', price: 0, minRank: 1, capacity: 2, rest: true },
-  { id: '공터', price: 0, minRank: 1, capacity: 2, up: ['def'], down: ['atk'], apUp: ['벌레풀'], apDown: ['기계'] },
-  { id: '미니 운동장', price: 0, minRank: 1, capacity: 2, up: ['hp'], down: ['tp'], apUp: ['짐승'], apDown: ['용'] },
-  { id: '미니 체육관', price: 300, minRank: 1, capacity: 2, up: ['atk'], down: ['def'], apUp: ['기계'], apDown: ['벌레풀'] },
-  { id: '미니 화산', price: 400, minRank: 1, capacity: 2, up: ['atk'], down: ['def'], apUp: ['용'], apDown: ['짐승'] },
-  { id: '미니 화원', price: 400, minRank: 1, capacity: 2, up: ['int'], down: ['atk'], apUp: ['성', '벌레풀'], apDown: ['암흑', '기계'] },
-  { id: '미니 수영장', price: 400, minRank: 1, capacity: 2, up: ['hp'], down: ['spd'], apUp: ['물'], apDown: ['새'], supplemental: true },
-  { id: '미니 새장', price: 400, minRank: 1, capacity: 2, up: ['spd'], down: ['def'], apUp: ['새'], apDown: ['물'], supplemental: true },
-  { id: '미니 묘지', price: 400, minRank: 1, capacity: 2, up: ['int'], down: ['hp'], apUp: ['암흑'], apDown: ['성'], supplemental: true },
-  { id: '백신 연구실', price: 800, minRank: 2, capacity: 2, up: ['tp'], apUp: ['백신'], apDown: ['바이러스'], supplemental: true },
-  { id: '데이터 연구실', price: 800, minRank: 2, capacity: 2, up: ['tp'], apUp: ['데이터'], apDown: ['백신'], supplemental: true },
-  { id: '바이러스 연구실', price: 800, minRank: 2, capacity: 2, up: ['tp'], apUp: ['바이러스'], apDown: ['데이터'], supplemental: true },
-  { id: '운동장', price: 1500, minRank: 3, capacity: 6, up: ['spd'], supplemental: false },
+  { id: '기본 케이지', no: 0, price: 0, minRank: 1, capacity: 99 },
+  { id: '공터', no: 1, price: 0, minRank: 1, capacity: 2, up: ['def'], down: ['atk'] },
+  { id: '운동장', no: 2, price: 2000, minRank: 3, capacity: 6, up: ['hp'], gain: 2 },
+  { id: '경기장', no: 3, price: 4500, minRank: 5, capacity: 10, up: ['spd'], gain: 2 },
+  { id: '도장', no: 4, price: 2000, minRank: 3, capacity: 6, up: ['tp'], gain: 2 },
+  { id: '체육관', no: 5, price: 3000, minRank: 4, capacity: 8, up: ['atk'], gain: 2 },
+  { id: '연구소', no: 6, price: 3000, minRank: 4, capacity: 8, apUp: ['데이터'], gain: 2 },
+  { id: '화산', no: 7, price: 3000, minRank: 4, capacity: 8, apUp: ['용'], gain: 2 },
+  { id: '초원', no: 8, price: 2000, minRank: 3, capacity: 6, apUp: ['짐승'], gain: 2 },
+  { id: '해변', no: 9, price: 3000, minRank: 4, capacity: 8, apUp: ['물'], gain: 2 },
+  { id: '고산', no: 10, price: 3000, minRank: 4, capacity: 8, apUp: ['새'], gain: 2 },
+  { id: '숲', no: 11, price: 2000, minRank: 3, capacity: 6, apUp: ['벌레풀'], gain: 2 },
+  { id: '정글', no: 12, price: 2000, minRank: 3, capacity: 6, apUp: ['벌레풀'], gain: 2 },
+  { id: '신전', no: 13, price: 0, minRank: 99, capacity: 6, resist: '빛' },
+  { id: '묘지', no: 14, price: 2000, minRank: 3, capacity: 6, apUp: ['암흑'], gain: 2 },
+  { id: '공장', no: 15, price: 2000, minRank: 3, capacity: 6, apUp: ['기계'], gain: 2 },
+  { id: '미니 양호실', no: 16, price: 0, minRank: 1, capacity: 2, rest: true },
+  { id: '병원', no: 17, price: 2000, minRank: 3, capacity: 6, apUp: ['백신'], gain: 2 },
+  { id: '화원', no: 18, price: 1200, minRank: 2, capacity: 4, apUp: ['성'], gain: 2 },
+  { id: '온천', no: 19, price: 3500, minRank: 4, capacity: 8, rest: true },
+  { id: '사막', no: 20, price: 0, minRank: 99, capacity: 6, resist: '열' },
+  { id: '얼음', no: 21, price: 0, minRank: 99, capacity: 8, resist: '추위' },
+  { id: '발전소', no: 22, price: 0, minRank: 99, capacity: 6, resist: '천둥' },
+  { id: '가스실', no: 23, price: 1200, minRank: 2, capacity: 4, apUp: ['바이러스'], gain: 2 },
+  { id: '절', no: 24, price: 400, minRank: 1, capacity: 2, up: ['int'] },
+  { id: '동물원', no: 25, price: 1500, minRank: 2, capacity: 2, autoCare: true },
+  { id: '목장', no: 26, price: 4000, minRank: 4, capacity: 8, autoCare: true },
+  { id: '링', no: 27, price: 2500, minRank: 3, capacity: 6, battleUp: 1 },
+  { id: '미니 운동장', no: 30, price: 0, minRank: 1, capacity: 2, up: ['hp'], down: ['tp'] },
+  { id: '양호실', no: 31, price: 2000, minRank: 3, capacity: 6, rest: true },
+  { id: '미니 화원', no: 32, price: 400, minRank: 1, capacity: 2, apUp: ['성'], apDown: ['암흑'] },
+  { id: '미니 숲', no: 33, price: 400, minRank: 1, capacity: 2, apUp: ['벌레풀'], apDown: ['기계'] },
+  { id: '미니 체육관', no: 34, price: 300, minRank: 1, capacity: 2, up: ['atk'], down: ['def'] },
+  { id: '미니 화산', no: 35, price: 400, minRank: 1, capacity: 2, apUp: ['용'], apDown: ['짐승'] },
+  { id: '미니 얼음', no: 36, price: 0, minRank: 99, capacity: 2, resist: '추위' },
+  { id: '미니 고산', no: 37, price: 400, minRank: 1, capacity: 2, apUp: ['새'], apDown: ['물'] },
+  { id: '미니 공장', no: 38, price: 400, minRank: 1, capacity: 2, apUp: ['기계'], apDown: ['벌레풀'] },
+  { id: '미니 해변', no: 39, price: 400, minRank: 1, capacity: 2, apUp: ['물'], apDown: ['새'] },
+  { id: '동굴', no: 40, price: 0, minRank: 99, capacity: 2, resist: '어둠' },
 ];
+/** 예전 임시 케이지 이름 → 원작 이름 (저장 데이터 이전용) */
+export const CAGE_RENAMES: Record<string, string> = {
+  '미니 수영장': '미니 해변',
+  '미니 새장': '미니 고산',
+  '미니 묘지': '묘지',
+  '백신 연구실': '병원',
+  '데이터 연구실': '연구소',
+  '바이러스 연구실': '가스실',
+};
 export const getCage = (id: string) => CAGES.find((c) => c.id === id) ?? CAGES[0];
 export const START_CAGES = ['기본 케이지', '미니 양호실', '공터', '미니 운동장'];
 

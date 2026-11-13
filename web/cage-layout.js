@@ -3,23 +3,46 @@
 // 원본 시설 배경의 외곽과 점유 모양을 맞춘다. 정원은 별도의 게임 규칙이다.
 window.CageLayout = {
   types: {
-    // core: 규칙 엔진(web/core.js)의 케이지 이름. 훈련·회복 효과는 그쪽 규칙을 따른다.
-    // art:false 인 시설은 원본 배경을 아직 변환하지 않아 단색으로 그린다.
-    free: {name:'기본 케이지',core:'기본 케이지',frame:0,cells:[[0,0]],capacity:1},
-    gym: {name:'미니 체육관',core:'미니 체육관',frame:3,cells:[[0,0],[1,0],[2,0]],capacity:2},
-    field: {name:'미니 운동장',core:'미니 운동장',frame:1,cells:[[0,0],[1,0],[0,1]],capacity:2},
-    clinic: {name:'미니 양호실',core:'미니 양호실',frame:15,cells:[[0,0]],capacity:3},
-    vacant: {name:'공터',core:'공터',art:false,color:'#b9a77a',cells:[[0,0],[1,0]],capacity:2},
-    volcano: {name:'미니 화산',core:'미니 화산',art:false,color:'#c46a4a',cells:[[0,0],[1,0]],capacity:2},
-    flower: {name:'미니 화원',core:'미니 화원',art:false,color:'#d9a3c0',cells:[[0,0],[1,0]],capacity:2},
-    pool: {name:'미니 수영장',core:'미니 수영장',art:false,color:'#5f9fd0',cells:[[0,0],[1,0]],capacity:2},
-    aviary: {name:'미니 새장',core:'미니 새장',art:false,color:'#9fcfe0',cells:[[0,0],[1,0]],capacity:2},
-    grave: {name:'미니 묘지',core:'미니 묘지',art:false,color:'#6c5f7d',cells:[[0,0],[1,0]],capacity:2},
-    labV: {name:'백신 연구실',core:'백신 연구실',art:false,color:'#e8e2b0',cells:[[0,0]],capacity:2},
-    labD: {name:'데이터 연구실',core:'데이터 연구실',art:false,color:'#a8d8c0',cells:[[0,0]],capacity:2},
-    labX: {name:'바이러스 연구실',core:'바이러스 연구실',art:false,color:'#c9a0d0',cells:[[0,0]],capacity:2},
-    stadium: {name:'운동장',core:'운동장',art:false,color:'#c8b07a',cells:[[0,0],[1,0],[0,1],[1,1]],capacity:6}
+    // 원작 케이지 (이름·수용 수는 원작 글, 모양·그림은 root/training/field_cmNN_01에서 tools/extract_cage_fields.py로 얻은 값).
+    // core: 규칙 엔진(web/core.js)의 케이지 이름. img: assets/facilities의 그림. fit: 점유 칸 상자에 꽉 맞춰 그린다.
+    // free·clinic·field·gym은 예전 저장과 맞추려고 남긴 이름이다 (field=미니 운동장, gym=미니 체육관).
+    free: {name:'기본 케이지',core:'기본 케이지',img:'free',cells:[[0,0]],capacity:1},
+    cm01: {name:'공터',core:'공터',img:'cm01',fit:true,cells:[[0,0]],capacity:2},
+    cm02: {name:'운동장',core:'운동장',img:'field-hex',fit:true,cells:[[0,0],[1,0],[0,1]],capacity:6},
+    cm03: {name:'경기장',core:'경기장',img:'cm03',fit:true,cells:[[0,0],[1,0],[2,0],[0,1],[1,1]],capacity:10},
+    cm04: {name:'도장',core:'도장',img:'cm04',fit:true,cells:[[0,0],[1,0],[2,0]],capacity:6},
+    cm05: {name:'체육관',core:'체육관',img:'cm05',fit:true,cells:[[0,0],[1,0],[-1,1],[0,1]],capacity:8},
+    cm06: {name:'연구소',core:'연구소',img:'cm06',fit:true,cells:[[0,0],[1,0],[-2,1],[-1,1]],capacity:8},
+    cm07: {name:'화산',core:'화산',img:'cm07',fit:true,cells:[[0,0],[1,0],[0,1],[1,1]],capacity:8},
+    cm08: {name:'초원',core:'초원',img:'cm08',fit:true,cells:[[0,0],[0,1],[1,1]],capacity:6},
+    cm09: {name:'해변',core:'해변',img:'cm09',fit:true,cells:[[0,0],[2,0],[0,1],[1,1]],capacity:8},
+    cm10: {name:'고산',core:'고산',img:'cm10',fit:true,cells:[[0,0],[2,0],[0,1],[1,1]],capacity:8},
+    cm11: {name:'숲',core:'숲',img:'cm11',fit:true,cells:[[0,0],[-2,1],[-1,1]],capacity:6},
+    cm12: {name:'정글',core:'정글',img:'cm12',fit:true,cells:[[0,0],[1,0],[1,1]],capacity:6},
+    cm14: {name:'묘지',core:'묘지',img:'cm14',fit:true,cells:[[0,0],[1,0],[1,1]],capacity:6},
+    cm15: {name:'공장',core:'공장',img:'cm15',fit:true,cells:[[0,0],[0,1],[1,1]],capacity:6},
+    clinic: {name:'미니 양호실',core:'미니 양호실',img:'clinic-hex',fit:true,cells:[[0,0]],capacity:2},
+    cm17: {name:'병원',core:'병원',img:'cm17',fit:true,cells:[[0,0],[-1,1],[0,1]],capacity:6},
+    cm18: {name:'화원',core:'화원',img:'cm18',fit:true,cells:[[0,0],[-1,1]],capacity:4},
+    cm19: {name:'온천',core:'온천',img:'cm19',fit:true,cells:[[0,0],[1,0],[2,0],[3,0]],capacity:8},
+    cm23: {name:'가스실',core:'가스실',img:'cm23',fit:true,cells:[[0,0],[0,1]],capacity:4},
+    cm24: {name:'절',core:'절',img:'cm24',fit:true,cells:[[0,0]],capacity:2},
+    cm25: {name:'동물원',core:'동물원',img:'cm25',fit:true,cells:[[0,0],[1,0]],capacity:2},
+    cm26: {name:'목장',core:'목장',img:'cm26',fit:true,cells:[[0,0],[1,0],[-1,1],[0,1]],capacity:8},
+    cm27: {name:'링',core:'링',img:'cm27',fit:true,cells:[[0,0],[-1,1],[0,1]],capacity:6},
+    field: {name:'미니 운동장',core:'미니 운동장',img:'cm30',fit:true,cells:[[0,0]],capacity:2},
+    cm31: {name:'양호실',core:'양호실',img:'cm31',fit:true,cells:[[0,0],[1,0]],capacity:6},
+    cm32: {name:'미니 화원',core:'미니 화원',img:'cm32',fit:true,cells:[[0,0]],capacity:2},
+    cm33: {name:'미니 숲',core:'미니 숲',img:'cm33',fit:true,cells:[[0,0]],capacity:2},
+    gym: {name:'미니 체육관',core:'미니 체육관',img:'cm34',fit:true,cells:[[0,0]],capacity:2},
+    cm35: {name:'미니 화산',core:'미니 화산',img:'cm35',fit:true,cells:[[0,0]],capacity:2},
+    cm37: {name:'미니 고산',core:'미니 고산',img:'cm37',fit:true,cells:[[0,0]],capacity:2},
+    cm38: {name:'미니 공장',core:'미니 공장',img:'cm38',fit:true,cells:[[0,0]],capacity:2},
+    cm39: {name:'미니 해변',core:'미니 해변',img:'cm39',fit:true,cells:[[0,0]],capacity:2},
   },
+  // 예전 임시 시설 이름 → 원작 시설 (저장된 배치 이전용)
+  aliases: {vacant:'cm01',volcano:'cm35',flower:'cm32',pool:'cm39',aviary:'cm37',grave:'cm14',labV:'cm17',labD:'cm06',labX:'cm23',stadium:'cm02'},
+  rename(kind){return this.aliases[kind]||kind;},
   // 게임 화면이 채워 넣는 선택 규칙. 비워 두면 제한 없음 (테스트 기본값).
   // space: 랭크별 케이지 공간(칸), canPlace(item, items): 새 시설 설치 허용 여부(보유 확인)
   space: null,

@@ -21,6 +21,7 @@
 | 8 | 런처 패키징 | 예정 |
 
 ### 7단계 진행 상황
+- 완료: 케이지를 원작 38종으로 교체(이름·효과·수용 수는 원작 글, 모양·그림은 root/training/field_cmNN). 미니 시설은 1칸, 큰 시설은 2~5칸에 훈련 상승 2배(임시). 동물원·목장 자동 돌봄, 링 배틀 수, 온천·양호실 회복. 예전 임시 시설은 저장에서 원작 이름으로 이전(배치 버전 3)
 - 양호실 테두리 후속: 사용자 요청으로 얇은 외곽선을 운동장과 같은 청록색 기둥·난간 울타리로 통일.
 - 시설 후속 수정: 양호실·운동장 그림 자체를 육각 점유 형태에 맞춰 재구성한 전용 PNG 적용. 모든 시설의 최종 경계 클리핑 복구로 외부 침범 차단. 이전 무클리핑 확대/축소 수정은 이 방식으로 대체.
 - 수정: 사냥 로프 입력을 사육장 카메라·줌에서 분리해 캔버스 표시 크기로 변환. 시설 그림은 육각 클리핑을 제거하고 전체 그림을 비율 유지 축소/확대로 점유 영역 경계 상자에 맞춤(운동장 잘림 수정).
@@ -53,10 +54,11 @@
 8. 런처 패키징
 
 ## 알아둘 것
+- 케이지 그림을 다시 변환할 때: `python tools/extract_cage_fields.py "<root 폴더>"` → `web/assets/facilities/cmNN.png`, 출력되는 칸 좌표가 web/cage-layout.js의 cells
 - 원본 게임 파일(root 폴더)은 형규 PC `C:\Users\TEST OS\OneDrive\Desktop\root`에만 있다. 저장소에 올리지 않는다
 - 사냥 지도를 다시 변환할 때: `python tools/extract_hunt_maps.py "<root 폴더>"` → `web/assets/fields/NN_01.png`(낮)·`NN_02.png`(밤). 쓰는 번호는 스크립트의 `USED`와 game.js `HUNT_MAP`을 함께 고친다
 - 타이틀·공통 배경 그림 다시 변환: `python tools/extract_title.py "<root 폴더>"` → `web/assets/ui` (로고·구슬·배경)
 - 원작 문장 해독: `python tools/extract_text.py "<root 폴더>" "<출력 폴더>"` (출력은 저장소 밖). 근거는 design.md에 줄 번호로만 적는다
 - 스프라이트를 다시 변환할 때: `python tools/extract_sprites.py --source-root "<root 폴더>"`. 이름 대응은 `tools/sprite_names.json` (형규 확인 완료)
 - 저장 데이터: 브라우저 localStorage `champion-web-v2`. 형식을 바꾸면 기존 저장을 이어받는 처리를 함께 넣는다
-- 테스트: `npm test` (엔진 vitest 58개 + 케이지·터치·안내 node:test 33개). 원본 프레임 범위·유지 시간·상태 전환·정지·먹이 예약/취소와 기존 입력을 검사. 통합 브라우저에서 기존 저장 이어하기, 원본 도트 표시, 바닥 배치 후 자동 섭취도 확인했다. 이 작업 환경은 npm이 없어 같은 scripts를 `pnpm test`, `pnpm run build:core`로 실행했다. `pnpm exec tsc --noEmit`, `python tools/check_web.py`도 통과.
+- 테스트: `npm test` (엔진 vitest 65개 + 케이지·터치·안내 node:test 34개). 원본 프레임 범위·유지 시간·상태 전환·정지·먹이 예약/취소와 기존 입력을 검사. 통합 브라우저에서 기존 저장 이어하기, 원본 도트 표시, 바닥 배치 후 자동 섭취도 확인했다. 이 작업 환경은 npm이 없어 같은 scripts를 `pnpm test`, `pnpm run build:core`로 실행했다. `pnpm exec tsc --noEmit`, `python tools/check_web.py`도 통과.

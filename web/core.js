@@ -298,139 +298,350 @@ var ChampCore = (function(exports) {
 	var CAGES = [
 		{
 			id: "기본 케이지",
+			no: 0,
 			price: 0,
 			minRank: 1,
 			capacity: 99
 		},
 		{
+			id: "공터",
+			no: 1,
+			price: 0,
+			minRank: 1,
+			capacity: 2,
+			up: ["def"],
+			down: ["atk"]
+		},
+		{
+			id: "운동장",
+			no: 2,
+			price: 2e3,
+			minRank: 3,
+			capacity: 6,
+			up: ["hp"],
+			gain: 2
+		},
+		{
+			id: "경기장",
+			no: 3,
+			price: 4500,
+			minRank: 5,
+			capacity: 10,
+			up: ["spd"],
+			gain: 2
+		},
+		{
+			id: "도장",
+			no: 4,
+			price: 2e3,
+			minRank: 3,
+			capacity: 6,
+			up: ["tp"],
+			gain: 2
+		},
+		{
+			id: "체육관",
+			no: 5,
+			price: 3e3,
+			minRank: 4,
+			capacity: 8,
+			up: ["atk"],
+			gain: 2
+		},
+		{
+			id: "연구소",
+			no: 6,
+			price: 3e3,
+			minRank: 4,
+			capacity: 8,
+			apUp: ["데이터"],
+			gain: 2
+		},
+		{
+			id: "화산",
+			no: 7,
+			price: 3e3,
+			minRank: 4,
+			capacity: 8,
+			apUp: ["용"],
+			gain: 2
+		},
+		{
+			id: "초원",
+			no: 8,
+			price: 2e3,
+			minRank: 3,
+			capacity: 6,
+			apUp: ["짐승"],
+			gain: 2
+		},
+		{
+			id: "해변",
+			no: 9,
+			price: 3e3,
+			minRank: 4,
+			capacity: 8,
+			apUp: ["물"],
+			gain: 2
+		},
+		{
+			id: "고산",
+			no: 10,
+			price: 3e3,
+			minRank: 4,
+			capacity: 8,
+			apUp: ["새"],
+			gain: 2
+		},
+		{
+			id: "숲",
+			no: 11,
+			price: 2e3,
+			minRank: 3,
+			capacity: 6,
+			apUp: ["벌레풀"],
+			gain: 2
+		},
+		{
+			id: "정글",
+			no: 12,
+			price: 2e3,
+			minRank: 3,
+			capacity: 6,
+			apUp: ["벌레풀"],
+			gain: 2
+		},
+		{
+			id: "신전",
+			no: 13,
+			price: 0,
+			minRank: 99,
+			capacity: 6,
+			resist: "빛"
+		},
+		{
+			id: "묘지",
+			no: 14,
+			price: 2e3,
+			minRank: 3,
+			capacity: 6,
+			apUp: ["암흑"],
+			gain: 2
+		},
+		{
+			id: "공장",
+			no: 15,
+			price: 2e3,
+			minRank: 3,
+			capacity: 6,
+			apUp: ["기계"],
+			gain: 2
+		},
+		{
 			id: "미니 양호실",
+			no: 16,
 			price: 0,
 			minRank: 1,
 			capacity: 2,
 			rest: true
 		},
 		{
-			id: "공터",
+			id: "병원",
+			no: 17,
+			price: 2e3,
+			minRank: 3,
+			capacity: 6,
+			apUp: ["백신"],
+			gain: 2
+		},
+		{
+			id: "화원",
+			no: 18,
+			price: 1200,
+			minRank: 2,
+			capacity: 4,
+			apUp: ["성"],
+			gain: 2
+		},
+		{
+			id: "온천",
+			no: 19,
+			price: 3500,
+			minRank: 4,
+			capacity: 8,
+			rest: true
+		},
+		{
+			id: "사막",
+			no: 20,
+			price: 0,
+			minRank: 99,
+			capacity: 6,
+			resist: "열"
+		},
+		{
+			id: "얼음",
+			no: 21,
+			price: 0,
+			minRank: 99,
+			capacity: 8,
+			resist: "추위"
+		},
+		{
+			id: "발전소",
+			no: 22,
+			price: 0,
+			minRank: 99,
+			capacity: 6,
+			resist: "천둥"
+		},
+		{
+			id: "가스실",
+			no: 23,
+			price: 1200,
+			minRank: 2,
+			capacity: 4,
+			apUp: ["바이러스"],
+			gain: 2
+		},
+		{
+			id: "절",
+			no: 24,
+			price: 400,
+			minRank: 1,
+			capacity: 2,
+			up: ["int"]
+		},
+		{
+			id: "동물원",
+			no: 25,
+			price: 1500,
+			minRank: 2,
+			capacity: 2,
+			autoCare: true
+		},
+		{
+			id: "목장",
+			no: 26,
+			price: 4e3,
+			minRank: 4,
+			capacity: 8,
+			autoCare: true
+		},
+		{
+			id: "링",
+			no: 27,
+			price: 2500,
+			minRank: 3,
+			capacity: 6,
+			battleUp: 1
+		},
+		{
+			id: "미니 운동장",
+			no: 30,
 			price: 0,
 			minRank: 1,
 			capacity: 2,
-			up: ["def"],
-			down: ["atk"],
+			up: ["hp"],
+			down: ["tp"]
+		},
+		{
+			id: "양호실",
+			no: 31,
+			price: 2e3,
+			minRank: 3,
+			capacity: 6,
+			rest: true
+		},
+		{
+			id: "미니 화원",
+			no: 32,
+			price: 400,
+			minRank: 1,
+			capacity: 2,
+			apUp: ["성"],
+			apDown: ["암흑"]
+		},
+		{
+			id: "미니 숲",
+			no: 33,
+			price: 400,
+			minRank: 1,
+			capacity: 2,
 			apUp: ["벌레풀"],
 			apDown: ["기계"]
 		},
 		{
-			id: "미니 운동장",
-			price: 0,
-			minRank: 1,
-			capacity: 2,
-			up: ["hp"],
-			down: ["tp"],
-			apUp: ["짐승"],
-			apDown: ["용"]
-		},
-		{
 			id: "미니 체육관",
+			no: 34,
 			price: 300,
 			minRank: 1,
 			capacity: 2,
 			up: ["atk"],
-			down: ["def"],
-			apUp: ["기계"],
-			apDown: ["벌레풀"]
+			down: ["def"]
 		},
 		{
 			id: "미니 화산",
+			no: 35,
 			price: 400,
 			minRank: 1,
 			capacity: 2,
-			up: ["atk"],
-			down: ["def"],
 			apUp: ["용"],
 			apDown: ["짐승"]
 		},
 		{
-			id: "미니 화원",
-			price: 400,
-			minRank: 1,
+			id: "미니 얼음",
+			no: 36,
+			price: 0,
+			minRank: 99,
 			capacity: 2,
-			up: ["int"],
-			down: ["atk"],
-			apUp: ["성", "벌레풀"],
-			apDown: ["암흑", "기계"]
+			resist: "추위"
 		},
 		{
-			id: "미니 수영장",
+			id: "미니 고산",
+			no: 37,
 			price: 400,
 			minRank: 1,
 			capacity: 2,
-			up: ["hp"],
-			down: ["spd"],
-			apUp: ["물"],
-			apDown: ["새"],
-			supplemental: true
-		},
-		{
-			id: "미니 새장",
-			price: 400,
-			minRank: 1,
-			capacity: 2,
-			up: ["spd"],
-			down: ["def"],
 			apUp: ["새"],
-			apDown: ["물"],
-			supplemental: true
+			apDown: ["물"]
 		},
 		{
-			id: "미니 묘지",
+			id: "미니 공장",
+			no: 38,
 			price: 400,
 			minRank: 1,
 			capacity: 2,
-			up: ["int"],
-			down: ["hp"],
-			apUp: ["암흑"],
-			apDown: ["성"],
-			supplemental: true
+			apUp: ["기계"],
+			apDown: ["벌레풀"]
 		},
 		{
-			id: "백신 연구실",
-			price: 800,
-			minRank: 2,
+			id: "미니 해변",
+			no: 39,
+			price: 400,
+			minRank: 1,
 			capacity: 2,
-			up: ["tp"],
-			apUp: ["백신"],
-			apDown: ["바이러스"],
-			supplemental: true
+			apUp: ["물"],
+			apDown: ["새"]
 		},
 		{
-			id: "데이터 연구실",
-			price: 800,
-			minRank: 2,
+			id: "동굴",
+			no: 40,
+			price: 0,
+			minRank: 99,
 			capacity: 2,
-			up: ["tp"],
-			apUp: ["데이터"],
-			apDown: ["백신"],
-			supplemental: true
-		},
-		{
-			id: "바이러스 연구실",
-			price: 800,
-			minRank: 2,
-			capacity: 2,
-			up: ["tp"],
-			apUp: ["바이러스"],
-			apDown: ["데이터"],
-			supplemental: true
-		},
-		{
-			id: "운동장",
-			price: 1500,
-			minRank: 3,
-			capacity: 6,
-			up: ["spd"],
-			supplemental: false
+			resist: "어둠"
 		}
 	];
+	/** 예전 임시 케이지 이름 → 원작 이름 (저장 데이터 이전용) */
+	var CAGE_RENAMES = {
+		"미니 수영장": "미니 해변",
+		"미니 새장": "미니 고산",
+		"미니 묘지": "묘지",
+		"백신 연구실": "병원",
+		"데이터 연구실": "연구소",
+		"바이러스 연구실": "가스실"
+	};
 	var getCage = (id) => CAGES.find((c) => c.id === id) ?? CAGES[0];
 	var START_CAGES = [
 		"기본 케이지",
@@ -1274,6 +1485,12 @@ var ChampCore = (function(exports) {
 		}
 		if (s.salve == null) s.salve = 0;
 		delete s.ropeLevel;
+		const renamed = (id) => CAGE_RENAMES[id] ?? id;
+		if (s.cages.some((c) => CAGE_RENAMES[c])) s.cages = [...new Set(s.cages.map(renamed))];
+		if (s.digimon.some((d) => CAGE_RENAMES[d.cage])) s.digimon = s.digimon.map((d) => CAGE_RENAMES[d.cage] ? {
+			...d,
+			cage: renamed(d.cage)
+		} : d);
 		return s;
 	}
 	function freshSave(now = Date.now()) {
@@ -1332,6 +1549,8 @@ var ChampCore = (function(exports) {
 	};
 	/** 훈련 한 번에 걸리는 게임 분 */
 	var TRAINING_MINUTES = 15;
+	/** 동물원·목장이 먹이를 주는 배고픔 기준 (임시) */
+	var AUTO_FEED_BELOW = 50;
 	/** 스트레스가 풀리는 케이지. 온천·양호실·동물원·미니 동물원은 아직 게임에 없지만 추가되면 바로 적용된다 */
 	var STRESS_RELIEF_CAGES = [
 		"온천",
@@ -1412,6 +1631,10 @@ var ChampCore = (function(exports) {
 			d.fatigue = Math.max(0, d.fatigue - (cage.rest ? .5 : .04));
 			d.poopTimer += 1;
 		}
+		if (cage.autoCare) {
+			d.poopTimer = 0;
+			if (d.hunger < 50) d.hunger = 100;
+		}
 		if (d.poopTimer >= poopInterval(sp.stage)) {
 			d.poopTimer = 0;
 			if (d.poop < 5) {
@@ -1457,16 +1680,17 @@ var ChampCore = (function(exports) {
 				return toEgg(d, false);
 			}
 		}
-		if (cage.up || cage.apUp) {
+		if (cage.up || cage.apUp || cage.battleUp) {
 			if (!d.trainDone && !ctx.sleep && !d.sick && !d.injured && d.hunger > 0 && d.fatigue < 90) {
 				d.trainMinutes = (d.trainMinutes ?? 0) + 1;
 				if (d.trainMinutes >= 15) {
 					d.trainMinutes = 0;
 					d.trainDone = true;
 					const speed = d.personality === "솔직" ? 1.3 : d.personality === "성급한" ? .8 : 1;
+					const gain = cage.gain ?? 1;
 					const changes = [];
 					for (const k of cage.up ?? []) {
-						const n = Math.max(1, Math.round((1 + ctx.rng() * (sp.stage + 1)) * speed));
+						const n = Math.max(1, Math.round((1 + ctx.rng() * (sp.stage + 1)) * speed * gain));
 						d.stats[k] += n;
 						changes.push(`${STAT_LABEL[k]} +${n}`);
 					}
@@ -1474,13 +1698,20 @@ var ChampCore = (function(exports) {
 						if (d.stats[k] > 1) changes.push(`${STAT_LABEL[k]} -1`);
 						d.stats[k] = Math.max(1, d.stats[k] - 1);
 					}
+					for (const k of cage.apUp ?? []) {
+						d.ap[k] = Math.min(99, d.ap[k] + 3 * speed * gain);
+						changes.push(`${k} 수치 ↑`);
+					}
+					if (cage.battleUp) {
+						d.battles += cage.battleUp;
+						changes.push(`배틀 수 +${cage.battleUp}`);
+					}
 					if (changes.length) events.push({
 						type: "trained",
 						uid: d.uid,
 						name: sp.name,
 						changes: changes.join(", ")
 					});
-					for (const k of cage.apUp ?? []) d.ap[k] = Math.min(99, d.ap[k] + 3 * speed);
 					for (const k of cage.apDown ?? []) d.ap[k] = Math.max(0, d.ap[k] - 1);
 					d.fatigue = Math.min(100, d.fatigue + 5);
 					addStress(d, STRESS.training);
@@ -2273,7 +2504,9 @@ var ChampCore = (function(exports) {
 	}
 	exports.ARENA = ARENA;
 	exports.ATTRS = ATTRS;
+	exports.AUTO_FEED_BELOW = AUTO_FEED_BELOW;
 	exports.CAGES = CAGES;
+	exports.CAGE_RENAMES = CAGE_RENAMES;
 	exports.CAGE_SPACE_BY_RANK = CAGE_SPACE_BY_RANK;
 	exports.CAPACITY = CAPACITY;
 	exports.CAPACITY_BY_RANK = CAPACITY_BY_RANK;
