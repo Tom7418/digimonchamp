@@ -28,6 +28,7 @@
   const SPRITE_BY_NAME = Object.fromEntries(window.SPRITES.filter((m) => m.name).map((m) => [m.name, m.id]));
   const FAMILY_COLOR = { 용: '#d9774b', 짐승: '#c9a35b', 물: '#5b9fd9', 새: '#8fc7e8', 벌레풀: '#7fb35a', 기계: '#9aa3ad', 성: '#f0dc8a', 암흑: '#7a5a9a' };
   const START_LAYOUT = [
+    { id: 'start-basic', kind: 'free', q: 1, r: 2, rotation: 0 },
     { id: 'start-clinic', kind: 'clinic', q: 0, r: 0, rotation: 0 },
     { id: 'start-field', kind: 'field', q: 2, r: 1, rotation: 0 },
   ];
@@ -56,7 +57,7 @@
 
   // ---------- 저장 ----------
   function freshView() {
-    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 4, team: [], selected: 0, logs: [], poops: [], foods: [], tips: {}, entryNoticeRead: null, farmWorld: 2 };
+    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 5, team: [], selected: 0, logs: [], poops: [], foods: [], tips: {}, entryNoticeRead: null, farmWorld: 2 };
   }
   function load() {
     try {
@@ -1816,7 +1817,7 @@
   // 카메라보다 큰 월드의 좌표를 옛 960x560 범위로 잘라내지 않는다.
   view.foods = C.restoreFloorFood(save, view.foods, board.roam);
   syncTeam();
-  { const p = view.team[view.selected]; if (p) board.centerOn(p.x, p.y - 40); }
+  board.centerLayout();
   // 도구 줄은 원작처럼 사육장 화면 안 아래쪽에 겹쳐 둔다 (휠이 확대·축소라 화면 밖 버튼은 쓰기 불편하다)
   document.querySelector('.canvas-wrap').append($('#tray'));
   initFarmInput();
@@ -1828,7 +1829,7 @@
     if (b) {
       view.selected = +b.dataset.partner;
       const p = view.team[view.selected];
-      if (p) board.centerOn(p.x, p.y - 40);
+      board.centerLayout();
       render();
       persist();
     }

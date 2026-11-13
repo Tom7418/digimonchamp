@@ -29,7 +29,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  canvas.closest('.canvas-wrap').after(toolbar);
  const instruction=toolbar.querySelector('#cage-instruction');
  function status(){toolbar.classList.toggle('editing',editing);toolbar.querySelector('#edit-cages').textContent=editing?'✓ 편집 완료':'케이지 편집';instruction.textContent=editing?'종류 선택 → 빈 칸에 배치 · 설치된 케이지는 끌어서 이동 · 회전 후 배치 · 빈 곳을 눌러 선택 해제':'디지몬을 케이지로 끌어 넣으세요. 파트너 선택 후 케이지를 클릭해도 입장합니다. 휠: 확대/축소 · 빈 바닥 드래그: 화면 이동.';if(getState().storedCages?.length)instruction.textContent+=` · 보관 시설 ${getState().storedCages.length}개: 해당 종류를 선택해 다시 설치하세요.`;toolbar.querySelector('#rotate-cage').disabled=!editing;toolbar.querySelector('#remove-cage').disabled=!editing||!selected;toolbar.querySelectorAll('[data-build]').forEach(b=>b.classList.toggle('active',b.dataset.build===tool));}
- function init(){const s=getState();if(s.layoutVersion!==4){s.layoutBackup=JSON.parse(JSON.stringify(s.layout||[]));const renamed=c=>c&&({...c,kind:L.rename(c.kind)});const migrated=L.migrate((s.layout||[]).map(renamed));s.layout=migrated.placed;s.storedCages=[...(s.storedCages||[]).map(renamed).filter(c=>c&&L.types[c.kind]),...migrated.stored];for(const p of s.team||[])if(p.cage)p.cage=L.rename(p.cage);s.layoutVersion=4;}s.layout=L.restore(s.layout);for(const p of s.team){if(!s.layout.some(c=>c.id===p.cageId)){p.cageId=null;p.cage='free';p.cageSeconds=0;}}}
+ function init(){const s=getState();if(s.layoutVersion!==5){s.layoutBackup=JSON.parse(JSON.stringify(s.layout||[]));const renamed=c=>c&&({...c,kind:L.rename(c.kind)});const old=(s.layout||[]).map(renamed);if(!old.some(c=>c.kind==='free')&&!(s.storedCages||[]).some(c=>L.rename(c.kind)==='free'))old.push({id:'start-basic',kind:'free',q:1,r:2,rotation:0});const migrated=L.migrate(old);s.layout=migrated.placed;s.storedCages=[...(s.storedCages||[]).map(renamed).filter(c=>c&&L.types[c.kind]),...migrated.stored];for(const p of s.team||[])if(p.cage)p.cage=L.rename(p.cage);s.layoutVersion=5;}s.layout=L.restore(s.layout);for(const p of s.team){if(!s.layout.some(c=>c.id===p.cageId)){p.cageId=null;p.cage='free';p.cageSeconds=0;}}}
  init();status();
  toolbar.querySelector('#edit-cages').onclick=()=>{if(isBlocked())return;editing=!editing;tool=null;selected=null;drag=null;status();};
  toolbar.querySelectorAll('[data-build]').forEach(b=>{
@@ -63,6 +63,15 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
    // 화면(캔버스) 좌표 이벤트 → 월드 좌표
    toWorld:e=>coordinate(e),
    centerOn(x,y){cam.x=x-VIEW.w/(2*zoom);cam.y=y-VIEW.h/(2*zoom);clampCam();},
+   // 배치된 시설의 실제 범위를 기준으로 화면 중심과 배율을 맞춘다.
+   centerLayout(){
+     const points=getState().layout.flatMap(c=>L.cells(c).map(([q,r])=>center(q,r)));
+     if(!points.length){cam.x=(WORLD.w-VIEW.w/zoom)/2;cam.y=(WORLD.h-VIEW.h/zoom)/2;clampCam();return;}
+     const left=Math.min(...points.map(p=>p.x))-R, right=Math.max(...points.map(p=>p.x))+R;
+     const top=Math.min(...points.map(p=>p.y))-R, bottom=Math.max(...points.map(p=>p.y))+R;
+     zoom=Math.max(0.5,Math.min(1,VIEW.w/(right-left+100),VIEW.h/(bottom-top+100)));
+     cam.x=(left+right)/2-VIEW.w/(2*zoom);cam.y=(top+bottom)/2-VIEW.h/(2*zoom);clampCam();
+   },
    // 자유 활동 디지몬이 돌아다닐 수 있는 범위
    roam:{x0:OX-R*0.6,x1:OX+Math.sqrt(3)*R*7-R*0.4,y0:OY-R*0.5,y1:OY+R*6.5},
    open(){if(isBlocked())return;editing=true;status();toolbar.scrollIntoView({block:'nearest',behavior:'smooth'});},
