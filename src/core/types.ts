@@ -80,6 +80,8 @@ export interface Digimon {
   trainMinutes?: number;
   /** 이번 배치의 훈련을 마쳤는가. 훈련 케이지 밖에 두면 풀린다 */
   trainDone?: boolean;
+  /** 마지막으로 쓰다듬은 시각(게임 분) */
+  pettedAt?: number;
 }
 
 export interface SaveData {

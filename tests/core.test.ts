@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS } from '../src/core/care';
+import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -7,7 +7,7 @@ import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMa
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp } from '../src/core/hunt';
 import type { Digimon, SaveData } from '../src/core/types';
-import { biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
+import { ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
 describe('floor food reservations', () => {
   it('restores food in the expanded farm without clipping to the old viewport', () => {
@@ -144,6 +144,39 @@ describe('evolution', () => {
     expect(relief('목장')).toBe(44);
     expect(relief('절')).toBeGreaterThan(44);
     expect(getCage('경기장').capacity).toBe(10);
+  });
+  it('계절: 여름은 훈련 효과가 높고, 겨울은 훈련 부상이 잦다', () => {
+    const train = (clock: number, rng = seeded(1)) => {
+      let s = withMon({ ...freshSave(0), clock }, { hunger: 100, personality: '쿨' });
+      s = { ...s, cages: [...s.cages, '미니 화산'] };
+      s = setCage(s, 1, '미니 화산').save;
+      return advance(s, 20, rng);
+    };
+    const day = 1440, noon = 12 * 60;
+    expect(only(train(noon).save).ap['용']).toBe(3); // 봄
+    expect(only(train(8 * day + noon).save).ap['용']).toBe(4.5); // 여름
+    const injuries = (clock: number) => Array.from({ length: 300 }, (_, i) => only(train(clock, seeded(i + 1)).save).injured).filter(Boolean).length;
+    const spring = injuries(noon), winter = injuries(24 * day + noon);
+    expect(spring).toBeGreaterThan(0);
+    expect(winter).toBeGreaterThan(spring);
+  });
+  it('쓰다듬으면 스트레스가 조금 풀리고, 게임 1시간 안에는 다시 풀리지 않는다', () => {
+    const s = withMon(freshSave(0), { stress: 50 });
+    const a = pet(s, 1);
+    expect(only(a.save).stress).toBe(50 - PET.relief);
+    expect(only(pet(a.save, 1).save).stress).toBe(50 - PET.relief);
+    expect(only(pet({ ...a.save, clock: a.save.clock + PET.cooldown }, 1).save).stress).toBe(50 - 2 * PET.relief);
+    expect(pet(withMon(s, { isEgg: true }), 1).ok).toBe(false);
+  });
+  it('바닥에 오래 둔 고기·프로틴은 상한 먹이가 된다', () => {
+    const s = { ...freshSave(0), meat: 2, pills: 1, rotten: 0 };
+    const foods: FloorFood[] = [{ kind: 'meat', x: 1, y: 1, remaining: 40 }, { kind: 'pill', x: 2, y: 2 }];
+    const early = ageFloorFood(s, foods, SPOIL_MINUTES - 1);
+    expect(early.spoiled).toBe(0);
+    const late = ageFloorFood(early.save, early.foods, 1);
+    expect(late.foods.map((f) => f.kind)).toEqual(['rotten', 'rotten']);
+    expect(late.save).toMatchObject({ meat: 1, pills: 0, rotten: 2 });
+    expect(restoreFloorFood(early.save, JSON.parse(JSON.stringify(early.foods)))[0].age).toBe(SPOIL_MINUTES - 1);
   });
   it('예전 임시 케이지 이름은 원작 이름으로 옮겨진다', () => {
     const old = withMon(freshSave(0), { cage: '미니 수영장' });

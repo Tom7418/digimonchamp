@@ -216,10 +216,11 @@ export function runBattle(mine: Entrant[], foes: Entrant[], rng: Rng): BattleSta
 }
 
 /** 배틀 결과를 디지몬에게 반영: 횟수·승수, 피로, 쓰러진 디지몬의 부상 */
-export function applyBattleResult(d: Digimon, won: boolean, ko: boolean, rng: Rng): Digimon {
+export function applyBattleResult(d: Digimon, won: boolean, ko: boolean, rng: Rng, winter = false): Digimon {
   // 원작 문장: 알약(프로틴)을 과식하면 부상 위험이 늘어난다. 3개 넘게 먹으면 1개당 +15% (임시)
   const overeat = Math.max(0, (d.protein ?? 0) - PROTEIN_SAFE) * 0.15;
-  const injuryChance = Math.min(1, (ko ? (d.personality === '대담' ? 0.6 : 0.3) : 0) + overeat);
+  // 겨울에는 부상 확률이 오른다 (원작 도움말 help #136, 배수 2는 임시)
+  const injuryChance = Math.min(1, ((ko ? (d.personality === '대담' ? 0.6 : 0.3) : 0) + overeat) * (winter ? 2 : 1));
   return {
     ...d,
     protein: 0,

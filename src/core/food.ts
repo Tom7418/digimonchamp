@@ -5,7 +5,9 @@ import type { SaveData } from './types';
 export type FoodKind = 'meat' | 'rotten' | 'pill';
 /** 바닥 먹이 종류 → 저장의 재고 칸 */
 const STOCK: Record<FoodKind, 'meat' | 'rotten' | 'pills'> = { meat: 'meat', rotten: 'rotten', pill: 'pills' };
-export interface FloorFood { kind: FoodKind; x: number; y: number; remaining?: number }
+export interface FloorFood { kind: FoodKind; x: number; y: number; remaining?: number; /** 바닥에 놓인 게임 분 */ age?: number }
+/** 바닥에 둔 고기·프로틴이 상하기까지의 게임 분 (원작 도움말 help #138·#141: 남기면 상한다. 4시간은 임시) */
+export const SPOIL_MINUTES = 240;
 export interface FoodBounds { x0: number; x1: number; y0: number; y1: number }
 
 /** 바닥 먹이는 기존 저장 방식대로 재고 안에서 예약한다. 먹을 때만 재고를 차감한다. */
@@ -20,7 +22,7 @@ export function restoreFloorFood(save: SaveData, raw: unknown, bounds: FoodBound
   for (const f of raw) {
     if (!f || !Object.hasOwn(STOCK, f.kind) || !Number.isFinite(f.x) || !Number.isFinite(f.y)) continue;
     if (f.remaining !== undefined && (!Number.isFinite(f.remaining) || f.remaining <= 0)) continue;
-    if (availableFood(save, foods, f.kind) > 0) foods.push({ ...(f.remaining === undefined ? {} : {remaining: Math.min(100, f.remaining)}), kind: f.kind, x: Math.min(bounds.x1, Math.max(bounds.x0, f.x)), y: Math.min(bounds.y1, Math.max(bounds.y0, f.y)) });
+    if (availableFood(save, foods, f.kind) > 0) foods.push({ ...(f.remaining === undefined ? {} : {remaining: Math.min(100, f.remaining)}), ...(Number.isFinite(f.age) && f.age > 0 ? {age: f.age} : {}), kind: f.kind, x: Math.min(bounds.x1, Math.max(bounds.x0, f.x)), y: Math.min(bounds.y1, Math.max(bounds.y0, f.y)) });
   }
   return foods;
 }
@@ -65,4 +67,18 @@ export function biteFloorFood(save: SaveData, foods: readonly FloorFood[], uid: 
   return {ok: true, save: next,
     foods: rest <= 0 ? foods.filter((_, i) => i !== index) : foods.map((f, i) => i === index ? {...f, remaining: rest} : f),
     message: '고기를 한 입 먹었다.'};
+}
+
+/** 바닥 먹이의 시간을 흘려보낸다. 오래 둔 고기·프로틴은 상한 먹이가 된다 (재고도 상한 먹이로 옮긴다). */
+export function ageFloorFood(save: SaveData, foods: readonly FloorFood[], minutes = 1): { save: SaveData; foods: FloorFood[]; spoiled: number } {
+  let next = save, spoiled = 0;
+  const out = foods.map((f) => {
+    if (f.kind === 'rotten') return f;
+    const age = (f.age ?? 0) + minutes;
+    if (age < SPOIL_MINUTES || next[STOCK[f.kind]] <= 0) return { ...f, age };
+    spoiled += 1;
+    next = { ...next, [STOCK[f.kind]]: next[STOCK[f.kind]] - 1, rotten: next.rotten + 1 };
+    return { kind: 'rotten' as const, x: f.x, y: f.y };
+  });
+  return { save: next, foods: out, spoiled };
 }

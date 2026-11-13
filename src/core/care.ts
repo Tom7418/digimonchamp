@@ -103,6 +103,7 @@ export type FarmEvent =
   | { type: 'egg'; uid: number; from: string; reason?: 'sick' }
   | { type: 'lost'; uid: number; name: string; reason: string }
   | { type: 'sick'; uid: number; name: string }
+  | { type: 'injured'; uid: number; name: string }
   | { type: 'poop'; uid: number }
   /** 훈련 케이지에서 1시간마다 오른·내린 능력치 (예: 'HP +3, 방어 -1') */
   | { type: 'trained'; uid: number; name: string; changes: string }
@@ -118,6 +119,20 @@ export type FarmEvent =
 export const STRESS = { crowdedPerDay: 20, rotten: 50, sick: 40, training: 5, hungerBelow: 20, perHunger: 1.5, show: 70, reliefPerHour: 5, autoCarePerHour: 3, restPerHour: 1 };
 /** 훈련 한 번에 걸리는 게임 분 */
 export const TRAINING_MINUTES = 15;
+/**
+ * 계절 (원작 도움말 help #136: 여름은 트레이닝 효과가 높고, 겨울은 부상 확률이 오른다).
+ * 트레이닝 부상 (help #140: 배틀이나 트레이닝을 할 때 부상당할 수 있다).
+ * 배수·확률은 임시 값.
+ */
+export const SUMMER = 1;
+export const WINTER = 3;
+export const SUMMER_TRAINING = 1.5;
+export const WINTER_INJURY = 2;
+export const TRAIN_INJURY = 0.03;
+/** 프로틴을 먹은 채 훈련하면 1개당 부상 확률 +2% (help #138, 수치 임시) */
+export const PROTEIN_TRAIN_INJURY = 0.02;
+/** 쓰다듬기 (help #143: 손 아이콘으로 쓰다듬을 수 있다). 효과는 원작에서 확인 못 한 임시 값: 게임 1시간에 한 번 스트레스 -3 */
+export const PET = { relief: 3, cooldown: 60 };
 /** 동물원·목장이 먹이를 주는 배고픔 기준 (임시) */
 export const AUTO_FEED_BELOW = 50;
 /** 스트레스가 풀리는 케이지. 온천·양호실·동물원·미니 동물원은 아직 게임에 없지만 추가되면 바로 적용된다 */
@@ -164,7 +179,7 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
 }
 
 /** 디지몬 한 마리의 게임 시간 1분. null이면 로스트 */
-function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; sleep?: boolean }, events: FarmEvent[]): Digimon | null {
+function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; sleep?: boolean; season?: number }, events: FarmEvent[]): Digimon | null {
   let d: Digimon = { ...prev, stats: { ...prev.stats }, ap: { ...prev.ap } };
   d.stageAge += 1;
 
@@ -240,7 +255,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
         d.trainMinutes = 0;
         d.trainDone = true;
         const speed = d.personality === '솔직' ? 1.3 : d.personality === '성급한' ? 0.8 : 1;
-        const gain = cage.gain ?? 1;
+        const gain = (cage.gain ?? 1) * (ctx.season === SUMMER ? SUMMER_TRAINING : 1);
         const changes: string[] = [];
         for (const k of cage.up ?? []) {
           const n = Math.max(1, Math.round((1 + ctx.rng() * (sp.stage + 1)) * speed * gain));
@@ -263,6 +278,12 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
         for (const k of cage.apDown ?? []) d.ap[k] = Math.max(0, d.ap[k] - 1);
         d.fatigue = Math.min(100, d.fatigue + 5);
         addStress(d, STRESS.training);
+        const risk = (TRAIN_INJURY + (d.protein ?? 0) * PROTEIN_TRAIN_INJURY) * (ctx.season === WINTER ? WINTER_INJURY : 1);
+        if (!d.injured && ctx.rng() < risk) {
+          d.injured = true;
+          d.sickMinutes = 0;
+          events.push({ type: 'injured', uid: d.uid, name: sp.name });
+        }
       }
     }
   } else {
@@ -300,13 +321,14 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
 export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false): { save: SaveData; events: FarmEvent[] } {
   const events: FarmEvent[] = [];
   const rank = tamerRank(save);
+  const season = dateOf(save.clock).season;
   let free = capacityOf(save) - usedCapacity(save);
   const next: Digimon[] = [];
   const seen = new Set(save.seen);
   save.digimon.forEach((d, i) => {
     const before = d.isEgg ? 0 : getSpecies(d.speciesId).size;
     const isLast = next.length + (save.digimon.length - i) <= 1;
-    const r = tickOne(d, { rank, free, isLast, rng, sleep }, events);
+    const r = tickOne(d, { rank, free, isLast, rng, sleep, season }, events);
     if (!r) {
       free += before;
       return;
@@ -417,6 +439,15 @@ export function feedRotten(save: SaveData, uid: number): ActionResult {
     return y;
   });
   return { ok: true, message: events.length ? '썩은 고기를 먹고 병에 걸렸다! (페널티 +1)' : '썩은 고기를 먹었다…', save: { ...s, rotten: save.rotten - 1 } };
+}
+
+/** 쓰다듬기: 게임 1시간에 한 번 스트레스가 조금 풀린다 */
+export function pet(save: SaveData, uid: number): ActionResult & { soothed?: boolean } {
+  const d = find(save, uid);
+  if (!d || d.isEgg) return fail(save, '아직 쓰다듬을 수 없어요.');
+  const name = getSpecies(d.speciesId).name;
+  if (d.pettedAt != null && save.clock - d.pettedAt < PET.cooldown) return { ok: true, save, message: `${name}(은)는 기분이 좋아 보인다.` };
+  return { ok: true, soothed: true, message: `${name}(을)를 쓰다듬었다.`, save: update(save, uid, (x) => ({ ...x, pettedAt: save.clock, stress: Math.max(0, (x.stress ?? 0) - PET.relief) })) };
 }
 
 /** 바닥의 똥 하나 치우기 */

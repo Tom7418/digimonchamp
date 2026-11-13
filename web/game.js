@@ -147,6 +147,9 @@
       log(`${e.name}이(가) 병에 걸렸습니다. 약(주사기)을 선택하고 디지몬을 터치하세요. (페널티 +1)`);
       toast(`${e.name} 발병!`);
       tipMail('sick', '디지몬이 병에 걸렸습니다.\n아래 약(주사기)을 선택한 뒤 디지몬을 터치하면 주사를 놓습니다. 세대가 낮으면 한 번에 안 나을 수도 있어요.\n이틀 동안 방치하면 쓰러져 디지에그로 돌아갑니다.');
+    } else if (e.type === 'injured') {
+      log(`${e.name}이(가) 훈련하다 다쳤습니다. 상처약을 선택하고 디지몬을 터치하세요.`);
+      toast(`${e.name} 부상!`);
     } else if (e.type === 'blocked')
       log(
         e.reason === 'rank'
@@ -495,9 +498,37 @@
   const SWEEP_FRAME = 18 / 60, SWEEP_LOOPS = 2, SPARKLE_FRAME = 9 / 60;
   const sweeps = [];
   const careImages = Object.fromEntries(['poop_1', 'poop_2', 'broom_1', 'broom_2', ...[1, 2, 3, 4, 5, 6, 7].map((i) => `sparkle_${i}`)].map((k) => [k, Object.assign(new Image(), { src: `assets/ui/${k}.png` })]));
+  // 바닥에 오래 둔 고기·프로틴은 상한다. 먹는 중인 먹이를 가리키는 참조가 끊기지 않게 같은 객체를 고친다
+  function spoilFoods() {
+    if (!view.foods.length) return;
+    const r = C.ageFloorFood(save, view.foods);
+    save = r.save;
+    r.foods.forEach((f, i) => {
+      const o = view.foods[i];
+      if (f.kind !== o.kind) delete o.remaining, delete o.age;
+      Object.assign(o, f);
+    });
+    if (r.spoiled) {
+      log('바닥에 둔 먹이가 상했습니다. 빗자루로 치우세요. 디지몬이 먹으면 병에 걸립니다.');
+      toast('먹이가 상했습니다!');
+      renderTray();
+    }
+  }
+  // 빗자루는 상한 먹이도 치운다
+  function sweepRotten(pt) {
+    const f = view.foods.find((x) => x.kind === 'rotten' && Math.hypot(pt.x - x.x, pt.y - (x.y - 20)) <= 40 && ![...feeding.values()].some((e) => e.food === x));
+    if (!f) return false;
+    view.foods = view.foods.filter((x) => x !== f);
+    save = { ...save, rotten: Math.max(0, save.rotten - 1) };
+    log('상한 먹이를 치웠습니다.');
+    renderTray();
+    render();
+    persist();
+    return true;
+  }
   function sweepAt(pt) {
     const hit = view.poops.filter((x) => !x.sweeping).sort((a, b) => Math.hypot(pt.x - a.x, pt.y - a.y) - Math.hypot(pt.x - b.x, pt.y - b.y))[0];
-    if (!hit || Math.hypot(pt.x - hit.x, pt.y - (hit.y - 14)) > 40) return;
+    if (!hit || Math.hypot(pt.x - hit.x, pt.y - (hit.y - 14)) > 40) return void sweepRotten(pt);
     hit.sweeping = true;
     sweeps.push({ poop: hit, start: performance.now(), done: false });
   }
@@ -546,6 +577,20 @@
         // 강화 기운: 3틱씩 10프레임, 네 번 반복
         if (t > 2) careFx.splice(i, 1);
         else put(`fx_aura_${(Math.floor(t / 0.05) % 10) + 1}`, x, y + 6, 20, 67);
+        continue;
+      }
+      if (fx.kind === 'pet') {
+        // 쓰다듬기: 하트가 떠오른다 (원작 그림을 찾기 전의 임시 표현)
+        if (t > 0.9) careFx.splice(i, 1);
+        else {
+          ctx.save();
+          ctx.globalAlpha = 1 - t / 0.9;
+          ctx.font = 'bold 26px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#ff6f91';
+          ctx.fillText('♥', x, y - 70 - t * 30);
+          ctx.restore();
+        }
         continue;
       }
       const u = t - TOOL_TIME;
@@ -962,7 +1007,7 @@
     const ko = new Set(b.state.units.filter((u) => u.team === 0 && !u.alive).map((u) => u.uid));
     const uids = new Set(b.state.units.filter((u) => u.team === 0).map((u) => u.uid));
     const before = C.tamerRank(save);
-    save = { ...save, digimon: save.digimon.map((d) => (uids.has(d.uid) ? C.applyBattleResult(d, won, ko.has(d.uid), Math.random) : d)) };
+    save = { ...save, digimon: save.digimon.map((d) => (uids.has(d.uid) ? C.applyBattleResult(d, won, ko.has(d.uid), Math.random, C.dateOf(save.clock).season === C.WINTER) : d)) };
     const m = b.setup.match;
     const wasQualified = save.qualifiedYear;
     // 타이틀은 이겼을 때만, 챔피언십 예선·본선은 진 것도 기록한다
@@ -1672,6 +1717,17 @@
     toast,
     () => !!battle || !!hunt || mailOpen || dayEnding,
   );
+  // 손으로 디지몬을 움직이지 않고 누르면 쓰다듬는다 (원작 도움말 help #143)
+  board.onPet = (index) => {
+    const p = view.team[index];
+    const r = p && C.pet(save, p.uid);
+    if (!r) return;
+    save = r.save;
+    if (r.ok) startCareFx('pet', p, true);
+    if (r.soothed) log(r.message);
+    render();
+    persist();
+  };
   // 육각 칸을 키우기 전(사육장 960x560)의 저장 좌표를 새 월드 크기로 옮긴다
   if (view.farmWorld !== 2) {
     const kx = board.world.w / 960, ky = board.world.h / 560;
@@ -1879,6 +1935,7 @@
           const r = C.tickFarm(save);
           save = r.save;
           r.events.forEach(logEvent);
+          spoilFoods();
           changed = true;
           checkSchedule();
         }

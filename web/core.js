@@ -1550,6 +1550,23 @@ var ChampCore = (function(exports) {
 	};
 	/** 훈련 한 번에 걸리는 게임 분 */
 	var TRAINING_MINUTES = 15;
+	/**
+	* 계절 (원작 도움말 help #136: 여름은 트레이닝 효과가 높고, 겨울은 부상 확률이 오른다).
+	* 트레이닝 부상 (help #140: 배틀이나 트레이닝을 할 때 부상당할 수 있다).
+	* 배수·확률은 임시 값.
+	*/
+	var SUMMER = 1;
+	var WINTER = 3;
+	var SUMMER_TRAINING = 1.5;
+	var WINTER_INJURY = 2;
+	var TRAIN_INJURY = .03;
+	/** 프로틴을 먹은 채 훈련하면 1개당 부상 확률 +2% (help #138, 수치 임시) */
+	var PROTEIN_TRAIN_INJURY = .02;
+	/** 쓰다듬기 (help #143: 손 아이콘으로 쓰다듬을 수 있다). 효과는 원작에서 확인 못 한 임시 값: 게임 1시간에 한 번 스트레스 -3 */
+	var PET = {
+		relief: 3,
+		cooldown: 60
+	};
 	/** 동물원·목장이 먹이를 주는 배고픔 기준 (임시) */
 	var AUTO_FEED_BELOW = 50;
 	/** 스트레스가 풀리는 케이지. 온천·양호실·동물원·미니 동물원은 아직 게임에 없지만 추가되면 바로 적용된다 */
@@ -1689,7 +1706,7 @@ var ChampCore = (function(exports) {
 					d.trainMinutes = 0;
 					d.trainDone = true;
 					const speed = d.personality === "솔직" ? 1.3 : d.personality === "성급한" ? .8 : 1;
-					const gain = cage.gain ?? 1;
+					const gain = (cage.gain ?? 1) * (ctx.season === 1 ? SUMMER_TRAINING : 1);
 					const changes = [];
 					for (const k of cage.up ?? []) {
 						const n = Math.max(1, Math.round((1 + ctx.rng() * (sp.stage + 1)) * speed * gain));
@@ -1717,6 +1734,16 @@ var ChampCore = (function(exports) {
 					for (const k of cage.apDown ?? []) d.ap[k] = Math.max(0, d.ap[k] - 1);
 					d.fatigue = Math.min(100, d.fatigue + 5);
 					addStress(d, STRESS.training);
+					const risk = (TRAIN_INJURY + (d.protein ?? 0) * PROTEIN_TRAIN_INJURY) * (ctx.season === 3 ? 2 : 1);
+					if (!d.injured && ctx.rng() < risk) {
+						d.injured = true;
+						d.sickMinutes = 0;
+						events.push({
+							type: "injured",
+							uid: d.uid,
+							name: sp.name
+						});
+					}
 				}
 			}
 		} else {
@@ -1775,6 +1802,7 @@ var ChampCore = (function(exports) {
 	function tickFarm(save, rng = defaultRng, sleep = false) {
 		const events = [];
 		const rank = tamerRank(save);
+		const season = dateOf(save.clock).season;
 		let free = capacityOf(save) - usedCapacity(save);
 		const next = [];
 		const seen = new Set(save.seen);
@@ -1786,7 +1814,8 @@ var ChampCore = (function(exports) {
 				free,
 				isLast,
 				rng,
-				sleep
+				sleep,
+				season
 			}, events);
 			if (!r) {
 				free += before;
@@ -1928,6 +1957,27 @@ var ChampCore = (function(exports) {
 				...s,
 				rotten: save.rotten - 1
 			}
+		};
+	}
+	/** 쓰다듬기: 게임 1시간에 한 번 스트레스가 조금 풀린다 */
+	function pet(save, uid) {
+		const d = find(save, uid);
+		if (!d || d.isEgg) return fail(save, "아직 쓰다듬을 수 없어요.");
+		const name = getSpecies(d.speciesId).name;
+		if (d.pettedAt != null && save.clock - d.pettedAt < PET.cooldown) return {
+			ok: true,
+			save,
+			message: `${name}(은)는 기분이 좋아 보인다.`
+		};
+		return {
+			ok: true,
+			soothed: true,
+			message: `${name}(을)를 쓰다듬었다.`,
+			save: update(save, uid, (x) => ({
+				...x,
+				pettedAt: save.clock,
+				stress: Math.max(0, (x.stress ?? 0) - PET.relief)
+			}))
 		};
 	}
 	/** 바닥의 똥 하나 치우기 */
@@ -2369,9 +2419,9 @@ var ChampCore = (function(exports) {
 		return s;
 	}
 	/** 배틀 결과를 디지몬에게 반영: 횟수·승수, 피로, 쓰러진 디지몬의 부상 */
-	function applyBattleResult(d, won, ko, rng) {
+	function applyBattleResult(d, won, ko, rng, winter = false) {
 		const overeat = Math.max(0, (d.protein ?? 0) - 3) * .15;
-		const injuryChance = Math.min(1, (ko ? d.personality === "대담" ? .6 : .3 : 0) + overeat);
+		const injuryChance = Math.min(1, ((ko ? d.personality === "대담" ? .6 : .3 : 0) + overeat) * (winter ? 2 : 1));
 		return {
 			...d,
 			protein: 0,
@@ -2389,6 +2439,8 @@ var ChampCore = (function(exports) {
 		rotten: "rotten",
 		pill: "pills"
 	};
+	/** 바닥에 둔 고기·프로틴이 상하기까지의 게임 분 (원작 도움말 help #138·#141: 남기면 상한다. 4시간은 임시) */
+	var SPOIL_MINUTES = 240;
 	/** 바닥 먹이는 기존 저장 방식대로 재고 안에서 예약한다. 먹을 때만 재고를 차감한다. */
 	function availableFood(save, foods, kind) {
 		return Math.max(0, save[STOCK[kind]] - foods.filter((f) => f.kind === kind).length);
@@ -2407,6 +2459,7 @@ var ChampCore = (function(exports) {
 			if (f.remaining !== void 0 && (!Number.isFinite(f.remaining) || f.remaining <= 0)) continue;
 			if (availableFood(save, foods, f.kind) > 0) foods.push({
 				...f.remaining === void 0 ? {} : { remaining: Math.min(100, f.remaining) },
+				...Number.isFinite(f.age) && f.age > 0 ? { age: f.age } : {},
 				kind: f.kind,
 				x: Math.min(bounds.x1, Math.max(bounds.x0, f.x)),
 				y: Math.min(bounds.y1, Math.max(bounds.y0, f.y))
@@ -2504,6 +2557,34 @@ var ChampCore = (function(exports) {
 			message: "고기를 한 입 먹었다."
 		};
 	}
+	/** 바닥 먹이의 시간을 흘려보낸다. 오래 둔 고기·프로틴은 상한 먹이가 된다 (재고도 상한 먹이로 옮긴다). */
+	function ageFloorFood(save, foods, minutes = 1) {
+		let next = save, spoiled = 0;
+		const out = foods.map((f) => {
+			if (f.kind === "rotten") return f;
+			const age = (f.age ?? 0) + minutes;
+			if (age < 240 || next[STOCK[f.kind]] <= 0) return {
+				...f,
+				age
+			};
+			spoiled += 1;
+			next = {
+				...next,
+				[STOCK[f.kind]]: next[STOCK[f.kind]] - 1,
+				rotten: next.rotten + 1
+			};
+			return {
+				kind: "rotten",
+				x: f.x,
+				y: f.y
+			};
+		});
+		return {
+			save: next,
+			foods: out,
+			spoiled
+		};
+	}
 	exports.ARENA = ARENA;
 	exports.ATTRS = ATTRS;
 	exports.AUTO_CARE_REST = AUTO_CARE_REST;
@@ -2534,6 +2615,7 @@ var ChampCore = (function(exports) {
 	exports.MIN_PER_DAY = MIN_PER_DAY;
 	exports.OFFLINE_CAP_MINUTES = OFFLINE_CAP_MINUTES;
 	exports.PERSONALITIES = PERSONALITIES;
+	exports.PET = PET;
 	exports.POOP_INTERVAL = POOP_INTERVAL;
 	exports.PRELIM = PRELIM;
 	exports.PRELIM_DAYS = PRELIM_DAYS;
@@ -2541,12 +2623,14 @@ var ChampCore = (function(exports) {
 	exports.PRELIM_WINS = PRELIM_WINS;
 	exports.PROTEIN_ATK = PROTEIN_ATK;
 	exports.PROTEIN_SAFE = PROTEIN_SAFE;
+	exports.PROTEIN_TRAIN_INJURY = PROTEIN_TRAIN_INJURY;
 	exports.RARE_WEIGHT = RARE_WEIGHT;
 	exports.ROOKIE_CHANCE = ROOKIE_CHANCE;
 	exports.ROPES = ROPES;
 	exports.SEASONS = SEASONS;
 	exports.SEASON_CODE = SEASON_CODE;
 	exports.SPECIES = SPECIES;
+	exports.SPOIL_MINUTES = SPOIL_MINUTES;
 	exports.STAGE_LABEL = STAGE_LABEL;
 	exports.START_CAGES = START_CAGES;
 	exports.START_CLOCK = START_CLOCK;
@@ -2556,15 +2640,21 @@ var ChampCore = (function(exports) {
 	exports.STRESS = STRESS;
 	exports.STRESS_RELIEF_CAGES = STRESS_RELIEF_CAGES;
 	exports.STRONG_CHANCE = STRONG_CHANCE;
+	exports.SUMMER = SUMMER;
+	exports.SUMMER_TRAINING = SUMMER_TRAINING;
 	exports.TIME_LIMIT = TIME_LIMIT;
 	exports.TITLES = TITLES;
 	exports.TRAINING_MINUTES = TRAINING_MINUTES;
+	exports.TRAIN_INJURY = TRAIN_INJURY;
 	exports.TREAT_CHANCE = TREAT_CHANCE;
 	exports.WILD_COUNT = WILD_COUNT;
+	exports.WINTER = WINTER;
+	exports.WINTER_INJURY = WINTER_INJURY;
 	exports.WIRE_PACK = WIRE_PACK;
 	exports.addStress = addStress;
 	exports.advance = advance;
 	exports.advanceOffline = advanceOffline;
+	exports.ageFloorFood = ageFloorFood;
 	exports.applyBattleResult = applyBattleResult;
 	exports.applyMatch = applyMatch;
 	exports.applyWin = applyWin;
@@ -2608,6 +2698,7 @@ var ChampCore = (function(exports) {
 	exports.nextMorningClock = nextMorningClock;
 	exports.parseCond = parseCond;
 	exports.parseHabitats = parseHabitats;
+	exports.pet = pet;
 	exports.pick = pick;
 	exports.pickWild = pickWild;
 	exports.poopInterval = poopInterval;
