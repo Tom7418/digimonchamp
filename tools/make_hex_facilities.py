@@ -126,6 +126,8 @@ def rail(im, cells, mask):
     im.putalpha(Image.composite(im.getchannel('A'), Image.new('L', im.size, 0), mask))
 
 
+# 수작업 생성 전용 이미지 보존 (내장 image_gen 편집본).
+JOBS = {k:v for k,v in JOBS.items() if k not in ('free', 'gym')}
 for name, job in JOBS.items():
     kind, number, cells = job[:3]
     mask = mask_of(cells)
