@@ -26,4 +26,9 @@ if __name__ == '__main__':
     cells(ROOT / 'common/e001_ikusei', {30: 'bubble_injured', 31: 'bubble_sick', 34: 'bubble_hungry', 36: 'bubble_stress'})
     cells(ROOT / 'common/e001_ikusei', {137: 'poop_1', 138: 'poop_2'}, box=(-14, -19, 24, 24))  # 원점 (14,19)
     cells(ROOT / 'common/e001_ikusei', {139: 'broom_1', 140: 'broom_2'}, box=(-16, -28, 34, 34))
+    # 도구 줄 그림: 손 커서, 말풍선 안의 주사기·반창고, 쓰다듬을 때 나오는 음표 4프레임
+    cells(ROOT / 'common/e001_ikusei', {141: 'tool_hand'})
+    cells(ROOT / 'common/e001_ikusei', {31: 'tool_shot'}, crop=(5, 7, 14, 9), key=(255, 255, 255))
+    cells(ROOT / 'common/i000_item', {35: 'tool_heal'}, crop=(9, 1, 13, 13), key=(255, 255, 255))
+    cells(ROOT / 'common/e001_ikusei', {144 + i: f'note_{i + 1}' for i in range(4)})
     cells(ROOT / 'common/e001_ikusei', {148 + i: f'sparkle_{i + 1}' for i in range(7)}, box=(-16, -44, 32, 48))

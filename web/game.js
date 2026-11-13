@@ -465,6 +465,7 @@
   }
   // 선택형 도구: 고기·알약(프로틴)은 바닥에 놓아 먹이고, 약(주사기)·상처약은 디지몬을 터치해 쓴다.
   let selectedItem = null;
+  const TOOL_ICON = { meat: 'assets/items/meat.png', pill: 'assets/items/pill.png', shot: 'assets/ui/tool_shot.png', heal: 'assets/ui/tool_heal.png' };
   const ITEMS = [
     { kind: 'meat', label: '고기', count: () => C.availableFood(save, view.foods, 'meat') },
     { kind: 'pill', label: '알약', count: () => C.availableFood(save, view.foods, 'pill') },
@@ -476,11 +477,11 @@
     canvas.style.cursor = selectedItem === 'broom' ? 'url(assets/ui/broom_1.png) 6 26, pointer' : '';
     setHtml(
       '#tray',
-      // 원작 사육장 아래 도구 줄 아이콘 (ui/UI_Icon_training, tools/extract_ui.py)
-      '<button class="tray-item tool" data-item="select" aria-pressed="' + (selectedItem === null) + '" title="선택 / 이동"><img src="assets/ui/icon_hand.png" alt=""><b>선택</b></button>' +
-        ITEMS.map((it) => `<button class="tray-item tool" data-item="${it.kind}" aria-pressed="${selectedItem === it.kind}"${it.count() > 0 ? '' : ' disabled'} title="${it.label}"><img src="assets/ui/icon_${it.kind}.png" alt=""><b>${it.label}</b><small>×${Math.max(0, it.count())}</small></button>`).join('') +
+      // 도구 줄 그림은 원작의 실제 도트: 손 커서, 고기, 알약, 말풍선 속 주사기·반창고, 빗자루, 공터 (tools/extract_ui.py·extract_items.py)
+      '<button class="tray-item tool" data-item="select" aria-pressed="' + (selectedItem === null) + '" title="선택 / 이동 / 쓰다듬기"><img src="assets/ui/tool_hand.png" alt=""><b>선택</b></button>' +
+        ITEMS.map((it) => `<button class="tray-item tool" data-item="${it.kind}" aria-pressed="${selectedItem === it.kind}"${it.count() > 0 ? '' : ' disabled'} title="${it.label}"><img src="${TOOL_ICON[it.kind]}" alt=""><b>${it.label}</b><small>×${Math.max(0, it.count())}</small></button>`).join('') +
         '<button class="tray-item tool" data-item="broom" aria-pressed="' + (selectedItem === 'broom') + '" title="빗자루: 똥만 눌러 치우기"><img src="assets/ui/broom_1.png" alt=""><b>빗자루</b>' + (view.poops.length ? `<small>${view.poops.length}</small>` : '') + '</button>' +
-        '<button class="tray-item tool" data-tool="cage" title="케이지 편집"><img src="assets/ui/icon_cage.png" alt=""><b>케이지</b></button>' +
+        '<button class="tray-item tool" data-tool="cage" title="케이지 편집"><img src="assets/facilities/cm01.png" alt=""><b>케이지</b></button>' +
         '<span class="tray-hint">' + (selectedItem === 'broom' ? '치울 똥을 터치하세요 · 빗자루를 든 동안은 똥만 눌립니다 · Esc로 취소' : selectedItem === 'meat' ? '사육장 바닥을 터치해 고기를 놓으세요 · Esc로 취소' : selectedItem === 'pill' ? '바닥에 알약(프로틴)을 놓으면 디지몬이 먹고 다음 배틀에서 힘이 세집니다 · 과식 주의' : selectedItem === 'shot' ? '병에 걸린 디지몬을 터치해 주사를 놓으세요 · Esc로 취소' : selectedItem === 'heal' ? '다친 디지몬을 터치해 상처약을 바르세요 · Esc로 취소' : '고기·알약 → 바닥 터치 · 약·상처약 → 디지몬 터치') + '</span>',
     );
   }
@@ -583,16 +584,11 @@
         continue;
       }
       if (fx.kind === 'pet') {
-        // 쓰다듬기: 하트가 떠오른다 (원작 그림을 찾기 전의 임시 표현)
+        // 쓰다듬기: 원작의 빨간 음표 4프레임 (common/e001_ikusei 144~147번)
         if (t > 0.9) careFx.splice(i, 1);
         else {
-          ctx.save();
-          ctx.globalAlpha = 1 - t / 0.9;
-          ctx.font = 'bold 26px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillStyle = '#ff6f91';
-          ctx.fillText('♥', x, y - 70 - t * 30);
-          ctx.restore();
+          const im = fxImage(`note_${Math.min(4, Math.floor(t / 0.225) + 1)}`);
+          if (im.complete && im.naturalWidth) ctx.drawImage(im, x + 14, y - 74 - im.naturalHeight * 2, im.naturalWidth * 2, im.naturalHeight * 2);
         }
         continue;
       }

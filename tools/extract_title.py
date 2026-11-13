@@ -65,7 +65,7 @@ def screen(base: Path, name: str, height=192):
     print(name, w, h)
 
 
-def cells(base: Path, picks: dict, gfx='.ncbr', box=None):
+def cells(base: Path, picks: dict, gfx='.ncbr', box=None, crop=None, key=None):
     """box=(left, top, W, H)를 주면 셀 원점 기준 같은 틀에 그려 프레임끼리 위치가 맞는다."""
     c = base.with_suffix('.ncer').read_bytes()
     graphics = base.with_suffix(gfx).read_bytes()
@@ -94,6 +94,8 @@ def cells(base: Path, picks: dict, gfx='.ncbr', box=None):
         else:
             left, top = min(o[0] for o in objs), min(o[1] for o in objs)
             W, H = max(o[0] + o[2] for o in objs) - left, max(o[1] + o[3] for o in objs) - top
+            if crop:  # 셀 그림 왼쪽 위 기준 (x, y, w, h)만 잘라 낸다
+                left, top, W, H = left + crop[0], top + crop[1], crop[2], crop[3]
         out = bytearray(W * H * 4)
         base_addr = struct.unpack_from('<I', c, transfer + 8 + i * 8)[0] if transfer else 0
         for x, y, ow, oh, d, b in reversed(objs):
@@ -107,6 +109,10 @@ def cells(base: Path, picks: dict, gfx='.ncbr', box=None):
                     if not idx:
                         continue
                     col = pal[idx if depth == 8 else (d >> 12) * 16 + idx]
+                    if key and tuple(col) == key:  # 말풍선 바탕색처럼 지울 색
+                        continue
+                    if not (0 <= x - left + px < W and 0 <= y - top + py < H):
+                        continue
                     o = ((y - top + py) * W + x - left + px) * 4
                     out[o:o + 4] = bytes((*col, 255))
         png(OUT / f'{name}.png', W, H, out)
