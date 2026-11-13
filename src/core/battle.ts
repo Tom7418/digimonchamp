@@ -49,7 +49,16 @@ export interface Entrant {
   mode: AttackMode;
 }
 
-export const entrantOf = (d: Digimon, mode: AttackMode): Entrant => ({ uid: d.uid, speciesId: d.speciesId, stats: d.stats, personality: d.personality, mode });
+/** 알약(프로틴) 하나당 공격 +15%, 최대 3개분 (임시 값) */
+export const PROTEIN_ATK = 0.15;
+export const PROTEIN_SAFE = 3;
+export const entrantOf = (d: Digimon, mode: AttackMode): Entrant => ({
+  uid: d.uid,
+  speciesId: d.speciesId,
+  stats: d.protein ? { ...d.stats, atk: Math.round(d.stats.atk * (1 + PROTEIN_ATK * Math.min(PROTEIN_SAFE, d.protein))) } : d.stats,
+  personality: d.personality,
+  mode,
+});
 
 export function makeEnemies(stage: Stage, count: number, scale: number, rng: Rng): Entrant[] {
   const pool = speciesByStage(stage);
@@ -208,9 +217,12 @@ export function runBattle(mine: Entrant[], foes: Entrant[], rng: Rng): BattleSta
 
 /** 배틀 결과를 디지몬에게 반영: 횟수·승수, 피로, 쓰러진 디지몬의 부상 */
 export function applyBattleResult(d: Digimon, won: boolean, ko: boolean, rng: Rng): Digimon {
-  const injuryChance = ko ? (d.personality === '대담' ? 0.6 : 0.3) : 0;
+  // 원작 문장: 알약(프로틴)을 과식하면 부상 위험이 늘어난다. 3개 넘게 먹으면 1개당 +15% (임시)
+  const overeat = Math.max(0, (d.protein ?? 0) - PROTEIN_SAFE) * 0.15;
+  const injuryChance = Math.min(1, (ko ? (d.personality === '대담' ? 0.6 : 0.3) : 0) + overeat);
   return {
     ...d,
+    protein: 0,
     battles: d.battles + 1,
     wins: d.wins + (won ? 1 : 0),
     fatigue: Math.min(100, d.fatigue + 20),

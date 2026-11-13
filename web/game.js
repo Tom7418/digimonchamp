@@ -144,9 +144,9 @@
     } else if (e.type === 'egg') log(`${n(e.from)}이(가) 수명을 다해 디지에그로 돌아갔습니다.`);
     else if (e.type === 'lost') log(`${e.name}을(를) 잃었습니다… (${e.reason})`);
     else if (e.type === 'sick') {
-      log(`${e.name}이(가) 병에 걸렸습니다. 알약을 선택하고 디지몬을 터치하세요. (페널티 +1)`);
+      log(`${e.name}이(가) 병에 걸렸습니다. 약(주사기)을 선택하고 디지몬을 터치하세요. (페널티 +1)`);
       toast(`${e.name} 발병!`);
-      tipMail('sick', '디지몬이 병에 걸렸습니다.\n아래 알약을 선택한 뒤 디지몬을 터치하면 낫습니다.\n이틀 동안 방치하면 쓰러져 디지에그로 돌아갑니다.');
+      tipMail('sick', '디지몬이 병에 걸렸습니다.\n아래 약(주사기)을 선택한 뒤 디지몬을 터치하면 주사를 놓습니다. 세대가 낮으면 한 번에 안 나을 수도 있어요.\n이틀 동안 방치하면 쓰러져 디지에그로 돌아갑니다.');
     } else if (e.type === 'blocked')
       log(
         e.reason === 'rank'
@@ -284,7 +284,7 @@
       );
     }
 
-    $('#inventory').textContent = `고기 ${save.meat} · 알약 ${save.pills} · ${C.ropeOf(save.rope).name} · 메모리카드 ${save.memoryCard}G`;
+    $('#inventory').textContent = `고기 ${save.meat} · 알약 ${save.pills} · 약 ${save.medicine} · 상처약 ${save.salve} · ${C.ropeOf(save.rope).name} · 메모리카드 ${save.memoryCard}G`;
     const next = C.upcoming(save);
     $('#milestone').textContent = next[0] || '모든 타이틀 획득!';
     setHtml(
@@ -445,21 +445,23 @@
       ctx.stroke();
     }
   }
-  const itemImages = Object.fromEntries(['meat', 'meat_1', 'meat_2', 'meat_3', 'pill', 'rotten'].map((kind) => {
+  const itemImages = Object.fromEntries(['meat', 'meat_1', 'meat_2', 'meat_3', 'pill', 'pill_1', 'pill_2', 'pill_3', 'rotten'].map((kind) => {
     const image = new Image();
     image.src = `assets/items/${kind}.png`;
     return [kind, image];
   }));
   function drawFood(f) {
     const stage = Math.min(3, Math.floor((100 - (f.remaining ?? 100)) / 25));
-    const image = itemImages[f.kind === 'meat' && stage ? 'meat_' + stage : f.kind];
+    const image = itemImages[(f.kind === 'meat' || f.kind === 'pill') && stage ? `${f.kind}_${stage}` : f.kind];
     if (image?.complete && image.naturalWidth) ctx.drawImage(image, f.x - 32, f.y - 60, 64, 70);
   }
-  // 선택형 도구: 고기는 바닥 배치만, 알약은 디지몬을 터치해 사용한다.
+  // 선택형 도구: 고기·알약(프로틴)은 바닥에 놓아 먹이고, 약(주사기)·상처약은 디지몬을 터치해 쓴다.
   let selectedItem = null;
   const ITEMS = [
     { kind: 'meat', label: '고기', count: () => C.availableFood(save, view.foods, 'meat') },
-    { kind: 'pill', label: '알약', count: () => save.pills },
+    { kind: 'pill', label: '알약', count: () => C.availableFood(save, view.foods, 'pill') },
+    { kind: 'shot', label: '약', count: () => save.medicine, target: true },
+    { kind: 'heal', label: '상처약', count: () => save.salve, target: true },
   ];
   function renderTray() {
     // 빗자루를 든 동안은 마우스 커서도 원작 빗자루 그림
@@ -471,7 +473,7 @@
         ITEMS.map((it) => `<button class="tray-item tool" data-item="${it.kind}" aria-pressed="${selectedItem === it.kind}"${it.count() > 0 ? '' : ' disabled'} title="${it.label}"><img src="assets/ui/icon_${it.kind}.png" alt=""><b>${it.label}</b><small>×${Math.max(0, it.count())}</small></button>`).join('') +
         '<button class="tray-item tool" data-item="broom" aria-pressed="' + (selectedItem === 'broom') + '" title="빗자루: 똥만 눌러 치우기"><img src="assets/ui/broom_1.png" alt=""><b>빗자루</b>' + (view.poops.length ? `<small>${view.poops.length}</small>` : '') + '</button>' +
         '<button class="tray-item tool" data-tool="cage" title="케이지 편집"><img src="assets/ui/icon_cage.png" alt=""><b>케이지</b></button>' +
-        '<span class="tray-hint">' + (selectedItem === 'broom' ? '치울 똥을 터치하세요 · 빗자루를 든 동안은 똥만 눌립니다 · Esc로 취소' : selectedItem === 'meat' ? '사육장 바닥을 터치해 고기를 놓으세요 · Esc로 취소' : selectedItem === 'pill' ? '치료할 디지몬을 터치하세요 · Esc로 취소' : '고기 선택 → 바닥 터치 · 알약 선택 → 디지몬 터치') + '</span>',
+        '<span class="tray-hint">' + (selectedItem === 'broom' ? '치울 똥을 터치하세요 · 빗자루를 든 동안은 똥만 눌립니다 · Esc로 취소' : selectedItem === 'meat' ? '사육장 바닥을 터치해 고기를 놓으세요 · Esc로 취소' : selectedItem === 'pill' ? '바닥에 알약(프로틴)을 놓으면 디지몬이 먹고 다음 배틀에서 힘이 세집니다 · 과식 주의' : selectedItem === 'shot' ? '병에 걸린 디지몬을 터치해 주사를 놓으세요 · Esc로 취소' : selectedItem === 'heal' ? '다친 디지몬을 터치해 상처약을 바르세요 · Esc로 취소' : '고기·알약 → 바닥 터치 · 약·상처약 → 디지몬 터치') + '</span>',
     );
   }
   function petAt(pt) {
@@ -523,14 +525,61 @@
       else put(`sparkle_${Math.min(7, Math.floor((now - sw.cleanedAt) / 1000 / SPARKLE_FRAME) + 1)}`, x, y, 16, 44);
     }
   }
+  // ---------- 치료·강화 연출: 원작 common/e001_ikusei 회복 고리(2번)·회복 빛(4번)·강화 기운(15번) ----------
+  const fxImages = {};
+  const fxImage = (k) => fxImages[k] || (fxImages[k] = Object.assign(new Image(), { src: `assets/ui/${k}.png` }));
+  const careFx = [];
+  const TOOL_TIME = 0.9, HEAL_SEQ = [1, 2, 3, 0, 4, 5, 6, 0];
+  function startCareFx(kind, pet, success) {
+    careFx.push({ kind, pet, success, start: performance.now() });
+  }
+  function drawCareFx(now) {
+    const put = (key, x, y, ox, oy) => {
+      const im = fxImage(key);
+      if (im.complete && im.naturalWidth) ctx.drawImage(im, x - ox * 2, y - oy * 2, im.naturalWidth * 2, im.naturalHeight * 2);
+    };
+    for (let i = careFx.length - 1; i >= 0; i--) {
+      const fx = careFx[i], t = (now - fx.start) / 1000, { x, y } = fx.pet;
+      if (fx.kind === 'aura') {
+        // 강화 기운: 3틱씩 10프레임, 네 번 반복
+        if (t > 2) careFx.splice(i, 1);
+        else put(`fx_aura_${(Math.floor(t / 0.05) % 10) + 1}`, x, y + 6, 20, 67);
+        continue;
+      }
+      if (t < TOOL_TIME) {
+        // 주사기·상처약 아이콘이 디지몬에게 두 번 다가갔다 물러난다
+        const poke = Math.abs(Math.sin((t / TOOL_TIME) * Math.PI * 2)) * 14;
+        const im = fxImage(fx.kind === 'shot' ? 'icon_shot' : 'icon_heal');
+        if (im.complete && im.naturalWidth) ctx.drawImage(im, x + 18 - poke, y - 70 + poke * 0.5, 48, 48);
+        continue;
+      }
+      const u = t - TOOL_TIME;
+      if (!fx.success || u > 1.6) {
+        if (!fx.success && u < 0.8) {
+          ctx.font = 'bold 18px sans-serif';
+          ctx.fillStyle = '#ffe36a';
+          ctx.textAlign = 'center';
+          ctx.fillText('…', x, y - 80);
+        } else careFx.splice(i, 1);
+        continue;
+      }
+      // 회복 고리 10틱씩 6프레임 + 회복 빛 6틱씩 8프레임 두 번
+      if (u < 1) put(`fx_ring_${Math.floor(u / (10 / 60)) + 1}`, x, y + 4, 15, 29);
+      put(`fx_heal_${HEAL_SEQ[Math.floor(u / 0.1) % 8]}`, x, y, 16, 43);
+    }
+  }
   function dropItem(kind, pt) {
     if (farmInputBlocked()) return;
     if (kind === 'broom') return sweepAt(pt);
     const hit = petAt(pt);
-    if (kind === 'pill') {
-      if (!hit) return toast('알약을 사용할 디지몬을 터치하세요.');
+    if (kind === 'shot' || kind === 'heal') {
+      if (!hit) return toast(kind === 'shot' ? '주사를 놓을 디지몬을 터치하세요.' : '상처약을 바를 디지몬을 터치하세요.');
       view.selected = view.team.indexOf(hit.p);
-      return apply(C.heal(save, hit.d.uid));
+      const res = kind === 'shot' ? C.cure(save, hit.d.uid, Math.random) : C.treat(save, hit.d.uid, Math.random);
+      if (res.ok && typeof startCareFx === 'function') startCareFx(kind, hit.p, kind === 'shot' ? !res.save.digimon.find((x) => x.uid === hit.d.uid)?.sick : !res.save.digimon.find((x) => x.uid === hit.d.uid)?.injured);
+      apply(res);
+      renderTray();
+      return;
     }
     const it = ITEMS.find((x) => x.kind === kind);
     if (!it || it.count() <= 0) return toast('사용 가능한 아이템이 없어요. 상점에서 사세요.');
@@ -635,18 +684,21 @@
         save = r.save;
         // 부분 섭취는 새 먹이 객체를 예약하고, 배가 차면 남은 고기를 놓아둔다.
         const left = r.foods[foodIndex], eater = save.digimon.find(x => x.uid === d.uid);
-        if (r.foods.length === oldCount && left && left.x === eating.food.x && left.y === eating.food.y && left.remaining > 0 && eater.hunger < 100)
+        if (r.foods.length === oldCount && left && left.x === eating.food.x && left.y === eating.food.y && left.remaining > 0 && (eater.hunger < 100 || left.kind === 'pill'))
           feeding.set(d.uid, {food: left, elapsed: 0, species: d.speciesId});
         log(`${nameOf(d)}: ${r.message}`);
-        effect = { text: eating.food.kind === 'meat' ? '♥ 냠냠!' : '우웩…', color: '#ffe4a0', until: performance.now() + 1500, uid: d.uid };
+        effect = { text: r.boosted ? '힘이 솟는다!' : eating.food.kind === 'pill' ? '오독오독' : eating.food.kind === 'meat' ? '♥ 냠냠!' : '우웩…', color: r.boosted ? '#9dff8a' : '#ffe4a0', until: performance.now() + 1500, uid: d.uid };
+        if (r.boosted && typeof startCareFx === 'function') startCareFx('aura', p, true);
       }
       render();
       persist();
       return true;
     }
-    if (!view.foods.length || d.isEgg || d.hunger >= 60) return false;
+    if (!view.foods.length || d.isEgg) return false;
     let best = null;
     for (const f of view.foods) {
+      // 고기는 배고플 때만, 알약(프로틴)은 배와 상관없이 먹는다 (하루 5개까지)
+      if (f.kind === 'pill' ? (d.protein ?? 0) >= 5 : d.hunger >= 60) continue;
       // 다른 디지몬이 씹는 먹이를 동시에 소비하지 않는다.
       if ([...feeding.values()].some((e) => e.food === f)) continue;
       // 병든 디지몬은 썩은 먹이를 거부한다. 먹지 못하는 먹이 앞에서 계속 멈추지 않는다.
@@ -676,6 +728,7 @@
     if (d.hunger < 30) return '🍖';
     if (d.poop >= 3) return '💩';
     if (d.fatigue > 80) return '💤';
+    if (d.protein) return '💪';
     return null;
   }
 
@@ -948,7 +1001,7 @@
       log(msg);
       toast('랭크 업!');
     }
-    for (const d of save.digimon) if (uids.has(d.uid) && d.injured) log(`${nameOf(d)}이(가) 다쳤습니다. 양호실에 넣거나 알약으로 치료하세요.`);
+    for (const d of save.digimon) if (uids.has(d.uid) && d.injured) log(`${nameOf(d)}이(가) 다쳤습니다. 양호실에 넣거나 상처약으로 치료하세요.`);
     $('#modal-title').textContent = won ? 'WIN!' : 'LOSE';
     $('#modal-ok').disabled = false;
     $('#close-modal').disabled = false;
@@ -1146,6 +1199,7 @@
         ctx.fillText(effect.text, p.x, p.y - 95 - (1500 - (effect.until - performance.now())) / 80);
       }
     }
+    drawCareFx(performance.now());
     ctx.restore();
     drawMinimap();
     if (paused) {
@@ -1657,12 +1711,12 @@
       '디지몬 챔피언십 웹판',
       `<ol>
         <li>디지에그에서 시작합니다. 현실 1초가 게임 2분이고, 아침 7시부터 밤 9시까지가 하루입니다. 밤 9시가 되면 달력을 보고 다음 날로 넘어갑니다.</li>
-        <li>고기를 선택한 뒤 사육장 바닥을 터치하면 배치됩니다. 배고픈 디지몬은 훈련을 멈추고 걸어와 먹습니다. 알약은 선택 후 치료할 디지몬을 터치하세요. 선택 / 이동 버튼이나 Esc로 도구를 해제합니다. 바닥의 똥은 빗자루를 선택한 뒤 눌러 치웁니다(빗자루를 든 동안은 똥만 눌립니다).</li>
+        <li>고기를 선택한 뒤 사육장 바닥을 터치하면 배치됩니다. 배고픈 디지몬은 훈련을 멈추고 걸어와 먹습니다. 알약(프로틴)도 바닥에 놓으면 디지몬이 먹고 다음 배틀에서 공격이 오릅니다(과식하면 부상 위험). 병은 약(주사기), 부상은 상처약을 선택한 뒤 디지몬을 터치해 치료합니다. 선택 / 이동 버튼이나 Esc로 도구를 해제합니다. 바닥의 똥은 빗자루를 선택한 뒤 눌러 치웁니다(빗자루를 든 동안은 똥만 눌립니다).</li>
         <li>디지몬을 끌어 케이지에 넣으면 1시간마다 정해진 능력치와 종족·속성 수치가 오릅니다. 양호실은 피로와 부상을 회복합니다.</li>
         <li>진화는 자동입니다. 오른쪽 진화 조건표의 위에서부터 먼저 채운 쪽으로 진화하고, 아무것도 채우지 못하면 수명이 다할 때 ‘시간 경과’ 진화를 합니다.</li>
         <li>배고픔·똥 방치·썩은 고기는 병(페널티)이 됩니다. 병·부상을 이틀 방치하면 쓰러져 디지에그로 돌아갑니다.</li>
         <li>타이틀 매치(엔트리 07:00~15:00)에서 이기면 테이머 랭크가 올라 사육 용량, 케이지 공간, 진화 가능 세대가 늘어납니다. 첫 타이틀은 봄 3일 ‘에이스 오브 링’입니다.</li>
-        <li>프리 배틀로 배틀 횟수와 비트를 모으고, 상점에서 고기·알약·케이지를 사세요.</li>
+        <li>프리 배틀로 배틀 횟수와 비트를 모으고, 상점에서 고기·알약·약·상처약·케이지를 사세요.</li>
       </ol><p class="hint">비공식 비영리 팬게임입니다. 진행은 이 브라우저에 자동 저장되며, 창을 닫아 둔 시간도 최대 12시간까지 반영됩니다. 사냥은 아직 웹판에 옮기지 않았습니다.</p>`,
     );
   // ---------- 타이틀 화면 (원작 title_menu 그림) ----------

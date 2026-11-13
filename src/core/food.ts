@@ -2,13 +2,15 @@ import { feed, feedRotten, type ActionResult } from './care';
 import { getSpecies } from './data';
 import type { SaveData } from './types';
 
-export type FoodKind = 'meat' | 'rotten';
+export type FoodKind = 'meat' | 'rotten' | 'pill';
+/** 바닥 먹이 종류 → 저장의 재고 칸 */
+const STOCK: Record<FoodKind, 'meat' | 'rotten' | 'pills'> = { meat: 'meat', rotten: 'rotten', pill: 'pills' };
 export interface FloorFood { kind: FoodKind; x: number; y: number; remaining?: number }
 export interface FoodBounds { x0: number; x1: number; y0: number; y1: number }
 
 /** 바닥 먹이는 기존 저장 방식대로 재고 안에서 예약한다. 먹을 때만 재고를 차감한다. */
 export function availableFood(save: SaveData, foods: readonly FloorFood[], kind: FoodKind): number {
-  return Math.max(0, save[kind] - foods.filter((f) => f.kind === kind).length);
+  return Math.max(0, save[STOCK[kind]] - foods.filter((f) => f.kind === kind).length);
 }
 
 /** 이전 버전에서 중복 사용한 예약·잘못된 좌표만 정리하며 남은 먹이는 순서대로 보존한다. */
@@ -16,7 +18,7 @@ export function restoreFloorFood(save: SaveData, raw: unknown, bounds: FoodBound
   const foods: FloorFood[] = [];
   if (!Array.isArray(raw)) return foods;
   for (const f of raw) {
-    if (!f || (f.kind !== 'meat' && f.kind !== 'rotten') || !Number.isFinite(f.x) || !Number.isFinite(f.y)) continue;
+    if (!f || !Object.hasOwn(STOCK, f.kind) || !Number.isFinite(f.x) || !Number.isFinite(f.y)) continue;
     if (f.remaining !== undefined && (!Number.isFinite(f.remaining) || f.remaining <= 0)) continue;
     if (availableFood(save, foods, f.kind) > 0) foods.push({ ...(f.remaining === undefined ? {} : {remaining: Math.min(100, f.remaining)}), kind: f.kind, x: Math.min(bounds.x1, Math.max(bounds.x0, f.x)), y: Math.min(bounds.y1, Math.max(bounds.y0, f.y)) });
   }
@@ -43,8 +45,15 @@ export function eatFloorFood(save: SaveData, foods: readonly FloorFood[], uid: n
  */
 export function biteFloorFood(save: SaveData, foods: readonly FloorFood[], uid: number, index: number) {
   const food = foods[index], d = save.digimon.find(d => d.uid === uid);
-  if (!food || !d || d.isEgg || d.hunger >= 100 || save[food.kind] <= 0)
+  if (!food || !d || d.isEgg || save[STOCK[food.kind]] <= 0 || (food.kind !== 'pill' && d.hunger >= 100))
     return {ok: false, save, foods, message: '지금은 먹을 수 없어요.'};
+  // 알약(프로틴)은 원작 그림처럼 네 입(i000_item 6~9)에 다 먹고, 배는 차지 않지만 힘이 오른다.
+  if (food.kind === 'pill') {
+    const rest = (food.remaining ?? 100) - 25;
+    if (rest > 0) return {ok: true, save, foods: foods.map((f, i) => i === index ? {...f, remaining: rest} : f), message: '알약을 깨물었다.'};
+    const next = {...save, pills: save.pills - 1, digimon: save.digimon.map(p => p.uid === uid ? {...p, protein: (p.protein ?? 0) + 1} : p)};
+    return {ok: true, save: next, foods: foods.filter((_, i) => i !== index), message: '알약을 다 먹고 힘이 솟는다!', boosted: true};
+  }
   if (food.kind === 'rotten') return eatFloorFood(save, foods, uid, index);
   const amount = [0, 5, 5, 10, 20, 25, 50][getSpecies(d.speciesId).stage];
   const remaining = food.remaining ?? 100;

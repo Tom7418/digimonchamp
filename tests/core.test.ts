@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval } from '../src/core/care';
+import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat } from '../src/core/care';
 import { getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
-import { createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
+import { applyBattleResult, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp } from '../src/core/hunt';
@@ -64,7 +64,7 @@ describe('floor food reservations', () => {
     expect(r.save.meat).toBe(s.meat);
   });
   it('old saves keep valid reservations and repair excess or invalid entries once', () => {
-    const s = { ...freshSave(0), meat: 1, rotten: 0 };
+    const s = { ...freshSave(0), meat: 1, rotten: 0, pills: 0 };
     const restored = restoreFloorFood(s, [...foods, ...foods, null, { kind: 'pill', x: 1, y: 1 }, { kind: 'rotten', x: 200, y: 300 }]);
     expect(restored).toEqual(foods);
     expect(restoreFloorFood(s, JSON.parse(JSON.stringify(restored)))).toEqual(restored);
@@ -440,5 +440,60 @@ describe('partial meat bites', () => {
     expect(r.save.digimon[0].hunger).toBe(100); expect(r.foods[0].remaining).toBe(99.5);
     expect(biteFloorFood(r.save,r.foods,1,0).ok).toBe(false);
     s.digimon[0].isEgg=true; expect(biteFloorFood(s,f,1,0).ok).toBe(false);
+  });
+});
+
+describe('약·상처약·알약(프로틴): 원작 문장 기준으로 역할을 나눔', () => {
+  const sickSave = (stage: string) => {
+    const s = freshEggSave(0);
+    const d = { ...newDigimon(1, stage), sick: true, injured: true };
+    return { ...s, digimon: [d] } as SaveData;
+  };
+  it('약(주사기)은 병만 고치고, 세대가 낮을수록 실패할 수 있다', () => {
+    const s = sickSave('깜몬');
+    const ok = cure(s, 1, () => 0);
+    expect(ok.save.digimon[0].sick).toBe(false);
+    expect(ok.save.digimon[0].injured).toBe(true); // 부상은 그대로
+    expect(ok.save.medicine).toBe(s.medicine - 1);
+    const miss = cure(s, 1, () => 0.99);
+    expect(miss.ok).toBe(true);
+    expect(miss.save.digimon[0].sick).toBe(true);
+    expect(miss.save.medicine).toBe(s.medicine - 1);
+    expect(cure({ ...s, medicine: 0 }, 1).ok).toBe(false);
+  });
+  it('상처약은 부상만 고친다', () => {
+    const s = sickSave('아구몬');
+    const r = treat(s, 1, () => 0);
+    expect(r.save.digimon[0]).toMatchObject({ injured: false, sick: true });
+    expect(r.save.salve).toBe(s.salve - 1);
+  });
+  it('알약은 바닥에서 네 입에 먹고 공격을 올리며, 배틀 뒤에 사라진다', () => {
+    const s = { ...freshEggSave(0), pills: 1, digimon: [{ ...newDigimon(1, '아구몬'), hunger: 100 }] } as SaveData;
+    let foods: readonly FloorFood[] = [{ kind: 'pill', x: 0, y: 0 }];
+    let cur = s;
+    for (let i = 0; i < 4; i++) {
+      const r = biteFloorFood(cur, foods, 1, 0);
+      expect(r.ok).toBe(true);
+      cur = r.save;
+      foods = r.foods;
+    }
+    expect(foods).toEqual([]);
+    expect(cur.pills).toBe(0);
+    const d = cur.digimon[0];
+    expect(d.protein).toBe(1);
+    expect(entrantOf(d, '일반').stats.atk).toBeGreaterThan(d.stats.atk);
+    expect(applyBattleResult(d, true, false, () => 0.99).protein).toBe(0);
+  });
+  it('알약을 과식하면 KO가 아니어도 부상 위험이 생긴다', () => {
+    const d = { ...newDigimon(1, '아구몬'), protein: 6 };
+    expect(applyBattleResult(d, true, false, () => 0.3).injured).toBe(true);
+    expect(applyBattleResult({ ...d, protein: 1 }, true, false, () => 0.3).injured).toBe(false);
+  });
+  it('옛 저장의 알약(치료용)은 약으로 옮긴다', () => {
+    const old = { ...freshEggSave(0), pills: 3 } as Partial<SaveData>;
+    delete old.medicine;
+    delete old.salve;
+    const s = upgradeSave(old as SaveData);
+    expect(s).toMatchObject({ medicine: 3, salve: 1, pills: 0 });
   });
 });

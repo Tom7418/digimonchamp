@@ -16,8 +16,8 @@ def extract_items(source_root, output):
     width, height, pixels = captured[0]
     cell = meta['width']
     output.mkdir(parents=True, exist_ok=True)
-    # 원본 셀을 눈으로 확인한 대응: 0 고기, 4 썩은 고기(이전 저장 표시용), 6 알약.
-    for name, frame in {'meat': 0, 'meat_1': 1, 'meat_2': 2, 'meat_3': 3, 'rotten': 4, 'pill': 6}.items():
+    # 원본 셀을 눈으로 확인한 대응: 0~3 고기(먹는 단계), 4 썩은 고기(이전 저장 표시용), 6~9 알약(프로틴, 먹는 단계).
+    for name, frame in {'meat': 0, 'meat_1': 1, 'meat_2': 2, 'meat_3': 3, 'rotten': 4, 'pill': 6, 'pill_1': 7, 'pill_2': 8, 'pill_3': 9}.items():
         rgba = b''.join(pixels[(y * width + frame * cell) * 4:(y * width + (frame + 1) * cell) * 4] for y in range(height))
         write_png(output / f'{name}.png', cell, height, rgba)
 

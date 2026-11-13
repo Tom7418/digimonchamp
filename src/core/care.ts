@@ -55,6 +55,13 @@ export function upgradeSave(save: SaveData): SaveData {
   }
   if (!s.ropes.includes(s.rope)) s.rope = bestRope(s.ropes);
   if (!s.memoryCard) s.memoryCard = MEMORY_CARDS[0].size;
+  // 예전 알약은 병·부상 치료용이었다 → 약으로 옮기고, 알약은 이제 프로틴(강화)
+  if (s.medicine == null) {
+    s.medicine = s.pills ?? 0;
+    s.salve = 1;
+    s.pills = 0;
+  }
+  if (s.salve == null) s.salve = 0;
   delete s.ropeLevel;
   return s;
 }
@@ -66,6 +73,8 @@ export function freshSave(now = Date.now()): SaveData {
     bits: 500,
     meat: 10,
     pills: 2,
+    medicine: 2,
+    salve: 1,
     rotten: 0,
     ropes: [START_ROPE],
     rope: START_ROPE,
@@ -247,6 +256,8 @@ export function advance(save: SaveData, minutes: number, rng: Rng = defaultRng) 
     cur = r.save;
     events.push(...r.events);
   }
+  // 알약(프로틴) 효과는 하루만 간다 (임시)
+  cur = { ...cur, digimon: cur.digimon.map((d) => (d.protein ? { ...d, protein: 0 } : d)) };
   return { save: cur, events };
 }
 
@@ -341,11 +352,37 @@ export function clean(save: SaveData, uid: number): ActionResult {
   return { ok: true, message: '깨끗하게 치웠다!', save: update(save, uid, (x) => ({ ...x, poop: 0, dirtyMinutes: 0 })) };
 }
 
-export function heal(save: SaveData, uid: number): ActionResult {
+/** 약이 들을 확률. 원작 문장: 세대가 낮으면 나을 확률이 낮아지기도 한다 (값은 임시) */
+export const CURE_CHANCE = [0, 0.7, 0.8, 0.9, 1, 1, 1];
+/** 상처약이 들을 확률. 원작 문장: 세대가 높으면 나을 확률이 낮아지기도 한다 (값은 임시) */
+export const TREAT_CHANCE = [0, 1, 1, 1, 0.9, 0.8, 0.7];
+
+/** 약(주사기)으로 병을 고친다. 실패해도 약은 쓴다 */
+export function cure(save: SaveData, uid: number, rng: Rng = defaultRng): ActionResult {
   const d = find(save, uid);
-  if (!d || (!d.sick && !d.injured)) return fail(save, '아프지 않아요.');
-  if (save.pills <= 0) return fail(save, '알약이 없어요. 상점에서 사세요.');
-  return { ok: true, message: '알약을 먹고 나았다.', save: { ...update(save, uid, (x) => ({ ...x, sick: false, injured: false, sickMinutes: 0 })), pills: save.pills - 1 } };
+  if (!d || !d.sick) return fail(save, '병에 걸리지 않았어요.');
+  if (save.medicine <= 0) return fail(save, '약이 없어요. 상점에서 사세요.');
+  const used = { ...save, medicine: save.medicine - 1 };
+  if (rng() >= CURE_CHANCE[getSpecies(d.speciesId).stage]) return { ok: true, message: '약을 놓았지만 아직 낫지 않았다…', save: used };
+  return { ok: true, message: '병이 나았다!', save: update(used, uid, (x) => ({ ...x, sick: false, sickMinutes: 0 })) };
+}
+
+/** 상처약으로 부상을 치료한다. 실패해도 상처약은 쓴다 */
+export function treat(save: SaveData, uid: number, rng: Rng = defaultRng): ActionResult {
+  const d = find(save, uid);
+  if (!d || !d.injured) return fail(save, '다치지 않았어요.');
+  if (save.salve <= 0) return fail(save, '상처약이 없어요. 상점에서 사세요.');
+  const used = { ...save, salve: save.salve - 1 };
+  if (rng() >= TREAT_CHANCE[getSpecies(d.speciesId).stage]) return { ok: true, message: '상처약을 발랐지만 아직 낫지 않았다…', save: used };
+  return { ok: true, message: '상처가 나았다!', save: update(used, uid, (x) => ({ ...x, injured: false })) };
+}
+
+/** 예전 '치료' 버튼 호환: 병이면 약, 다쳤으면 상처약 */
+export function heal(save: SaveData, uid: number, rng: Rng = defaultRng): ActionResult {
+  const d = find(save, uid);
+  if (d?.sick) return cure(save, uid, rng);
+  if (d?.injured) return treat(save, uid, rng);
+  return fail(save, '아프지 않아요.');
 }
 
 export function setCage(save: SaveData, uid: number, cageId: string): ActionResult {
@@ -386,7 +423,9 @@ export function shopItems(save: SaveData): ShopItem[] {
   const rank = tamerRank(save);
   const items: ShopItem[] = [
     { id: 'meat', name: '고기 ×5', price: 50, apply: (s) => ({ ...s, meat: s.meat + 5 }), available: () => true },
-    { id: 'pill', name: '알약 ×1', price: 80, apply: (s) => ({ ...s, pills: s.pills + 1 }), available: () => true },
+    { id: 'pill', name: '알약(프로틴) ×1', price: 120, apply: (s) => ({ ...s, pills: s.pills + 1 }), available: () => true },
+    { id: 'medicine', name: '약(주사) ×1', price: 80, apply: (s) => ({ ...s, medicine: s.medicine + 1 }), available: () => true },
+    { id: 'salve', name: '상처약 ×1', price: 80, apply: (s) => ({ ...s, salve: s.salve + 1 }), available: () => true },
     { id: 'rotten', name: '썩은 고기 ×2', price: 20, apply: (s) => ({ ...s, rotten: s.rotten + 2 }), available: () => true },
     { id: 'wire', name: `노멀 와이어 ×${WIRE_PACK.count}`, price: WIRE_PACK.price, apply: (s) => ({ ...s, wires: (s.wires ?? 0) + WIRE_PACK.count }), available: () => true },
   ];

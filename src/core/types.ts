@@ -68,6 +68,8 @@ export interface Digimon {
   dirtyMinutes: number;
   sickMinutes: number;
   poopTimer: number;
+  /** 오늘 먹은 알약(프로틴) 수. 다음 배틀 공격 상승, 많으면 부상 위험. 배틀 뒤·밤에 0 */
+  protein?: number;
 }
 
 export interface SaveData {
@@ -76,7 +78,12 @@ export interface SaveData {
   clock: number;
   bits: number;
   meat: number;
+  /** 알약 = 원작 '프로틴'(txt_list #271·#275): 바닥에 놓으면 먹고, 다음 배틀에서 공격이 오른다 */
   pills: number;
+  /** 약(txt_list #272·#276): 병을 고친다. 주사기로 사용 */
+  medicine: number;
+  /** 상처약(txt_list #273·#277): 부상을 치료한다 */
+  salve: number;
   rotten: number;
   /** 가진 로프 id (hunt.ts ROPES) */
   ropes: string[];
