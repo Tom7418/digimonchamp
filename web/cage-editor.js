@@ -88,7 +88,6 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
        }ctx.restore();
        ctx.strokeStyle=selected===c.id?'#ffe374':'#8ed3e6';ctx.lineWidth=selected===c.id?4:2;outerBorder(ctx,c);
        // 시설 이름·칸 수는 케이지 편집 중에만 보인다 (플레이 화면에는 숨김)
-       if(editing){ctx.font='bold 13px sans-serif';const label=`${type.name} · ${cells.length}칸`,lw=ctx.measureText(label).width+16;ctx.fillStyle='#102e3ce8';ctx.fillRect(anchor.x-lw/2,anchor.y+R*0.55,lw,20);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.fillText(label,anchor.x,anchor.y+R*0.55+15);}
      }
      const next=editing&&candidate(hover);if(next){const valid=L.valid(s.layout,next);for(const [q,r] of L.cells(next)){polygon(ctx,q,r);ctx.fillStyle=valid?'#79efa588':'#ff5a6e99';ctx.fill();}}
      // 디지몬은 배치된 시설 안에서만 훈련한다. 같은 시설에서는 점유 칸을 나눠 사용한다.

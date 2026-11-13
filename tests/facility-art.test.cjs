@@ -15,7 +15,7 @@ test('facility art uses hex assets and remains clipped at every rotation',()=>{
   board.draw(ctx);
   assert.equal(draws.length,1);assert.equal(draws[0].clipped,true);
   assert.equal(clipped,false);
-  assert.equal(draws[0].src,'assets/facilities/'+{clinic:'clinic-hex',cm02:'cm02-hex',cm04:'cm04-hex',free:'free-hex',field:'field-hex',cm03:'cm03-hex'}[kind]+'.png');
+  assert.equal(draws[0].src,'assets/facilities/'+{clinic:'clinic-hex',cm02:'cm02-hex',cm04:'cm04-hex',free:'free-hex',field:'cm30',cm03:'cm03-hex'}[kind]+'.png');
   assert.ok(draws[0].args[6]>0&&draws[0].args[7]>0);
  }
 });

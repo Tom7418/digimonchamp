@@ -6,10 +6,10 @@ window.CageLayout = {
     // 원작 케이지 (이름·수용 수는 원작 글, 모양·그림은 root/training/field_cmNN_01에서 tools/extract_cage_fields.py로 얻은 값).
     // core: 규칙 엔진(web/core.js)의 케이지 이름. img: assets/facilities의 그림. fit: 점유 칸 상자에 꽉 맞춰 그린다.
     // 그림은 육각 점유 모양에 맞춘 전용 그림(<이름>-hex.png, tools/make_hex_facilities.py. clinic·field는 Codex가 만든 것).
-    // 미니 시설은 원작에서 1칸이지만 이 게임에서는 예전 크기(미니 운동장·미니 체육관 3칸, 그 밖 2칸)를 유지한다 (형규가 정함).
+    // 공터·미니 시설은 원작과 같이 한 칸으로 통일한다 (사용자 후속 요청).
     // free·clinic·field·gym은 예전 저장과 맞추려고 남긴 이름이다 (field=미니 운동장, gym=미니 체육관).
     free: {name:'기본 케이지',core:'기본 케이지',img:'free-hex',cells:[[0,0]],capacity:1},
-    cm01: {name:'공터',core:'공터',img:'cm01-hex',fit:true,cells:[[0,0],[1,0]],capacity:2},
+    cm01: {name:'공터',core:'공터',img:'cm01',fit:true,cells:[[0,0]],capacity:2},
     cm02: {name:'운동장',core:'운동장',img:'cm02-hex',fit:true,cells:[[0,0],[1,0],[0,1]],capacity:6},
     cm03: {name:'경기장',core:'경기장',img:'cm03-hex',fit:true,cells:[[0,0],[1,0],[2,0],[0,1],[1,1]],capacity:10},
     cm04: {name:'도장',core:'도장',img:'cm04-hex',fit:true,cells:[[0,0],[1,0],[2,0]],capacity:6},
@@ -32,15 +32,15 @@ window.CageLayout = {
     cm25: {name:'동물원',core:'동물원',img:'cm25-hex',fit:true,cells:[[0,0],[1,0]],capacity:2},
     cm26: {name:'목장',core:'목장',img:'cm26-hex',fit:true,cells:[[0,0],[1,0],[-1,1],[0,1]],capacity:8},
     cm27: {name:'링',core:'링',img:'cm27-hex',fit:true,cells:[[0,0],[-1,1],[0,1]],capacity:6},
-    field: {name:'미니 운동장',core:'미니 운동장',img:'field-hex',fit:true,cells:[[0,0],[1,0],[0,1]],capacity:2},
+    field: {name:'미니 운동장',core:'미니 운동장',img:'cm30',fit:true,cells:[[0,0]],capacity:2},
     cm31: {name:'양호실',core:'양호실',img:'cm31-hex',fit:true,cells:[[0,0],[1,0]],capacity:6},
-    cm32: {name:'미니 화원',core:'미니 화원',img:'cm32-hex',fit:true,cells:[[0,0],[1,0]],capacity:2},
-    cm33: {name:'미니 숲',core:'미니 숲',img:'cm33-hex',fit:true,cells:[[0,0],[1,0]],capacity:2},
-    gym: {name:'미니 체육관',core:'미니 체육관',img:'gym-hex',fit:true,cells:[[0,0],[1,0],[2,0]],capacity:2},
-    cm35: {name:'미니 화산',core:'미니 화산',img:'cm35-hex',fit:true,cells:[[0,0],[1,0]],capacity:2},
-    cm37: {name:'미니 고산',core:'미니 고산',img:'cm37-hex',fit:true,cells:[[0,0],[1,0]],capacity:2},
-    cm38: {name:'미니 공장',core:'미니 공장',img:'cm38-hex',fit:true,cells:[[0,0],[1,0]],capacity:2},
-    cm39: {name:'미니 해변',core:'미니 해변',img:'cm39-hex',fit:true,cells:[[0,0],[1,0]],capacity:2},
+    cm32: {name:'미니 화원',core:'미니 화원',img:'cm32',fit:true,cells:[[0,0]],capacity:2},
+    cm33: {name:'미니 숲',core:'미니 숲',img:'cm33',fit:true,cells:[[0,0]],capacity:2},
+    gym: {name:'미니 체육관',core:'미니 체육관',img:'cm34',fit:true,cells:[[0,0]],capacity:2},
+    cm35: {name:'미니 화산',core:'미니 화산',img:'cm35',fit:true,cells:[[0,0]],capacity:2},
+    cm37: {name:'미니 고산',core:'미니 고산',img:'cm37',fit:true,cells:[[0,0]],capacity:2},
+    cm38: {name:'미니 공장',core:'미니 공장',img:'cm38',fit:true,cells:[[0,0]],capacity:2},
+    cm39: {name:'미니 해변',core:'미니 해변',img:'cm39',fit:true,cells:[[0,0]],capacity:2},
   },
   // 예전 임시 시설 이름 → 원작 시설 (저장된 배치 이전용)
   aliases: {vacant:'cm01',volcano:'cm35',flower:'cm32',pool:'cm39',aviary:'cm37',grave:'cm14',labV:'cm17',labD:'cm06',labX:'cm23',stadium:'cm02'},
