@@ -65,6 +65,8 @@
       if (raw && raw.save && raw.save.version === 2 && Array.isArray(raw.save.digimon) && raw.save.digimon.length && raw.view) {
         save = C.upgradeSave(raw.save);
         view = { ...freshView(), ...raw.view };
+        if (raw.save.digimon.some(d => d.statVersion !== 1))
+          view.logs.unshift({ time: stamp(), text: '디지몬 능력치를 원작 수치 기준으로 갱신했습니다.' });
         view.farmWorld = raw.view.farmWorld; // 없으면 옛 좌표 → 시작할 때 새 월드 크기로 옮긴다
         // 먹이 좌표 복원은 board 생성과 옛 월드 좌표 변환을 마친 뒤 수행한다.
         // 재접속도 21시에서 멈춘다. 수면은 달력의 '다음 날로'를 누를 때만 진행한다.

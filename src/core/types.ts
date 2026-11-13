@@ -50,6 +50,10 @@ export interface Digimon {
   originBaby: string;
   personality: Personality;
   stats: Stats;
+  /** 1: 원본 능력치 곡선 단위. 누락된 기존 저장은 upgradeSave에서 한 번 이전한다. */
+  statVersion?: 1;
+  /** 이전 당시 능력치 원본. 새 단위에 맞춰 범위를 조정해도 되돌려 확인할 수 있게 보존한다. */
+  legacyStats?: Stats;
   ap: Record<ApKey, number>;
   /** 훈련 결과로 얻은 내성. 옛 저장은 없으면0, 전투 피해에 반영하는 규칙은 후속. */
   resistance?: Partial<Record<'열' | '추위' | '천둥' | '빛' | '어둠', number>>;

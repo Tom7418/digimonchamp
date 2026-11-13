@@ -78,8 +78,9 @@ export function createBattle(mine: Entrant[], foes: Entrant[]): BattleState {
   const place = (list: Entrant[], team: 0 | 1) =>
     list.forEach((e, i) => {
       const sp = getSpecies(e.speciesId);
-      const maxHp = 40 + e.stats.hp * 3;
-      const maxTp = 20 + e.stats.tp;
+      // 능력치가 원본 단위이므로 예전 임시 HP×3+40 / TP+20 보정을 중복하지 않는다.
+      const maxHp = Math.max(1, e.stats.hp);
+      const maxTp = Math.max(0, e.stats.tp);
       units.push({
         id: units.length,
         team,

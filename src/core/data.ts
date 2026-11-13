@@ -1,8 +1,10 @@
+import statTable from '../data/training.json';
+import type { Rng } from './rng';
 import raw from '../data/evolutions.txt?raw';
 import habitatRaw from '../data/habitats.txt?raw';
 import speciesRaw from '../data/species.txt?raw';
 import speciesApiRaw from '../data/species-api.txt?raw';
-import { ATTRS, FAMILIES, type ApKey, type Attr, type Cond, type Family, type Species, type SpeciesAttr, type Stage, type Stats } from './types';
+import { ATTRS, FAMILIES, STAT_KEYS, type ApKey, type Attr, type Cond, type Family, type Species, type SpeciesAttr, type Stage, type StatKey, type Stats } from './types';
 
 export const STAGE_LABEL: Record<Stage, string> = { 1: '유년기I', 2: '유년기II', 3: '성장기', 4: '성숙기', 5: '완전체', 6: '궁극체' };
 /** 단계별 수명(게임 분) */
@@ -119,48 +121,28 @@ export function getSpecies(id: string): Species {
   return s;
 }
 
-/** 종족별 능력치 성향 (합 6) */
-const PROFILE: Record<Family, Stats> = {
-  용: { hp: 1.1, tp: 0.7, atk: 1.5, def: 1.0, int: 0.8, spd: 0.9 },
-  짐승: { hp: 1.0, tp: 0.7, atk: 1.2, def: 0.8, int: 0.8, spd: 1.5 },
-  물: { hp: 1.4, tp: 0.9, atk: 0.9, def: 1.3, int: 0.9, spd: 0.6 },
-  새: { hp: 0.8, tp: 1.0, atk: 1.0, def: 0.7, int: 1.1, spd: 1.4 },
-  벌레풀: { hp: 1.2, tp: 0.9, atk: 1.0, def: 1.3, int: 0.8, spd: 0.8 },
-  기계: { hp: 1.0, tp: 0.8, atk: 1.2, def: 1.5, int: 0.9, spd: 0.6 },
-  성: { hp: 0.9, tp: 1.4, atk: 0.8, def: 0.9, int: 1.4, spd: 0.6 },
-  암흑: { hp: 0.9, tp: 1.2, atk: 1.2, def: 0.7, int: 1.3, spd: 0.7 },
-};
-const STAGE_BONUS: Record<Stage, number> = { 1: 8, 2: 10, 3: 25, 4: 55, 5: 110, 6: 200 };
-
-/**
- * 종별 능력치 성향 (평균 1). 원본 표의 기본 능력치 6개의 비율을 쓴다.
- * 후속 코드 조사: 여섯 값은 HP·TP·공격·방어·지능·민첩 곡선 인덱스로 확인됨.
- * 아래 인덱스 비율은 기존 웹 능력치 규모를 유지하기 위한 근사이며 원작 초기화 계산은 아니다.
- * 크기(STAGE_BONUS 등)는 원작 수치 체계를 몰라 예전 임시 값을 유지한다.
- * 능력치가 모두 0인 유년기는 종족 성향을 쓴다.
- */
-function profileOf(sp: Species): Stats {
-  const v = ORIGINAL[sp.id]?.stats ?? [];
-  const sum = v.reduce((a, b) => a + b, 0);
-  if (!sum) return PROFILE[sp.family];
-  const k = 6 / sum;
-  return { hp: v[0] * k, tp: v[1] * k, atk: v[2] * k, def: v[3] * k, int: v[4] * k, spd: v[5] * k };
+/** 원본 종별 곡선 인덱스가 가리키는 기본 훈련 범위. */
+export function statBounds(id: string, key: StatKey): { min: number; max: number } {
+  const column = STAT_KEYS.indexOf(key), index = ORIGINAL[id]?.stats[column] ?? 0;
+  return { min: statTable.curves[index][column], max: statTable.curves[Math.min(24, index + 3)][column] - (key === 'hp' ? 10 : 1) };
 }
 
-/** 해당 종으로 진화(또는 부화)할 때 더해지는 능력치 */
-export function evolutionBonus(id: string): Stats {
-  const sp = getSpecies(id);
-  const p = profileOf(sp);
-  const b = STAGE_BONUS[sp.stage];
-  return { hp: Math.round(p.hp * b), tp: Math.round(p.tp * b), atk: Math.round(p.atk * b), def: Math.round(p.def * b), int: Math.round(p.int * b), spd: Math.round(p.spd * b) };
+/** ARM9 0x0206159c: 시작 곡선 값 + 다음 곡선 간격 절반 안의 난수. HP는10단위. */
+export function initialStats(id: string, rng: Rng = Math.random): Stats {
+  getSpecies(id); // 알 수 없는 종을 조용히 생성하지 않는다.
+  return Object.fromEntries(STAT_KEYS.map((key, column) => {
+    const index = ORIGINAL[id]?.stats[column] ?? 0, step = key === 'hp' ? 10 : 1;
+    const start = statTable.curves[index][column], next = statTable.curves[Math.min(24, index + 1)][column];
+    const slots = Math.trunc(Math.trunc((next - start) / 2) / step);
+    const roll = Math.min(0.999999999, Math.max(0, rng()));
+    return [key, start + (slots ? Math.floor(roll * slots) * step : 0)];
+  })) as Stats;
 }
 
-/** 야생/상대 디지몬의 표준 능력치 */
+/** 상대의 표준치는 원본 초기 범위의 중앙. 대회별 배율은 여전히 웹판 난이도 정책이다. */
 export function typicalStats(id: string, scale = 1): Stats {
-  const sp = getSpecies(id);
-  const total = [0, 8, 18, 45, 110, 240, 460][sp.stage] * scale;
-  const p = profileOf(sp);
-  return { hp: Math.round(p.hp * total), tp: Math.round(p.tp * total), atk: Math.round(p.atk * total), def: Math.round(p.def * total), int: Math.round(p.int * total), spd: Math.round(p.spd * total) };
+  const stats = initialStats(id, () => 0.5);
+  return Object.fromEntries(STAT_KEYS.map(key => [key, Math.max(1, Math.round(stats[key] * scale))])) as Stats;
 }
 
 export const speciesByStage = (stage: Stage) => Object.values(SPECIES).filter((s) => s.stage === stage);

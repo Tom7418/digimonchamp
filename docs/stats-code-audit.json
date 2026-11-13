@@ -1,0 +1,20 @@
+{
+  "species": 216,
+  "instructionChecks": 16,
+  "hashes": {
+    "arm9": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
+    "overlay18": "44183ea85e90332dca3747699c2ff6033d8c0cd1e5deb3d6e2b0350f112d386e",
+    "overlay19": "02ef4c126fd11bd5e2bea21202442bd48575b2afcd29c045f70036940ebde671"
+  },
+  "verified": {
+    "initial": "0x0206159c",
+    "evolution": "0x02062258",
+    "rebirthTable": "0x0209ee7c",
+    "battleRefill": "0x021179e4"
+  },
+  "webPolicy": [
+    "이전 저장 능력치는 별도 보관하고 초기 중앙값~상한으로 한 번만 이전",
+    "상대 배율·피해 공식·진화 조건/AP 이월은 기존 웹판 정책",
+    "알 내부 능력치는0. 부화 시 재탄생 횟수 보정을 적용하며 알 내부 훈련 이월은 미재현"
+  ]
+}

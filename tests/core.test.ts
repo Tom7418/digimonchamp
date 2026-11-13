@@ -1,7 +1,8 @@
+import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { applyTraining, trainingBounds, trainingDelta } from '../src/core/training';
 import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
-import { CAGES, getCage, getSpecies, originalSpecies, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
+import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
@@ -381,7 +382,8 @@ describe('원본 속성·종족', () => {
     for (const sp of Object.values(SPECIES)) expect(originalSpecies(sp.id)!.life).toBe(LIFESPAN[sp.stage]);
     // 피요몬은 민첩이 높고(4,5,4,4,5,6), 아르마몬은 방어가 높고 민첩이 낮다(5,5,5,6,5,4)
     const piyo = typicalStats('피요몬'), arma = typicalStats('아르마몬');
-    expect(piyo.spd).toBeGreaterThan(piyo.hp);
+    // HP는 공격·민첩과 단위가 다르다. 같은 종류의 능력치끼리 종별 성향을 비교한다.
+    expect(piyo.spd).toBeGreaterThan(arma.spd);
     expect(arma.def).toBeGreaterThan(arma.spd);
   });
   it('진화표의 모든 종이 원본 표에 있고 세대가 같다', () => {
@@ -779,5 +781,79 @@ describe('원본 훈련 결과와 실제 변화량', () => {
     expect(applyTraining(d, getCage('화산'), 0, rolls(0.7, 0.5, 0.5))).toEqual(['열 내성 +9', '추위 내성 +0 (하한)']);
     expect(JSON.parse(JSON.stringify(d)).resistance).toEqual({ 열: 9, 추위: 0 });
     expect(JSON.parse(before).resistance).toBeUndefined();
+  });
+});
+
+
+describe('원본 능력치 생성·진화·저장 이전', () => {
+  it('216종 초기값은 범위 안이며 HP는10단위다', () => {
+    for (const id of Object.keys(SPECIES)) for (const roll of [0, 0.5, 0.999999]) {
+      const stats = initialStats(id, () => roll);
+      for (const key of ['hp','tp','atk','def','int','spd'] as const) {
+        const bounds = statBounds(id, key);
+        expect(stats[key], `${id} ${key}`).toBeGreaterThanOrEqual(bounds.min);
+        expect(stats[key], `${id} ${key}`).toBeLessThanOrEqual(bounds.max);
+      }
+      expect(stats.hp % 10).toBe(0);
+    }
+    expect(initialStats('아구몬', () => 0)).toEqual({ hp:600, tp:30, atk:30, def:30, int:30, spd:30 });
+    expect(initialStats('아구몬', () => 0.999999)).toEqual({ hp:670, tp:33, atk:33, def:33, int:33, spd:33 });
+    expect(typicalStats('아구몬')).toEqual({ hp:640, tp:32, atk:32, def:32, int:32, spd:32 });
+  });
+  it('진화는 새 종의 초기값에 이전 훈련의 일부를 이월하고 새 범위에서 제한한다', () => {
+    const d = newDigimon(1, '코로몬', () => 0);
+    d.stats = { hp:590, tp:25, atk:29, def:29, int:29, spd:29 };
+    const before = JSON.stringify(d);
+    const stats = evolvedStats(d, '아구몬', 0, () => 0);
+    expect(stats).toEqual({ hp:650, tp:32, atk:32, def:32, int:32, spd:32 });
+    expect(JSON.stringify(d)).toBe(before);
+    for (const key of ['hp','tp','atk','def','int','spd'] as const) d.stats[key] = 100000;
+    const limited = evolvedStats(d, '아구몬', 100, () => 0.999);
+    for (const key of ['hp','tp','atk','def','int','spd'] as const) expect(limited[key]).toBe(statBounds('아구몬', key).max);
+  });
+  it('재탄생 횟수 보정과 원본99 경계도 보존한다', () => {
+    expect([0,1,6,10,19,20,98,99,100,101].map(rebirthPercent)).toEqual([0,5,8,10,20,25,25,99,50,50]);
+    const fresh = evolvedStats(null, '아구몬', 0, () => 0);
+    const reborn = evolvedStats(null, '아구몬', 1, () => 0);
+    expect(reborn.hp).toBe(fresh.hp + 20);
+    expect(reborn.atk).toBe(fresh.atk + 1);
+  });
+  it('옛 저장 수치를 별도로 보존하며 한 번만 변환한다', () => {
+    const d = newDigimon(1, '아구몬', () => 0);
+    delete d.statVersion;
+    d.stats = { hp:25, tp:42, atk:400, def:2, int:38, spd:32 };
+    d.ap['용'] = 60;d.trainMinutes = 9;
+    const old = JSON.stringify(d);
+    const migrated = upgradeStats(d);
+    expect(migrated.stats).toEqual({ hp:640, tp:42, atk:53, def:32, int:38, spd:32 });
+    expect(migrated.legacyStats).toEqual(d.stats);
+    expect(migrated.legacyStats).not.toBe(d.stats);
+    expect(migrated).toMatchObject({ statVersion:1, ap:d.ap, trainMinutes:9, uid:d.uid });
+    expect(JSON.stringify(d)).toBe(old);
+    const s = { ...freshSave(0), digimon:[migrated] };
+    expect(upgradeSave(JSON.parse(JSON.stringify(s)))).toEqual(s);
+    const egg = upgradeStats({ ...d, isEgg:true });
+    expect(Object.values(egg.stats)).toEqual([0,0,0,0,0,0]);
+  });
+  it('부화·진화는 새 단위 표식을 유지하고 범위 안에서 시작한다', () => {
+    const hatch = advance(freshEggSave(0), 30, () => 0.5).save.digimon[0];
+    expect(hatch).toMatchObject({ isEgg:false, speciesId:'깜몬', statVersion:1 });
+    expect(hatch.stats).toEqual(initialStats('깜몬', () => 0.5));
+    let s = withMon(freshSave(0), { stageAge:LIFESPAN[1]-1, hunger:100 });
+    s = tickFarm(s, () => 0.5).save;
+    expect(only(s).speciesId).toBe('코로몬');
+    for (const key of ['hp','tp','atk','def','int','spd'] as const) expect(only(s).stats[key]).toBeLessThanOrEqual(statBounds('코로몬', key).max);
+  });
+  it('전투는 같은 HP·TP 단위를 사용하며 임시배율을 더하지 않는다', () => {
+    const mine = newDigimon(1, '아구몬', () => 0.5);
+    const foe = newDigimon(2, '아구몬', () => 0.5);
+    const s = createBattle([entrantOf(mine, '일반')], [entrantOf(foe, '일반')]);
+    expect(s.units[0].maxHp).toBe(mine.stats.hp);
+    expect(s.units[0].maxTp).toBe(mine.stats.tp);
+    expect(s.units[1].maxHp).toBe(s.units[0].maxHp);
+    const rng = seeded(81);
+    for (let i=0; i<1000 && !s.over; i++) stepBattle(s, rng);
+    expect(s.over).toBe(true);
+    expect(s.units.every(u => Number.isFinite(u.hp) && u.hp >= 0 && u.hp <= u.maxHp)).toBe(true);
   });
 });

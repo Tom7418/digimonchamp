@@ -58,13 +58,13 @@ for i in range(216):
     assert all(0 <= index <= 24 for index in [*struct.unpack_from('<4H', rec, 52), *rec[60:62]])
 out = {'facilities': facilities, 'summerAdd': array_at_literal(0x02117bc4),
        'winterAdd': array_at_literal(0x02117bc8), 'variance': array_at_literal(0x02117bd4),
-       'curves': curves}
+       'curves': curves, 'rebirthBonus': list(arm[0x9ee7c:0x9ee7c + 20])}
 (REPO / 'src/data/training.json').write_text(json.dumps(out, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 audit = {'facilityCount': len(facilities), 'curveCount': len(curves),
          'hashes': {name: hashlib.sha256(data).hexdigest() for name, data in [('arm9', arm), ('overlay18', farm), ('overlay0', hunt)]},
          'verified': {'resultTable': '0x020c87a4', 'curveTable': '0x020c9528', 'applyEffect': '0x02117274',
                       'huntResponseSelector': '0x02112618', 'huntResponseRecordBytes': [116, 129]},
-         'limits': ['기존 웹 능력치 체계 유지: 원작 최저치 아래/상한 위의 저장값을 강제 변경하지 않음',
+         'limits': ['능력치 단위는 원본 곡선으로 이전. 이전값 별도 보존; 상세는 stats-code-audit.json',
                     'AP 0~99·내성 0~310은 웹 정책; 원작 AP 최종 정규화는 미확인',
                     '시설 모드1/2 배수·부가 생활 효과·표에 없는33/36/38 시설은 별도 후속']}
 (REPO / 'docs/training-code-audit.json').write_text(json.dumps(audit, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

@@ -1,5 +1,6 @@
 import { applyTraining } from './training';
-import { CAGE_RENAMES, CAGES, dateOf, DAY_END_HOUR, DAY_START_HOUR, EGG_MINUTES, evolutionBonus, getCage, getSpecies, originalSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK, typicalStats } from './data';
+import { evolvedStats, upgradeStats } from './stats';
+import { CAGE_RENAMES, CAGES, dateOf, DAY_END_HOUR, DAY_START_HOUR, EGG_MINUTES, initialStats, getCage, getSpecies, originalSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK } from './data';
 import { endOfLife, findEvolution } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, tamerRank } from './titles';
@@ -11,7 +12,6 @@ export const CAPACITY = 200;
 export const OFFLINE_CAP_MINUTES = 12 * 60;
 
 const zeroAp = () => Object.fromEntries([...FAMILIES, ...ATTRS].map((k) => [k, 0])) as Record<ApKey, number>;
-const addStats = (a: Stats, b: Stats): Stats => Object.fromEntries(STAT_KEYS.map((k) => [k, a[k] + b[k]])) as Stats;
 
 export function newDigimon(uid: number, speciesId: string, rng: Rng = defaultRng, wild = false): Digimon {
   return {
@@ -20,7 +20,9 @@ export function newDigimon(uid: number, speciesId: string, rng: Rng = defaultRng
     isEgg: false,
     originBaby: getSpecies(speciesId).stage === 1 ? speciesId : '깜몬',
     personality: pick(rng, PERSONALITIES),
-    stats: wild ? typicalStats(speciesId) : evolutionBonus(speciesId),
+    // 사육·포획 모두 같은 원본 초기 범위. 야생 여부로 임시 능력치 배수를 주지 않는다.
+    stats: initialStats(speciesId, rng),
+    statVersion: 1,
     ap: zeroAp(),
     stageAge: 0,
     hunger: 70,
@@ -93,6 +95,7 @@ export function upgradeSave(save: SaveData): SaveData {
   const renamed = (id: string) => CAGE_RENAMES[id] ?? id;
   if (s.cages.some((c) => CAGE_RENAMES[c])) s.cages = [...new Set(s.cages.map(renamed))];
   if (s.digimon.some((d) => CAGE_RENAMES[d.cage])) s.digimon = s.digimon.map((d) => (CAGE_RENAMES[d.cage] ? { ...d, cage: renamed(d.cage) } : d));
+  s.digimon = s.digimon.map(upgradeStats);
   return s;
 }
 
@@ -187,10 +190,10 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
   return {
     ...d,
     isEgg: true,
-    eggs: countEgg ? d.eggs + 1 : d.eggs,
+    eggs: countEgg ? Math.min(100, d.eggs + 1) : d.eggs,
     stageAge: 0,
-    // 디지에그화하면 능력치 일부를 이어받는다
-    stats: Object.fromEntries(STAT_KEYS.map((k) => [k, Math.round(d.stats[k] * 0.15)])) as Stats,
+    // 옛 임시15% 잔여는 폐기. 부화 때 재탄생 횟수 보정을 새 종 범위 안에서 적용한다.
+    stats: Object.fromEntries(STAT_KEYS.map(k => [k, 0])) as Stats,
     ap: zeroAp(),
     battles: 0,
     wins: 0,
@@ -217,7 +220,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   if (d.isEgg) {
     if (d.stageAge >= EGG_MINUTES) {
       events.push({ type: 'hatched', uid: d.uid, from: '디지에그', to: d.originBaby });
-      d = { ...d, isEgg: false, speciesId: d.originBaby, stageAge: 0, stats: addStats(d.stats, evolutionBonus(d.originBaby)) };
+      d = { ...d, isEgg: false, speciesId: d.originBaby, stageAge: 0, stats: evolvedStats(null, d.originBaby, d.eggs, ctx.rng), statVersion: 1 };
     }
     return d;
   }
@@ -317,7 +320,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
       events.push({ type: 'evolved', uid: d.uid, from: sp.id, to: evo.to });
       // 진화하면 쌓아 둔 종족·속성 수치는 절반만 이어진다
       const ap = Object.fromEntries(Object.entries(d.ap).map(([k, v]) => [k, Math.floor(v / 2)])) as Record<ApKey, number>;
-      return { ...d, speciesId: evo.to, stageAge: 0, stats: addStats(d.stats, evolutionBonus(evo.to)), ap, rottenEaten: 0 };
+      return { ...d, speciesId: evo.to, stageAge: 0, stats: evolvedStats(d, evo.to, d.eggs, ctx.rng), statVersion: 1, ap, rottenEaten: 0 };
     }
     if (d.stageAge >= LIFESPAN[sp.stage]) {
       if (evo?.kind === 'blocked' && d.stageAge === LIFESPAN[sp.stage]) events.push({ type: 'blocked', uid: d.uid, name: sp.name, reason: evo.reason });

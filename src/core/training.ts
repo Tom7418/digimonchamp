@@ -1,7 +1,7 @@
 import table from '../data/training.json';
-import { originalSpecies, type Cage } from './data';
+import { statBounds, type Cage } from './data';
 import type { Rng } from './rng';
-import { STAT_KEYS, STAT_LABEL, type Digimon, type StatKey, type ApKey } from './types';
+import { STAT_KEYS, STAT_LABEL, type Digimon, type ApKey } from './types';
 
 // overlay18 0x02117274의 항목 순서. 표시명은 txt_list #19~40과 대응한다.
 const AP_ORDER: ApKey[] = ['바이러스', '백신', '데이터', '용', '짐승', '물', '새', '기계', '성', '벌레풀', '암흑'];
@@ -9,13 +9,8 @@ export const RESIST_KEYS = ['열', '추위', '천둥', '빛', '어둠'] as const
 const outcomes = table.facilities as Record<string, { weight: number; changes: number[][] }[]>;
 const percentile = (rng: Rng) => Math.min(99, Math.max(0, Math.floor(rng() * 100)));
 
-/** +52..61의 여섯 값은 절대 능력치가 아니라 곡선 표의 인덱스다. */
-export function trainingBounds(speciesId: string, key: StatKey): { min: number; max: number } {
-  const index = originalSpecies(speciesId)?.stats[STAT_KEYS.indexOf(key)];
-  if (index == null) return { min: 1, max: Infinity };
-  const column = STAT_KEYS.indexOf(key);
-  return { min: table.curves[index][column], max: table.curves[Math.min(24, index + 3)][column] - (key === 'hp' ? 10 : 1) };
-}
+/** 초기화·진화와 같은 범위를 공유한다. */
+export const trainingBounds = statBounds;
 
 /** 원본 시설 결과표 + 여름/겨울 가산 + 항목별 난수 폭. 시설 모드 배수는 미연결(기본0). */
 export function trainingDelta(key: number, base: number, season: number, rng: Rng): number {
