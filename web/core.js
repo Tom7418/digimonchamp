@@ -1314,19 +1314,29 @@ var ChampCore = (function(exports) {
 	var usedCapacity = (save) => save.digimon.reduce((s, d) => s + (d.isEgg ? 0 : getSpecies(d.speciesId).size), 0);
 	/**
 	* 스트레스 (원작 도움말 help #127: 쌓이면 병에 걸린다. 수치는 화면에 나오지 않는다).
-	* 값은 형규가 정함: 정원 초과로 하루가 지날 때마다 +20, 상한 먹이 +80, 병 +40,
-	* 배고픔 20 미만부터 1 내려갈 때마다 +1.5 (배고픔 0에서 합계 +30). 80 이상이면 말풍선 표시.
-	* 임시(Claude가 정함): 100이 되면 병, 스트레스 요인 없이 아침을 맞으면 -10.
+	* 값은 형규가 정함: 정원 초과로 하루가 지날 때마다 +20, 상한 먹이 +50, 병 +40, 훈련 한 번(1시간)마다 +5,
+	* 배고픔 20 미만부터 1 내려갈 때마다 +1.5 (배고픔 0에서 합계 +30). 60 이상이면 말풍선 표시.
+	* 쉬는 케이지(온천·미니 양호실·양호실·동물원·미니 동물원)에서 게임 1시간마다 -5. 다른 회복 수단은 없다.
+	* 임시(Claude가 정함): 100이 되면 병.
 	*/
 	var STRESS = {
 		crowdedPerDay: 20,
-		rotten: 80,
+		rotten: 50,
 		sick: 40,
+		training: 5,
 		hungerBelow: 20,
 		perHunger: 1.5,
-		show: 80,
-		calmPerDay: 10
+		show: 60,
+		reliefPerHour: 5
 	};
+	/** 스트레스가 풀리는 케이지. 온천·양호실·동물원·미니 동물원은 아직 게임에 없지만 추가되면 바로 적용된다 */
+	var STRESS_RELIEF_CAGES = [
+		"온천",
+		"미니 양호실",
+		"양호실",
+		"동물원",
+		"미니 동물원"
+	];
 	function addStress(d, amount) {
 		d.stress = Math.max(0, Math.min(100, (d.stress ?? 0) + amount));
 	}
@@ -1445,6 +1455,7 @@ var ChampCore = (function(exports) {
 			}
 		}
 		if (d.stageAge % 60 === 0) {
+			if (STRESS_RELIEF_CAGES.includes(cage.id)) addStress(d, -STRESS.reliefPerHour);
 			if (!ctx.sleep && !d.sick && !d.injured && d.hunger > 0 && d.fatigue < 90 && (cage.up || cage.apUp)) {
 				const speed = d.personality === "솔직" ? 1.3 : d.personality === "성급한" ? .8 : 1;
 				const changes = [];
@@ -1466,6 +1477,7 @@ var ChampCore = (function(exports) {
 				for (const k of cage.apUp ?? []) d.ap[k] = Math.min(99, d.ap[k] + 3 * speed);
 				for (const k of cage.apDown ?? []) d.ap[k] = Math.max(0, d.ap[k] - 1);
 				d.fatigue = Math.min(100, d.fatigue + 5);
+				addStress(d, STRESS.training);
 			}
 			const evo = findEvolution(d, ctx.rank, ctx.free);
 			if (evo?.kind === "evolve") {
@@ -1608,7 +1620,6 @@ var ChampCore = (function(exports) {
 				};
 				if (d.isEgg) return d;
 				if (crowded.includes(d.uid)) addStress(d, STRESS.crowdedPerDay);
-				else if (!d.sick && d.hunger >= STRESS.hungerBelow) addStress(d, -STRESS.calmPerDay);
 				return d;
 			})
 		};
@@ -2294,6 +2305,7 @@ var ChampCore = (function(exports) {
 	exports.STAT_KEYS = STAT_KEYS;
 	exports.STAT_LABEL = STAT_LABEL;
 	exports.STRESS = STRESS;
+	exports.STRESS_RELIEF_CAGES = STRESS_RELIEF_CAGES;
 	exports.STRONG_CHANCE = STRONG_CHANCE;
 	exports.TIME_LIMIT = TIME_LIMIT;
 	exports.TITLES = TITLES;

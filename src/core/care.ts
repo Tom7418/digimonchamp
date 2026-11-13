@@ -106,11 +106,14 @@ export type FarmEvent =
 
 /**
  * 스트레스 (원작 도움말 help #127: 쌓이면 병에 걸린다. 수치는 화면에 나오지 않는다).
- * 값은 형규가 정함: 정원 초과로 하루가 지날 때마다 +20, 상한 먹이 +80, 병 +40,
- * 배고픔 20 미만부터 1 내려갈 때마다 +1.5 (배고픔 0에서 합계 +30). 80 이상이면 말풍선 표시.
- * 임시(Claude가 정함): 100이 되면 병, 스트레스 요인 없이 아침을 맞으면 -10.
+ * 값은 형규가 정함: 정원 초과로 하루가 지날 때마다 +20, 상한 먹이 +50, 병 +40, 훈련 한 번(1시간)마다 +5,
+ * 배고픔 20 미만부터 1 내려갈 때마다 +1.5 (배고픔 0에서 합계 +30). 60 이상이면 말풍선 표시.
+ * 쉬는 케이지(온천·미니 양호실·양호실·동물원·미니 동물원)에서 게임 1시간마다 -5. 다른 회복 수단은 없다.
+ * 임시(Claude가 정함): 100이 되면 병.
  */
-export const STRESS = { crowdedPerDay: 20, rotten: 80, sick: 40, hungerBelow: 20, perHunger: 1.5, show: 80, calmPerDay: 10 };
+export const STRESS = { crowdedPerDay: 20, rotten: 50, sick: 40, training: 5, hungerBelow: 20, perHunger: 1.5, show: 60, reliefPerHour: 5 };
+/** 스트레스가 풀리는 케이지. 온천·양호실·동물원·미니 동물원은 아직 게임에 없지만 추가되면 바로 적용된다 */
+export const STRESS_RELIEF_CAGES = ['온천', '미니 양호실', '양호실', '동물원', '미니 동물원'];
 export function addStress(d: Digimon, amount: number) {
   d.stress = Math.max(0, Math.min(100, (d.stress ?? 0) + amount));
 }
@@ -213,6 +216,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   }
 
   if (d.stageAge % 60 === 0) {
+    if (STRESS_RELIEF_CAGES.includes(cage.id)) addStress(d, -STRESS.reliefPerHour);
     // 훈련 케이지: 정해진 능력치가 랜덤하게 오른다
     if (!ctx.sleep && !d.sick && !d.injured && d.hunger > 0 && d.fatigue < 90 && (cage.up || cage.apUp)) {
       const speed = d.personality === '솔직' ? 1.3 : d.personality === '성급한' ? 0.8 : 1;
@@ -230,6 +234,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
       for (const k of cage.apUp ?? []) d.ap[k] = Math.min(99, d.ap[k] + 3 * speed);
       for (const k of cage.apDown ?? []) d.ap[k] = Math.max(0, d.ap[k] - 1);
       d.fatigue = Math.min(100, d.fatigue + 5);
+      addStress(d, STRESS.training);
     }
     const evo = findEvolution(d, ctx.rank, ctx.free);
     if (evo?.kind === 'evolve') {
@@ -324,14 +329,13 @@ export function endDay(save: SaveData, rng: Rng = defaultRng, crowded: number[] 
     cur = r.save;
     events.push(...r.events);
   }
-  // 알약(프로틴) 효과는 하루만 간다 (임시). 하루가 지날 때 스트레스: 정원 초과 +20, 아무 요인 없으면 -10
+  // 알약(프로틴) 효과는 하루만 간다 (임시). 하루가 지날 때 스트레스: 정원 초과 +20
   cur = {
     ...cur,
     digimon: cur.digimon.map((x) => {
       const d = { ...x, protein: 0 };
       if (d.isEgg) return d;
       if (crowded.includes(d.uid)) addStress(d, STRESS.crowdedPerDay);
-      else if (!d.sick && d.hunger >= STRESS.hungerBelow) addStress(d, -STRESS.calmPerDay);
       return d;
     }),
   };

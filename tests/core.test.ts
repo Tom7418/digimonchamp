@@ -508,21 +508,31 @@ describe('스트레스 (형규가 정한 값)', () => {
     for (let i = 0; i < 5; i++) s = tickFarm(s, seeded(1)).save;
     expect(s.digimon[0].stress).toBeCloseTo(30, 5); // 0에 머물러도 더 쌓이지 않는다
   });
-  it('병에 걸리면 +40, 상한 먹이는 +80 (그 병과 겹치지 않음)', () => {
+  it('병에 걸리면 +40, 상한 먹이는 +50 (그 병과 겹치지 않음)', () => {
     let s = one({ poop: 5, dirtyMinutes: 179 });
     s = tickFarm(s, seeded(1)).save;
     expect(s.digimon[0]).toMatchObject({ sick: true, stress: 40 });
     const r = feedRotten({ ...one({ rottenEaten: 1 }), rotten: 1 }, 1);
-    expect(r.save.digimon[0]).toMatchObject({ sick: true, stress: 80 });
+    expect(r.save.digimon[0]).toMatchObject({ sick: true, stress: 50 });
   });
-  it('정원 초과로 하루가 지나면 +20, 아무 일 없으면 -10', () => {
+  it('정원 초과로 하루가 지나면 +20, 그냥 지나면 그대로', () => {
     const night = { ...one({ stress: 50 }), clock: 21 * 60 };
     expect(endDay(night, seeded(1), [1]).save.digimon[0].stress).toBe(70);
-    expect(endDay(night, seeded(1)).save.digimon[0].stress).toBe(40);
+    expect(endDay(night, seeded(1)).save.digimon[0].stress).toBe(50);
   });
   it('100이 되면 병에 걸린다 (한 번만)', () => {
     const s = tickFarm(one({ stress: 100 }), seeded(1)).save;
     expect(s.digimon[0]).toMatchObject({ sick: true, stress: 100, penalties: 1 });
-    expect(STRESS.show).toBe(80);
+    expect(STRESS.show).toBe(60);
+  });
+  it('훈련 한 번마다 +5, 미니 양호실에서는 1시간마다 -5', () => {
+    const hour = (cage: string, stress: number) => {
+      let s = one({ cage, stress, stageAge: 59 });
+      s = tickFarm(s, seeded(1)).save;
+      return s.digimon[0].stress;
+    };
+    expect(hour('미니 운동장', 10)).toBe(15);
+    expect(hour('미니 양호실', 10)).toBe(5);
+    expect(hour('기본 케이지', 10)).toBe(10);
   });
 });
