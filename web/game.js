@@ -1262,7 +1262,7 @@
   }
   // 오른쪽 아래 작은 지도: 사육장 전체와 지금 보는 범위
   function drawMinimap() {
-    const W = board.world.w, H = board.world.h, k = 150 / W, w = 150, h = H * k, x0 = 960 - w - 12, y0 = 560 - h - 12;
+    const W = board.world.w, H = board.world.h, k = 150 / W, w = 150, h = H * k, x0 = 960 - w - 12, y0 = 12; // 아래쪽은 도구 줄이 차지하므로 오른쪽 위
     ctx.fillStyle = '#081a24c0';
     ctx.fillRect(x0 - 3, y0 - 3, w + 6, h + 6);
     for (const c of view.layout) {
@@ -1821,8 +1821,8 @@
   view.foods = C.restoreFloorFood(save, view.foods, board.roam);
   syncTeam();
   { const p = view.team[view.selected]; if (p) board.centerOn(p.x, p.y - 40); }
-  // 아이템 칸은 사육장 바로 아래에 둔다 (화면을 내리지 않고 끌어 놓을 수 있게)
-  document.querySelector('.canvas-wrap').after($('#tray'));
+  // 도구 줄은 원작처럼 사육장 화면 안 아래쪽에 겹쳐 둔다 (휠이 확대·축소라 화면 밖 버튼은 쓰기 불편하다)
+  document.querySelector('.canvas-wrap').append($('#tray'));
   initFarmInput();
   tipMail('welcome', '디지몬 챔피언십에 참가하게 된 것을 환영합니다!\n디지에그가 곧 부화합니다. 고기를 선택한 뒤 바닥을 터치해 놓고, 똥은 눌러서 치워 주세요.\n밤 9시가 되면 하루가 끝납니다.');
 

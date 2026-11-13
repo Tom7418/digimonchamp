@@ -172,3 +172,9 @@ dialog p,dialog li{color:#e3f2ff}
 .world-top .wallet{flex-direction:row-reverse;align-items:center}
 #world{width:min(100%,calc((100vh - 222px) * 960 / 560))}
 @media(max-width:700px){.world-top .band{order:5;flex-basis:100%}.world-top .band>*{font-size:11px;padding:2px 7px}.tray-item.tool{min-width:54px;height:52px}.tray-item.tool img{width:26px;height:26px}.actions button{padding:10px 8px 12px}}
+
+/* 도구 줄: 사육장 화면 안 아래쪽 (원작 배치) */
+.canvas-wrap>.tray{position:absolute;left:0;right:0;bottom:0;z-index:3;margin:0;border:0;border-radius:0;border-top:3px solid #f2b13a;background:linear-gradient(#3a3f46e6,#1d2126f2);gap:6px;padding:5px 8px;flex-wrap:nowrap;justify-content:center;overflow-x:auto}
+.canvas-wrap>.tray .tray-hint{display:none}
+.hunting .canvas-wrap>.tray{display:none}
+@media(max-width:700px){.canvas-wrap>.tray{justify-content:flex-start;padding:3px 4px;gap:3px}.canvas-wrap>.tray .tray-item.tool{min-width:44px;height:44px}.canvas-wrap>.tray .tray-item.tool img{width:22px;height:22px}.canvas-wrap>.tray .tray-item.tool b{font-size:9px}}
