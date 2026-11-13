@@ -985,7 +985,7 @@
       team.map((d) => C.entrantOf(d, mode)),
       foes,
     );
-    battle = { setup, state, acc: 0, flashes: [], done: false };
+    battle = { setup, state, acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map() };
     log(`${setup.title} 출전: ${team.map(nameOf).join(', ')}`);
     showModal(
       setup.title,
@@ -1003,14 +1003,27 @@
     b.acc += dt * 2; // 화면에서는 2배속으로 진행
     while (b.acc >= 0.1 && !b.state.over) {
       b.acc -= 0.1;
-      for (const e of C.stepBattle(b.state, Math.random)) {
+      const before=new Map(b.state.units.map(u=>[u.id,{x:u.x,y:u.y}]));
+      const events=C.stepBattle(b.state, Math.random);
+      for(const u of b.state.units){
+        const p=before.get(u.id);
+        b.motion.set(u.id,{dx:u.x-p.x,dy:u.y-p.y});
+      }
+      for (const e of events) {
+        // 공격/피격 시각은 실제 전투 이벤트에만 반응한다. 임시 연출 길이 0.2초.
+        if(e.type==='hit'){
+          const attacker=b.state.units.find(u=>u.id===e.from),target=b.state.units.find(u=>u.id===e.to);
+          b.actions.set(e.from,{kind:'attack',left:0.2,direction:target.x>=attacker.x?1:-1});
+          b.actions.set(e.to,{kind:'hit',left:0.2,direction:target.x>=attacker.x?1:-1});
+        }
         if (e.type === 'hit')
           b.flashes.push({ id: e.to, text: `-${e.damage}${e.special ? '!' : ''}`, until: performance.now() + 700, color: e.special ? '#ffd36a' : '#fff' });
         if (e.type === 'heal') b.flashes.push({ id: e.to, text: `+${e.amount}`, until: performance.now() + 700, color: '#8ef0a0' });
         if (e.type === 'ko') battleLog(`${b.state.units[e.id].name} 쓰러짐!`);
       }
     }
-    drawArena();
+    for(const [id,a] of b.actions){a.left-=dt;if(a.left<=0)b.actions.delete(id);}
+    drawArena(dt * 2);
     if (b.state.over) finishBattle();
   }
   function battleLog(t) {
@@ -1068,7 +1081,7 @@
     render();
     persist();
   }
-  function drawArena() {
+  function drawArena(dt = 0) {
     const el = $('#arena');
     if (!el || !battle) return;
     const ctx = el.getContext('2d');
@@ -1085,7 +1098,13 @@
     ctx.stroke();
     for (const u of s.units) {
       if (!u.alive) ctx.globalAlpha = 0.3;
-      body(ctx, u.speciesId, false, u.x, u.y + 14, 1.6, Math.floor(performance.now() / 250) % 2, u.team === 0);
+      const m=battle.motion.get(u.id)||{dx:u.team===0?0.001:-0.001,dy:0};
+      const spriteId=SPRITE_BY_NAME[C.getSpecies(u.speciesId).name];
+      const pose=animations.movement(u,spriteId,m.dx,m.dy,dt,!u.alive);
+      const action=battle.actions.get(u.id);
+      const offset=action ? Math.sin(Math.PI*(1-action.left/0.2))* (action.kind==='attack'?7:3)*action.direction : 0;
+      if(action?.kind==='hit')ctx.globalAlpha=0.55;
+      body(ctx, u.speciesId, false, u.x+offset, u.y + 14, 1.6, pose.frame, action?.kind==='attack'?action.direction>0:pose.flip);
       ctx.globalAlpha = 1;
       ctx.fillStyle = '#30404a';
       ctx.fillRect(u.x - 20, u.y + 18, 40, 4);
