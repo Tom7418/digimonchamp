@@ -1234,7 +1234,9 @@
       const d = digi(p.uid);
       if (!d) continue;
       const oldX = p.x, oldY = p.y;
-      if (animDt > 0 && !d.isEgg && !seekFood(p, d, dt) && !p.cageId) {
+      // 잡고 옮기는 동안에는 자율 이동·먹기 예약이 드롭 위치를 덮어쓰지 않는다.
+      if (board.isDragging(d.uid)) feeding.delete(d.uid);
+      if (animDt > 0 && !board.isDragging(d.uid) && !d.isEgg && !seekFood(p, d, dt) && !p.cageId) {
         if (Math.abs(p.target - p.x) < 3) {
           if (Math.random() < 0.008) p.target = Math.max(board.roam.x0, Math.min(board.roam.x1, p.x + (Math.random() - 0.5) * 500));
         } else {
@@ -1988,6 +1990,7 @@
     () => !!battle || !!hunt || mailOpen || dayEnding,
   );
   // 손으로 디지몬을 움직이지 않고 누르면 쓰다듬는다 (원작 도움말 help #143)
+  board.onGrab = (uid) => feeding.delete(uid); // 프레임 사이에 빠르게 드롭해도 먼 먹이를 소비하지 않는다.
   board.onPet = (index) => {
     const p = view.team[index];
     const r = p && C.pet(save, p.uid);

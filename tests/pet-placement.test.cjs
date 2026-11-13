@@ -1,0 +1,67 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+function setup(saved){
+ const noop=()=>{},nodes={},toolbar={classList:{toggle:noop},querySelector:k=>nodes[k]??=( {} ),querySelectorAll:()=>[]};
+ const window={},ctx=vm.createContext({window,document:{createElement:()=>toolbar},Image:function(){},crypto:{randomUUID:()=> 'new'}});
+ for(const f of ['cage-layout.js','cage-editor.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),ctx);
+ const events={},box={left:80,top:40,width:480,height:280};
+ const canvas={style:{},closest:()=>({after:noop}),addEventListener:(k,f)=>events[k]=f,getBoundingClientRect:()=>box,setPointerCapture:noop};
+ const state=saved??{layoutVersion:6,layout:[{id:'clinic',kind:'clinic',q:1,r:1,rotation:0},{id:'field',kind:'field',q:2,r:2,rotation:0}],team:[],selected:0};
+ const board=window.createCageEditor(canvas,()=>state,noop,noop,()=>false);
+ if(!saved){const p=board.center(0,0);state.team=[{uid:1,...p,target:p.x,cage:'free',cageId:null}];}
+ const drawCtx=new Proxy({}, {get:()=>noop});
+ const draw=()=>board.draw(drawCtx);
+ const event=p=>({pointerId:1,clientX:box.left+(p.x-board.cam.x)*board.zoom*box.width/960,clientY:box.top+(p.y-board.cam.y)*board.zoom*box.height/560});
+ const drop=point=>{const p=state.team[0];canvas.onpointerdown(event({x:p.x,y:p.y-25}));canvas.onpointermove(event({x:point.x,y:point.y-25}));draw();canvas.onpointerup(event({x:point.x,y:point.y-25}));draw();};
+ return {state,board,canvas,events,draw,event,drop,nodes};
+}
+const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
+test('케이지 중앙 밖에 놓은 실제 발 위치를 매 프레임 보존한다',()=>{
+ const s=setup(),c=s.board.center(1,1),point={x:c.x+65,y:c.y+35};s.drop(point);
+ const p=s.state.team[0];assert.equal(p.cageId,'clinic');assert.equal(p.cage,'clinic');
+ for(let i=0;i<5;i++)s.draw();near(p.x,point.x);near(p.y,point.y);near(p.target,point.x);
+ // 같은 시설 안에서 다시 옮겨도 소속은 유지한다.
+ s.drop({x:c.x-65,y:c.y+30});near(p.x,c.x-65);near(p.y,c.y+30);assert.equal(p.cageId,'clinic');
+});
+test('여러 칸 시설 안의 원하는 위치와 확대·이동된 화면 좌표를 보존한다',()=>{
+ const s=setup();s.board.centerOn(900,600);
+ s.events.wheel({...s.event(s.board.center(2,2)),deltaY:-600,preventDefault(){}});
+ const c=s.board.center(2,3),point={x:c.x-70,y:c.y+20};s.drop(point);
+ const p=s.state.team[0];assert.equal(p.cageId,'field');near(p.x,point.x);near(p.y,point.y);
+ const reload=setup(JSON.parse(JSON.stringify(s.state)));reload.draw();near(reload.state.team[0].x,point.x);near(reload.state.team[0].y,point.y);
+});
+test('케이지 이동·회전 때 내부 위치를 따라가며 다른 디지몬에 의해 재정렬되지 않는다',()=>{
+ const s=setup(),c=s.board.center(1,1);s.drop({x:c.x+40,y:c.y+20});
+ s.state.team.push({uid:2,x:c.x-30,y:c.y+10,target:c.x-30,cage:'clinic',cageId:'clinic'});s.draw();
+ const cage=s.state.layout[0];cage.q=2;cage.rotation=1;s.draw();const next=s.board.center(2,1),p=s.state.team[0];
+ near(p.x,next.x+40*0.5-20*Math.sqrt(3)/2);near(p.y,next.y+40*Math.sqrt(3)/2+20*0.5);
+});
+test('드래그 취소·사육장 밖 드롭은 원래 좌표와 소속을 복구한다',()=>{
+ const s=setup(),c=s.board.center(1,1);s.drop({x:c.x+50,y:c.y});
+ const p=s.state.team[0],old={x:p.x,y:p.y};
+ for(const cancel of [true,false]){
+  s.canvas.onpointerdown(s.event({x:p.x,y:p.y-25}));s.canvas.onpointermove(s.event({x:-500,y:-500}));s.draw();
+  if(cancel)s.canvas.onpointercancel();else s.canvas.onpointerup(s.event({x:-500,y:-500}));
+  s.draw();near(p.x,old.x);near(p.y,old.y);assert.equal(p.cageId,'clinic');
+ }
+});
+test('빈 바닥 드롭도 중앙으로 끌어당기지 않으며 옛 저장의 유효한 위치를 보존한다',()=>{
+ const s=setup(),c=s.board.center(1,1);s.drop({x:c.x+40,y:c.y});
+ const free=s.board.center(0,0),point={x:free.x+55,y:free.y+15};s.drop(point);
+ assert.equal(s.state.team[0].cageId,null);near(s.state.team[0].x,point.x);near(s.state.team[0].y,point.y);
+ s.canvas.onpointerdown(s.event({x:point.x,y:point.y-25}));s.canvas.onpointermove(s.event({x:point.x+100,y:point.y}));s.draw();s.canvas.onpointercancel();
+ near(s.state.team[0].x,point.x);near(s.state.team[0].y,point.y);near(s.state.team[0].target,point.x);
+ const p=s.state.team[0];p.cageId='clinic';p.cage='clinic';p.x=c.x-55;p.y=c.y+40;delete p.cagePosition;
+ s.draw();near(p.x,c.x-55);near(p.y,c.y+40);
+});
+test('선택 후 클릭도 클릭한 바닥 위치를 쓰고 마지막 pointerup 좌표로 드롭한다',()=>{
+ const s=setup(),c=s.board.center(1,1),p=s.state.team[0],point={x:c.x+60,y:c.y};
+ s.canvas.onpointerdown(s.event(point));s.canvas.onpointerup(s.event(point));s.draw();
+ near(p.x,point.x);near(p.y,point.y);assert.equal(p.cageId,'clinic');
+ const end={x:c.x-60,y:c.y+20};
+ s.canvas.onpointerdown(s.event({x:p.x,y:p.y-25}));
+ // 마지막 move 이벤트가 생략되어도 실제 놓은 위치를 사용한다.
+ s.canvas.onpointerup(s.event({x:end.x,y:end.y-25}));s.draw();near(p.x,end.x);near(p.y,end.y);
+ const free=s.board.center(0,0),empty={x:free.x+50,y:free.y};
+ s.canvas.onpointerdown(s.event(empty));s.canvas.onpointerup(s.event(empty));s.draw();
+ near(p.x,empty.x);near(p.y,empty.y);assert.equal(p.cageId,null);
+});
