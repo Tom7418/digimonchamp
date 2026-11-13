@@ -360,8 +360,17 @@ describe('원본 속성·종족', () => {
     expect(getSpecies('토이아구몬')).toMatchObject({ attr: '백신', family: '기계' });
     expect(getSpecies('아구몬')).toMatchObject({ attr: '백신', family: '용' });
     expect(getSpecies('가루몬(흑)').attr).toBe('바이러스');
-    expect(getSpecies('파닥몬').attr).toBe('프리');
-    expect(getSpecies('코로몬').attr).toBe('없음');
+    expect(originalSpecies('코로몬')!.attr).toBe('없음');
+    expect(originalSpecies('아르마몬')!.attr).toBe('프리');
+  });
+  it('원본이 프리·없음인 종만 디지몬 API 값으로 보완한다', () => {
+    expect(getSpecies('코로몬').attr).toBe('데이터');
+    expect(getSpecies('퍼그몬').attr).toBe('바이러스');
+    expect(getSpecies('아르마몬').attr).toBe('백신');
+    expect(getSpecies('파닥몬').attr).toBe('프리'); // API에 데이터·백신이 함께 있어 정할 수 없다
+    expect(getSpecies('산몬').attr).toBe('없음'); // API 값이 비어 있다
+    expect(getSpecies('즈루몬').attr).toBe('프리');
+    expect(getSpecies('피요몬').attr).toBe('백신'); // 원본에 값이 있으면 건드리지 않는다
   });
   it('진화표의 모든 종이 원본 표에 있고 세대가 같다', () => {
     const missing = Object.values(SPECIES).filter((sp) => !originalSpecies(sp.id)).map((sp) => sp.id);

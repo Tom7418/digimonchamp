@@ -1,0 +1,39 @@
+# 원본 표에서 속성이 프리·없음인 종을 디지몬 API(digi-api.com, 2026-11-13 조회) 값으로 보완한 것. 형규 지시.
+# 규칙: API의 속성 목록에서 Free를 뺀 것이 하나면 그 속성, Free뿐이면 프리.
+#       둘 이상(Data와 Vaccine)이면 정할 수 없어 원본 값(프리)을 유지하고, API에 값이 없으면 원본 값(없음)을 유지한다.
+# 이름|쓰는 속성|API 이름|API 속성 목록
+즈루몬|프리|Zurumon|Free
+뽈뽈몬|프리|Choromon|Free
+새싹몬|프리|Nyokimon|Free
+뽀글몬|프리|Bubbmon|Free
+피치몬|프리|Pitchmon|Free
+푸니몬|데이터|Punimon|Free/Data
+깜몬|데이터|Botamon|Free/Data
+포요몬|데이터|Poyomon|Free/Data
+모크몬|프리|Mokumon|Free
+하얀몬|프리|Yukimi Botamon|Free
+유라몬|데이터|Yuramon|Data/Free
+푸치몬|프리|Petitmon|Free
+카프리몬|프리|Caprimon|Free
+코로몬|데이터|Koromon|Data/Free
+시드몬|데이터|Tanemon|Data/Free
+뿔몬|데이터|Tunomon|Data/Free
+토코몬|데이터|Tokomon|Data/Free
+야옹몬|프리|Nyaromon|Free
+퍼그몬|바이러스|Pagumon|Virus/Free
+어니몬|데이터|Pyocomon|Data/Free
+둥실몬|데이터|Pukamon|Data/Free
+쁘띠메라몬|없음|(API에 없음)|
+모티몬|데이터|Mochimon|Data/Free
+베비도몬|프리|Babydmon|Free
+산몬|없음|Sunmon|(비어 있음)
+문몬|없음|Moonmon|(비어 있음)
+아르마몬|백신|Armadimon|Free/Vaccine
+파닥몬|프리|Patamon|Data/Free/Vaccine
+브이몬|백신|V-mon|Free/Vaccine
+황금아르마몬|백신|Ankylomon|Free/Vaccine
+링스몬|백신|Lynxmon|Vaccine/Free
+바이킹몬|프리|Vikemon|Data/Free/Vaccine
+발키리몬|프리|Valkyrimon|Data/Free/Vaccine
+그랜쿠가몬|바이러스|Gran Kuwagamon|Virus/Free
+황제드라몬|백신|Imperialdramon(Paladin Mode)|Vaccine/Free

@@ -1,6 +1,7 @@
 import raw from '../data/evolutions.txt?raw';
 import habitatRaw from '../data/habitats.txt?raw';
 import speciesRaw from '../data/species.txt?raw';
+import speciesApiRaw from '../data/species-api.txt?raw';
 import { ATTRS, FAMILIES, type ApKey, type Attr, type Cond, type Family, type Species, type SpeciesAttr, type Stage, type Stats } from './types';
 
 export const STAGE_LABEL: Record<Stage, string> = { 1: '유년기I', 2: '유년기II', 3: '성장기', 4: '성숙기', 5: '완전체', 6: '궁극체' };
@@ -43,6 +44,13 @@ for (const line of speciesRaw.split(/\r?\n/)) {
   ORIGINAL[name] = { attr: attr as SpeciesAttr, family, stage: Number(stage) };
 }
 export const originalSpecies = (id: string) => ORIGINAL[id];
+/** 원본에서 프리·없음인 종의 속성을 디지몬 API 값으로 보완한 표 (src/data/species-api.txt) */
+const API_ATTR: Record<string, SpeciesAttr> = {};
+for (const line of speciesApiRaw.split(/\r?\n/)) {
+  if (!line.trim() || line.startsWith('#')) continue;
+  const [name, attr] = line.split('|');
+  API_ATTR[name] = attr as SpeciesAttr;
+}
 
 function build(): Record<string, Species> {
   const out: Record<string, Species> = {};
@@ -90,6 +98,8 @@ function build(): Record<string, Species> {
     const guessed = top(famVotes[sp.id]) ?? (p && sp.stage > 2 ? p.family : FAMILIES[hash(sp.id) % FAMILIES.length]);
     sp.family = real && isFamily(real.family) ? real.family : guessed;
     sp.attr = real ? real.attr : (top(attrVotes[sp.id]) ?? ATTRS[hash(sp.id + '속성') % ATTRS.length]);
+    // 원본이 프리·없음일 때만 디지몬 API 값으로 보완한다
+    if ((sp.attr === '프리' || sp.attr === '없음') && API_ATTR[sp.id]) sp.attr = API_ATTR[sp.id];
     const dragon = sp.family === '용';
     sp.size = { 1: 4, 2: 6, 3: 10, 4: 16, 5: dragon ? 24 : 20, 6: dragon ? 32 : 24 }[sp.stage];
   }
