@@ -119,6 +119,8 @@ export type FarmEvent =
 export const STRESS = { crowdedPerDay: 20, rotten: 50, sick: 40, training: 5, hungerBelow: 20, perHunger: 1.5, show: 70, reliefPerHour: 5, autoCarePerHour: 3, restPerHour: 1 };
 /** 훈련 한 번에 걸리는 게임 분 */
 export const TRAINING_MINUTES = 15;
+/** 병·부상을 방치해 로스트되기까지의 게임 분 (임시: 이틀) */
+export const NEGLECT_MINUTES = 2880;
 /**
  * 계절 (원작 도움말 help #136: 여름은 트레이닝 효과가 높고, 겨울은 부상 확률이 오른다).
  * 트레이닝 부상 (help #140: 배틀이나 트레이닝을 할 때 부상당할 수 있다).
@@ -239,10 +241,16 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
       d.injured = false;
       d.sickMinutes = d.sick ? d.sickMinutes : 0;
     }
-    // 병·부상을 이틀 방치하면 죽어서 디지에그(디지타마)로 돌아간다 (로스트되지 않음)
-    if (d.sickMinutes >= 2880) {
-      events.push({ type: 'egg', uid: d.uid, from: sp.id, reason: 'sick' });
-      return toEgg(d, false);
+    // 병·부상을 이틀 방치하면 로스트된다 (원작 도움말 help #142: 두 번 다시 돌아오지 않는다.
+    // 단, 일정 조건을 채웠다면 디지에그로 다시 태어난다 → 수명 때와 같은 조건을 쓴다).
+    // 이틀이라는 시간은 임시 값. 마지막 한 마리는 게임이 막히지 않도록 디지에그로 남긴다 (임시)
+    if (d.sickMinutes >= NEGLECT_MINUTES) {
+      if (endOfLife(d) === 'egg' || ctx.isLast) {
+        events.push({ type: 'egg', uid: d.uid, from: sp.id, reason: 'sick' });
+        return toEgg(d, false);
+      }
+      events.push({ type: 'lost', uid: d.uid, name: sp.name, reason: '병·부상 방치' });
+      return null;
     }
   }
 

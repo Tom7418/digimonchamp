@@ -355,16 +355,21 @@ describe('hunting', () => {
 });
 
 describe('illness', () => {
-  it('a digimon left sick for two days returns to a digi-egg instead of being lost', () => {
+  it('병을 이틀 방치하면 로스트되고, 배틀 10회 이상이면 디지에그로 다시 태어난다', () => {
     const base = freshSave(0);
-    const sick = { ...base, digimon: [{ ...only(base), sick: true, eggs: 1 }, newDigimon(2, '깜몬')], nextUid: 3 };
-    const r = advance(sick, 2880, seeded(1));
-    const d = r.save.digimon.find((x) => x.uid === 1)!;
+    const mon = (patch: Partial<Digimon>) => ({ ...newDigimon(1, '깜몬'), hunger: 100, sick: true, ...patch });
+    const run = (first: Digimon, alone = false) => advance({ ...base, digimon: alone ? [first] : [first, newDigimon(2, '깜몬')], nextUid: 3 }, 2880, seeded(1));
+    const lost = run(mon({}));
+    expect(lost.save.digimon.some((x) => x.uid === 1)).toBe(false);
+    expect(lost.events.some((e) => e.type === 'lost' && e.reason === '병·부상 방치')).toBe(true);
+    const reborn = run(mon({ battles: 10, eggs: 1 }));
+    const d = reborn.save.digimon.find((x) => x.uid === 1)!;
     expect(d.isEgg).toBe(true);
     expect(d.sick).toBe(false);
     expect(d.eggs).toBe(1); // 병으로 죽은 것은 디지에그화 횟수로 세지 않는다
-    expect(r.events.some((e) => e.type === 'egg' && e.reason === 'sick')).toBe(true);
-    expect(r.events.some((e) => e.type === 'lost')).toBe(false);
+    expect(reborn.events.some((e) => e.type === 'egg' && e.reason === 'sick')).toBe(true);
+    // 마지막 한 마리는 디지에그로 남는다
+    expect(run(mon({}), true).save.digimon[0].isEgg).toBe(true);
   });
 });
 

@@ -6,8 +6,8 @@ export type FoodKind = 'meat' | 'rotten' | 'pill';
 /** 바닥 먹이 종류 → 저장의 재고 칸 */
 const STOCK: Record<FoodKind, 'meat' | 'rotten' | 'pills'> = { meat: 'meat', rotten: 'rotten', pill: 'pills' };
 export interface FloorFood { kind: FoodKind; x: number; y: number; remaining?: number; /** 바닥에 놓인 게임 분 */ age?: number }
-/** 바닥에 둔 고기·프로틴이 상하기까지의 게임 분 (원작 도움말 help #138·#141: 남기면 상한다. 4시간은 임시) */
-export const SPOIL_MINUTES = 240;
+/** 바닥에 둔 고기·프로틴이 상하기까지의 게임 분 (원작 도움말 help #138·#141: 남기면 상한다. 이틀은 형규가 정함) */
+export const SPOIL_MINUTES = 2880;
 export interface FoodBounds { x0: number; x1: number; y0: number; y1: number }
 
 /** 바닥 먹이는 기존 저장 방식대로 재고 안에서 예약한다. 먹을 때만 재고를 차감한다. */

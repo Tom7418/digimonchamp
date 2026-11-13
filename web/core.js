@@ -1550,6 +1550,8 @@ var ChampCore = (function(exports) {
 	};
 	/** 훈련 한 번에 걸리는 게임 분 */
 	var TRAINING_MINUTES = 15;
+	/** 병·부상을 방치해 로스트되기까지의 게임 분 (임시: 이틀) */
+	var NEGLECT_MINUTES = 2880;
 	/**
 	* 계절 (원작 도움말 help #136: 여름은 트레이닝 효과가 높고, 겨울은 부상 확률이 오른다).
 	* 트레이닝 부상 (help #140: 배틀이나 트레이닝을 할 때 부상당할 수 있다).
@@ -1690,13 +1692,22 @@ var ChampCore = (function(exports) {
 				d.sickMinutes = d.sick ? d.sickMinutes : 0;
 			}
 			if (d.sickMinutes >= 2880) {
+				if (endOfLife(d) === "egg" || ctx.isLast) {
+					events.push({
+						type: "egg",
+						uid: d.uid,
+						from: sp.id,
+						reason: "sick"
+					});
+					return toEgg(d, false);
+				}
 				events.push({
-					type: "egg",
+					type: "lost",
 					uid: d.uid,
-					from: sp.id,
-					reason: "sick"
+					name: sp.name,
+					reason: "병·부상 방치"
 				});
-				return toEgg(d, false);
+				return null;
 			}
 		}
 		if (cage.up || cage.apUp || cage.battleUp) {
@@ -2439,8 +2450,8 @@ var ChampCore = (function(exports) {
 		rotten: "rotten",
 		pill: "pills"
 	};
-	/** 바닥에 둔 고기·프로틴이 상하기까지의 게임 분 (원작 도움말 help #138·#141: 남기면 상한다. 4시간은 임시) */
-	var SPOIL_MINUTES = 240;
+	/** 바닥에 둔 고기·프로틴이 상하기까지의 게임 분 (원작 도움말 help #138·#141: 남기면 상한다. 이틀은 형규가 정함) */
+	var SPOIL_MINUTES = 2880;
 	/** 바닥 먹이는 기존 저장 방식대로 재고 안에서 예약한다. 먹을 때만 재고를 차감한다. */
 	function availableFood(save, foods, kind) {
 		return Math.max(0, save[STOCK[kind]] - foods.filter((f) => f.kind === kind).length);
@@ -2563,7 +2574,7 @@ var ChampCore = (function(exports) {
 		const out = foods.map((f) => {
 			if (f.kind === "rotten") return f;
 			const age = (f.age ?? 0) + minutes;
-			if (age < 240 || next[STOCK[f.kind]] <= 0) return {
+			if (age < 2880 || next[STOCK[f.kind]] <= 0) return {
 				...f,
 				age
 			};
@@ -2613,6 +2624,7 @@ var ChampCore = (function(exports) {
 	exports.LIFESPAN = LIFESPAN;
 	exports.MEMORY_CARDS = MEMORY_CARDS;
 	exports.MIN_PER_DAY = MIN_PER_DAY;
+	exports.NEGLECT_MINUTES = NEGLECT_MINUTES;
 	exports.OFFLINE_CAP_MINUTES = OFFLINE_CAP_MINUTES;
 	exports.PERSONALITIES = PERSONALITIES;
 	exports.PET = PET;
