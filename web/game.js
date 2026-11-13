@@ -529,7 +529,7 @@
   const fxImages = {};
   const fxImage = (k) => fxImages[k] || (fxImages[k] = Object.assign(new Image(), { src: `assets/ui/${k}.png` }));
   const careFx = [];
-  const TOOL_TIME = 0.9, HEAL_SEQ = [1, 2, 3, 0, 4, 5, 6, 0];
+  const TOOL_TIME = 0, HEAL_SEQ = [1, 2, 3, 0, 4, 5, 6, 0];
   function startCareFx(kind, pet, success) {
     careFx.push({ kind, pet, success, start: performance.now() });
   }
@@ -544,13 +544,6 @@
         // 강화 기운: 3틱씩 10프레임, 네 번 반복
         if (t > 2) careFx.splice(i, 1);
         else put(`fx_aura_${(Math.floor(t / 0.05) % 10) + 1}`, x, y + 6, 20, 67);
-        continue;
-      }
-      if (t < TOOL_TIME) {
-        // 주사기·상처약 아이콘이 디지몬에게 두 번 다가갔다 물러난다
-        const poke = Math.abs(Math.sin((t / TOOL_TIME) * Math.PI * 2)) * 14;
-        const im = fxImage(fx.kind === 'shot' ? 'icon_shot' : 'icon_heal');
-        if (im.complete && im.naturalWidth) ctx.drawImage(im, x + 18 - poke, y - 70 + poke * 0.5, 48, 48);
         continue;
       }
       const u = t - TOOL_TIME;
