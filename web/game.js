@@ -985,7 +985,7 @@
       team.map((d) => C.entrantOf(d, mode)),
       foes,
     );
-    battle = { setup, state, acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map() };
+    battle = { setup, state, acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
     log(`${setup.title} 출전: ${team.map(nameOf).join(', ')}`);
     showModal(
       setup.title,
@@ -999,7 +999,9 @@
   }
   function battleTick(dt) {
     const b = battle;
-    if (!b || b.done) return;
+    if (!b) return;
+    if(b.done){b.effects.tick(dt);drawArena(0);return;}
+    b.effects.tick(dt);
     b.acc += dt * 2; // 화면에서는 2배속으로 진행
     while (b.acc >= 0.1 && !b.state.over) {
       b.acc -= 0.1;
@@ -1010,6 +1012,7 @@
         b.motion.set(u.id,{dx:u.x-p.x,dy:u.y-p.y});
       }
       for (const e of events) {
+        b.effects.add(e,b.state.units);
         // 공격/피격 시각은 실제 전투 이벤트에만 반응한다. 임시 연출 길이 0.2초.
         if(e.type==='hit'){
           const attacker=b.state.units.find(u=>u.id===e.from),target=b.state.units.find(u=>u.id===e.to);
@@ -1103,14 +1106,16 @@
       const pose=animations.movement(u,spriteId,m.dx,m.dy,dt,!u.alive);
       const action=battle.actions.get(u.id);
       const offset=action ? Math.sin(Math.PI*(1-action.left/0.2))* (action.kind==='attack'?7:3)*action.direction : 0;
-      if(action?.kind==='hit')ctx.globalAlpha=0.55;
+      if(action?.kind==='hit'&&u.alive)ctx.globalAlpha=0.55;
       body(ctx, u.speciesId, false, u.x+offset, u.y + 14, 1.6, pose.frame, action?.kind==='attack'?action.direction>0:pose.flip);
       ctx.globalAlpha = 1;
+      if(!u.alive){ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle='#5c6570';ctx.fillText('전투 불능',u.x,u.y-25);}
       ctx.fillStyle = '#30404a';
       ctx.fillRect(u.x - 20, u.y + 18, 40, 4);
       ctx.fillStyle = u.team === 0 ? '#58c27d' : '#e0795b';
       ctx.fillRect(u.x - 20, u.y + 18, 40 * Math.max(0, u.hp / u.maxHp), 4);
     }
+    battle.effects.draw(ctx);
     const now = performance.now();
     battle.flashes = battle.flashes.filter((f) => f.until > now);
     for (const f of battle.flashes) {
