@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { applyTraining, trainingBounds, trainingDelta } from '../src/core/training';
 import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
-import { CAGES, getCage, getSpecies, originalSpecies, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
+import { CAGES, getCage, getSpecies, originalSpecies, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
@@ -101,14 +102,14 @@ describe('evolution', () => {
     expect(only(r.save).speciesId).toBe('코로몬');
   });
   it('AP from a training cage changes the branch', () => {
-    // 성격에 따라 훈련 속도가 달라지므로 고정한다
+    // 시설 결과·변동을 고정하여 진화 분기를 확인한다
     let s = withMon(freshSave(0), { hunger: 100, personality: '쿨' });
     s = { ...s, cages: [...s.cages, '묘지'] };
-    // 훈련은 넣을 때마다 한 번(15분)뿐이라, 큰 시설(상승 2배)인 묘지에서도 꺼냈다 다시 넣기를 네 번 해야 암흑 20이 넘는다
-    for (let i = 0; i < 4; i++) {
+    // 묘지 기본 결과는 암흑+5에 변동 -1. 재배치 여섯 번으로20을 넘긴다.
+    for (let i = 0; i < 6; i++) {
       s = setCage(s, 1, '묘지').save;
       s = advance(s, 20, () => 0.5).save;
-      if (i === 0) expect(only(advance(s, 60, () => 0.5).save).ap['암흑']).toBe(6); // 그대로 두면 더 훈련하지 않는다
+      if (i === 0) expect(only(advance(s, 60, () => 0.5).save).ap['암흑']).toBe(4); // 그대로 두면 더 훈련하지 않는다
       s = setCage(s, 1, '기본 케이지').save;
       s = advance(s, 1, () => 0.5).save;
     }
@@ -124,7 +125,7 @@ describe('evolution', () => {
       return only(advance(s, 20, seeded(1)).save);
     };
     expect(train('미니 화산').ap['용']).toBe(3);
-    expect(train('화산').ap['용']).toBe(6);
+    expect(train('화산').ap['용']).toBe(5);
     expect(train('링').battles).toBe(1);
     let s = withMon(freshSave(0), { hunger: 55 });
     s = { ...s, cages: [...s.cages, '목장'] };
@@ -154,7 +155,7 @@ describe('evolution', () => {
     };
     const day = 1440, noon = 12 * 60;
     expect(only(train(noon).save).ap['용']).toBe(3); // 봄
-    expect(only(train(8 * day + noon).save).ap['용']).toBe(4.5); // 여름
+    expect(only(train(8 * day + noon).save).ap['용']).toBe(5); // 여름: 원본 가산+2
     const injuries = (clock: number) => Array.from({ length: 300 }, (_, i) => only(train(clock, seeded(i + 1)).save).injured).filter(Boolean).length;
     const spring = injuries(noon), winter = injuries(24 * day + noon);
     expect(spring).toBeGreaterThan(0);
@@ -730,5 +731,53 @@ describe('종별 낮잠 주기', () => {
     expect(d.restCycle?.species).toBe('코로몬');
     expect(isSleeping(d)).toBe(false);
     expect(isSleeping({ ...only(s), isEgg: true })).toBe(false);
+  });
+});
+
+
+describe('원본 훈련 결과와 실제 변화량', () => {
+  const rolls = (...values: number[]) => { let i = 0; return () => values[i++] ?? 0.5; };
+  it('실제1초에 게임10분, 기본15분 훈련은1.5초다', () => {
+    expect(MINUTES_PER_SECOND).toBe(10);
+    expect(15 / MINUTES_PER_SECOND).toBe(1.5);
+  });
+  it('시설은70/20/10 경계에서 서로 다른 결과를 선택한다', () => {
+    const train = (roll: number) => {
+      const d = newDigimon(1, '아구몬');
+      d.stats.hp = 700; d.stats.tp = 40; d.stats.int = 40; d.stats.spd = 40; d.stats.def = 40;
+      return { d, changes: applyTraining(d, getCage('운동장'), 0, rolls(roll, 0.5, 0.5)) };
+    };
+    expect(train(0.69).changes).toEqual(['HP +50', 'TP -3']);
+    expect(train(0.70).changes).toEqual(['HP +70', '지능 -5']);
+    expect(train(0.90).changes).toEqual(['민첩 +5', '방어 -7']);
+  });
+  it('여름은 항목별 가산, HP는 원본대로10 단위 반올림한다', () => {
+    expect(trainingDelta(3, 6, 0, () => 0.5)).toBe(5);
+    expect(trainingDelta(3, 6, 1, () => 0.5)).toBe(7);
+    expect(trainingDelta(16, 50, 0, () => 0)).toBe(30);
+    expect(trainingDelta(16, 50, 0, () => 0.99)).toBe(70);
+    expect(trainingDelta(17, -2, 1, () => 0.5)).toBe(-2);
+  });
+  it('종별 곡선 인덱스에서 상하한을 얻고 한계에서는 실제 차이만 보고한다', () => {
+    expect(trainingBounds('아구몬', 'atk')).toEqual({ min: 30, max: 53 });
+    expect(trainingBounds('피요몬', 'spd').max).toBeGreaterThan(trainingBounds('아르마몬', 'spd').max);
+    expect(trainingBounds('아르마몬', 'def').max).toBeGreaterThan(trainingBounds('피요몬', 'def').max);
+    const d = newDigimon(1, '아구몬');d.stats.atk = 52; d.stats.def = 30;
+    expect(applyTraining(d, getCage('체육관'), 0, rolls(0, 0.5, 0.5))).toEqual(['공격 +1', '방어 +0 (하한)']);
+    expect(d.stats.atk).toBe(53);expect(d.stats.def).toBe(30);
+    expect(applyTraining(d, getCage('체육관'), 0, rolls(0, 0.5, 0.5))[0]).toBe('공격 +0 (상한)');
+  });
+  it('기존 저장이 원작 범위 밖이어도 임의로 끌어올리거나 깎지 않는다', () => {
+    const d = newDigimon(1, '아구몬');d.stats.atk = 200;d.stats.def = 2;
+    expect(applyTraining(d, getCage('체육관'), 0, rolls(0, 0.5, 0.5))).toEqual(['공격 +0 (상한)', '방어 +0 (하한)']);
+    expect(d.stats.atk).toBe(200);expect(d.stats.def).toBe(2);
+  });
+  it('AP·내성의 실제 증감과 한계, 저장 재개를 보존한다', () => {
+    const d = newDigimon(1, '아구몬');d.ap['용'] = 98;d.ap['짐승'] = 2;
+    expect(applyTraining(d, getCage('화산'), 0, rolls(0, 0.5, 0.5))).toEqual(['용 수치 +1', '짐승 수치 -2']);
+    const before = JSON.stringify(d);
+    expect(applyTraining(d, getCage('화산'), 0, rolls(0.7, 0.5, 0.5))).toEqual(['열 내성 +9', '추위 내성 +0 (하한)']);
+    expect(JSON.parse(JSON.stringify(d)).resistance).toEqual({ 열: 9, 추위: 0 });
+    expect(JSON.parse(before).resistance).toBeUndefined();
   });
 });

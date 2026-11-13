@@ -1,9 +1,10 @@
+import { applyTraining } from './training';
 import { CAGE_RENAMES, CAGES, dateOf, DAY_END_HOUR, DAY_START_HOUR, EGG_MINUTES, evolutionBonus, getCage, getSpecies, originalSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK, typicalStats } from './data';
 import { endOfLife, findEvolution } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, tamerRank } from './titles';
 import { bestRope, MEMORY_CARDS, ROPES, START_ROPE, WIRE_PACK, BAIT_PACK, BAITS, GEARS, gearCount, SHOT_PACK, SHOTS } from './hunt';
-import { ATTRS, FAMILIES, PERSONALITIES, STAT_KEYS, STAT_LABEL, type ApKey, type Digimon, type SaveData, type Stats } from './types';
+import { ATTRS, FAMILIES, PERSONALITIES, STAT_KEYS, type ApKey, type Digimon, type SaveData, type Stats } from './types';
 
 /** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
 export const CAPACITY = 200;
@@ -132,7 +133,7 @@ export type FarmEvent =
   | { type: 'sick'; uid: number; name: string }
   | { type: 'injured'; uid: number; name: string }
   | { type: 'poop'; uid: number }
-  /** 훈련 케이지에서 1시간마다 오른·내린 능력치 (예: 'HP +3, 방어 -1') */
+  /** 훈련 완료 후 실제로 오른·내린 능력치 (예: 'HP +3, 방어 -1') */
   | { type: 'trained'; uid: number; name: string; changes: string }
   | { type: 'blocked'; uid: number; name: string; reason: 'rank' | 'capacity' };
 
@@ -155,7 +156,6 @@ export const NEGLECT_MINUTES = 2880;
  */
 export const SUMMER = 1;
 export const WINTER = 3;
-export const SUMMER_TRAINING = 1.5;
 export const WINTER_INJURY = 2;
 export const TRAIN_INJURY = 0.03;
 /** 프로틴을 먹은 채 훈련하면 1개당 부상 확률 +2% (help #138, 수치 임시) */
@@ -205,6 +205,7 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
     fatigue: 0,
     cage: '기본 케이지',
     restCycle: undefined,
+    resistance: undefined,
   };
 }
 
@@ -291,28 +292,8 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
       if (d.trainMinutes >= TRAINING_MINUTES) {
         d.trainMinutes = 0;
         d.trainDone = true;
-        const speed = d.personality === '솔직' ? 1.3 : d.personality === '성급한' ? 0.8 : 1;
-        const gain = (cage.gain ?? 1) * (ctx.season === SUMMER ? SUMMER_TRAINING : 1);
-        const changes: string[] = [];
-        for (const k of cage.up ?? []) {
-          const n = Math.max(1, Math.round((1 + ctx.rng() * (sp.stage + 1)) * speed * gain));
-          d.stats[k] += n;
-          changes.push(`${STAT_LABEL[k]} +${n}`);
-        }
-        for (const k of cage.down ?? []) {
-          if (d.stats[k] > 1) changes.push(`${STAT_LABEL[k]} -1`);
-          d.stats[k] = Math.max(1, d.stats[k] - 1);
-        }
-        for (const k of cage.apUp ?? []) {
-          d.ap[k] = Math.min(99, d.ap[k] + 3 * speed * gain);
-          changes.push(`${k} 수치 ↑`);
-        }
-        if (cage.battleUp) {
-          d.battles += cage.battleUp;
-          changes.push(`배틀 수 +${cage.battleUp}`);
-        }
-        if (changes.length) events.push({ type: 'trained', uid: d.uid, name: sp.name, changes: changes.join(', ') });
-        for (const k of cage.apDown ?? []) d.ap[k] = Math.max(0, d.ap[k] - 1);
+        const changes = applyTraining(d, cage, ctx.season ?? 0, ctx.rng);
+        events.push({ type: 'trained', uid: d.uid, name: sp.name, changes: changes.join(', ') });
         d.fatigue = Math.min(100, d.fatigue + 5);
         addStress(d, STRESS.training);
         const risk = (TRAIN_INJURY + (d.protein ?? 0) * PROTEIN_TRAIN_INJURY) * (ctx.season === WINTER ? WINTER_INJURY : 1);

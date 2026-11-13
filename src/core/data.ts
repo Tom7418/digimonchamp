@@ -134,7 +134,8 @@ const STAGE_BONUS: Record<Stage, number> = { 1: 8, 2: 10, 3: 25, 4: 55, 5: 110, 
 
 /**
  * 종별 능력치 성향 (평균 1). 원본 표의 기본 능력치 6개의 비율을 쓴다.
- * 값은 원본이고 '기본 능력치'라는 뜻과 순서(HP·TP·공격·방어·지능·민첩)는 추정이다.
+ * 후속 코드 조사: 여섯 값은 HP·TP·공격·방어·지능·민첩 곡선 인덱스로 확인됨.
+ * 아래 인덱스 비율은 기존 웹 능력치 규모를 유지하기 위한 근사이며 원작 초기화 계산은 아니다.
  * 크기(STAGE_BONUS 등)는 원작 수치 체계를 몰라 예전 임시 값을 유지한다.
  * 능력치가 모두 0인 유년기는 종족 성향을 쓴다.
  */
@@ -172,6 +173,8 @@ export const DAYS_PER_SEASON = 8;
 export const DAY_START_HOUR = 7;
 export const DAY_END_HOUR = 21;
 export const MIN_PER_DAY = 1440;
+/** 사용자 지정: 실제1초 = 게임10분(×1). 온라인·오프라인 모두 같은 배율. */
+export const MINUTES_PER_SECOND = 10;
 export const START_CLOCK = 8 * 60;
 
 export function dateOf(clock: number) {
@@ -197,7 +200,7 @@ export interface Cage {
   rest?: boolean;
   /** 원작 번호 (0은 이 게임에만 있는 자유 활동 구역) */
   no: number;
-  /** 훈련 한 번의 상승 배수 (임시) */
+  /** 원본 결과표가 없는 시설에서만 쓰는 임시 훈련 배수 */
   gain?: number;
   /** 먹이·배설물을 알아서 처리 (동물원·목장) */
   autoCare?: boolean;
@@ -212,8 +215,8 @@ type StatKey2 = keyof Stats;
 
 // 케이지 40종: 이름·순서·효과·수용 수는 원작 글(root/ui/txt txt_list 487~566번)에서 확인.
 //   no는 원작 번호이자 그림 번호(root/training/field_cmNN_01).
-// 임시 값: price·minRank, gain(훈련 한 번의 상승 배수: 미니·1칸 1, 큰 시설 2),
-//   down·apDown(원작 글에는 내려가는 값이 없다. 예전 임시 규칙을 미니 시설에만 남김).
+// price·minRank는 임시. 훈련은 training.ts의 원본 결과표가 우선하며,
+// up/apUp은 시설 분류·표시용, gain/down/apDown은 원본 표에 없는 시설의 임시 대체에만 사용.
 // 내성(빛·열·추위·천둥·어둠) 시설은 내성 규칙이 아직 없어 팔지 않는다(price 0). 대기실(28)·덮개(29)는 설명이 없어 뺐다.
 export const CAGES: Cage[] = [
   { id: '기본 케이지', no: 0, price: 0, minRank: 1, capacity: 99 },

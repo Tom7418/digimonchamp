@@ -8,3 +8,4 @@ export * from './core/titles';
 export * from './core/hunt';
 export * from './core/rng';
 export * from './core/food';
+export * from './core/training';

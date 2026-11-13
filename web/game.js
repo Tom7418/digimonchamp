@@ -1,7 +1,7 @@
 'use strict';
 // 디지몬 챔피언십 웹판 화면.
 // 게임 규칙(사육·진화·배틀·타이틀·상점)은 web/core.js(ChampCore, src/core에서 빌드)를 그대로 쓰고,
-// 이 파일은 화면 그리기, 입력, 저장만 담당한다. 시간: 현실 1초 = 게임 2분 (임시).
+// 이 파일은 화면 그리기, 입력, 저장만 담당한다. 시간: 현실 1초 = 게임10분(사용자 지정).
 (() => {
   const C = window.ChampCore;
   const animations = window.createAnimationPlayer(window.DIGIMON_ANIMATIONS);
@@ -16,9 +16,8 @@
       return false;
     }
   })();
-  // 시간 흐름: 현실 1초 = 게임 2분 (×1). 하루(07:00~21:00)가 약 7분. 원작 속도는 미확인이라 임시 값
-  // 원작 도움말(help #96): 디지털 월드의 1일은 실제 시간 10분 → 1440분 / 600초
-  const MINUTES_PER_SECOND = 2.4;
+  // 온라인·오프라인 시간에 같은 엔진 배율을 쓴다(현실1초 = 게임10분, 사용자 지정).
+  const MINUTES_PER_SECOND = C.MINUTES_PER_SECOND;
   const pad = (n) => String(n).padStart(2, '0');
   const clamp = (n, a = 0, b = 100) => Math.min(b, Math.max(a, n));
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -269,9 +268,11 @@
     const ap = Object.entries(d.ap).filter(([, v]) => v >= 1);
     setHtml(
       '#ap',
-      ap.length
+      (ap.length
         ? ap.map(([k, v]) => `<span>${k} ${Math.floor(v)}</span>`).join('')
-        : '<span class="muted">종족·속성 수치 없음 — 훈련 케이지에 넣어 올리세요</span>',
+        : '<span class="muted">종족·속성 수치 없음 — 훈련 케이지에 넣어 올리세요</span>') +
+        Object.entries(d.resistance ?? {}).filter(([, v]) => v > 0)
+          .map(([k, v]) => `<span title="훈련 기록입니다. 배틀 피해에 반영하는 규칙은 추가 예정입니다.">${esc(k)} 내성 ${v}</span>`).join(''),
     );
 
     // 진화 힌트: 위에서부터 먼저 충족한 쪽으로 진화
@@ -2190,13 +2191,15 @@
   function frame(now) {
     if (titleOpen) drawTitleArt(now / 1000);
     if (selectedItem && farmInputBlocked()) clearItemTool();
-    const dt = lastTime ? Math.min(0.05, (now - lastTime) / 1000) : 0;
+    // 화면이 느려도 게임 시계는 실제 경과 시간을 따른다. 움직임만 큰 프레임 간격을 제한한다.
+    const elapsed = lastTime ? Math.min(C.OFFLINE_CAP_MINUTES / MINUTES_PER_SECOND, Math.max(0, (now - lastTime) / 1000)) : 0;
+    const dt = Math.min(0.05, elapsed);
     lastTime = now;
     if (!document.hidden) {
       if (battle) battleTick(dt);
       else if (!titleOpen && !paused && !board.editing && !mailOpen && !dayEnding) {
         if (hunt) huntTick(dt);
-        clock += dt * speed * MINUTES_PER_SECOND;
+        clock += elapsed * speed * MINUTES_PER_SECOND;
         let changed = false;
         while (clock >= 1 && !dayEnding) {
           clock -= 1;

@@ -51,6 +51,8 @@ export interface Digimon {
   personality: Personality;
   stats: Stats;
   ap: Record<ApKey, number>;
+  /** 훈련 결과로 얻은 내성. 옛 저장은 없으면0, 전투 피해에 반영하는 규칙은 후속. */
+  resistance?: Partial<Record<'열' | '추위' | '천둥' | '빛' | '어둠', number>>;
   /** 현재 단계에서 지난 게임 분 */
   stageAge: number;
   hunger: number;
