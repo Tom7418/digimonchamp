@@ -54,6 +54,7 @@
     clock = 0,
     toastTimer,
     effect = null;
+  const trainingFloats = new Map();
 
   // ---------- 저장 ----------
   function freshView() {
@@ -132,7 +133,11 @@
   }
   function logEvent(e) {
     const n = (id) => C.getSpecies(id).name;
-    if (e.type === 'trained') return log(`${e.name}(은)는 ${e.changes}`);
+    if (e.type === 'trained') {
+      // 엔진이 확정한 실제 변화량을 마리별로 표시해 동시 훈련도 서로 덮어쓰지 않는다.
+      trainingFloats.set(e.uid, {lines:e.changes.split(', '),elapsed:0});
+      return log(`${e.name}(은)는 ${e.changes}`);
+    }
     if (e.type === 'poop') return dropPoop(e.uid);
     if (e.type === 'hatched') log(`디지에그가 부화해 ${n(e.to)}이(가) 태어났습니다!`);
     else if (e.type === 'evolved') {
@@ -1252,6 +1257,20 @@
         ctx.lineTo(p.x - 5, p.y - 90);
         ctx.lineTo(p.x + 5, p.y - 90);
         ctx.fill();
+      }
+      const training = trainingFloats.get(p.uid);
+      if(training){
+        training.elapsed += animDt;
+        if(training.elapsed>=3)trainingFloats.delete(p.uid);
+        else{
+          ctx.save();ctx.textAlign='center';ctx.font='bold 15px sans-serif';
+          ctx.globalAlpha=Math.min(1,(3-training.elapsed)*2);
+          training.lines.forEach((line,i)=>{
+            const y=p.y-105-(training.lines.length-1-i)*19-training.elapsed*12;
+            ctx.lineWidth=3;ctx.strokeStyle='#153b35';ctx.strokeText(line,p.x,y);
+            ctx.fillStyle=line.includes('-')?'#ffbe9d':'#a5ffae';ctx.fillText(line,p.x,y);
+          });ctx.restore();
+        }
       }
       if (effect && effect.uid === p.uid && performance.now() < effect.until) {
         ctx.font = 'bold 17px sans-serif';

@@ -19,7 +19,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  const polygon=(ctx,q,r,append=false)=>{const c=center(q,r);if(!append)ctx.beginPath();for(let i=0;i<6;i++){const a=(i*60-30)*Math.PI/180;const x=c.x+R*Math.cos(a),y=c.y+R*Math.sin(a);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();};
  const screenPoint=e=>{const box=canvas.getBoundingClientRect();return {x:(e.clientX-box.left)*VIEW.w/box.width,y:(e.clientY-box.top)*VIEW.h/box.height};};
  const coordinate=e=>{const p=screenPoint(e);return {x:p.x/zoom+cam.x,y:p.y/zoom+cam.y};};
- const tile=p=>{let best=null,dist=R;for(let r=0;r<5;r++)for(let q=-Math.floor(r/2);q<5-Math.floor(r/2);q++){const c=center(q,r),d=Math.hypot(p.x-c.x,p.y-c.y);if(d<dist){dist=d;best={q,r};}}return best;};
+ const tile=p=>{let best=null,dist=R;for(let r=0;r<5;r++)for(let q=-Math.floor(r/2);q<5+(r%2===0?1:0)-Math.floor(r/2);q++){const c=center(q,r),d=Math.hypot(p.x-c.x,p.y-c.y);if(d<dist){dist=d;best={q,r};}}return best;};
  // 팔레트의 작은 모양 미리보기도 실제 배치 좌표에서 생성한다.
  function footprint(kind){const points=L.cells({kind,q:0,r:0,rotation:0}).map(([q,r])=>{const c=center(q,r);return Array.from({length:6},(_,i)=>{const a=(i*60-30)*Math.PI/180;return [c.x+R*Math.cos(a),c.y+R*Math.sin(a)];});});const flat=points.flat(),xs=flat.map(p=>p[0]),ys=flat.map(p=>p[1]);return `<svg class="footprint" viewBox="${Math.min(...xs)-3} ${Math.min(...ys)-3} ${Math.max(...xs)-Math.min(...xs)+6} ${Math.max(...ys)-Math.min(...ys)+6}" aria-label="${L.types[kind].cells.length}칸 점유 모양">${points.map(ps=>`<polygon points="${ps.map(p=>p.join(',')).join(' ')}"/>`).join('')}</svg>`;}
  // 맞닿은 변은 제거하여 여러 칸 시설을 하나의 방처럼 표시한다.
@@ -77,7 +77,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
    open(){if(isBlocked())return;editing=true;status();toolbar.scrollIntoView({block:'nearest',behavior:'smooth'});},
    get editing(){return editing;},
    draw(ctx){const s=getState();ctx.fillStyle='#214b50';ctx.fillRect(0,0,WORLD.w,WORLD.h);
-     for(let r=0;r<5;r++)for(let q=-Math.floor(r/2);q<5-Math.floor(r/2);q++){polygon(ctx,q,r);ctx.fillStyle='#407675';ctx.fill();ctx.strokeStyle='#8eaaa1';ctx.lineWidth=1;ctx.stroke();}
+     for(let r=0;r<5;r++)for(let q=-Math.floor(r/2);q<5+(r%2===0?1:0)-Math.floor(r/2);q++){polygon(ctx,q,r);ctx.fillStyle='#407675';ctx.fill();ctx.strokeStyle='#8eaaa1';ctx.lineWidth=1;ctx.stroke();}
      for(const c of s.layout){
        const type=L.types[c.kind],cells=L.cells(c),anchor=center(c.q,c.r),im=facilities[c.kind];
        // 전체 점유 영역을 합집합으로 잘라 원본 시설 배경을 딱 한 번 그린다.
