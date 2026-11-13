@@ -49,3 +49,10 @@ test('사냥 일시정지는 방향·상태·프레임을 유지하고 재개 �
   assert.equal(p.movement(a,id,0,0,0.1,true).state,'idle');
   assert.equal(p.movement(a,id,2,0,0.1).frame,p.sample(id,'walk',0));
 });
+
+test('먹기·일반 피격·전투 불능·로프 동작은 ROM 추적 시퀀스와 일치한다',()=>{
+ assert.equal(data.states.eat,14);assert.equal(data.states.hurt,5);assert.equal(data.states.hurtAlt,6);
+ assert.equal(data.states.ko,15);assert.equal(data.states.boundIdle,16);
+ assert.deepEqual(Array.from(data.banks[data.sprites.m201_agumon][14].frames,f=>f[0]),[24,25]);
+ assert.equal(data.training.cm07,29);assert.equal(data.training.cm05,8);assert.equal(data.training.cm04,33);
+});

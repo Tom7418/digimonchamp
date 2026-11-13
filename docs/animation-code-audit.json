@@ -1,0 +1,433 @@
+{
+  "method": "static ARM code paths and NANR; no emulator trace",
+  "hashes": {
+    "arm9": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
+    "overlay0": "32cf7bfd1acd9ddafd22dacdfced421ea2cc0cebfbbea335cef2891d5ad34ec3",
+    "overlay18": "44183ea85e90332dca3747699c2ff6033d8c0cd1e5deb3d6e2b0350f112d386e",
+    "overlay19": "02ef4c126fd11bd5e2bea21202442bd48575b2afcd29c045f70036940ebde671"
+  },
+  "eat": {
+    "sequence": 14,
+    "select": "overlay18 0x0211bb7c/0x0211bb80",
+    "consume": "0x0211bc24 -> 0x0210f220; subtracts target data+0x10 and updates depleted object",
+    "agumonFrames": [
+      24,
+      25
+    ],
+    "toyagumonFrames": [
+      24,
+      25
+    ]
+  },
+  "hurt": {
+    "sequences": [
+      5,
+      6
+    ],
+    "select": "overlay19 0x021168ec..0x021168fc",
+    "ordinaryReaction": "0x021189c8..0x021189f4 chooses reaction1/2; 0x02118a88 sets action15; dispatcher0x02116890",
+    "exceptions": "status and attack-specific reactions use other sequences; not all special branches implemented"
+  },
+  "ko": {
+    "sequence": 15,
+    "select": "overlay19 0x02116540..0x02116580 tests HP and sets sequence15"
+  },
+  "rope": {
+    "userVerifiedAgumonCells": [
+      27,
+      43
+    ],
+    "sequenceRange": [
+      16,
+      25
+    ],
+    "codeCorroboration": "overlay0 0x02121c58..0x02121c78 selects sequence19 instead of3 with bound flag+0x118"
+  },
+  "sleep": {
+    "sequence": 13,
+    "entry": "overlay18 0x0211b888/0x0211b894",
+    "status": "rest-state path, not knockout"
+  },
+  "training": {
+    "table": "ARM9 0x020c81e0; 37 records of40 bytes",
+    "dispatch": "overlay18 0x021191d4..0x02119300 -> 0x02118cfc -> 0x02118a10 -> 0x0211ceb0",
+    "facilities": [
+      {
+        "resource": "field_cm01_01",
+        "commands": [
+          30,
+          30,
+          3
+        ],
+        "primarySequence": 34,
+        "secondarySequence": 0
+      },
+      {
+        "resource": "field_cm02_01",
+        "commands": [
+          1,
+          1,
+          13
+        ],
+        "primarySequence": 3,
+        "secondarySequence": 1
+      },
+      {
+        "resource": "field_cm03_01",
+        "commands": [
+          1,
+          1,
+          13
+        ],
+        "primarySequence": 3,
+        "secondarySequence": 1
+      },
+      {
+        "resource": "field_cm04_01",
+        "commands": [
+          2,
+          2,
+          0
+        ],
+        "primarySequence": 33,
+        "secondarySequence": 8
+      },
+      {
+        "resource": "field_cm05_01",
+        "commands": [
+          0,
+          0,
+          25
+        ],
+        "primarySequence": 8,
+        "secondarySequence": 32
+      },
+      {
+        "resource": "field_cm06_01",
+        "commands": [
+          29,
+          29,
+          14
+        ],
+        "primarySequence": 31,
+        "secondarySequence": null
+      },
+      {
+        "resource": "field_cm07_01",
+        "commands": [
+          4,
+          4,
+          15
+        ],
+        "primarySequence": 29,
+        "secondarySequence": null
+      },
+      {
+        "resource": "field_cm08_01",
+        "commands": [
+          1,
+          1,
+          6
+        ],
+        "primarySequence": 3,
+        "secondarySequence": 0
+      },
+      {
+        "resource": "field_cm09_01",
+        "commands": [
+          1,
+          1,
+          15
+        ],
+        "primarySequence": 3,
+        "secondarySequence": null
+      },
+      {
+        "resource": "field_cm10_01",
+        "commands": [
+          5,
+          5,
+          16
+        ],
+        "primarySequence": null,
+        "secondarySequence": 4
+      },
+      {
+        "resource": "field_cm11_01",
+        "commands": [
+          6,
+          6,
+          17
+        ],
+        "primarySequence": 0,
+        "secondarySequence": 4
+      },
+      {
+        "resource": "field_cm12_01",
+        "commands": [
+          6,
+          6,
+          15
+        ],
+        "primarySequence": 0,
+        "secondarySequence": null
+      },
+      {
+        "resource": "field_cm13_01",
+        "commands": [
+          7,
+          7,
+          8
+        ],
+        "primarySequence": 35,
+        "secondarySequence": 31
+      },
+      {
+        "resource": "field_cm14_01",
+        "commands": [
+          8,
+          8,
+          18
+        ],
+        "primarySequence": 31,
+        "secondarySequence": 1
+      },
+      {
+        "resource": "field_cm15_01",
+        "commands": [
+          6,
+          6,
+          14
+        ],
+        "primarySequence": 0,
+        "secondarySequence": null
+      },
+      {
+        "resource": "field_cm16_01",
+        "commands": [
+          4294967295,
+          27,
+          4294967295
+        ],
+        "primarySequence": 28,
+        "secondarySequence": null
+      },
+      {
+        "resource": "field_cm17_01",
+        "commands": [
+          27,
+          27,
+          4294967295
+        ],
+        "primarySequence": 28,
+        "secondarySequence": null
+      },
+      {
+        "resource": "field_cm18_01",
+        "commands": [
+          9,
+          9,
+          6
+        ],
+        "primarySequence": 30,
+        "secondarySequence": 0
+      },
+      {
+        "resource": "field_cm19_01",
+        "commands": [
+          9,
+          9,
+          13
+        ],
+        "primarySequence": 30,
+        "secondarySequence": 1
+      },
+      {
+        "resource": "field_cm20_01",
+        "commands": [
+          1,
+          1,
+          15
+        ],
+        "primarySequence": 3,
+        "secondarySequence": null
+      },
+      {
+        "resource": "field_cm21_01",
+        "commands": [
+          10,
+          10,
+          19
+        ],
+        "primarySequence": 1,
+        "secondarySequence": 4
+      },
+      {
+        "resource": "field_cm22_01",
+        "commands": [
+          11,
+          11,
+          20
+        ],
+        "primarySequence": 1,
+        "secondarySequence": 6
+      },
+      {
+        "resource": "field_cm23_01",
+        "commands": [
+          8,
+          8,
+          21
+        ],
+        "primarySequence": 31,
+        "secondarySequence": 14
+      },
+      {
+        "resource": "field_cm24_01",
+        "commands": [
+          3,
+          3,
+          14
+        ],
+        "primarySequence": 0,
+        "secondarySequence": null
+      },
+      {
+        "resource": "field_cm25_01",
+        "commands": [
+          4294967295,
+          6,
+          12
+        ],
+        "primarySequence": 0,
+        "secondarySequence": 13
+      },
+      {
+        "resource": "field_cm26_01",
+        "commands": [
+          4294967295,
+          9,
+          1
+        ],
+        "primarySequence": 30,
+        "secondarySequence": 3
+      },
+      {
+        "resource": "field_cm27_01",
+        "commands": [
+          0,
+          0,
+          0
+        ],
+        "primarySequence": 8,
+        "secondarySequence": 8
+      },
+      {
+        "resource": "field_cm30_01",
+        "commands": [
+          25,
+          25,
+          13
+        ],
+        "primarySequence": 32,
+        "secondarySequence": 1
+      },
+      {
+        "resource": "field_cm31_01",
+        "commands": [
+          4294967295,
+          27,
+          4294967295
+        ],
+        "primarySequence": 28,
+        "secondarySequence": null
+      },
+      {
+        "resource": "field_cm32_01",
+        "commands": [
+          9,
+          9,
+          6
+        ],
+        "primarySequence": 30,
+        "secondarySequence": 0
+      },
+      {
+        "resource": "field_cm34_01",
+        "commands": [
+          0,
+          0,
+          25
+        ],
+        "primarySequence": 8,
+        "secondarySequence": 32
+      },
+      {
+        "resource": "field_cm35_01",
+        "commands": [
+          4,
+          4,
+          15
+        ],
+        "primarySequence": 29,
+        "secondarySequence": null
+      },
+      {
+        "resource": "field_cm37_01",
+        "commands": [
+          5,
+          5,
+          16
+        ],
+        "primarySequence": null,
+        "secondarySequence": 4
+      },
+      {
+        "resource": "field_cm39_01",
+        "commands": [
+          27,
+          27,
+          15
+        ],
+        "primarySequence": 28,
+        "secondarySequence": null
+      },
+      {
+        "resource": "field_cm40_01",
+        "commands": [
+          0,
+          13,
+          6
+        ],
+        "primarySequence": 1,
+        "secondarySequence": 0
+      },
+      {
+        "resource": "field_cm28_01",
+        "commands": [
+          4294967295,
+          4294967295,
+          4294967295
+        ],
+        "primarySequence": null,
+        "secondarySequence": null
+      },
+      {
+        "resource": "field_cm29_01",
+        "commands": [
+          4294967295,
+          4294967295,
+          4294967295
+        ],
+        "primarySequence": null,
+        "secondarySequence": null
+      }
+    ]
+  },
+  "correction": "Previous eat=29 and hurt=4 were visual guesses and wrong for these code paths. Previous eat=30 candidate withdrawn: common effect actor+0x1d8 was not proof of a food object.",
+  "limitations": [
+    "training table includes alternative and multi-stage actions; web currently uses first mapped action only",
+    "special hit reactions remain partially decoded",
+    "60Hz playback remains previous interpretation"
+  ]
+}

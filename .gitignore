@@ -14,3 +14,6 @@ __pycache__/
 *.ncer
 *.nanr
 *.nclr
+
+# 로컬 ROM 코드 분석 의존성 (배포/커밋 제외)
+.analysis-deps/

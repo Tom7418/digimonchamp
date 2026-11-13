@@ -1017,8 +1017,9 @@
         if(e.type==='hit'){
           const attacker=b.state.units.find(u=>u.id===e.from),target=b.state.units.find(u=>u.id===e.to);
           const id=SPRITE_BY_NAME[C.getSpecies(target.speciesId).name];
-          const duration=animations.duration(id,'hurt');
-          b.actions.set(e.to,{kind:'hit',left:duration,duration});
+          const state=Math.random()<0.5?'hurt':'hurtAlt';
+          const duration=animations.duration(id,state);
+          b.actions.set(e.to,{kind:'hit',left:duration,duration,state});
         }
         if (e.type === 'hit')
           b.flashes.push({ id: e.to, text: `-${e.damage}${e.special ? '!' : ''}`, until: performance.now() + 700, color: e.special ? '#ffd36a' : '#fff' });
@@ -1107,7 +1108,7 @@
       const pose=animations.movement(u,spriteId,m.dx,m.dy,dt,!u.alive);
       const action=battle.actions.get(u.id);
       // 피격 시 해당 종의 원본 셀을 원본 유지 시간으로 재생한다. 인위적 흔들림/점멸 없음.
-      const frame=action?.kind==='hit'?animations.sample(spriteId,'hurt',action.duration-action.left):pose.frame;
+      const frame=!u.alive?animations.sample(spriteId,'ko',0):action?.kind==='hit'?animations.sample(spriteId,action.state,action.duration-action.left):pose.frame;
       body(ctx,u.speciesId,false,u.x,u.y+14,1.6,frame,pose.flip);
       ctx.globalAlpha = 1;
       if(!u.alive){ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle='#5c6570';ctx.fillText('전투 불능',u.x,u.y-25);}
@@ -1249,7 +1250,13 @@
       }
       // 행동별 원본 셀을 재생한다. 인위적인 상하 흔들림은 사용하지 않는다.
       if (animDt > 0) p.motion = feeding.has(d.uid) ? 'eat' : Math.hypot(p.x - oldX, p.y - oldY) > 0.01 ? 'walk' : 'idle';
-      const frame = animations.pose(p, animationId(d), p.motion || 'idle', animDt);
+      const facility=L.types[p.cage];
+      const facilityNo=({field:'cm30',gym:'cm34',clinic:'cm16'})[p.cage] || facility?.img?.match(/cm[0-9]+/)?.[0];
+      const trainingSequence=window.DIGIMON_ANIMATIONS.training[facilityNo];
+      // 훈련은 원작 시설 행동표의 동작으로 표시. 복합 행동의 첫 동작만 연결.
+      const state=p.cageId&&p.motion!=='eat'&&trainingSequence!==undefined&&!d.isEgg
+        ? 'seq_'+trainingSequence : p.motion||'idle';
+      const frame = animations.pose(p, animationId(d), state, animDt);
       body(ctx, d.speciesId, d.isEgg, p.x, p.y, scale, frame, p.direction > 0); // 원본 도트는 왼쪽을 향하므로 오른쪽 이동에서만 반전
       // 머리 위 상태 말풍선 (배고픔·병·부상·똥·피로)
       const bub = bubbleOf(d);
@@ -1763,7 +1770,9 @@
       }
       if (w.flash > 0 && Math.floor(w.flash * 20) % 2) ctx.globalAlpha = 0.4;
       const spriteId = SPRITE_BY_NAME[C.getSpecies(w.id).name];
-      const motion = animations.movement(w, spriteId, w.movedX || 0, w.movedY || 0, dt, w.bound > 0);
+      const motion = w.bound>0
+        ? {frame:animations.pose(w,spriteId,'boundIdle',dt),flip:w.vx>0}
+        : animations.movement(w, spriteId, w.movedX || 0, w.movedY || 0, dt);
       body(ctx, w.id, false, w.x, w.y, 2, motion.frame, motion.flip);
       ctx.globalAlpha = 1;
       const sp = C.getSpecies(w.id);
