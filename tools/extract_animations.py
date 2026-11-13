@@ -35,7 +35,9 @@ def main():
     banks, ids = [], {}
     for sp in sprites:
         sequences = decode(args.source_root / (sp['source'] + '.nanr'), sp['frames'])
-        # 동작명은 원본에 없다. 도트 대조에 따른 임시 대응이며 나머지 동작은 후속 연결한다.
+        # 역할은 실행 코드 추적 근거로 연결한다. 셀 번호는 각 종의 NANR에서 개별 추출.
+        if len(sequences) != (2 if sp['id']=='e000_digitama' else 40):
+            raise ValueError('Unexpected species sequence layout: '+sp['id'])
         # 전체 시퀀스를 보존한다. 같은 번호를 모든 상황에 임의 배정하지 않는다.
         if sequences not in banks:
             banks.append(sequences)

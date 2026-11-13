@@ -56,3 +56,19 @@ test('먹기·일반 피격·전투 불능·로프 동작은 ROM 추적 시퀀�
  assert.deepEqual(Array.from(data.banks[data.sprites.m201_agumon][14].frames,f=>f[0]),[24,25]);
  assert.equal(data.training.cm07,29);assert.equal(data.training.cm05,8);assert.equal(data.training.cm04,33);
 });
+
+test('216종의 필수 동작은 모두 존재하고 디지에그는 별도 구조를 유지한다',()=>{
+ const required=['idle','walk','eat','hurt','hurtAlt','ko','boundIdle','boundRun'];
+ for(const sp of ctx.window.SPRITES){
+  const bank=data.banks[data.sprites[sp.id]];
+  if(sp.id==='e000_digitama'){assert.equal(bank.length,2);continue;}
+  assert.equal(bank.length,40,sp.id);
+  for(const state of required)assert.ok(bank[data.states[state]]?.frames.length,sp.id+':'+state);
+ }
+});
+test('아구몬 셀 번호를 다른 종에 복사하지 않는다',()=>{
+ for(const [id,cells] of [['m208_gabumon',[22,23]],['m205_gaomon',[29,30]],['m102_koromon',[23,24]]]){
+  const seq=data.banks[data.sprites[id]][data.states.eat];
+  assert.deepEqual(Array.from(seq.frames,f=>f[0]),cells);
+ }
+});
