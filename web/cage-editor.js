@@ -69,12 +69,18 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
      for(const c of s.layout){
        const type=L.types[c.kind],cells=L.cells(c),anchor=center(c.q,c.r),im=facilities[c.kind];
        // 전체 점유 영역을 합집합으로 잘라 원본 시설 배경을 딱 한 번 그린다.
-       ctx.save();ctx.beginPath();for(const [q,r] of cells)polygon(ctx,q,r,true);ctx.clip();ctx.fillStyle=type.color||'#a5a883';ctx.fill();
+       ctx.save();ctx.beginPath();for(const [q,r] of cells)polygon(ctx,q,r,true);ctx.clip();ctx.fillStyle=type.color||'#a5a883';ctx.fill();ctx.restore();
+       // 바닥만 육각 영역으로 자른다. 시설 그림은 투명 여백을 제외한 전체를 비율 유지로 맞춘다.
+       ctx.save();
        const local=type.cells.map(([q,r])=>({x:Math.sqrt(3)*R*(q+r/2),y:R*1.5*r}));
        const left=Math.min(...local.map(p=>p.x))-Math.sqrt(3)*R/2,top=Math.min(...local.map(p=>p.y))-R;
        const width=Math.max(...local.map(p=>p.x))-left+Math.sqrt(3)*R/2,height=Math.max(...local.map(p=>p.y))-top+R;
        ctx.translate(anchor.x,anchor.y);ctx.rotate((c.rotation||0)*Math.PI/3);
-       if(im.complete&&im.naturalWidth){const b=im.content||{x:0,y:0,w:im.naturalWidth,h:im.naturalHeight};if(b.w===im.naturalWidth&&b.h===im.naturalHeight)ctx.drawImage(im,left,top,width,height);else{const k=Math.max(width/b.w,height/b.h),dw=b.w*k,dh=b.h*k;ctx.drawImage(im,b.x,b.y,b.w,b.h,left+(width-dw)/2,top+height-dh,dw,dh);}}ctx.restore();
+       if(im.complete&&im.naturalWidth){
+         const b=im.content||{x:0,y:0,w:im.naturalWidth,h:im.naturalHeight};
+         const k=Math.min(width/b.w,height/b.h),dw=b.w*k,dh=b.h*k;
+         ctx.drawImage(im,b.x,b.y,b.w,b.h,left+(width-dw)/2,top+(height-dh)/2,dw,dh);
+       }ctx.restore();
        ctx.strokeStyle=selected===c.id?'#ffe374':'#8ed3e6';ctx.lineWidth=selected===c.id?4:2;outerBorder(ctx,c);
        // 시설 이름·칸 수는 케이지 편집 중에만 보인다 (플레이 화면에는 숨김)
        if(editing){ctx.font='bold 13px sans-serif';const label=`${type.name} · ${cells.length}칸`,lw=ctx.measureText(label).width+16;ctx.fillStyle='#102e3ce8';ctx.fillRect(anchor.x-lw/2,anchor.y+R*0.55,lw,20);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.fillText(label,anchor.x,anchor.y+R*0.55+15);}

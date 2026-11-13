@@ -29,3 +29,14 @@ test('zoom and camera remain bounded at extreme wheel deltas',()=>{
  events.wheel({...e,deltaY:-100000});assert.equal(board.zoom,2.5);
  assert.ok(board.cam.x<=board.world.w-board.view.w/board.zoom);
 });
+
+test('hunt pointer uses canvas pixels regardless of farm zoom, pan, or CSS size',()=>{
+ const source=fs.readFileSync('web/game.js','utf8');
+ const part=source.slice(source.indexOf('  function canvasPoint(e)'),source.indexOf('  function huntPointer('));
+ const canvas={width:960,height:560,getBoundingClientRect:()=>({left:120,top:80,width:480,height:280})};
+ const context=vm.createContext({canvas,board:{toWorld(){throw Error('farm coordinates used');}}});
+ vm.runInContext(part,context);
+ for(const [clientX,clientY,x,y] of [[120,80,0,0],[360,220,480,280],[600,360,960,560]]){
+   const p=context.canvasPoint({clientX,clientY});assert.equal(p.x,x);assert.equal(p.y,y);
+ }
+});

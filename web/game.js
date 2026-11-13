@@ -1488,8 +1488,10 @@
   }
 
   function canvasPoint(e) {
+    // 사냥은 화면 좌표로 그린다. 사육장 카메라/줌을 적용하면 로프가 포인터에서 벗어난다.
     const r = canvas.getBoundingClientRect();
-    return board.toWorld(e);
+    return { x: (e.clientX - r.left) * canvas.width / r.width,
+      y: (e.clientY - r.top) * canvas.height / r.height };
   }
   function huntPointer(type, e) {
     if (!hunt) return;
