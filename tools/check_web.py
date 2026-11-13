@@ -10,7 +10,7 @@ for ref in re.findall(r'(?:src|href)="([^"]+)"', html):
     if ref.startswith(('http:', 'https:', '#', 'data:')):
         continue
     assert not ref.startswith('/'), f'Absolute path breaks project Pages: {ref}'
-    assert (web / ref).exists(), f'Missing page dependency: {ref}'
+    assert (web / ref.split('?', 1)[0]).exists(), f'Missing page dependency: {ref}'
 sprites = json.loads((web / 'assets/sprites.json').read_text(encoding='utf-8'))
 js = (web / 'assets/sprites.js').read_text(encoding='utf-8')
 assert json.loads(js.removeprefix('window.SPRITES = ').removesuffix(';')) == sprites
