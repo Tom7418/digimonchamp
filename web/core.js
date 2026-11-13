@@ -1545,6 +1545,7 @@ var ChampCore = (function(exports) {
 		perHunger: 1.5,
 		show: 70,
 		reliefPerHour: 5,
+		autoCarePerHour: 3,
 		restPerHour: 1
 	};
 	/** 훈련 한 번에 걸리는 게임 분 */
@@ -1552,13 +1553,14 @@ var ChampCore = (function(exports) {
 	/** 동물원·목장이 먹이를 주는 배고픔 기준 (임시) */
 	var AUTO_FEED_BELOW = 50;
 	/** 스트레스가 풀리는 케이지. 온천·양호실·동물원·미니 동물원은 아직 게임에 없지만 추가되면 바로 적용된다 */
+	/** 쉬는 시설: 시간당 -5 */
 	var STRESS_RELIEF_CAGES = [
 		"온천",
 		"미니 양호실",
-		"양호실",
-		"동물원",
-		"미니 동물원"
+		"양호실"
 	];
+	/** 동물원·목장: 쉬는 시설보다 약하게 시간당 -3, 피로도 조금 빨리 풀린다 (형규가 정한 방향, 수치는 임시) */
+	var AUTO_CARE_REST = .2;
 	function addStress(d, amount) {
 		d.stress = Math.max(0, Math.min(100, (d.stress ?? 0) + amount));
 	}
@@ -1628,7 +1630,7 @@ var ChampCore = (function(exports) {
 		if (ctx.sleep) d.fatigue = Math.max(0, d.fatigue - .3);
 		else {
 			d.hunger = Math.max(0, d.hunger - (d.personality === "열혈" ? .11 : .08));
-			d.fatigue = Math.max(0, d.fatigue - (cage.rest ? .5 : .04));
+			d.fatigue = Math.max(0, d.fatigue - (cage.rest ? .5 : cage.autoCare ? AUTO_CARE_REST : .04));
 			d.poopTimer += 1;
 		}
 		if (cage.autoCare) {
@@ -1722,7 +1724,7 @@ var ChampCore = (function(exports) {
 			d.trainMinutes = 0;
 		}
 		if (d.stageAge % 60 === 0) {
-			addStress(d, -(STRESS_RELIEF_CAGES.includes(cage.id) ? STRESS.reliefPerHour : STRESS.restPerHour));
+			addStress(d, -(STRESS_RELIEF_CAGES.includes(cage.id) ? STRESS.reliefPerHour : cage.autoCare ? STRESS.autoCarePerHour : STRESS.restPerHour));
 			const evo = findEvolution(d, ctx.rank, ctx.free);
 			if (evo?.kind === "evolve") {
 				events.push({
@@ -2504,6 +2506,7 @@ var ChampCore = (function(exports) {
 	}
 	exports.ARENA = ARENA;
 	exports.ATTRS = ATTRS;
+	exports.AUTO_CARE_REST = AUTO_CARE_REST;
 	exports.AUTO_FEED_BELOW = AUTO_FEED_BELOW;
 	exports.CAGES = CAGES;
 	exports.CAGE_RENAMES = CAGE_RENAMES;

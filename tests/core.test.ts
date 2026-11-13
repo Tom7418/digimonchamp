@@ -133,6 +133,16 @@ describe('evolution', () => {
     expect(only(r.save).hunger).toBeGreaterThan(50);
     expect(only(r.save).poop).toBe(0);
     expect(CAGES.filter((c) => c.no > 0).length).toBe(38);
+    // 동물원·목장은 온천·양호실보다 약한 쉬는 시설: 스트레스 시간당 -3 (쉬는 시설 -5, 그 밖 -1)
+    const relief = (cage: string) => {
+      let z = withMon(freshSave(0), { hunger: 100, stress: 50 });
+      z = { ...z, cages: [...z.cages, cage] };
+      z = setCage(z, 1, cage).save;
+      return only(advance(z, 120, seeded(1)).save).stress;
+    };
+    expect(relief('온천')).toBe(40);
+    expect(relief('목장')).toBe(44);
+    expect(relief('절')).toBeGreaterThan(44);
     expect(getCage('경기장').capacity).toBe(10);
   });
   it('예전 임시 케이지 이름은 원작 이름으로 옮겨진다', () => {

@@ -115,13 +115,16 @@ export type FarmEvent =
  * 게임 1시간마다 -1, 쉬는 케이지(온천·미니 양호실·양호실·동물원·미니 동물원)에서는 -5.
  * 임시(Claude가 정함): 100이 되면 병.
  */
-export const STRESS = { crowdedPerDay: 20, rotten: 50, sick: 40, training: 5, hungerBelow: 20, perHunger: 1.5, show: 70, reliefPerHour: 5, restPerHour: 1 };
+export const STRESS = { crowdedPerDay: 20, rotten: 50, sick: 40, training: 5, hungerBelow: 20, perHunger: 1.5, show: 70, reliefPerHour: 5, autoCarePerHour: 3, restPerHour: 1 };
 /** 훈련 한 번에 걸리는 게임 분 */
 export const TRAINING_MINUTES = 15;
 /** 동물원·목장이 먹이를 주는 배고픔 기준 (임시) */
 export const AUTO_FEED_BELOW = 50;
 /** 스트레스가 풀리는 케이지. 온천·양호실·동물원·미니 동물원은 아직 게임에 없지만 추가되면 바로 적용된다 */
-export const STRESS_RELIEF_CAGES = ['온천', '미니 양호실', '양호실', '동물원', '미니 동물원'];
+/** 쉬는 시설: 시간당 -5 */
+export const STRESS_RELIEF_CAGES = ['온천', '미니 양호실', '양호실'];
+/** 동물원·목장: 쉬는 시설보다 약하게 시간당 -3, 피로도 조금 빨리 풀린다 (형규가 정한 방향, 수치는 임시) */
+export const AUTO_CARE_REST = 0.2;
 export function addStress(d: Digimon, amount: number) {
   d.stress = Math.max(0, Math.min(100, (d.stress ?? 0) + amount));
 }
@@ -180,7 +183,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
     d.fatigue = Math.max(0, d.fatigue - 0.3);
   } else {
     d.hunger = Math.max(0, d.hunger - (d.personality === '열혈' ? 0.11 : 0.08));
-    d.fatigue = Math.max(0, d.fatigue - (cage.rest ? 0.5 : 0.04));
+    d.fatigue = Math.max(0, d.fatigue - (cage.rest ? 0.5 : cage.autoCare ? AUTO_CARE_REST : 0.04));
     d.poopTimer += 1;
   }
   // 동물원·목장: 먹이와 배설물을 알아서 처리한다 (원작 설명). 고기는 쓰지 않는다 (임시)
@@ -268,8 +271,8 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   }
 
   if (d.stageAge % 60 === 0) {
-    // 어디서든 1시간에 1, 쉬는 케이지에서는 5 회복 (겹치지 않음)
-    addStress(d, -(STRESS_RELIEF_CAGES.includes(cage.id) ? STRESS.reliefPerHour : STRESS.restPerHour));
+    // 어디서든 1시간에 1, 동물원·목장 3, 쉬는 케이지 5 회복 (겹치지 않음)
+    addStress(d, -(STRESS_RELIEF_CAGES.includes(cage.id) ? STRESS.reliefPerHour : cage.autoCare ? STRESS.autoCarePerHour : STRESS.restPerHour));
     const evo = findEvolution(d, ctx.rank, ctx.free);
     if (evo?.kind === 'evolve') {
       events.push({ type: 'evolved', uid: d.uid, from: sp.id, to: evo.to });

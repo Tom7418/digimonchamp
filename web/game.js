@@ -56,7 +56,7 @@
 
   // ---------- 저장 ----------
   function freshView() {
-    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 3, team: [], selected: 0, logs: [], poops: [], foods: [], tips: {}, entryNoticeRead: null, farmWorld: 2 };
+    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 4, team: [], selected: 0, logs: [], poops: [], foods: [], tips: {}, entryNoticeRead: null, farmWorld: 2 };
   }
   function load() {
     try {
