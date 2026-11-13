@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
-import { CAGES, getCage, getSpecies, originalSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
+import { CAGES, getCage, getSpecies, originalSpecies, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
-import type { Digimon, SaveData } from '../src/core/types';
+import type { Digimon, SaveData, Stage } from '../src/core/types';
 import { ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
 describe('floor food reservations', () => {
@@ -186,9 +186,9 @@ describe('evolution', () => {
     expect(only(s).cage).toBe('미니 해변');
   });
   it('battle count evolves 코로몬 into 아구몬, and rank gates the next stage', () => {
-    const base = withMon(freshSave(0), { speciesId: '코로몬', battles: 3, stageAge: 600 });
+    const base = withMon(freshSave(0), { speciesId: '코로몬', battles: 3, stageAge: 1200 });
     expect(findEvolution(only(base), 1, 100)).toEqual({ kind: 'evolve', to: '아구몬' });
-    const agu = { ...only(base), speciesId: '아구몬', battles: 6, stageAge: 2000 };
+    const agu = { ...only(base), speciesId: '아구몬', battles: 6, stageAge: 2400 };
     expect(findEvolution(agu, 1, 100)).toEqual({ kind: 'blocked', to: '그레이몬', reason: 'rank' });
     expect(findEvolution(agu, 3, 100)).toEqual({ kind: 'blocked', to: '그레이몬', reason: 'rank' });
     expect(findEvolution(agu, 4, 100)).toEqual({ kind: 'evolve', to: '그레이몬' });
@@ -367,10 +367,21 @@ describe('원본 속성·종족', () => {
     expect(getSpecies('코로몬').attr).toBe('데이터');
     expect(getSpecies('퍼그몬').attr).toBe('바이러스');
     expect(getSpecies('아르마몬').attr).toBe('백신');
-    expect(getSpecies('파닥몬').attr).toBe('프리'); // API에 데이터·백신이 함께 있어 정할 수 없다
+    expect(getSpecies('파닥몬').attr).toBe('데이터'); // API는 데이터·백신 둘 다, 공식 도감은 데이터
+    expect(getSpecies('바이킹몬').attr).toBe('프리'); // API에 데이터·백신이 함께 있어 정할 수 없다
     expect(getSpecies('산몬').attr).toBe('없음'); // API 값이 비어 있다
     expect(getSpecies('즈루몬').attr).toBe('프리');
     expect(getSpecies('피요몬').attr).toBe('백신'); // 원본에 값이 있으면 건드리지 않는다
+  });
+  it('용량·세대 지속 시간·능력치 성향은 원본 표 값을 쓴다', () => {
+    expect([1, 2, 3, 4, 5, 6].map((s) => speciesByStage(s as Stage)[0].size)).toEqual([6, 8, 10, 14, 18, 24]);
+    expect(LIFESPAN).toEqual({ 1: 1440, 2: 5760, 3: 11520, 4: 17280, 5: 24480, 6: 30240 });
+    // 세대 안에서는 모든 종의 지속 시간이 같다
+    for (const sp of Object.values(SPECIES)) expect(originalSpecies(sp.id)!.life).toBe(LIFESPAN[sp.stage]);
+    // 피요몬은 민첩이 높고(4,5,4,4,5,6), 아르마몬은 방어가 높고 민첩이 낮다(5,5,5,6,5,4)
+    const piyo = typicalStats('피요몬'), arma = typicalStats('아르마몬');
+    expect(piyo.spd).toBeGreaterThan(piyo.hp);
+    expect(arma.def).toBeGreaterThan(arma.spd);
   });
   it('진화표의 모든 종이 원본 표에 있고 세대가 같다', () => {
     const missing = Object.values(SPECIES).filter((sp) => !originalSpecies(sp.id)).map((sp) => sp.id);

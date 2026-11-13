@@ -29,7 +29,7 @@
 산몬|없음|Sunmon|(비어 있음)
 문몬|없음|Moonmon|(비어 있음)
 아르마몬|백신|Armadimon|Free/Vaccine
-파닥몬|프리|Patamon|Data/Free/Vaccine
+파닥몬|데이터|Patamon|Data/Free/Vaccine (공식 도감 digimon.net/reference_ko에서 데이터로 확인, 형규)
 브이몬|백신|V-mon|Free/Vaccine
 황금아르마몬|백신|Ankylomon|Free/Vaccine
 링스몬|백신|Lynxmon|Vaccine/Free

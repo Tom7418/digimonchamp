@@ -10,7 +10,12 @@
   - +16 u32 세대 (1 유년기1 ~ 6 궁극체)
   - +20 u32 속성: 0 없음(유년기), 1 백신, 2 바이러스, 3 데이터, 4 프리
   - +28 u32 종족 비트: 1 짐승, 2 기계, 4 벌레풀, 8 새, 16 용, 32 물, 64 성, 128 암흑 (0은 유년기1)
-  나머지 칸(크기·수명으로 보이는 값 등)은 아직 뜻을 확인하지 못해 쓰지 않는다.
+  아래는 값은 확인했지만 뜻은 추정이다 (형규 지시로 추정한 역할대로 쓴다):
+  - +32 u8  용량(G): 세대별 고정 6·8·10·14·18·24
+  - +44 u32 세대 지속 시간(분): 1440·5760·11520·17280·24480·30240 (1·4·8·12·17·21일)
+  - +48 f32 이동 속도 배율 0.8~1.1
+  - +52 u16×4, +60 u8×2 기본 능력치 6개 (원작 표시 순서 HP·TP·공격·방어·지능·민첩으로 가정)
+  나머지 칸(+0, +33~34, +36~43, +62~, +84~, +116~)은 아직 쓰지 않는다.
 원본 글은 저장소에 옮기지 않는다. 이 파일에는 이름과 분류 값만 쓴다.
 """
 import struct, sys
@@ -39,12 +44,15 @@ def cstr(pointer):
 
 
 lines = ['# 원본 실행 코드의 디지몬 표에서 뽑은 속성·종족 (tools/extract_species.py). 손으로 고치지 말 것',
-         '# 이름|속성|종족|세대|원본 영문 이름']
+         '# 이름|속성|종족|세대|원본 영문 이름|용량|세대 지속 분|기본 능력치(HP,TP,공격,방어,지능,민첩)|속도 배율']
 for i in range(COUNT):
     rec = arm9[TABLE + i*SIZE: TABLE + (i+1)*SIZE]
     english = cstr(struct.unpack_from('<I', rec, 4)[0])
     stage, attr, _, family = struct.unpack_from('<4I', rec, 16)
-    lines.append('|'.join([RENAME.get(english, names[i]), ATTR[attr], FAMILY[family], str(stage), english]))
+    stats = list(struct.unpack_from('<4H', rec, 52)) + list(rec[60:62])
+    speed = round(struct.unpack_from('<f', rec, 48)[0], 2)
+    lines.append('|'.join([RENAME.get(english, names[i]), ATTR[attr], FAMILY[family], str(stage), english,
+                           str(rec[32]), str(struct.unpack_from('<I', rec, 44)[0]), ','.join(map(str, stats)), str(speed)]))
 out = REPO / 'src/data/species.txt'
 out.write_text('\n'.join(lines) + '\n', encoding='utf-8', newline='\n')
 print(len(lines) - 2, '종 →', out)

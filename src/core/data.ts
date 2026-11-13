@@ -6,7 +6,11 @@ import { ATTRS, FAMILIES, type ApKey, type Attr, type Cond, type Family, type Sp
 
 export const STAGE_LABEL: Record<Stage, string> = { 1: '유년기I', 2: '유년기II', 3: '성장기', 4: '성숙기', 5: '완전체', 6: '궁극체' };
 /** 단계별 수명(게임 분) */
-export const LIFESPAN: Record<Stage, number> = { 1: 12 * 60, 2: 24 * 60, 3: 72 * 60, 4: 120 * 60, 5: 192 * 60, 6: 240 * 60 };
+/**
+ * 세대별 지속 시간(분): 1·4·8·12·17·21일.
+ * 값은 원본 실행 코드의 디지몬 표(+44, 세대마다 모든 종이 같다)이고, '수명'이라는 뜻은 추정이다 (형규 지시로 적용).
+ */
+export const LIFESPAN: Record<Stage, number> = { 1: 1440, 2: 5760, 3: 11520, 4: 17280, 5: 24480, 6: 30240 };
 export const EGG_MINUTES = 30;
 
 const isFamily = (s: string): s is Family => (FAMILIES as readonly string[]).includes(s);
@@ -37,11 +41,11 @@ function hash(s: string) {
 }
 
 /** 원본 표의 속성·종족 (이름 → 값) */
-const ORIGINAL: Record<string, { attr: SpeciesAttr; family: string; stage: number }> = {};
+const ORIGINAL: Record<string, { attr: SpeciesAttr; family: string; stage: number; size: number; life: number; stats: number[]; speed: number }> = {};
 for (const line of speciesRaw.split(/\r?\n/)) {
   if (!line.trim() || line.startsWith('#')) continue;
-  const [name, attr, family, stage] = line.split('|');
-  ORIGINAL[name] = { attr: attr as SpeciesAttr, family, stage: Number(stage) };
+  const [name, attr, family, stage, , size, life, stats, speed] = line.split('|');
+  ORIGINAL[name] = { attr: attr as SpeciesAttr, family, stage: Number(stage), size: Number(size), life: Number(life), stats: stats.split(',').map(Number), speed: Number(speed) };
 }
 export const originalSpecies = (id: string) => ORIGINAL[id];
 /** 원본에서 프리·없음인 종의 속성을 디지몬 API 값으로 보완한 표 (src/data/species-api.txt) */
@@ -101,7 +105,8 @@ function build(): Record<string, Species> {
     // 원본이 프리·없음일 때만 디지몬 API 값으로 보완한다
     if ((sp.attr === '프리' || sp.attr === '없음') && API_ATTR[sp.id]) sp.attr = API_ATTR[sp.id];
     const dragon = sp.family === '용';
-    sp.size = { 1: 4, 2: 6, 3: 10, 4: 16, 5: dragon ? 24 : 20, 6: dragon ? 32 : 24 }[sp.stage];
+    // 용량은 원본 표(+32) 값. 표에 없는 종만 예전 임시 값
+    sp.size = real ? real.size : { 1: 4, 2: 6, 3: 10, 4: 16, 5: dragon ? 24 : 20, 6: dragon ? 32 : 24 }[sp.stage];
   }
   return out;
 }
@@ -127,10 +132,24 @@ const PROFILE: Record<Family, Stats> = {
 };
 const STAGE_BONUS: Record<Stage, number> = { 1: 8, 2: 10, 3: 25, 4: 55, 5: 110, 6: 200 };
 
+/**
+ * 종별 능력치 성향 (평균 1). 원본 표의 기본 능력치 6개의 비율을 쓴다.
+ * 값은 원본이고 '기본 능력치'라는 뜻과 순서(HP·TP·공격·방어·지능·민첩)는 추정이다.
+ * 크기(STAGE_BONUS 등)는 원작 수치 체계를 몰라 예전 임시 값을 유지한다.
+ * 능력치가 모두 0인 유년기는 종족 성향을 쓴다.
+ */
+function profileOf(sp: Species): Stats {
+  const v = ORIGINAL[sp.id]?.stats ?? [];
+  const sum = v.reduce((a, b) => a + b, 0);
+  if (!sum) return PROFILE[sp.family];
+  const k = 6 / sum;
+  return { hp: v[0] * k, tp: v[1] * k, atk: v[2] * k, def: v[3] * k, int: v[4] * k, spd: v[5] * k };
+}
+
 /** 해당 종으로 진화(또는 부화)할 때 더해지는 능력치 */
 export function evolutionBonus(id: string): Stats {
   const sp = getSpecies(id);
-  const p = PROFILE[sp.family];
+  const p = profileOf(sp);
   const b = STAGE_BONUS[sp.stage];
   return { hp: Math.round(p.hp * b), tp: Math.round(p.tp * b), atk: Math.round(p.atk * b), def: Math.round(p.def * b), int: Math.round(p.int * b), spd: Math.round(p.spd * b) };
 }
@@ -139,7 +158,7 @@ export function evolutionBonus(id: string): Stats {
 export function typicalStats(id: string, scale = 1): Stats {
   const sp = getSpecies(id);
   const total = [0, 8, 18, 45, 110, 240, 460][sp.stage] * scale;
-  const p = PROFILE[sp.family];
+  const p = profileOf(sp);
   return { hp: Math.round(p.hp * total), tp: Math.round(p.tp * total), atk: Math.round(p.atk * total), def: Math.round(p.def * total), int: Math.round(p.int * total), spd: Math.round(p.spd * total) };
 }
 
