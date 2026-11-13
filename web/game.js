@@ -398,7 +398,8 @@
     $('#close-modal').disabled = true;
   }
   function finishDay() {
-    const r = C.endDay(save);
+    // 정원을 넘긴 케이지에서 하루를 보낸 디지몬은 스트레스를 받는다
+    const r = C.endDay(save, Math.random, L.crowded(view));
     save = r.save;
     r.events.forEach(logEvent);
     dayEnding = false;
@@ -718,6 +719,7 @@
     if (d.isEgg) return null;
     if (d.sick) return '🤢';
     if (d.injured) return '🩹';
+    if ((d.stress ?? 0) >= C.STRESS.show) return 'stress';
     if (d.hunger < 30) return '🍖';
     if (d.poop >= 3) return '💩';
     if (d.fatigue > 80) return '💤';
@@ -1161,7 +1163,12 @@
       body(ctx, d.speciesId, d.isEgg, p.x, p.y, scale, frame, p.direction > 0); // 원본 도트는 왼쪽을 향하므로 오른쪽 이동에서만 반전
       // 머리 위 상태 말풍선 (배고픔·병·부상·똥·피로)
       const bub = bubbleOf(d);
-      if (bub) {
+      // 병·부상·스트레스·배고픔은 원작 말풍선 그림(common/e001_ikusei 30·31·34·36)
+      const bubImage = bub && fxImage({ '🤢': 'bubble_sick', '🩹': 'bubble_injured', stress: 'bubble_stress', '🍖': 'bubble_hungry' }[bub] || 'bubble_stress');
+      if (bub && (bub === 'stress' || '🤢🩹🍖'.includes(bub)) && bubImage.complete && bubImage.naturalWidth) {
+        const top = p.y - (spriteOf(d.speciesId, d.isEgg)?.baseline ?? 30) * scale - 6;
+        ctx.drawImage(bubImage, p.x + 2, top - 26, 40, 40);
+      } else if (bub && bub !== 'stress') {
         const top = p.y - (spriteOf(d.speciesId, d.isEgg)?.baseline ?? 30) * scale - 6;
         ctx.fillStyle = '#ffffffe8';
         ctx.strokeStyle = '#203040';

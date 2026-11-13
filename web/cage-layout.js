@@ -42,11 +42,14 @@ window.CageLayout = {
   // 구버전의 잘못된 모양을 바꿀 때 충돌한 시설은 빈자리로 이동한다.
   // 자리가 없으면 보관함으로 돌려보내며 원래 배치는 호출자가 백업한다.
   migrate(raw){const placed=[],stored=[];for(const original of Array.isArray(raw)?raw:[]){if(!original||!this.types[original.kind])continue;let c={...original};if(!this.valid(placed,c)){let found=false;for(let r=0;r<5&&!found;r++)for(let q=0;q<6&&!found;q++)for(let rotation=0;rotation<6;rotation++){const next={...c,q,r,rotation};if(this.valid(placed,next)){c=next;found=true;break;}}if(!found){stored.push(c);continue;}}placed.push(c);}return {placed,stored};},
+  // 케이지에 정원보다 많이 들어가 있는가
+  over(state,id){const cage=state.layout.find(c=>c.id===id);return !!cage&&state.team.filter(p=>p.cageId===id).length>this.types[cage.kind].capacity;},
+  // 정원을 넘긴 케이지에 있는 디지몬 uid 목록
+  crowded(state){return state.team.filter(p=>p.cageId&&this.over(state,p.cageId)).map(p=>p.uid);},
   assign(state,pet,id){
     const cage=state.layout.find(c=>c.id===id);
     if(!cage)return false;
-    const occupied=state.team.filter(p=>p!==pet&&p.cageId===id).length;
-    if(occupied>=this.types[cage.kind].capacity)return false;
+    // 원작처럼 정원을 넘겨도 넣을 수 있다. 넘긴 채 하루가 지나면 스트레스를 받는다 (crowded 참고)
     pet.cageId=id;pet.cage=cage.kind;pet.cageSeconds=0;return true;
   }
 };

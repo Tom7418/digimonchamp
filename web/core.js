@@ -1312,8 +1312,27 @@ var ChampCore = (function(exports) {
 		};
 	}
 	var usedCapacity = (save) => save.digimon.reduce((s, d) => s + (d.isEgg ? 0 : getSpecies(d.speciesId).size), 0);
-	function makeSick(d, events) {
+	/**
+	* 스트레스 (원작 도움말 help #127: 쌓이면 병에 걸린다. 수치는 화면에 나오지 않는다).
+	* 값은 형규가 정함: 정원 초과로 하루가 지날 때마다 +20, 상한 먹이 +80, 병 +40,
+	* 배고픔 20 미만부터 1 내려갈 때마다 +1.5 (배고픔 0에서 합계 +30). 80 이상이면 말풍선 표시.
+	* 임시(Claude가 정함): 100이 되면 병, 스트레스 요인 없이 아침을 맞으면 -10.
+	*/
+	var STRESS = {
+		crowdedPerDay: 20,
+		rotten: 80,
+		sick: 40,
+		hungerBelow: 20,
+		perHunger: 1.5,
+		show: 80,
+		calmPerDay: 10
+	};
+	function addStress(d, amount) {
+		d.stress = Math.max(0, Math.min(100, (d.stress ?? 0) + amount));
+	}
+	function makeSick(d, events, stress = STRESS.sick) {
 		if (d.sick) return;
+		addStress(d, stress);
 		d.sick = true;
 		d.sickMinutes = 0;
 		d.penalties += 1;
@@ -1337,6 +1356,9 @@ var ChampCore = (function(exports) {
 			penalties: 0,
 			sick: false,
 			injured: false,
+			stress: 0,
+			hungerStress: 0,
+			stressSick: false,
 			poop: 0,
 			hunger: 70,
 			fatigue: 0,
@@ -1386,6 +1408,18 @@ var ChampCore = (function(exports) {
 					uid: d.uid
 				});
 			}
+		}
+		if (d.hunger < STRESS.hungerBelow) {
+			const due = (STRESS.hungerBelow - d.hunger) * STRESS.perHunger;
+			if (due > (d.hungerStress ?? 0)) {
+				addStress(d, due - (d.hungerStress ?? 0));
+				d.hungerStress = due;
+			}
+		} else d.hungerStress = 0;
+		if ((d.stress ?? 0) < 100) d.stressSick = false;
+		else if (!d.stressSick) {
+			d.stressSick = true;
+			makeSick(d, events, 0);
 		}
 		d.starvingMinutes = d.hunger <= 0 && !ctx.sleep ? d.starvingMinutes + 1 : 0;
 		d.dirtyMinutes = d.poop >= 3 && !ctx.sleep ? d.dirtyMinutes + 1 : 0;
@@ -1522,13 +1556,6 @@ var ChampCore = (function(exports) {
 			cur = r.save;
 			events.push(...r.events);
 		}
-		cur = {
-			...cur,
-			digimon: cur.digimon.map((d) => d.protein ? {
-				...d,
-				protein: 0
-			} : d)
-		};
 		return {
 			save: cur,
 			events
@@ -1562,7 +1589,8 @@ var ChampCore = (function(exports) {
 		};
 	}
 	/** 하루 마감: 다음 날 아침 7시까지 잠잔다 (수명·병은 흐르고, 배고픔·똥·훈련은 멈춘다) */
-	function endDay(save, rng = defaultRng) {
+	/** crowded = 정원을 넘긴 케이지에 있는 디지몬 uid (케이지 배치는 화면 쪽이 안다) */
+	function endDay(save, rng = defaultRng, crowded = []) {
 		const morning = nextMorningClock(save);
 		const events = [];
 		let cur = save;
@@ -1571,6 +1599,19 @@ var ChampCore = (function(exports) {
 			cur = r.save;
 			events.push(...r.events);
 		}
+		cur = {
+			...cur,
+			digimon: cur.digimon.map((x) => {
+				const d = {
+					...x,
+					protein: 0
+				};
+				if (d.isEgg) return d;
+				if (crowded.includes(d.uid)) addStress(d, STRESS.crowdedPerDay);
+				else if (!d.sick && d.hunger >= STRESS.hungerBelow) addStress(d, -STRESS.calmPerDay);
+				return d;
+			})
+		};
 		return {
 			save: cur,
 			events
@@ -1616,9 +1657,10 @@ var ChampCore = (function(exports) {
 				hunger: Math.min(100, x.hunger + 15),
 				rottenEaten: x.rottenEaten + 1
 			};
+			addStress(y, STRESS.rotten);
 			if (y.rottenEaten >= 2) {
 				y.rottenEaten = 0;
-				makeSick(y, events);
+				makeSick(y, events, 0);
 			}
 			return y;
 		});
@@ -2251,12 +2293,14 @@ var ChampCore = (function(exports) {
 	exports.START_ROPE = START_ROPE;
 	exports.STAT_KEYS = STAT_KEYS;
 	exports.STAT_LABEL = STAT_LABEL;
+	exports.STRESS = STRESS;
 	exports.STRONG_CHANCE = STRONG_CHANCE;
 	exports.TIME_LIMIT = TIME_LIMIT;
 	exports.TITLES = TITLES;
 	exports.TREAT_CHANCE = TREAT_CHANCE;
 	exports.WILD_COUNT = WILD_COUNT;
 	exports.WIRE_PACK = WIRE_PACK;
+	exports.addStress = addStress;
 	exports.advance = advance;
 	exports.advanceOffline = advanceOffline;
 	exports.applyBattleResult = applyBattleResult;

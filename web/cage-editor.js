@@ -50,7 +50,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  canvas.addEventListener('wheel',e=>{if(isBlocked())return;e.preventDefault();const before=coordinate(e),p=screenPoint(e);zoom=Math.max(0.5,Math.min(2.5,zoom*Math.exp(-e.deltaY*0.001)));cam.x=before.x-p.x/zoom;cam.y=before.y-p.y/zoom;clampCam();},{passive:false});
  canvas.onpointerup=e=>{if(isBlocked()){drag=null;return;}if(drag?.pan?.moved){drag=null;status();return;}const s=getState(),t=tile(coordinate(e));
    if(editing){const next=candidate(t);if(next){if(L.valid(s.layout,next)){if(drag?.cage)Object.assign(s.layout.find(c=>c.id===drag.cage),next);else{const stored=(s.storedCages||[]).findIndex(c=>c.kind===next.kind);const id=stored>=0?s.storedCages.splice(stored,1)[0].id:crypto.randomUUID();s.layout.push({...next,id});}changed('케이지 배치를 저장했습니다.');}else notify('다른 케이지와 겹치거나 사육장을 벗어납니다.');}}
-   else if(t){const cage=L.at(s.layout,t.q,t.r),pet=s.team[drag?.pet??s.selected];if(cage){if(L.assign(s,pet,cage.id))changed(`${L.types[cage.kind].name}에 입장했습니다.`);else notify('이 케이지의 정원이 찼습니다.');}else if(drag?.pet!==undefined){pet.cageId=null;pet.cage='free';pet.cageSeconds=0;const c=center(t.q,t.r);pet.x=c.x;pet.y=c.y;pet.target=c.x;changed('자유 활동으로 전환했습니다.');}}
+   else if(t){const cage=L.at(s.layout,t.q,t.r),pet=s.team[drag?.pet??s.selected];if(cage){if(L.assign(s,pet,cage.id))changed(L.over(s,cage.id)?`${L.types[cage.kind].name}의 정원을 넘었습니다. 이대로 하루가 지나면 스트레스를 받습니다.`:`${L.types[cage.kind].name}에 입장했습니다.`);}else if(drag?.pet!==undefined){pet.cageId=null;pet.cage='free';pet.cageSeconds=0;const c=center(t.q,t.r);pet.x=c.x;pet.y=c.y;pet.target=c.x;changed('자유 활동으로 전환했습니다.');}}
    drag=null;status();
  };
  canvas.onpointercancel=()=>{drag=null;hover=null;};

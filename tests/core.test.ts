@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat } from '../src/core/care';
+import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS } from '../src/core/care';
 import { getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -495,5 +495,34 @@ describe('약·상처약·알약(프로틴): 원작 문장 기준으로 역할�
     delete old.salve;
     const s = upgradeSave(old as SaveData);
     expect(s).toMatchObject({ medicine: 3, salve: 1, pills: 0 });
+  });
+});
+
+describe('스트레스 (형규가 정한 값)', () => {
+  const one = (patch: Partial<Digimon>) => ({ ...freshEggSave(0), clock: 10 * 60, digimon: [{ ...newDigimon(1, '아구몬'), hunger: 100, ...patch }] }) as SaveData;
+  it('배고픔 20 아래로 1 내려갈 때마다 1.5, 배고픔 0에서 합계 30', () => {
+    expect(tickFarm(one({ hunger: 20.05 }), seeded(1)).save.digimon[0].stress ?? 0).toBeCloseTo(0.045, 1);
+    const half = tickFarm(one({ hunger: 10.08 }), seeded(1)).save.digimon[0];
+    expect(half.stress).toBeCloseTo(15, 0);
+    let s = one({ hunger: 0.05 });
+    for (let i = 0; i < 5; i++) s = tickFarm(s, seeded(1)).save;
+    expect(s.digimon[0].stress).toBeCloseTo(30, 5); // 0에 머물러도 더 쌓이지 않는다
+  });
+  it('병에 걸리면 +40, 상한 먹이는 +80 (그 병과 겹치지 않음)', () => {
+    let s = one({ poop: 5, dirtyMinutes: 179 });
+    s = tickFarm(s, seeded(1)).save;
+    expect(s.digimon[0]).toMatchObject({ sick: true, stress: 40 });
+    const r = feedRotten({ ...one({ rottenEaten: 1 }), rotten: 1 }, 1);
+    expect(r.save.digimon[0]).toMatchObject({ sick: true, stress: 80 });
+  });
+  it('정원 초과로 하루가 지나면 +20, 아무 일 없으면 -10', () => {
+    const night = { ...one({ stress: 50 }), clock: 21 * 60 };
+    expect(endDay(night, seeded(1), [1]).save.digimon[0].stress).toBe(70);
+    expect(endDay(night, seeded(1)).save.digimon[0].stress).toBe(40);
+  });
+  it('100이 되면 병에 걸린다 (한 번만)', () => {
+    const s = tickFarm(one({ stress: 100 }), seeded(1)).save;
+    expect(s.digimon[0]).toMatchObject({ sick: true, stress: 100, penalties: 1 });
+    expect(STRESS.show).toBe(80);
   });
 });

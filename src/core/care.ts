@@ -104,8 +104,20 @@ export type FarmEvent =
   | { type: 'trained'; uid: number; name: string; changes: string }
   | { type: 'blocked'; uid: number; name: string; reason: 'rank' | 'capacity' };
 
-function makeSick(d: Digimon, events: FarmEvent[]) {
+/**
+ * 스트레스 (원작 도움말 help #127: 쌓이면 병에 걸린다. 수치는 화면에 나오지 않는다).
+ * 값은 형규가 정함: 정원 초과로 하루가 지날 때마다 +20, 상한 먹이 +80, 병 +40,
+ * 배고픔 20 미만부터 1 내려갈 때마다 +1.5 (배고픔 0에서 합계 +30). 80 이상이면 말풍선 표시.
+ * 임시(Claude가 정함): 100이 되면 병, 스트레스 요인 없이 아침을 맞으면 -10.
+ */
+export const STRESS = { crowdedPerDay: 20, rotten: 80, sick: 40, hungerBelow: 20, perHunger: 1.5, show: 80, calmPerDay: 10 };
+export function addStress(d: Digimon, amount: number) {
+  d.stress = Math.max(0, Math.min(100, (d.stress ?? 0) + amount));
+}
+
+function makeSick(d: Digimon, events: FarmEvent[], stress = STRESS.sick) {
   if (d.sick) return;
+  addStress(d, stress);
   d.sick = true;
   d.sickMinutes = 0;
   d.penalties += 1;
@@ -127,6 +139,9 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
     penalties: 0,
     sick: false,
     injured: false,
+    stress: 0,
+    hungerStress: 0,
+    stressSick: false,
     poop: 0,
     hunger: 70,
     fatigue: 0,
@@ -163,6 +178,19 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
       d.poop += 1;
       events.push({ type: 'poop', uid: d.uid });
     }
+  }
+  // 배고픔 스트레스: 20 아래로 내려간 만큼만 한 번씩 더한다. 배가 차면 다음 배고픔 때 다시 센다
+  if (d.hunger < STRESS.hungerBelow) {
+    const due = (STRESS.hungerBelow - d.hunger) * STRESS.perHunger;
+    if (due > (d.hungerStress ?? 0)) {
+      addStress(d, due - (d.hungerStress ?? 0));
+      d.hungerStress = due;
+    }
+  } else d.hungerStress = 0;
+  if ((d.stress ?? 0) < 100) d.stressSick = false;
+  else if (!d.stressSick) {
+    d.stressSick = true;
+    makeSick(d, events, 0);
   }
   d.starvingMinutes = d.hunger <= 0 && !ctx.sleep ? d.starvingMinutes + 1 : 0;
   d.dirtyMinutes = d.poop >= 3 && !ctx.sleep ? d.dirtyMinutes + 1 : 0;
@@ -256,8 +284,6 @@ export function advance(save: SaveData, minutes: number, rng: Rng = defaultRng) 
     cur = r.save;
     events.push(...r.events);
   }
-  // 알약(프로틴) 효과는 하루만 간다 (임시)
-  cur = { ...cur, digimon: cur.digimon.map((d) => (d.protein ? { ...d, protein: 0 } : d)) };
   return { save: cur, events };
 }
 
@@ -288,7 +314,8 @@ export function advanceOffline(save: SaveData, minutes: number, rng: Rng = defau
 }
 
 /** 하루 마감: 다음 날 아침 7시까지 잠잔다 (수명·병은 흐르고, 배고픔·똥·훈련은 멈춘다) */
-export function endDay(save: SaveData, rng: Rng = defaultRng) {
+/** crowded = 정원을 넘긴 케이지에 있는 디지몬 uid (케이지 배치는 화면 쪽이 안다) */
+export function endDay(save: SaveData, rng: Rng = defaultRng, crowded: number[] = []) {
   const morning = nextMorningClock(save);
   const events: FarmEvent[] = [];
   let cur = save;
@@ -297,6 +324,17 @@ export function endDay(save: SaveData, rng: Rng = defaultRng) {
     cur = r.save;
     events.push(...r.events);
   }
+  // 알약(프로틴) 효과는 하루만 간다 (임시). 하루가 지날 때 스트레스: 정원 초과 +20, 아무 요인 없으면 -10
+  cur = {
+    ...cur,
+    digimon: cur.digimon.map((x) => {
+      const d = { ...x, protein: 0 };
+      if (d.isEgg) return d;
+      if (crowded.includes(d.uid)) addStress(d, STRESS.crowdedPerDay);
+      else if (!d.sick && d.hunger >= STRESS.hungerBelow) addStress(d, -STRESS.calmPerDay);
+      return d;
+    }),
+  };
   return { save: cur, events };
 }
 
@@ -330,9 +368,10 @@ export function feedRotten(save: SaveData, uid: number): ActionResult {
   const events: FarmEvent[] = [];
   const s = update(save, uid, (x) => {
     const y = { ...x, hunger: Math.min(100, x.hunger + 15), rottenEaten: x.rottenEaten + 1 };
+    addStress(y, STRESS.rotten);
     if (y.rottenEaten >= 2) {
       y.rottenEaten = 0;
-      makeSick(y, events);
+      makeSick(y, events, 0); // 상한 먹이 스트레스에 병 스트레스를 겹치지 않는다
     }
     return y;
   });

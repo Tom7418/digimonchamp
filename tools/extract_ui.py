@@ -22,6 +22,8 @@ if __name__ == '__main__':
     cells(ROOT / 'common/e001_ikusei', {8 + i: f'fx_ring_{i + 1}' for i in range(6)}, box=(-15, -29, 32, 32))  # 원점 (15,29)
     cells(ROOT / 'common/e001_ikusei', {17 + i: f'fx_heal_{i}' for i in range(7)}, box=(-16, -43, 32, 48))  # 원점 (16,43)
     cells(ROOT / 'common/e001_ikusei', {115 + i: f'fx_aura_{i + 1}' for i in range(10)}, box=(-20, -67, 40, 72))  # 원점 (20,67)
+    # 머리 위 상태 말풍선 (애니메이션 6번의 셀): 부상·병·배고픔·스트레스(낙서)
+    cells(ROOT / 'common/e001_ikusei', {30: 'bubble_injured', 31: 'bubble_sick', 34: 'bubble_hungry', 36: 'bubble_stress'})
     cells(ROOT / 'common/e001_ikusei', {137: 'poop_1', 138: 'poop_2'}, box=(-14, -19, 24, 24))  # 원점 (14,19)
     cells(ROOT / 'common/e001_ikusei', {139: 'broom_1', 140: 'broom_2'}, box=(-16, -28, 34, 34))
     cells(ROOT / 'common/e001_ikusei', {148 + i: f'sparkle_{i + 1}' for i in range(7)}, box=(-16, -44, 32, 48))

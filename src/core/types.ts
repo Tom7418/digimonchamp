@@ -70,6 +70,12 @@ export interface Digimon {
   poopTimer: number;
   /** 오늘 먹은 알약(프로틴) 수. 다음 배틀 공격 상승, 많으면 부상 위험. 배틀 뒤·밤에 0 */
   protein?: number;
+  /** 스트레스 0~100. 화면에는 수치 없이 80 이상일 때 말풍선으로만 보인다 */
+  stress?: number;
+  /** 이번 배고픔(20 미만) 동안 이미 더한 스트레스 */
+  hungerStress?: number;
+  /** 스트레스 100으로 이미 병이 났는가 (100 아래로 내려가면 풀림) */
+  stressSick?: boolean;
 }
 
 export interface SaveData {
