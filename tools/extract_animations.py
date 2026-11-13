@@ -36,11 +36,11 @@ def main():
     for sp in sprites:
         sequences = decode(args.source_root / (sp['source'] + '.nanr'), sp['frames'])
         # 동작명은 원본에 없다. 도트 대조에 따른 임시 대응이며 나머지 동작은 후속 연결한다.
-        sequences = [sequences[i] if i < len(sequences) else sequences[0] for i in (0, 2, 29)]
+        sequences = [sequences[i] if i < len(sequences) else sequences[0] for i in (0, 2, 29, 4)]
         if sequences not in banks:
             banks.append(sequences)
         ids[sp['id']] = banks.index(sequences)
-    data = {'tickRate': 60, 'states': {'idle': 0, 'walk': 1, 'eat': 2}, 'sourceSequences': {'idle': 0, 'walk': 2, 'eat': 29}, 'banks': banks, 'sprites': ids}
+    data = {'tickRate': 60, 'states': {'idle': 0, 'walk': 1, 'eat': 2, 'hurt': 3}, 'sourceSequences': {'idle': 0, 'walk': 2, 'eat': 29, 'hurt': 4}, 'banks': banks, 'sprites': ids}
     (PROJECT / 'web/assets/animations.js').write_text('window.DIGIMON_ANIMATIONS = ' + json.dumps(data, separators=(',', ':')) + ';\n', encoding='utf-8')
     print(f'{len(ids)} sprites / {len(banks)} unique animation banks')
 

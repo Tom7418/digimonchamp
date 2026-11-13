@@ -1016,8 +1016,9 @@
         // 공격/피격 시각은 실제 전투 이벤트에만 반응한다. 임시 연출 길이 0.2초.
         if(e.type==='hit'){
           const attacker=b.state.units.find(u=>u.id===e.from),target=b.state.units.find(u=>u.id===e.to);
-          b.actions.set(e.from,{kind:'attack',left:0.2,direction:target.x>=attacker.x?1:-1});
-          b.actions.set(e.to,{kind:'hit',left:0.2,direction:target.x>=attacker.x?1:-1});
+          const id=SPRITE_BY_NAME[C.getSpecies(target.speciesId).name];
+          const duration=animations.duration(id,'hurt');
+          b.actions.set(e.to,{kind:'hit',left:duration,duration});
         }
         if (e.type === 'hit')
           b.flashes.push({ id: e.to, text: `-${e.damage}${e.special ? '!' : ''}`, until: performance.now() + 700, color: e.special ? '#ffd36a' : '#fff' });
@@ -1105,9 +1106,9 @@
       const spriteId=SPRITE_BY_NAME[C.getSpecies(u.speciesId).name];
       const pose=animations.movement(u,spriteId,m.dx,m.dy,dt,!u.alive);
       const action=battle.actions.get(u.id);
-      const offset=action ? Math.sin(Math.PI*(1-action.left/0.2))* (action.kind==='attack'?7:3)*action.direction : 0;
-      if(action?.kind==='hit'&&u.alive)ctx.globalAlpha=0.55;
-      body(ctx, u.speciesId, false, u.x+offset, u.y + 14, 1.6, pose.frame, action?.kind==='attack'?action.direction>0:pose.flip);
+      // 피격 시 해당 종의 원본 셀을 원본 유지 시간으로 재생한다. 인위적 흔들림/점멸 없음.
+      const frame=action?.kind==='hit'?animations.sample(spriteId,'hurt',action.duration-action.left):pose.frame;
+      body(ctx,u.speciesId,false,u.x,u.y+14,1.6,frame,pose.flip);
       ctx.globalAlpha = 1;
       if(!u.alive){ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle='#5c6570';ctx.fillText('전투 불능',u.x,u.y-25);}
       ctx.fillStyle = '#30404a';
