@@ -3,6 +3,7 @@
 (function(root) {
   function create(data) {
     const actors = new WeakMap();
+    const movementActors = new WeakMap();
     function sequence(id, state) {
       return data.banks[data.sprites[id]]?.[data.states[state]] || { frames: [[0, 1]], loop: true, start: 0 };
     }
@@ -26,7 +27,22 @@
       else a.elapsed += Math.max(0, dt);
       return sample(id, state, a.elapsed);
     }
-    return { duration, sample, pose };
+    // 속도 예정값 대신 실제 변위를 사용한다. 로프·벽에 막혔거나 수직으로만
+    // 움직일 때 방향이 튀지 않도록 마지막 수평 방향을 기억한다(원본은 왼쪽).
+    function movement(actor, id, dx, dy, dt, stopped = false) {
+      let m = movementActors.get(actor);
+      if (!m || m.id !== id) {
+        m = {id, state: 'idle', flip: false};
+        movementActors.set(actor, m);
+      }
+      // 정지 중에는 상태와 프레임 모두 유지한다.
+      if (dt > 0) {
+        m.state = !stopped && Math.hypot(dx, dy) > 0.0001 ? 'walk' : 'idle';
+        if (!stopped && Math.abs(dx) > 0.0001) m.flip = dx > 0;
+      }
+      return {state: m.state, flip: m.flip, frame: pose(actor, id, m.state, dt)};
+    }
+    return { duration, sample, pose, movement };
   }
   root.createAnimationPlayer = create;
   if (typeof module !== 'undefined') module.exports = { createAnimationPlayer: create };

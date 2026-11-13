@@ -1370,9 +1370,12 @@
     const now = performance.now();
     for (const w of hunt.wilds) {
       if (w.gone) continue;
+      // 이번 틱의 실제 변위. 로프·와이어로 이동하지 못하면 걷기를 재생하지 않는다.
+      w.movedX = 0; w.movedY = 0;
+      const oldX = w.x, oldY = w.y;
       w.flash = Math.max(0, w.flash - dt);
       if (w.bound > 0) {
-        // 감긴 동안은 제자리에서 버둥댄다
+        // 로프에 묶인 동안 이동 정지. 전용 버둥거림 동작을 확인하기 전에는 대기.
         w.bound -= dt;
         if (w.bound <= 0) {
           w.bound = 0;
@@ -1412,6 +1415,8 @@
         w.x = Math.min(AREA.x1, Math.max(AREA.x0, w.x));
         w.y = Math.min(AREA.y1, Math.max(AREA.y0 + 20, w.y));
       }
+      w.movedX = w.x - oldX;
+      w.movedY = w.y - oldY;
     }
     hunt.wilds = hunt.wilds.filter((w) => !w.gone || now < 0);
     hunt.respawn -= dt;
@@ -1532,7 +1537,7 @@
     }
   }
 
-  function drawHunt(t) {
+  function drawHunt(t, dt) {
     const [c1, c2] = FIELD_LOOK[hunt.field.id] || ['#7fb069', '#6a9a57'];
     const map = hunt.map;
     if (map && map.complete && map.naturalWidth) {
@@ -1582,7 +1587,9 @@
         ctx.stroke();
       }
       if (w.flash > 0 && Math.floor(w.flash * 20) % 2) ctx.globalAlpha = 0.4;
-      body(ctx, w.id, false, w.x, w.y, 2, Math.floor(t * 4) % 2, w.vx > 0);
+      const spriteId = SPRITE_BY_NAME[C.getSpecies(w.id).name];
+      const motion = animations.movement(w, spriteId, w.movedX || 0, w.movedY || 0, dt, w.bound > 0);
+      body(ctx, w.id, false, w.x, w.y, 2, motion.frame, motion.flip);
       ctx.globalAlpha = 1;
       const sp = C.getSpecies(w.id);
       const weak = !C.ropeDamage(save, w.id);
@@ -1870,7 +1877,7 @@
           if (save.clock % 10 === 0) persist();
         }
       }
-      if (hunt) drawHunt(now / 1000);
+      if (hunt) drawHunt(now / 1000, !titleOpen && !paused && !board.editing && !mailOpen && !dayEnding ? dt : 0);
       else drawFarm(now / 1000, dt);
       drawPortrait(!titleOpen && !paused && !mailOpen && !dayEnding && !board.editing ? dt : 0);
     }

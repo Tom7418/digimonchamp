@@ -30,3 +30,22 @@ test('단발 재생은 마지막 셀을 유지하고 없는 종은 안전하게 
   const p=ctx.window.createAnimationPlayer({tickRate:60,states:{idle:0},sprites:{a:0},banks:[[{frames:[[2,3],[7,5]],loop:false,start:0}]]});
   assert.equal(p.sample('a','idle',10),7);assert.equal(p.sample('missing','idle',10),0);
 });
+
+test('사냥 실제 이동·로프 정지·수직 이동에서 동작과 방향을 구분한다',()=>{
+  const p=ctx.window.createAnimationPlayer(data), a={}, id='m201_agumon';
+  let m=p.movement(a,id,2,0,0.1);
+  assert.equal(m.state,'walk');assert.equal(m.flip,true);
+  m=p.movement(a,id,0,3,0.1);assert.equal(m.flip,true);
+  m=p.movement(a,id,-2,0,0.1);assert.equal(m.flip,false);
+  m=p.movement(a,id,0,0,0.1);assert.equal(m.state,'idle');
+  m=p.movement(a,id,3,0,0.1,true);assert.equal(m.state,'idle');assert.equal(m.flip,false);
+});
+test('사냥 일시정지는 방향·상태·프레임을 유지하고 재개 시 걷기를 다시 시작한다',()=>{
+  const p=ctx.window.createAnimationPlayer(data), a={}, id='m201_agumon';
+  p.movement(a,id,2,0,0.1);
+  const moving=p.movement(a,id,2,0,0.3);
+  const paused=p.movement(a,id,-2,0,0,true);
+  assert.deepEqual(paused,moving);
+  assert.equal(p.movement(a,id,0,0,0.1,true).state,'idle');
+  assert.equal(p.movement(a,id,2,0,0.1).frame,p.sample(id,'walk',0));
+});
