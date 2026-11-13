@@ -1420,6 +1420,99 @@ var ChampCore = (function(exports) {
 		count: 10,
 		price: 100
 	};
+	var SHOTS = [
+		{
+			key: "hand",
+			name: "핸드 건",
+			price: 100,
+			minRank: 1
+		},
+		{
+			key: "rapid",
+			name: "래피드 건",
+			rapid: true,
+			price: 200,
+			minRank: 2
+		},
+		{
+			key: "sleep",
+			name: "슬립 라이플",
+			effect: "수면",
+			price: 300,
+			minRank: 2
+		},
+		{
+			key: "stun",
+			name: "스턴 라이플",
+			effect: "마비",
+			price: 300,
+			minRank: 3
+		},
+		{
+			key: "shotgun",
+			name: "샷 건",
+			spread: true,
+			price: 500,
+			minRank: 4
+		},
+		{
+			key: "stunshot",
+			name: "스턴 샷",
+			effect: "마비",
+			spread: true,
+			price: 800,
+			minRank: 5
+		}
+	].flatMap((f) => ["α", "β"].map((g, i) => ({
+		id: `${f.key}${i + 1}`,
+		name: f.name + g,
+		power: 10 * (i + 1),
+		effect: f.effect,
+		spread: f.spread,
+		rapid: f.rapid,
+		price: f.price * (i + 1),
+		minRank: f.minRank + i
+	})));
+	var shotOf = (id) => SHOTS.find((s) => s.id === id);
+	/** 한 번 살 때 들어오는 탄 수 (임시) */
+	var SHOT_PACK = 10;
+	var SHOT_SPREAD_RADIUS = 90;
+	/** 맞은 디지몬이 멈추는 초 (임시): 위력 10당 2초, 수면 3배, 마비 2배 */
+	var shotStun = (s) => s.power / 10 * 2 * (s.effect === "수면" ? 3 : s.effect === "마비" ? 2 : 1);
+	/** 맞았을 때 줄어드는 HP (임시): 위력 20 이상이면 1. 샷만으로는 잡히지 않게 HP 1은 남긴다 */
+	var shotDamage = (s, hp) => s.power >= 20 && hp > 1 ? 1 : 0;
+	/** 다음 발까지의 초 (임시) */
+	var shotCooldown = (s) => s.rapid ? .15 : .6;
+	var BAITS = [{
+		id: "bait1",
+		name: "일반 고기",
+		range: 200,
+		seconds: 12,
+		price: 150,
+		minRank: 1
+	}, {
+		id: "bait2",
+		name: "큰 고기",
+		range: 400,
+		seconds: 12,
+		price: 400,
+		minRank: 3
+	}];
+	var baitOf = (id) => BAITS.find((b) => b.id === id);
+	var BAIT_PACK = 5;
+	/** 장비 수량 */
+	var gearCount = (save, id) => save.gear?.[id] ?? 0;
+	/** 장비 하나 쓰기. 없으면 null */
+	function useGear(save, id) {
+		const n = gearCount(save, id);
+		return n > 0 ? {
+			...save,
+			gear: {
+				...save.gear,
+				[id]: n - 1
+			}
+		} : null;
+	}
 	// src/core/care.ts
 	/** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
 	var CAPACITY = 200;
@@ -1484,6 +1577,7 @@ var ChampCore = (function(exports) {
 			s.pills = 0;
 		}
 		if (s.salve == null) s.salve = 0;
+		if (!s.gear) s.gear = {};
 		delete s.ropeLevel;
 		const renamed = (id) => CAGE_RENAMES[id] ?? id;
 		if (s.cages.some((c) => CAGE_RENAMES[c])) s.cages = [...new Set(s.cages.map(renamed))];
@@ -1507,6 +1601,10 @@ var ChampCore = (function(exports) {
 			rope: START_ROPE,
 			memoryCard: MEMORY_CARDS[0].size,
 			wires: 5,
+			gear: {
+				hand1: 10,
+				bait1: 2
+			},
 			cages: [...START_CAGES],
 			digimon: [{
 				...newDigimon(1, "깜몬"),
@@ -2197,6 +2295,27 @@ var ChampCore = (function(exports) {
 				available: () => true
 			}
 		];
+		const addGear = (id, n) => (s) => ({
+			...s,
+			gear: {
+				...s.gear,
+				[id]: gearCount(s, id) + n
+			}
+		});
+		for (const g of SHOTS) items.push({
+			id: `gear:${g.id}`,
+			name: `${g.name} ×10 (위력 ${g.power}${g.spread ? "×6" : ""}${g.effect ? " · " + g.effect : ""})`,
+			price: g.price,
+			apply: addGear(g.id, 10),
+			available: () => rank >= g.minRank
+		});
+		for (const b of BAITS) items.push({
+			id: `gear:${b.id}`,
+			name: `${b.name} ×5 (사냥 미끼)`,
+			price: b.price,
+			apply: addGear(b.id, 5),
+			available: () => rank >= b.minRank
+		});
 		for (const r of ROPES) if (r.price > 0) items.push({
 			id: `rope:${r.id}`,
 			name: `${r.name} (내구력 ${r.durability})`,
@@ -2600,6 +2719,8 @@ var ChampCore = (function(exports) {
 	exports.ATTRS = ATTRS;
 	exports.AUTO_CARE_REST = AUTO_CARE_REST;
 	exports.AUTO_FEED_BELOW = AUTO_FEED_BELOW;
+	exports.BAITS = BAITS;
+	exports.BAIT_PACK = BAIT_PACK;
 	exports.CAGES = CAGES;
 	exports.CAGE_RENAMES = CAGE_RENAMES;
 	exports.CAGE_SPACE_BY_RANK = CAGE_SPACE_BY_RANK;
@@ -2641,6 +2762,9 @@ var ChampCore = (function(exports) {
 	exports.ROPES = ROPES;
 	exports.SEASONS = SEASONS;
 	exports.SEASON_CODE = SEASON_CODE;
+	exports.SHOTS = SHOTS;
+	exports.SHOT_PACK = SHOT_PACK;
+	exports.SHOT_SPREAD_RADIUS = SHOT_SPREAD_RADIUS;
 	exports.SPECIES = SPECIES;
 	exports.SPOIL_MINUTES = SPOIL_MINUTES;
 	exports.STAGE_LABEL = STAGE_LABEL;
@@ -2671,6 +2795,7 @@ var ChampCore = (function(exports) {
 	exports.applyMatch = applyMatch;
 	exports.applyWin = applyWin;
 	exports.availableFood = availableFood;
+	exports.baitOf = baitOf;
 	exports.bestRope = bestRope;
 	exports.biteFloorFood = biteFloorFood;
 	exports.buy = buy;
@@ -2695,6 +2820,7 @@ var ChampCore = (function(exports) {
 	exports.feedRotten = feedRotten;
 	exports.findEvolution = findEvolution;
 	exports.freshSave = freshSave;
+	exports.gearCount = gearCount;
 	exports.getCage = getCage;
 	exports.getSpecies = getSpecies;
 	exports.heal = heal;
@@ -2727,6 +2853,10 @@ var ChampCore = (function(exports) {
 	exports.seeded = seeded;
 	exports.setCage = setCage;
 	exports.shopItems = shopItems;
+	exports.shotCooldown = shotCooldown;
+	exports.shotDamage = shotDamage;
+	exports.shotOf = shotOf;
+	exports.shotStun = shotStun;
 	exports.speciesByStage = speciesByStage;
 	exports.stepBattle = stepBattle;
 	exports.tamerRank = tamerRank;
@@ -2736,6 +2866,7 @@ var ChampCore = (function(exports) {
 	exports.typicalStats = typicalStats;
 	exports.upcoming = upcoming;
 	exports.upgradeSave = upgradeSave;
+	exports.useGear = useGear;
 	exports.usedCapacity = usedCapacity;
 	exports.wildHp = wildHp;
 	return exports;

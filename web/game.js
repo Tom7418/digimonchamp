@@ -1374,7 +1374,7 @@
     if (!field.open) return;
     if (save.bits < field.fee) return toast('비트가 부족해요.');
     save = { ...save, bits: save.bits - field.fee };
-    hunt = { field, wilds: [], wires: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0 };
+    hunt = { field, wilds: [], wires: [], baits: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0 };
     // 1024x1024 원본 지도에서 화면(960x560)만큼 잘라 쓸 위치. 들어갈 때마다 달라진다.
     hunt.map = huntMapImage(field);
     hunt.view = { x: Math.floor(Math.random() * (1024 - 960)), y: Math.floor(Math.random() * (1024 - 560)) };
@@ -1405,6 +1405,46 @@
     if (hunt) hunt.tool = tool;
     $('#tool-rope').classList.toggle('active', tool === 'rope');
     $('#tool-wire').classList.toggle('active', tool === 'wire');
+    $('#tool-gear').classList.toggle('active', tool === 'gear');
+    if (tool === 'gear') refreshGear();
+  }
+  // 사냥 장비(샷·고기) 선택 목록. 가진 것만 수량과 함께 보여 준다
+  const GEAR = [...C.SHOTS, ...C.BAITS];
+  function refreshGear() {
+    const sel = $('#gear-select'), keep = sel.value;
+    const owned = GEAR.filter((x) => C.gearCount(save, x.id) > 0);
+    const html = owned.map((x) => `<option value="${x.id}">${esc(x.name)} ×${C.gearCount(save, x.id)}</option>`).join('') || '<option value="">장비 없음 (상점에서 구매)</option>';
+    if (sel.innerHTML !== html) sel.innerHTML = html;
+    if (owned.some((x) => x.id === keep)) sel.value = keep;
+  }
+  // 장비 사용: 샷은 맞은 디지몬을 멈추고(위력 20 이상은 HP 1 감소), 고기는 근처 디지몬을 끌어들인다
+  function useGearAt(p) {
+    const id = $('#gear-select').value, shot = C.shotOf(id), bait = C.baitOf(id);
+    if (!shot && !bait) return huntNote('쓸 장비가 없습니다. 상점에서 사세요.');
+    const now = performance.now() / 1000;
+    if (shot && now < (hunt.shotReady || 0)) return;
+    const next = C.useGear(save, id);
+    if (!next) return huntNote('남은 수량이 없습니다.');
+    save = next;
+    refreshGear();
+    if (bait) {
+      hunt.baits.push({ x: p.x, y: p.y, range: bait.range, left: bait.seconds, big: bait.id === 'bait2' });
+      return huntNote(`${bait.name}를 놓았다. 냄새에 디지몬이 모여든다.`);
+    }
+    hunt.shotReady = now + C.shotCooldown(shot);
+    hunt.fx.push({ x: p.x, y: p.y, r: shot.spread ? C.SHOT_SPREAD_RADIUS : 14, left: 0.25 });
+    const reach = shot.spread ? C.SHOT_SPREAD_RADIUS : 45;
+    let hits = hunt.wilds.filter((w) => !w.gone && Math.hypot(p.x - w.x, p.y - (w.y - 15)) < reach);
+    if (!shot.spread) hits = hits.sort((a, b) => Math.hypot(p.x - a.x, p.y - a.y) - Math.hypot(p.x - b.x, p.y - b.y)).slice(0, 1);
+    if (!hits.length) return huntNote('빗나갔다!');
+    for (const w of hits) {
+      w.stun = Math.max(w.stun || 0, C.shotStun(shot));
+      w.stunKind = shot.effect || '';
+      w.flee = 0;
+      w.hp -= C.shotDamage(shot, w.hp);
+      w.flash = 0.4;
+    }
+    huntNote(`${shot.name} 명중! ${hits.map((w) => C.getSpecies(w.id).name).join(', ')}${shot.effect ? ` ${shot.effect}` : ' 멈춤'}`);
   }
 
   // 선분 교차 (와이어 충돌)
@@ -1442,7 +1482,19 @@
         }
         continue;
       }
-      if (w.flee > 0) {
+      if (w.stun > 0) {
+        // 샷에 맞아 멈춘 동안은 움직이지 않는다
+        w.stun -= dt;
+        continue;
+      }
+      const lure = !(w.flee > 0) && hunt.baits.find((b) => Math.hypot(b.x - w.x, b.y - w.y) < b.range);
+      if (lure) {
+        // 고기 냄새를 따라간다. 다 오면 그 자리에 머문다
+        const dist = Math.hypot(lure.x - w.x, lure.y - w.y);
+        w.vx = dist > 14 ? ((lure.x - w.x) / dist) * 45 : 0;
+        w.vy = dist > 14 ? ((lure.y - w.y) / dist) * 45 : 0;
+        w.turn = 1;
+      } else if (w.flee > 0) {
         w.flee -= dt;
       } else {
         w.turn -= dt;
@@ -1474,6 +1526,10 @@
       w.movedX = w.x - oldX;
       w.movedY = w.y - oldY;
     }
+    for (const b of hunt.baits) b.left -= dt;
+    hunt.baits = hunt.baits.filter((b) => b.left > 0);
+    for (const f of hunt.fx) f.left -= dt;
+    hunt.fx = hunt.fx.filter((f) => f.left > 0);
     hunt.wilds = hunt.wilds.filter((w) => !w.gone || now < 0);
     hunt.respawn -= dt;
     if (hunt.wilds.length < C.WILD_COUNT && hunt.respawn <= 0) {
@@ -1553,6 +1609,8 @@
     if (!hunt) return;
     e.preventDefault();
     const p = canvasPoint(e);
+    if (type === 'down' && hunt.tool === 'gear') return useGearAt(p);
+    if (hunt.tool === 'gear') return;
     if (type === 'down') {
       const target = hunt.tool === 'rope' && hunt.wilds.find((w) => !w.gone && w.bound > 0 && Math.hypot(p.x - w.x, p.y - (w.y - 15)) < 50);
       hunt.pull = target ? { w: target, to: p } : null;
@@ -1629,6 +1687,10 @@
       ctx.fillStyle = '#7a5532';
       for (const p of [l.a, l.b]) ctx.fillRect(p.x - 3, p.y - 8, 6, 12);
     }
+    for (const b of hunt.baits) {
+      const im = itemImages.meat, k = b.big ? 1.5 : 1;
+      if (im?.complete && im.naturalWidth) ctx.drawImage(im, b.x - 32 * k, b.y - 50 * k, 64 * k, 70 * k);
+    }
     const order = [...hunt.wilds].sort((a, b) => a.y - b.y);
     for (const w of order) {
       const rx = footprint(w.id, false, 2);
@@ -1659,6 +1721,20 @@
         ctx.fillStyle = k < w.hp ? '#e0574b' : '#00000055';
         ctx.fillRect(w.x - w.max * 7 + k * 14, w.y + 22, 12, 5);
       }
+      if (w.stun > 0) {
+        ctx.font = 'bold 14px "Noto Sans KR",sans-serif';
+        ctx.fillStyle = w.stunKind === '수면' ? '#bfe3ff' : '#ffe36a';
+        ctx.fillText(w.stunKind === '수면' ? 'Zzz' : w.stunKind === '마비' ? '마비' : '멈춤', w.x, w.y - 62);
+      }
+    }
+    for (const f of hunt.fx) {
+      ctx.strokeStyle = '#fff4b0';
+      ctx.lineWidth = 3;
+      ctx.globalAlpha = Math.max(0, f.left / 0.25);
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
     }
     if (hunt.pull) {
       const { w, to } = hunt.pull;
@@ -1919,6 +1995,8 @@
   canvas.addEventListener('pointercancel', (e) => huntPointer('up', e));
   $('#tool-rope').onclick = () => setTool('rope');
   $('#tool-wire').onclick = () => setTool('wire');
+  $('#tool-gear').onclick = () => setTool('gear');
+  $('#gear-select').onchange = () => setTool('gear');
   $('#hunt-leave').onclick = () => endHunt();
 
   function frame(now) {

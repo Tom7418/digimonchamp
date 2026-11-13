@@ -164,3 +164,67 @@ export const MEMORY_CARDS = [
 
 /** 와이어 한 묶음 (상점) */
 export const WIRE_PACK = { count: 10, price: 100 };
+
+// ---------- 사냥 장비: 샷·고기 ----------
+// 이름·위력·효과·'6발' 문구는 원작 글(txt_list 350~361, 368~369번과 설명 396~407, 414~415번).
+// 임시 값: 가격·해금 랭크·묶음 수, 맞았을 때 멈추는 시간과 HP 감소, 범위, 고기의 유인 범위·시간.
+//   원작의 위력 10/20이 실제로 어떻게 계산되는지는 확인하지 못했다.
+export interface Shot {
+  id: string;
+  name: string;
+  /** 원작 위력 */
+  power: number;
+  effect?: '수면' | '마비';
+  /** 한 번에 6발 (범위 공격) */
+  spread?: boolean;
+  /** 연발 가능 */
+  rapid?: boolean;
+  price: number;
+  minRank: number;
+}
+const SHOT_FAMILIES: { key: string; name: string; effect?: '수면' | '마비'; spread?: boolean; rapid?: boolean; price: number; minRank: number }[] = [
+  { key: 'hand', name: '핸드 건', price: 100, minRank: 1 },
+  { key: 'rapid', name: '래피드 건', rapid: true, price: 200, minRank: 2 },
+  { key: 'sleep', name: '슬립 라이플', effect: '수면', price: 300, minRank: 2 },
+  { key: 'stun', name: '스턴 라이플', effect: '마비', price: 300, minRank: 3 },
+  { key: 'shotgun', name: '샷 건', spread: true, price: 500, minRank: 4 },
+  { key: 'stunshot', name: '스턴 샷', effect: '마비', spread: true, price: 800, minRank: 5 },
+];
+export const SHOTS: Shot[] = SHOT_FAMILIES.flatMap((f) =>
+  ['α', 'β'].map((g, i) => ({ id: `${f.key}${i + 1}`, name: f.name + g, power: 10 * (i + 1), effect: f.effect, spread: f.spread, rapid: f.rapid, price: f.price * (i + 1), minRank: f.minRank + i })),
+);
+export const shotOf = (id: string) => SHOTS.find((s) => s.id === id);
+/** 한 번 살 때 들어오는 탄 수 (임시) */
+export const SHOT_PACK = 10;
+export const SHOT_SPREAD_RADIUS = 90;
+/** 맞은 디지몬이 멈추는 초 (임시): 위력 10당 2초, 수면 3배, 마비 2배 */
+export const shotStun = (s: Shot) => (s.power / 10) * 2 * (s.effect === '수면' ? 3 : s.effect === '마비' ? 2 : 1);
+/** 맞았을 때 줄어드는 HP (임시): 위력 20 이상이면 1. 샷만으로는 잡히지 않게 HP 1은 남긴다 */
+export const shotDamage = (s: Shot, hp: number) => (s.power >= 20 && hp > 1 ? 1 : 0);
+/** 다음 발까지의 초 (임시) */
+export const shotCooldown = (s: Shot) => (s.rapid ? 0.15 : 0.6);
+
+export interface Bait {
+  id: string;
+  name: string;
+  /** 냄새가 닿는 거리(px) */
+  range: number;
+  /** 남아 있는 초 */
+  seconds: number;
+  price: number;
+  minRank: number;
+}
+// 큰 고기는 '보통의 2배 이상 냄새' (원작 글) → 범위 2배
+export const BAITS: Bait[] = [
+  { id: 'bait1', name: '일반 고기', range: 200, seconds: 12, price: 150, minRank: 1 },
+  { id: 'bait2', name: '큰 고기', range: 400, seconds: 12, price: 400, minRank: 3 },
+];
+export const baitOf = (id: string) => BAITS.find((b) => b.id === id);
+export const BAIT_PACK = 5;
+/** 장비 수량 */
+export const gearCount = (save: { gear?: Record<string, number> }, id: string) => save.gear?.[id] ?? 0;
+/** 장비 하나 쓰기. 없으면 null */
+export function useGear<T extends { gear?: Record<string, number> }>(save: T, id: string): T | null {
+  const n = gearCount(save, id);
+  return n > 0 ? { ...save, gear: { ...save.gear, [id]: n - 1 } } : null;
+}

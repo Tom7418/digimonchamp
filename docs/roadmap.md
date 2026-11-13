@@ -21,6 +21,7 @@
 | 8 | 런처 패키징 | 예정 |
 
 ### 7단계 진행 상황
+- 완료: 사냥 장비 1차 — 샷 12종(멈춤·수면·마비, 샷 건류는 범위)과 고기 미끼 2종. 사냥 화면 '장비' 버튼과 선택 목록, 상점 묶음 판매. 이름·위력은 원작 글, 효과 수치는 임시
 - 완료: 남은 돌봄 요소 — 계절 효과(여름 훈련 ×1.5, 겨울 부상 ×2), 트레이닝 부상, 바닥 먹이 상함(이틀), 병·부상 이틀 방치 시 로스트과 빗자루로 치우기, 쓰다듬기(스트레스 -3). 근거는 원작 도움말, 수치는 임시
 - 케이지 그림(내부 재구성·장식)은 Codex 담당: `web/assets/facilities/<이름>-hex.png`를 같은 크기로 덮어쓰면 된다 (이름·칸 모양은 web/cage-layout.js)
 - 완료: 케이지를 원작 38종으로 교체(이름·효과·수용 수는 원작 글, 모양·그림은 root/training/field_cmNN). 미니 시설은 예전 크기 유지(2~3칸), 큰 시설은 2~5칸에 훈련 상승 2배(임시). 동물원·목장은 자동 돌봄 + 약한 쉬는 시설(스트레스 -3/시간), 링 배틀 수, 온천·양호실 회복. 모든 시설 그림을 미니 양호실·미니 운동장과 같은 난간 테두리 육각 전용 그림으로 통일(tools/make_hex_facilities.py). 예전 임시 시설은 저장에서 원작 이름으로 이전(배치 버전 4)
@@ -63,4 +64,4 @@
 - 원작 문장 해독: `python tools/extract_text.py "<root 폴더>" "<출력 폴더>"` (출력은 저장소 밖). 근거는 design.md에 줄 번호로만 적는다
 - 스프라이트를 다시 변환할 때: `python tools/extract_sprites.py --source-root "<root 폴더>"`. 이름 대응은 `tools/sprite_names.json` (형규 확인 완료)
 - 저장 데이터: 브라우저 localStorage `champion-web-v2`. 형식을 바꾸면 기존 저장을 이어받는 처리를 함께 넣는다
-- 테스트: `npm test` (엔진 vitest 68개 + 케이지·터치·안내 node:test 34개). 원본 프레임 범위·유지 시간·상태 전환·정지·먹이 예약/취소와 기존 입력을 검사. 통합 브라우저에서 기존 저장 이어하기, 원본 도트 표시, 바닥 배치 후 자동 섭취도 확인했다. 이 작업 환경은 npm이 없어 같은 scripts를 `pnpm test`, `pnpm run build:core`로 실행했다. `pnpm exec tsc --noEmit`, `python tools/check_web.py`도 통과.
+- 테스트: `npm test` (엔진 vitest 70개 + 케이지·터치·안내 node:test 34개). 원본 프레임 범위·유지 시간·상태 전환·정지·먹이 예약/취소와 기존 입력을 검사. 통합 브라우저에서 기존 저장 이어하기, 원본 도트 표시, 바닥 배치 후 자동 섭취도 확인했다. 이 작업 환경은 npm이 없어 같은 scripts를 `pnpm test`, `pnpm run build:core`로 실행했다. `pnpm exec tsc --noEmit`, `python tools/check_web.py`도 통과.

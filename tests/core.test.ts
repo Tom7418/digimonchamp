@@ -5,7 +5,7 @@ import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS } from '../src/core/hunt';
 import type { Digimon, SaveData } from '../src/core/types';
 import { ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -351,6 +351,30 @@ describe('hunting', () => {
     const s = freshSave(0);
     expect(canHuntNow({ ...s, clock: 10 * 60 }).ok).toBe(true);
     expect(canHuntNow({ ...s, clock: 22 * 60 + 5 }).ok).toBe(false);
+  });
+});
+
+describe('사냥 장비', () => {
+  it('샷 12종: 원작 이름·위력, 수면·마비는 더 오래 멈춘다', () => {
+    expect(SHOTS.map((s) => s.name)).toEqual(['핸드 건α', '핸드 건β', '래피드 건α', '래피드 건β', '슬립 라이플α', '슬립 라이플β', '스턴 라이플α', '스턴 라이플β', '샷 건α', '샷 건β', '스턴 샷α', '스턴 샷β']);
+    expect(shotOf('hand2')!.power).toBe(20);
+    expect(shotStun(shotOf('sleep1')!)).toBeGreaterThan(shotStun(shotOf('stun1')!));
+    expect(shotStun(shotOf('stun1')!)).toBeGreaterThan(shotStun(shotOf('hand1')!));
+    expect(shotDamage(shotOf('hand1')!, 3)).toBe(0);
+    expect(shotDamage(shotOf('hand2')!, 3)).toBe(1);
+    expect(shotDamage(shotOf('hand2')!, 1)).toBe(0); // 샷만으로는 잡히지 않는다
+    expect(BAITS[1].range).toBe(BAITS[0].range * 2);
+  });
+  it('장비는 쓸 때마다 줄고, 상점에서 묶음으로 산다. 예전 저장에는 빈 장비 칸이 생긴다', () => {
+    const s = freshSave(0);
+    expect(gearCount(s, 'hand1')).toBe(10);
+    expect(gearCount(useGear(s, 'hand1')!, 'hand1')).toBe(9);
+    expect(useGear(s, 'stun2')).toBeNull();
+    const item = shopItems({ ...s, bits: 9999 }).find((i) => i.id === 'gear:hand1')!;
+    expect(gearCount(item.apply(s), 'hand1')).toBe(20);
+    const old = { ...s } as SaveData;
+    delete old.gear;
+    expect(upgradeSave(old).gear).toEqual({});
   });
 });
 

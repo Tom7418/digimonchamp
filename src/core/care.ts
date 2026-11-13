@@ -2,7 +2,7 @@ import { CAGE_RENAMES, CAGES, dateOf, DAY_END_HOUR, DAY_START_HOUR, EGG_MINUTES,
 import { endOfLife, findEvolution } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, tamerRank } from './titles';
-import { bestRope, MEMORY_CARDS, ROPES, START_ROPE, WIRE_PACK } from './hunt';
+import { bestRope, MEMORY_CARDS, ROPES, START_ROPE, WIRE_PACK, BAIT_PACK, BAITS, gearCount, SHOT_PACK, SHOTS } from './hunt';
 import { ATTRS, FAMILIES, PERSONALITIES, STAT_KEYS, STAT_LABEL, type ApKey, type Digimon, type SaveData, type Stats } from './types';
 
 /** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
@@ -62,6 +62,7 @@ export function upgradeSave(save: SaveData): SaveData {
     s.pills = 0;
   }
   if (s.salve == null) s.salve = 0;
+  if (!s.gear) s.gear = {};
   delete s.ropeLevel;
   // 예전 임시 케이지 이름을 원작 이름으로 옮긴다
   const renamed = (id: string) => CAGE_RENAMES[id] ?? id;
@@ -84,6 +85,8 @@ export function freshSave(now = Date.now()): SaveData {
     rope: START_ROPE,
     memoryCard: MEMORY_CARDS[0].size,
     wires: 5,
+    // 시작 장비는 임시
+    gear: { hand1: 10, bait1: 2 },
     cages: [...START_CAGES],
     // 원작처럼 디지에그에서 시작한다 (30분 뒤 깜몬 부화)
     digimon: [{ ...newDigimon(1, '깜몬'), isEgg: true, stats: { hp: 0, tp: 0, atk: 0, def: 0, int: 0, spd: 0 } }],
@@ -549,6 +552,9 @@ export function shopItems(save: SaveData): ShopItem[] {
     { id: 'wire', name: `노멀 와이어 ×${WIRE_PACK.count}`, price: WIRE_PACK.price, apply: (s) => ({ ...s, wires: (s.wires ?? 0) + WIRE_PACK.count }), available: () => true },
   ];
   // 로프: 랭크가 되면 그 계열(α·β·γ)이 상점에 열린다. 사면 가진 것 중 가장 좋은 로프를 든다.
+  const addGear = (id: string, n: number) => (s: SaveData) => ({ ...s, gear: { ...s.gear, [id]: gearCount(s, id) + n } });
+  for (const g of SHOTS) items.push({ id: `gear:${g.id}`, name: `${g.name} ×${SHOT_PACK} (위력 ${g.power}${g.spread ? '×6' : ''}${g.effect ? ' · ' + g.effect : ''})`, price: g.price, apply: addGear(g.id, SHOT_PACK), available: () => rank >= g.minRank });
+  for (const b of BAITS) items.push({ id: `gear:${b.id}`, name: `${b.name} ×${BAIT_PACK} (사냥 미끼)`, price: b.price, apply: addGear(b.id, BAIT_PACK), available: () => rank >= b.minRank });
   for (const r of ROPES)
     if (r.price > 0)
       items.push({

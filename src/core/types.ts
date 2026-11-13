@@ -107,6 +107,8 @@ export interface SaveData {
   ropeLevel?: number;
   /** 사냥에서 길을 막는 와이어 개수 */
   wires: number;
+  /** 사냥 장비(샷·고기) 수량. 키는 hunt.ts의 SHOTS·BAITS id */
+  gear?: Record<string, number>;
   cages: string[];
   digimon: Digimon[];
   titles: string[];

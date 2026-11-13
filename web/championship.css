@@ -46,7 +46,7 @@ dialog h3{font-size:13px;margin:10px 0 2px;color:#ffd36a}
 .hunt-tools{display:none;gap:6px;margin-left:auto;margin-right:8px}
 .hunting .hunt-tools{display:inline-flex}
 .hunting .cage-toolbar{display:none}
-.hunt-tools button.active{background:#ffd36a;color:#132c3b}
+.hunt-tools button.active{background:#ffd36a;color:#132c3b}.hunt-tools select{background:#2e526a;color:#e6f5ff;border:1px solid #6c9ab3;border-radius:4px;font-size:12px;max-width:170px}
 .hunting #world{cursor:crosshair;touch-action:none}
 /* 안내 편지 (원작 'From: 안내' 창) */
 .canvas-wrap{position:relative}
