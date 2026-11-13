@@ -25,7 +25,7 @@ for name in ('meat', 'meat_1', 'meat_2', 'meat_3', 'pill', 'rotten'):
     raw = (web / 'assets/items' / f'{name}.png').read_bytes()
     assert struct.unpack_from('>II', raw, 16) == (32, 35), f'Invalid item sprite: {name}'
 assert struct.unpack_from('>II', icon, 16) == (64 * 36, 48), 'Invalid cage icon sheet'
-for kind, size in {'free': (96,112), 'clinic': (96,112), 'gym': (288,112), 'field': (192,200), 'clinic-hex': (104,120), 'field-hex': (208,210)}.items():
+for kind, size in {'free': (96,112), 'clinic': (96,112), 'gym': (288,112), 'field': (192,200), 'clinic-hex': (208,240), 'field-hex': (416,420)}.items():
     raw=(web/'assets/facilities'/f'{kind}.png').read_bytes()
     assert struct.unpack_from('>II',raw,16)==size, f'Invalid facility background: {kind}'
 import re

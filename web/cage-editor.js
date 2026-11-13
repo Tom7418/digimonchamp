@@ -13,7 +13,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  // 원본 시설 그림 중 위쪽이 투명하게 비어 있는 것(미니 운동장 등)은 그대로 늘리면 육각 윗부분이 빈 채로 잘려 보인다.
  // 불러올 때 투명 여백을 제외한 그림 범위를 구한다. 새 육각 전용 그림은 점유 경계에 맞춘다.
  const contentBox=im=>{try{const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext('2d');x.drawImage(im,0,0);const d=x.getImageData(0,0,c.width,c.height).data;let top=c.height,bottom=0,left=c.width,right=0;for(let y=0;y<c.height;y++)for(let i=0;i<c.width;i++)if(d[(y*c.width+i)*4+3]>8){if(y<top)top=y;if(y>bottom)bottom=y;if(i<left)left=i;if(i>right)right=i;}return bottom>=top?{x:left,y:top,w:right-left+1,h:bottom-top+1}:null;}catch{return null;}};
- for(const [kind,t] of Object.entries(L.types)){const im=new Image();im.onload=()=>{im.content=contentBox(im);};im.src=`assets/facilities/${t.img||kind}.png`;facilities[kind]=im;}
+ for(const [kind,t] of Object.entries(L.types)){const im=new Image();im.onload=()=>{im.content=contentBox(im);};im.src=`assets/facilities/${kind==='free'?'free-ground':(t.img||kind)}.png`;facilities[kind]=im;}
  let editing=false,tool=null,rotation=0,selected=null,drag=null,hover=null;
  const center=(q,r)=>({x:OX+Math.sqrt(3)*R*(q+r/2),y:OY+R*1.5*r});
  const polygon=(ctx,q,r,append=false)=>{const c=center(q,r);if(!append)ctx.beginPath();for(let i=0;i<6;i++){const a=(i*60-30)*Math.PI/180;const x=c.x+R*Math.cos(a),y=c.y+R*Math.sin(a);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();};
@@ -23,7 +23,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  // 팔레트의 작은 모양 미리보기도 실제 배치 좌표에서 생성한다.
  function footprint(kind){const points=L.cells({kind,q:0,r:0,rotation:0}).map(([q,r])=>{const c=center(q,r);return Array.from({length:6},(_,i)=>{const a=(i*60-30)*Math.PI/180;return [c.x+R*Math.cos(a),c.y+R*Math.sin(a)];});});const flat=points.flat(),xs=flat.map(p=>p[0]),ys=flat.map(p=>p[1]);return `<svg class="footprint" viewBox="${Math.min(...xs)-3} ${Math.min(...ys)-3} ${Math.max(...xs)-Math.min(...xs)+6} ${Math.max(...ys)-Math.min(...ys)+6}" aria-label="${L.types[kind].cells.length}칸 점유 모양">${points.map(ps=>`<polygon points="${ps.map(p=>p.join(',')).join(' ')}"/>`).join('')}</svg>`;}
  // 맞닿은 변은 제거하여 여러 칸 시설을 하나의 방처럼 표시한다.
- function outerBorder(ctx,c){const edges=new Map();for(const [q,r] of L.cells(c)){const p=center(q,r),v=Array.from({length:6},(_,i)=>{const a=(i*60-30)*Math.PI/180;return [p.x+R*Math.cos(a),p.y+R*Math.sin(a)];});for(let i=0;i<6;i++){const a=v[i],b=v[(i+1)%6],key=[a.map(Math.round).join(','),b.map(Math.round).join(',')].sort().join('/');if(edges.has(key))edges.delete(key);else edges.set(key,[a,b]);}}ctx.beginPath();for(const [a,b] of edges.values()){ctx.moveTo(...a);ctx.lineTo(...b);}ctx.stroke();}
+ function outerBorder(ctx,c){const edges=new Map();for(const [q,r] of L.cells(c)){const p=center(q,r),v=Array.from({length:6},(_,i)=>{const a=(i*60-30)*Math.PI/180;return [p.x+R*Math.cos(a),p.y+R*Math.sin(a)];});for(let i=0;i<6;i++){const a=v[i],b=v[(i+1)%6],key=[a.map(Math.round).join(','),b.map(Math.round).join(',')].sort().join('/');if(edges.has(key))edges.delete(key);else edges.set(key,[a,b]);}}ctx.beginPath();for(const [a,b] of edges.values()){ctx.moveTo(...a);ctx.lineTo(...b);}ctx.stroke();return [...edges.values()];}
  const toolbar=document.createElement('section');toolbar.className='cage-toolbar';
  toolbar.innerHTML='<div class="cage-toolbar-head"><button id="edit-cages">케이지 편집</button><button id="rotate-cage">↻ 회전</button><button id="remove-cage">선택 케이지 철거</button></div><div class="cage-palette">'+Object.entries(L.types).map(([k,t])=>`<button data-build="${k}" draggable="false"><img src="assets/facilities/${t.img||k}.png" alt="${t.name} 시설">${footprint(k)}${t.name}<small>${t.cells.length}칸 · 정원 ${t.capacity}</small></button>`).join('')+'</div><p id="cage-instruction"></p>';
  canvas.closest('.canvas-wrap').after(toolbar);
@@ -93,8 +93,20 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
          const k=Math.min(width/b.w,height/b.h);
          const fitted=!!type.fit;
          const dw=fitted?width:b.w*k,dh=fitted?height:b.h*k;
+         ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
          ctx.drawImage(im,b.x,b.y,b.w,b.h,left+(width-dw)/2,top+(height-dh)/2,dw,dh);
        }ctx.restore();
+       // 기본 케이지 울타리는 이미지 실루엣 대신 실제 네 칸의 외곽 변에 맞춘다.
+       if(c.kind==='free'){
+         ctx.save();ctx.lineJoin='round';ctx.strokeStyle='#173b66';ctx.lineWidth=9;
+         const edges=outerBorder(ctx,c);ctx.strokeStyle='#39b9df';ctx.lineWidth=5;outerBorder(ctx,c);
+         for(const [a,b] of edges)for(let i=0,n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/65);i<=n;i++){
+           const x=a[0]+(b[0]-a[0])*i/n,y=a[1]+(b[1]-a[1])*i/n;
+           ctx.fillStyle='#173b66';ctx.fillRect(x-5,y-7,10,13);
+           ctx.fillStyle='#65d5ee';ctx.fillRect(x-3,y-5,6,8);
+           ctx.fillStyle='#ddfaff';ctx.fillRect(x-3,y-5,6,3);
+         }ctx.restore();
+       }
        ctx.strokeStyle=selected===c.id?'#ffe374':'#8ed3e6';ctx.lineWidth=selected===c.id?4:2;outerBorder(ctx,c);
        // 시설 이름·칸 수는 케이지 편집 중에만 보인다 (플레이 화면에는 숨김)
      }
