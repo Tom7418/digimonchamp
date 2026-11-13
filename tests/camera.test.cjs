@@ -6,7 +6,7 @@ function setup(){
  const events={},canvas={style:{},closest:()=>({after:noop}),addEventListener:(k,f)=>events[k]=f,
    getBoundingClientRect:()=>({left:0,top:0,width:960,height:560}),setPointerCapture:noop};
  const window={CageLayout:{types:{},restore:x=>x,at:()=>null}};
- const state={layoutVersion:5,layout:[],team:[]};
+ const state={layoutVersion:6,layout:[],team:[]};
  vm.runInNewContext(fs.readFileSync('web/cage-editor.js','utf8'),{window,document:{createElement:()=>node},Image:function(){}});
  return {board:window.createCageEditor(canvas,()=>state,noop,noop,()=>false),canvas,events};
 }

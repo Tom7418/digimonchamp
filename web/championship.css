@@ -178,3 +178,10 @@ dialog p,dialog li{color:#e3f2ff}
 .canvas-wrap>.tray .tray-hint{display:none}
 .hunting .canvas-wrap>.tray{display:none}
 @media(max-width:700px){.canvas-wrap>.tray{justify-content:flex-start;padding:3px 4px;gap:3px}.canvas-wrap>.tray .tray-item.tool{min-width:44px;height:44px}.canvas-wrap>.tray .tray-item.tool img{width:22px;height:22px}.canvas-wrap>.tray .tray-item.tool b{font-size:9px}}
+
+/* 작은 도구 바와 왼쪽부터 숫자 단축키 표시 */
+.canvas-wrap>.tray{padding:3px 6px;gap:4px;border-top-width:2px}
+.canvas-wrap>.tray .tray-item.tool{min-width:46px;height:40px;padding:2px 5px}
+.canvas-wrap>.tray .tray-item.tool img{width:24px;height:24px}
+.canvas-wrap>.tray .tray-item.tool b{font-size:9px}
+.tool-key{position:absolute;top:1px;left:3px;font:10px monospace;color:#ffe38a}

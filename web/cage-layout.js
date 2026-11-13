@@ -54,7 +54,7 @@ window.CageLayout = {
   valid(items,item){
     if(!this.types[item.kind]||!Number.isInteger(item.q)||!Number.isInteger(item.r)||!Number.isInteger(item.rotation)||item.rotation<0||item.rotation>5)return false;
     const cells=this.cells(item);
-    if(cells.some(([q,r])=>q<0||q>=6||r<0||r>=5))return false;
+    if(cells.some(([q,r])=>r<0||r>=5||q < -Math.floor(r/2)||q >= 5-Math.floor(r/2)))return false;
     const others=items.filter(c=>c.id!==item.id);
     if(this.space!=null&&others.reduce((n,c)=>n+this.cells(c).length,0)+cells.length>(typeof this.space==='function'?this.space():this.space))return false;
     if(this.canPlace&&!items.some(c=>c.id===item.id)&&!this.canPlace(item,items))return false;
@@ -66,7 +66,7 @@ window.CageLayout = {
   restore(raw){const out=[];for(const c of Array.isArray(raw)?raw:[]){if(c&&typeof c.id==='string'&&!out.some(x=>x.id===c.id)&&this.valid(out,c))out.push({...c});}return out;},
   // 구버전의 잘못된 모양을 바꿀 때 충돌한 시설은 빈자리로 이동한다.
   // 자리가 없으면 보관함으로 돌려보내며 원래 배치는 호출자가 백업한다.
-  migrate(raw){const placed=[],stored=[];for(const original of Array.isArray(raw)?raw:[]){if(!original||!this.types[original.kind])continue;let c={...original};if(!this.valid(placed,c)){let found=false;for(let r=0;r<5&&!found;r++)for(let q=0;q<6&&!found;q++)for(let rotation=0;rotation<6;rotation++){const next={...c,q,r,rotation};if(this.valid(placed,next)){c=next;found=true;break;}}if(!found){stored.push(c);continue;}}placed.push(c);}return {placed,stored};},
+  migrate(raw){const placed=[],stored=[];for(const original of Array.isArray(raw)?raw:[]){if(!original||!this.types[original.kind])continue;let c={...original};if(!this.valid(placed,c)){let found=false;for(let r=0;r<5&&!found;r++)for(let q=-Math.floor(r/2);q<5-Math.floor(r/2)&&!found;q++)for(let rotation=0;rotation<6;rotation++){const next={...c,q,r,rotation};if(this.valid(placed,next)){c=next;found=true;break;}}if(!found){stored.push(c);continue;}}placed.push(c);}return {placed,stored};},
   // 케이지에 정원보다 많이 들어가 있는가
   over(state,id){const cage=state.layout.find(c=>c.id===id);return !!cage&&state.team.filter(p=>p.cageId===id).length>this.types[cage.kind].capacity;},
   // 정원을 넘긴 케이지에 있는 디지몬 uid 목록

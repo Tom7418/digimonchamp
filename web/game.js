@@ -57,7 +57,7 @@
 
   // ---------- 저장 ----------
   function freshView() {
-    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 5, team: [], selected: 0, logs: [], poops: [], foods: [], tips: {}, entryNoticeRead: null, farmWorld: 2 };
+    return { layout: START_LAYOUT.map((c) => ({ ...c })), storedCages: [], layoutVersion: 6, team: [], selected: 0, logs: [], poops: [], foods: [], tips: {}, entryNoticeRead: null, farmWorld: 2 };
   }
   function load() {
     try {
@@ -485,6 +485,11 @@
         '<button class="tray-item tool" data-tool="cage" title="케이지 편집"><img src="assets/facilities/cm01.png" alt=""><b>케이지</b></button>' +
         '<span class="tray-hint">' + (selectedItem === 'broom' ? '치울 똥을 터치하세요 · 빗자루를 든 동안은 똥만 눌립니다 · Esc로 취소' : selectedItem === 'meat' ? '사육장 바닥을 터치해 고기를 놓으세요 · Esc로 취소' : selectedItem === 'pill' ? '바닥에 알약(프로틴)을 놓으면 디지몬이 먹고 다음 배틀에서 힘이 세집니다 · 과식 주의' : selectedItem === 'shot' ? '병에 걸린 디지몬을 터치해 주사를 놓으세요 · Esc로 취소' : selectedItem === 'heal' ? '다친 디지몬을 터치해 상처약을 바르세요 · Esc로 취소' : '고기·알약 → 바닥 터치 · 약·상처약 → 디지몬 터치') + '</span>',
     );
+    $('#tray').querySelectorAll('button').forEach((button,i)=>{
+      if(i>=9)return;
+      button.setAttribute('aria-keyshortcuts',String(i+1));
+      button.insertAdjacentHTML('afterbegin',`<kbd class="tool-key">${i+1}</kbd>`);
+    });
   }
   function petAt(pt) {
     let best = null;
@@ -698,6 +703,15 @@
     window.addEventListener('blur', clearItemTool);
     document.addEventListener('visibilitychange', () => { if (document.hidden) clearItemTool(); });
     window.addEventListener('keydown', (e) => {
+      // 입력 중·모달·사냥에서는 사육장 숫자 도구 단축키를 사용하지 않는다.
+      if(/^[1-9]$/.test(e.key)&&!e.ctrlKey&&!e.altKey&&!e.metaKey&&!e.repeat
+        &&!e.target?.closest?.('input,textarea,select,[contenteditable="true"]')
+        &&!farmInputBlocked()){
+        const button=$('#tray').querySelectorAll('button')[Number(e.key)-1];
+        if(button&&!button.disabled){e.preventDefault();button.click();}
+        return;
+      }
+
       if (e.key === 'Escape' && selectedItem) { e.preventDefault(); clearItemTool(); }
     });
     $('#mail').onclick = nextMail;
@@ -1247,7 +1261,7 @@
     }
     drawCareFx(performance.now());
     ctx.restore();
-    drawMinimap();
+    // 사육장에는 미니맵을 표시하지 않는다.
     if (paused) {
       ctx.fillStyle = '#00000066';
       ctx.fillRect(0, 0, 960, 560);

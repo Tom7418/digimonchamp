@@ -7,7 +7,8 @@ test('facility art uses hex assets and remains clipped at every rotation',()=>{
   const sandbox=vm.createContext({window,Image,document:{createElement:()=>toolbar}});
   for(const name of ['cage-layout.js','cage-editor.js'])vm.runInContext(fs.readFileSync('web/'+name,'utf8'),sandbox);
   const canvas={style:{},closest:()=>({after:noop}),addEventListener:noop};
-  const state={layoutVersion:5,layout:[{id:'a',kind,q:2,r:2,rotation}],team:[]};
+  const state={layoutVersion:6,layout:[{id:'a',kind,q:2,r:2,rotation}],team:[]};
+  state.layout=window.CageLayout.migrate(state.layout).placed;
   const board=window.createCageEditor(canvas,()=>state,noop,noop,()=>false);
   let clipped=false;const stack=[],draws=[];
   const ctx=new Proxy({save(){stack.push(clipped);},restore(){clipped=stack.pop();},clip(){clipped=true;},
