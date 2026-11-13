@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
-import { CAGES, getCage, getSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
+import { CAGES, getCage, getSpecies, originalSpecies, LIFESPAN, parseCond, SPECIES, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
@@ -351,6 +351,23 @@ describe('hunting', () => {
     const s = freshSave(0);
     expect(canHuntNow({ ...s, clock: 10 * 60 }).ok).toBe(true);
     expect(canHuntNow({ ...s, clock: 22 * 60 + 5 }).ok).toBe(false);
+  });
+});
+
+describe('원본 속성·종족', () => {
+  it('속성과 종족은 원본 실행 코드의 표를 따른다', () => {
+    expect(getSpecies('피요몬')).toMatchObject({ attr: '백신', family: '새' });
+    expect(getSpecies('토이아구몬')).toMatchObject({ attr: '백신', family: '기계' });
+    expect(getSpecies('아구몬')).toMatchObject({ attr: '백신', family: '용' });
+    expect(getSpecies('가루몬(흑)').attr).toBe('바이러스');
+    expect(getSpecies('파닥몬').attr).toBe('프리');
+    expect(getSpecies('코로몬').attr).toBe('없음');
+  });
+  it('진화표의 모든 종이 원본 표에 있고 세대가 같다', () => {
+    const missing = Object.values(SPECIES).filter((sp) => !originalSpecies(sp.id)).map((sp) => sp.id);
+    expect(missing).toEqual([]);
+    const wrong = Object.values(SPECIES).filter((sp) => originalSpecies(sp.id)!.stage !== sp.stage).map((sp) => sp.id);
+    expect(wrong).toEqual([]);
   });
 });
 

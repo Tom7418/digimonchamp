@@ -1,6 +1,7 @@
 import raw from '../data/evolutions.txt?raw';
 import habitatRaw from '../data/habitats.txt?raw';
-import { ATTRS, FAMILIES, type ApKey, type Attr, type Cond, type Family, type Species, type Stage, type Stats } from './types';
+import speciesRaw from '../data/species.txt?raw';
+import { ATTRS, FAMILIES, type ApKey, type Attr, type Cond, type Family, type Species, type SpeciesAttr, type Stage, type Stats } from './types';
 
 export const STAGE_LABEL: Record<Stage, string> = { 1: '유년기I', 2: '유년기II', 3: '성장기', 4: '성숙기', 5: '완전체', 6: '궁극체' };
 /** 단계별 수명(게임 분) */
@@ -34,6 +35,15 @@ function hash(s: string) {
   return h;
 }
 
+/** 원본 표의 속성·종족 (이름 → 값) */
+const ORIGINAL: Record<string, { attr: SpeciesAttr; family: string; stage: number }> = {};
+for (const line of speciesRaw.split(/\r?\n/)) {
+  if (!line.trim() || line.startsWith('#')) continue;
+  const [name, attr, family, stage] = line.split('|');
+  ORIGINAL[name] = { attr: attr as SpeciesAttr, family, stage: Number(stage) };
+}
+export const originalSpecies = (id: string) => ORIGINAL[id];
+
 function build(): Record<string, Species> {
   const out: Record<string, Species> = {};
   const famVotes: Record<string, Partial<Record<Family, number>>> = {};
@@ -66,7 +76,7 @@ function build(): Record<string, Species> {
     }
   }
 
-  // 종족·속성은 진화 조건에 쓰이는 수치에서 추정한다 (원작 수치를 옮긴 것이 아님)
+  // 아래 추정값(진화 조건에 쓰이는 수치로 투표)은 원본 표에 값이 없을 때만 쓴다
   const top = <K extends string>(v: Partial<Record<K, number>> | undefined): K | null => {
     const e = Object.entries(v ?? {}) as [K, number][];
     return e.length ? e.sort((a, b) => b[1] - a[1])[0][0] : null;
@@ -74,8 +84,12 @@ function build(): Record<string, Species> {
   const ordered = Object.values(out).sort((a, b) => a.stage - b.stage);
   for (const sp of ordered) {
     const p = parent[sp.id] ? out[parent[sp.id]] : null;
-    sp.family = top(famVotes[sp.id]) ?? (p && sp.stage > 2 ? p.family : FAMILIES[hash(sp.id) % FAMILIES.length]);
-    sp.attr = top(attrVotes[sp.id]) ?? ATTRS[hash(sp.id + '속성') % ATTRS.length];
+    // 속성·종족은 원본 실행 코드의 디지몬 표 값이다 (src/data/species.txt).
+    // 표에 종족이 없는 유년기1과 표에 없는 종만 예전처럼 진화 조건에서 추정한다.
+    const real = ORIGINAL[sp.id];
+    const guessed = top(famVotes[sp.id]) ?? (p && sp.stage > 2 ? p.family : FAMILIES[hash(sp.id) % FAMILIES.length]);
+    sp.family = real && isFamily(real.family) ? real.family : guessed;
+    sp.attr = real ? real.attr : (top(attrVotes[sp.id]) ?? ATTRS[hash(sp.id + '속성') % ATTRS.length]);
     const dragon = sp.family === '용';
     sp.size = { 1: 4, 2: 6, 3: 10, 4: 16, 5: dragon ? 24 : 20, 6: dragon ? 32 : 24 }[sp.stage];
   }

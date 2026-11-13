@@ -1,6 +1,6 @@
 import { getSpecies, speciesByStage, typicalStats } from './data';
 import { pick, range, type Rng } from './rng';
-import { PERSONALITIES, type AttackMode, type Attr, type Digimon, type Personality, type Stage, type Stats } from './types';
+import { PERSONALITIES, type AttackMode, type SpeciesAttr, type Digimon, type Personality, type Stage, type Stats } from './types';
 
 export const ARENA = { w: 480, h: 250 };
 export const TIME_LIMIT = 90;
@@ -12,7 +12,7 @@ export interface Unit {
   uid?: number;
   name: string;
   speciesId: string;
-  attr: Attr;
+  attr: SpeciesAttr;
   stats: Stats;
   personality: Personality;
   mode: AttackMode;
@@ -108,7 +108,9 @@ export function createBattle(mine: Entrant[], foes: Entrant[]): BattleState {
 }
 
 /** 백신 > 바이러스 > 데이터 > 백신 */
-function attrMult(a: Attr, b: Attr) {
+function attrMult(a: SpeciesAttr, b: SpeciesAttr) {
+  // 프리·없음은 상성이 없다 (임시)
+  if (a === '프리' || a === '없음' || b === '프리' || b === '없음') return 1;
   if ((a === '백신' && b === '바이러스') || (a === '바이러스' && b === '데이터') || (a === '데이터' && b === '백신')) return 1.2;
   if (a === b) return 1;
   return 0.9;

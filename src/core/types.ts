@@ -4,6 +4,8 @@ export const FAMILIES = ['용', '짐승', '물', '새', '벌레풀', '기계', '
 export const ATTRS = ['백신', '데이터', '바이러스'] as const;
 export type Family = (typeof FAMILIES)[number];
 export type Attr = (typeof ATTRS)[number];
+/** 디지몬 종의 속성. 원작에는 훈련 수치가 있는 세 속성 말고도 프리와 없음(유년기)이 있다 */
+export type SpeciesAttr = Attr | '프리' | '없음';
 export type ApKey = Family | Attr;
 
 export const STAT_KEYS = ['hp', 'tp', 'atk', 'def', 'int', 'spd'] as const;
@@ -31,7 +33,7 @@ export interface Species {
   name: string;
   stage: Stage;
   family: Family;
-  attr: Attr;
+  attr: SpeciesAttr;
   /** 용량(G) */
   size: number;
   evos: Evo[];
