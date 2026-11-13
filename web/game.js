@@ -726,6 +726,8 @@
   const animationId = (d) => SPRITE_BY_NAME[d.isEgg ? '디지에그' : C.getSpecies(d.speciesId).name];
   // 배고픈 디지몬은 접근 → 정지 → 씹기 → 소비 순서로 행동한다.
   function seekFood(p, d, dt) {
+    // 잠들면 씹기 예약만 풀고, 바닥의 먹이와 재고는 그대로 둔다.
+    if (C.isSleeping(d)) { feeding.delete(d.uid); return true; }
     const eating = feeding.get(d.uid);
     if (eating) {
       if (!view.foods.includes(eating.food) || d.isEgg || p.cageId || eating.species !== d.speciesId) {
@@ -782,6 +784,7 @@
   // 머리 위 상태 말풍선
   function bubbleOf(d) {
     if (d.isEgg) return null;
+    if (C.isSleeping(d)) return '💤';
     if (d.sick) return '🤢';
     if (d.injured) return '🩹';
     if ((d.stress ?? 0) >= C.STRESS.show) return 'stress';
@@ -1254,7 +1257,7 @@
       const facilityNo=({field:'cm30',gym:'cm34',clinic:'cm16'})[p.cage] || facility?.img?.match(/cm[0-9]+/)?.[0];
       const trainingSequence=window.DIGIMON_ANIMATIONS.training[facilityNo];
       // 훈련은 원작 시설 행동표의 동작으로 표시. 복합 행동의 첫 동작만 연결.
-      const state=p.cageId&&p.motion!=='eat'&&trainingSequence!==undefined&&!d.isEgg
+      const state=C.isSleeping(d) ? 'seq_13' : p.cageId&&p.motion!=='eat'&&trainingSequence!==undefined&&!d.isEgg&&!d.trainDone
         ? 'seq_'+trainingSequence : p.motion||'idle';
       const frame = animations.pose(p, animationId(d), state, animDt);
       body(ctx, d.speciesId, d.isEgg, p.x, p.y, scale, frame, p.direction > 0); // 원본 도트는 왼쪽을 향하므로 오른쪽 이동에서만 반전
@@ -1356,7 +1359,7 @@
     portrait.beginPath();
     portrait.ellipse(120, 119, rx, Math.max(5, rx * 0.28), 0, 0, 7);
     portrait.fill();
-    const frame = animations.pose(portraitActor, animationId(d), 'idle', dt);
+    const frame = animations.pose(portraitActor, animationId(d), C.isSleeping(d) ? 'seq_13' : 'idle', dt);
     body(portrait, d.speciesId, d.isEgg, 120, 120, scale, frame, false);
   }
 

@@ -45,6 +45,21 @@ test('케이지에서 걸어와 한 입씩 먹고 배가 차면 남은 고기를
   assert.equal(s.ctx.save.digimon[0].hunger,100);assert.equal(s.ctx.view.foods[0].remaining,50);
   assert.equal(s.seekFood(p,s.ctx.save.digimon[0],1),false);
 });
+test('먹다가 잠들면 예약을 풀고 깰 때까지 음식과 위치를 보존한다',()=>{
+  const s=setup();s.choose('meat');s.tap();
+  const p=s.ctx.view.team[0],d=s.ctx.save.digimon[0];p.cageId=null;
+  s.seekFood(p,d,0); // 씹기 시작
+  d.restCycle={species:d.speciesId,awakeLeft:0,sleepLeft:30};
+  s.seekFood(p,d,10);
+  assert.equal(s.ctx.view.foods[0].remaining,undefined);
+  assert.equal(s.ctx.save.meat,2);assert.equal(d.hunger,0);assert.equal(p.x,200);
+  d.restCycle.sleepLeft=0;
+  s.seekFood(p,d,10); // 새 씹기 예약만 생긴다
+  assert.equal(d.hunger,0);
+  s.seekFood(p,d,10);
+  assert.equal(s.ctx.save.digimon[0].hunger,10);
+});
+
 test('먹는 중 다른 디지몬의 중복 소비와 케이지 이동 후 뒤늦은 소비를 막는다',()=>{
   const s=setup();s.choose('meat');s.tap();const p=s.ctx.view.team[0],d=s.ctx.save.digimon[0];p.cageId=null;
   s.seekFood(p,d,0);

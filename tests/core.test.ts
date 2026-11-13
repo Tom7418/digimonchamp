@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
+import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, originalSpecies, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -107,12 +107,12 @@ describe('evolution', () => {
     // 훈련은 넣을 때마다 한 번(15분)뿐이라, 큰 시설(상승 2배)인 묘지에서도 꺼냈다 다시 넣기를 네 번 해야 암흑 20이 넘는다
     for (let i = 0; i < 4; i++) {
       s = setCage(s, 1, '묘지').save;
-      s = advance(s, 20, seeded(1)).save;
-      if (i === 0) expect(only(advance(s, 60, seeded(1)).save).ap['암흑']).toBe(6); // 그대로 두면 더 훈련하지 않는다
+      s = advance(s, 20, () => 0.5).save;
+      if (i === 0) expect(only(advance(s, 60, () => 0.5).save).ap['암흑']).toBe(6); // 그대로 두면 더 훈련하지 않는다
       s = setCage(s, 1, '기본 케이지').save;
-      s = advance(s, 1, seeded(1)).save;
+      s = advance(s, 1, () => 0.5).save;
     }
-    const r = advance(s, 8 * 60, seeded(1));
+    const r = advance(s, 8 * 60, () => 0.5);
     expect(only(r.save).speciesId).toBe('퍼그몬');
     expect(only(r.save).ap['암흑']).toBeLessThan(20);
   });
@@ -687,5 +687,48 @@ describe('스트레스 (형규가 정한 값)', () => {
     expect(tick({ cage: '기본 케이지', trainDone: true }).trainDone).toBe(false);
     expect(tick({ cage: '미니 양호실', stageAge: 59 }).stress).toBe(5);
     expect(tick({ cage: '기본 케이지', stageAge: 59 }).stress).toBe(9);
+  });
+});
+
+
+describe('종별 낮잠 주기', () => {
+  const cycle = (awakeLeft: number, sleepLeft = 0) => ({ species: '아구몬', awakeLeft, sleepLeft });
+  it('원본 범위는 종별로 읽고 옛 저장은 첫 틱에 주기를 만든다', () => {
+    expect(originalSpecies('깜몬').awake).toEqual([360, 420]);
+    expect(originalSpecies('아구몬').awake).toEqual([960, 1020]);
+    expect(originalSpecies('아구몬').sleep).toEqual([60, 120]);
+    const s = withMon(freshSave(0), { speciesId: '아구몬' });
+    const d = only(tickFarm(s, () => 0.5).save);
+    expect(d.restCycle).toEqual(cycle(989));
+    expect(only(s).restCycle).toBeUndefined();
+  });
+  it('잠들면 훈련·섭취·배설 진행을 멈추고 정해진 시간 뒤 깬다', () => {
+    let s = withMon(freshSave(0), { speciesId: '아구몬', restCycle: cycle(1), hunger: 50, fatigue: 30, cage: '미니 운동장', trainMinutes: 14, poopTimer: 20 });
+    s = tickFarm(s, () => 0).save;
+    expect(isSleeping(only(s))).toBe(true);
+    expect(only(s)).toMatchObject({ hunger: 50, fatigue: 29.7, trainMinutes: 14, poopTimer: 20 });
+    const saved = only(s).restCycle;
+    s = tickFarm(s, () => 0.5).save;
+    expect(saved?.sleepLeft).toBe(60); // 이전 저장 객체를 변경하지 않는다
+    for (let i = 0; i < 59; i++) s = tickFarm(s, () => 0.5).save;
+    expect(isSleeping(only(s))).toBe(false);
+    expect(only(s).trainDone).toBe(true); // 깬 뒤 남은 1분 훈련을 마친다
+  });
+  it('수면 중 한 입 처리와 직접 급여는 먹이·재고를 보존한다', () => {
+    const s = withMon(freshSave(0), { speciesId: '아구몬', hunger: 0, restCycle: cycle(0, 10) });
+    for (const kind of ['meat', 'pill', 'rotten'] as const) {
+      const foods = [{ kind, x: 100, y: 100, remaining: 50 }];
+      expect(biteFloorFood(s, foods, 1, 0)).toMatchObject({ ok: false, save: s, foods });
+    }
+    expect(feedFromTray(s, [], 1, 'meat').ok).toBe(false);
+  });
+  it('밤에는 낮잠 잔여를 정리하고 부화·진화한 종은 새 주기를 쓴다', () => {
+    const s = withMon(freshSave(0), { speciesId: '아구몬', restCycle: cycle(0, 10) });
+    expect(only(tickFarm(s, () => 0.5, true).save).restCycle).toBeUndefined();
+    const changed = withMon(s, { speciesId: '코로몬' });
+    const d = only(tickFarm(changed, () => 0.5).save);
+    expect(d.restCycle?.species).toBe('코로몬');
+    expect(isSleeping(d)).toBe(false);
+    expect(isSleeping({ ...only(s), isEgg: true })).toBe(false);
   });
 });

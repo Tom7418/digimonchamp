@@ -1,4 +1,4 @@
-import { CAGE_RENAMES, CAGES, dateOf, DAY_END_HOUR, DAY_START_HOUR, EGG_MINUTES, evolutionBonus, getCage, getSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK, typicalStats } from './data';
+import { CAGE_RENAMES, CAGES, dateOf, DAY_END_HOUR, DAY_START_HOUR, EGG_MINUTES, evolutionBonus, getCage, getSpecies, originalSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK, typicalStats } from './data';
 import { endOfLife, findEvolution } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, tamerRank } from './titles';
@@ -45,6 +45,30 @@ export function newDigimon(uid: number, speciesId: string, rng: Rng = defaultRng
 export const POOP_INTERVAL = { baby: 240, grown: 480 };
 export function poopInterval(stage: number): number {
   return stage <= 2 ? POOP_INTERVAL.baby : POOP_INTERVAL.grown;
+}
+
+/** 원본 표의 각성/수면 범위. 분 단위 진행과 야간 일괄 수면의 병합은 웹판 정책이다. */
+const cycleMinutes = (range: number[], rng: Rng) => range[0] + Math.floor(rng() * Math.max(1, range[1] - range[0]));
+export const isSleeping = (d: Digimon): boolean => !d.isEgg && d.restCycle?.species === d.speciesId && d.restCycle.sleepLeft > 0;
+function tickRestCycle(d: Digimon, rng: Rng, night: boolean): boolean {
+  const real = originalSpecies(d.speciesId);
+  if (!real) return false;
+  // 밤에는 기존 하루 마감을 유지한다. 낮잠 잔여를 아침으로 넘기지 않고 각성 주기를 새로 시작.
+  if (night) {
+    d.restCycle = undefined;
+    return true;
+  }
+  const old = d.restCycle;
+  const cycle = d.restCycle = old?.species === d.speciesId
+    ? { ...old } : { species: d.speciesId, awakeLeft: cycleMinutes(real.awake, rng), sleepLeft: 0 };
+  if (cycle.sleepLeft > 0) {
+    cycle.sleepLeft -= 1;
+    if (!cycle.sleepLeft) cycle.awakeLeft = cycleMinutes(real.awake, rng);
+  } else if (--cycle.awakeLeft <= 0) {
+    cycle.awakeLeft = 0;
+    cycle.sleepLeft = cycleMinutes(real.sleep, rng);
+  }
+  return isSleeping(d);
 }
 
 export function upgradeSave(save: SaveData): SaveData {
@@ -180,6 +204,7 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
     hunger: 70,
     fatigue: 0,
     cage: '기본 케이지',
+    restCycle: undefined,
   };
 }
 
@@ -198,8 +223,9 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
 
   const sp = getSpecies(d.speciesId);
   const cage = getCage(d.cage);
-  if (ctx.sleep) {
-    // 밤에는 잔다: 배고픔·똥·훈련 없이 피로만 풀린다. 병·부상은 계속 진행된다
+  const sleeping = tickRestCycle(d, ctx.rng, !!ctx.sleep) || !!ctx.sleep;
+  if (sleeping) {
+    // 밤과 종별 낮잠: 배고픔·똥·훈련 없이 피로만 풀린다. 병·부상은 계속 진행된다
     d.fatigue = Math.max(0, d.fatigue - 0.3);
   } else {
     d.hunger = Math.max(0, d.hunger - (d.personality === '열혈' ? 0.11 : 0.08));
@@ -231,8 +257,8 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
     d.stressSick = true;
     makeSick(d, events, 0);
   }
-  d.starvingMinutes = d.hunger <= 0 && !ctx.sleep ? d.starvingMinutes + 1 : 0;
-  d.dirtyMinutes = d.poop >= 3 && !ctx.sleep ? d.dirtyMinutes + 1 : 0;
+  d.starvingMinutes = d.hunger <= 0 && !sleeping ? d.starvingMinutes + 1 : 0;
+  d.dirtyMinutes = d.poop >= 3 && !sleeping ? d.dirtyMinutes + 1 : 0;
   if (d.starvingMinutes >= 240 || d.dirtyMinutes >= 180 || (d.fatigue >= 95 && ctx.rng() < 0.01)) {
     d.starvingMinutes = 0;
     d.dirtyMinutes = 0;
@@ -260,7 +286,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   // 훈련: 테이머가 훈련 케이지에 넣으면 15분 훈련을 한 번 한다. 끝나면 훈련 케이지가 아닌 곳에
   // 두었다가 다시 넣기 전에는 훈련하지 않는다 (형규가 정함. 15분은 게임 시간)
   if (cage.up || cage.apUp || cage.battleUp) {
-    if (!d.trainDone && !ctx.sleep && !d.sick && !d.injured && d.hunger > 0 && d.fatigue < 90) {
+    if (!d.trainDone && !sleeping && !d.sick && !d.injured && d.hunger > 0 && d.fatigue < 90) {
       d.trainMinutes = (d.trainMinutes ?? 0) + 1;
       if (d.trainMinutes >= TRAINING_MINUTES) {
         d.trainMinutes = 0;
@@ -427,7 +453,7 @@ const find = (save: SaveData, uid: number) => save.digimon.find((d) => d.uid ===
 
 export function feed(save: SaveData, uid: number): ActionResult {
   const d = find(save, uid);
-  if (!d || d.isEgg) return fail(save, '먹이를 줄 수 없어요.');
+  if (!d || d.isEgg || isSleeping(d)) return fail(save, '먹이를 줄 수 없어요.');
   if (save.meat <= 0) return fail(save, '고기가 없어요. 상점에서 사세요.');
   if (d.hunger >= 100) return fail(save, '배가 불러서 안 먹어요.');
   return { ok: true, message: '고기를 먹었다.', save: { ...update(save, uid, (x) => ({ ...x, hunger: Math.min(100, x.hunger + 35) })), meat: save.meat - 1 } };
@@ -436,7 +462,7 @@ export function feed(save: SaveData, uid: number): ActionResult {
 /** 썩은 고기 두 개를 먹으면 병에 걸린다 (페널티 진화용) */
 export function feedRotten(save: SaveData, uid: number): ActionResult {
   const d = find(save, uid);
-  if (!d || d.isEgg) return fail(save, '먹이를 줄 수 없어요.');
+  if (!d || d.isEgg || isSleeping(d)) return fail(save, '먹이를 줄 수 없어요.');
   if (save.rotten <= 0) return fail(save, '썩은 고기가 없어요.');
   if (d.sick) return fail(save, '이미 병에 걸려 있어요.');
   const events: FarmEvent[] = [];

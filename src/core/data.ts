@@ -41,11 +41,11 @@ function hash(s: string) {
 }
 
 /** 원본 표의 속성·종족 (이름 → 값) */
-const ORIGINAL: Record<string, { attr: SpeciesAttr; family: string; stage: number; size: number; life: number; stats: number[]; speed: number }> = {};
+const ORIGINAL: Record<string, { attr: SpeciesAttr; family: string; stage: number; size: number; life: number; stats: number[]; speed: number; awake: number[]; sleep: number[] }> = {};
 for (const line of speciesRaw.split(/\r?\n/)) {
   if (!line.trim() || line.startsWith('#')) continue;
-  const [name, attr, family, stage, , size, life, stats, speed] = line.split('|');
-  ORIGINAL[name] = { attr: attr as SpeciesAttr, family, stage: Number(stage), size: Number(size), life: Number(life), stats: stats.split(',').map(Number), speed: Number(speed) };
+  const [name, attr, family, stage, , size, life, stats, speed, awake, sleep] = line.split('|');
+  ORIGINAL[name] = { attr: attr as SpeciesAttr, family, stage: Number(stage), size: Number(size), life: Number(life), stats: stats.split(',').map(Number), speed: Number(speed), awake: awake.split(',').map(Number), sleep: sleep.split(',').map(Number) };
 }
 export const originalSpecies = (id: string) => ORIGINAL[id];
 /** 원본에서 프리·없음인 종의 속성을 디지몬 API 값으로 보완한 표 (src/data/species-api.txt) */

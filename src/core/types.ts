@@ -70,6 +70,8 @@ export interface Digimon {
   dirtyMinutes: number;
   sickMinutes: number;
   poopTimer: number;
+  /** 종별 낮잠 주기. 옛 저장은 첫 틱에 초기화, 진화·부화 때 새 종의 주기를 시작한다. */
+  restCycle?: { species: string; awakeLeft: number; sleepLeft: number };
   /** 오늘 먹은 알약(프로틴) 수. 다음 배틀 공격 상승, 많으면 부상 위험. 배틀 뒤·밤에 0 */
   protein?: number;
   /** 스트레스 0~100. 화면에는 수치 없이 80 이상일 때 말풍선으로만 보인다 */

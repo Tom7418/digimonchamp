@@ -1,4 +1,4 @@
-import { feed, feedRotten, type ActionResult } from './care';
+import { feed, feedRotten, isSleeping, type ActionResult } from './care';
 import { getSpecies } from './data';
 import type { SaveData } from './types';
 
@@ -47,7 +47,7 @@ export function eatFloorFood(save: SaveData, foods: readonly FloorFood[], uid: n
  */
 export function biteFloorFood(save: SaveData, foods: readonly FloorFood[], uid: number, index: number) {
   const food = foods[index], d = save.digimon.find(d => d.uid === uid);
-  if (!food || !d || d.isEgg || save[STOCK[food.kind]] <= 0 || (food.kind !== 'pill' && d.hunger >= 100))
+  if (!food || !d || d.isEgg || isSleeping(d) || save[STOCK[food.kind]] <= 0 || (food.kind !== 'pill' && d.hunger >= 100))
     return {ok: false, save, foods, message: '지금은 먹을 수 없어요.'};
   // 알약(프로틴)은 원작 그림처럼 네 입(i000_item 6~9)에 다 먹고, 배는 차지 않지만 힘이 오른다.
   if (food.kind === 'pill') {

@@ -1,0 +1,27 @@
+{
+  "species": 216,
+  "instructionChecks": 14,
+  "sha256": {
+    "arm9": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
+    "overlay18": "44183ea85e90332dca3747699c2ff6033d8c0cd1e5deb3d6e2b0350f112d386e"
+  },
+  "verified": {
+    "sleepSequence": 13,
+    "recordOffsetAwake": [
+      36,
+      38
+    ],
+    "recordOffsetSleep": [
+      40,
+      42
+    ],
+    "sleepEntry": "0x0211b888",
+    "wakeExit": "0x0211b8fc",
+    "actorSpeciesPointerOffset": 4
+  },
+  "webPolicy": "게임 분 단위 진행. 야간 일괄 수면 유지, 다음 아침 새 각성 주기. 배고픔·훈련·이동 정지와 피로 회복량은 웹판 정책.",
+  "unconfirmed": [
+    "training aptitude14 values",
+    "original timer cadence and interruption penalties"
+  ]
+}
