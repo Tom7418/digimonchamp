@@ -11,9 +11,9 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  let zoom=1; // 휠은 커서 아래 월드 위치를 유지하며 확대·축소한다.
  const clampCam=()=>{cam.x=Math.max(0,Math.min(WORLD.w-VIEW.w/zoom,cam.x));cam.y=Math.max(0,Math.min(WORLD.h-VIEW.h/zoom,cam.y));};
  // 원본 시설 그림 중 위쪽이 투명하게 비어 있는 것(미니 운동장 등)은 그대로 늘리면 육각 윗부분이 빈 채로 잘려 보인다.
- // 불러올 때 실제 그림이 있는 범위를 재 두고, 그 범위가 칸을 덮도록 같은 비율로 키워 그린다.
+ // 불러올 때 투명 여백을 제외한 그림 범위를 구한다. 새 육각 전용 그림은 점유 경계에 맞춘다.
  const contentBox=im=>{try{const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext('2d');x.drawImage(im,0,0);const d=x.getImageData(0,0,c.width,c.height).data;let top=c.height,bottom=0,left=c.width,right=0;for(let y=0;y<c.height;y++)for(let i=0;i<c.width;i++)if(d[(y*c.width+i)*4+3]>8){if(y<top)top=y;if(y>bottom)bottom=y;if(i<left)left=i;if(i>right)right=i;}return bottom>=top?{x:left,y:top,w:right-left+1,h:bottom-top+1}:null;}catch{return null;}};
- for(const [kind,t] of Object.entries(L.types)){const im=new Image();if(t.art!==false){im.onload=()=>{im.content=contentBox(im);};im.src=`assets/facilities/${kind}.png`;}facilities[kind]=im;}
+ for(const [kind,t] of Object.entries(L.types)){const im=new Image();if(t.art!==false){im.onload=()=>{im.content=contentBox(im);};im.src=`assets/facilities/${kind}${['clinic','field'].includes(kind)?'-hex':''}.png`;}facilities[kind]=im;}
  let editing=false,tool=null,rotation=0,selected=null,drag=null,hover=null;
  const center=(q,r)=>({x:OX+Math.sqrt(3)*R*(q+r/2),y:OY+R*1.5*r});
  const polygon=(ctx,q,r,append=false)=>{const c=center(q,r);if(!append)ctx.beginPath();for(let i=0;i<6;i++){const a=(i*60-30)*Math.PI/180;const x=c.x+R*Math.cos(a),y=c.y+R*Math.sin(a);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();};
@@ -69,16 +69,18 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
      for(const c of s.layout){
        const type=L.types[c.kind],cells=L.cells(c),anchor=center(c.q,c.r),im=facilities[c.kind];
        // 전체 점유 영역을 합집합으로 잘라 원본 시설 배경을 딱 한 번 그린다.
-       ctx.save();ctx.beginPath();for(const [q,r] of cells)polygon(ctx,q,r,true);ctx.clip();ctx.fillStyle=type.color||'#a5a883';ctx.fill();ctx.restore();
-       // 바닥만 육각 영역으로 자른다. 시설 그림은 투명 여백을 제외한 전체를 비율 유지로 맞춘다.
-       ctx.save();
+       ctx.save();ctx.beginPath();for(const [q,r] of cells)polygon(ctx,q,r,true);ctx.clip();ctx.fillStyle=type.color||'#a5a883';ctx.fill();
+       // 시설 그림도 회전된 실제 점유 칸 합집합 안에서만 표시한다.
+       // clinic/field는 내부 가구·트랙까지 이 모양에 맞춰 다시 구성한 전용 이미지다.
        const local=type.cells.map(([q,r])=>({x:Math.sqrt(3)*R*(q+r/2),y:R*1.5*r}));
        const left=Math.min(...local.map(p=>p.x))-Math.sqrt(3)*R/2,top=Math.min(...local.map(p=>p.y))-R;
        const width=Math.max(...local.map(p=>p.x))-left+Math.sqrt(3)*R/2,height=Math.max(...local.map(p=>p.y))-top+R;
        ctx.translate(anchor.x,anchor.y);ctx.rotate((c.rotation||0)*Math.PI/3);
        if(im.complete&&im.naturalWidth){
          const b=im.content||{x:0,y:0,w:im.naturalWidth,h:im.naturalHeight};
-         const k=Math.min(width/b.w,height/b.h),dw=b.w*k,dh=b.h*k;
+         const k=Math.min(width/b.w,height/b.h);
+         const fitted=['clinic','field'].includes(c.kind);
+         const dw=fitted?width:b.w*k,dh=fitted?height:b.h*k;
          ctx.drawImage(im,b.x,b.y,b.w,b.h,left+(width-dw)/2,top+(height-dh)/2,dw,dh);
        }ctx.restore();
        ctx.strokeStyle=selected===c.id?'#ffe374':'#8ed3e6';ctx.lineWidth=selected===c.id?4:2;outerBorder(ctx,c);
