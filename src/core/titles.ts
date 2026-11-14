@@ -1,6 +1,6 @@
-import { dateOf } from './data';
+import { dateOf, getSpecies, originalSpecies } from './data';
 import titlesRaw from '../data/titles.txt?raw';
-import type { SaveData, Stage } from './types';
+import type { Digimon, SaveData, Stage } from './types';
 
 export interface Match {
   id: string;
@@ -19,18 +19,29 @@ export interface Match {
   grade?: number;
   /** 참가 디지몬 세대 제한 */
   limitStage?: Stage;
-  /** 아직 검사하지 않는 참가 제한 (표시용) */
+  /** 참가 종족 한정 (이 중 하나) */
+  limitFamilies?: string[];
+  /** 참가 속성 한정 */
+  limitAttr?: string;
+  /** 참가 성격 한정 */
+  limitPersonality?: string;
+  /** 참가 타입 한정 (원본 디지몬 표의 타입 번호: 4 인형, 5 식물, 6 콩알, 8 곤충, 9 고대) */
+  limitKind?: number;
+  /** 한정 내용 표시 (원작 설명 글의 낱말) */
   limitNote?: string;
+  /** 아직 뜻을 몰라 검사하지 않는 조건이 있음 */
+  unknownLimit?: boolean;
 }
 
 /**
  * 타이틀 매치 61개. 이름·계절·날짜·필요 랭크·등급·상금·인원·참가 제한은 원본 실행 코드의 표와 설명 글에서 읽었다
  * (src/data/titles.txt, tools/extract_titles.py. 계절·날짜는 원작 편지와 대조해 확인, 랭크·등급·상금의 뜻은 추정).
  * 임시 값: 상대 세대(설명에 홀더 세대가 없으면 필요 랭크로 정함), 상대 강도(등급별 배율),
- *   상금 배율(상점 가격이 아직 임시라 원본 상금의 1/5), 랭크가 오르는 규칙.
- * 표시만 하고 아직 검사하지 않는 참가 제한: 속성·종족·타입·성격 한정(limitNote).
+ *   랭크가 오르는 규칙. 상금은 원본 값 그대로다.
+ * 참가 조건(인원·세대·종족·속성·성격·타입·디지에그화)은 원본 조건 표 값으로 검사한다 (entryProblems).
+ *   조건 표의 미해석 칸(1·2)이 걸린 두 타이틀은 검사하지 않고 표시만 한다.
  */
-export const PRIZE_SCALE = 0.2;
+export const PRIZE_SCALE = 1;
 const STAGE_NAME: Record<number, string> = { 2: '유년기', 3: '성장기', 4: '성숙기', 5: '완전체', 6: '궁극체' };
 const HOLDER_STAGE: Record<string, Stage> = { 유년기: 2, 성장기: 3, 성숙기: 4, 완전체: 5, 궁극체: 6 };
 const STAGE_BY_RANK: Stage[] = [3, 3, 3, 3, 4, 4, 5, 5, 6];
@@ -39,7 +50,7 @@ export const TITLES: Match[] = titlesRaw
   .split(/\r?\n/)
   .filter((l) => l.trim() && !l.startsWith('#'))
   .map((l) => {
-    const [no, name, season, day, rank, grade, prize, , mine, foes, limit, eggs, holder, other] = l.split('|');
+    const [no, name, season, day, rank, grade, prize, , mine, foes, limit, eggs, holder, other, families, attr, person, kind, flag] = l.split('|');
     const m: Match = {
       id: `m${no}`,
       name,
@@ -56,24 +67,61 @@ export const TITLES: Match[] = titlesRaw
     if (limit) m.limitStage = HOLDER_STAGE[limit];
     if (eggs) m.needEggs = Number(eggs);
     if (other) m.limitNote = `${other} 한정`;
+    if (families) m.limitFamilies = families.split(',');
+    if (attr) m.limitAttr = attr;
+    // 성격 번호 7만 쓰인다. 설명 글에서 겁쟁이로 확인
+    if (person) m.limitPersonality = other || '겁쟁이';
+    if (kind) m.limitKind = Number(kind);
+    if (flag) m.unknownLimit = true;
     return m;
   })
   .sort((a, b) => a.minRank - b.minRank || a.season - b.season || a.day - b.day);
+/** 출전 팀이 타이틀의 참가 조건을 채우지 못한 이유들 (비어 있으면 출전 가능) */
+export function entryProblems(m: Match, team: Digimon[]): string[] {
+  const out: string[] = [];
+  const all = (ok: (d: Digimon) => boolean) => team.every(ok);
+  const sp = (d: Digimon) => getSpecies(d.speciesId);
+  if (m.limitStage && !all((d) => sp(d).stage === m.limitStage)) out.push(`${STAGE_NAME[m.limitStage]} 한정`);
+  if (m.limitFamilies && !all((d) => m.limitFamilies!.includes(sp(d).family))) out.push(`${m.limitFamilies.join('·')} 종족 한정`);
+  if (m.limitAttr && !all((d) => sp(d).attr === m.limitAttr)) out.push(`${m.limitAttr} 속성 한정`);
+  if (m.limitPersonality && !all((d) => d.personality === m.limitPersonality)) out.push(`성격 ${m.limitPersonality} 한정`);
+  if (m.limitKind && !all((d) => originalSpecies(d.speciesId)?.kind === m.limitKind)) out.push(m.limitNote ?? '타입 한정');
+  if (m.needEggs && !all((d) => d.eggs >= m.needEggs!)) out.push(`디지에그화 ${m.needEggs}회 이상`);
+  return out;
+}
+/** 참가 조건 한 줄 요약 (표시용) */
+export function entryLimits(m: Match): string {
+  return [
+    m.limitStage ? `${STAGE_NAME[m.limitStage]} 한정` : '',
+    m.limitFamilies ? `${m.limitFamilies.join('·')} 종족 한정` : '',
+    m.limitAttr ? `${m.limitAttr} 속성 한정` : '',
+    m.limitPersonality ? `성격 ${m.limitPersonality} 한정` : '',
+    m.limitKind || m.unknownLimit ? (m.limitNote ?? '') : '',
+    m.needEggs ? `디지에그화 ${m.needEggs}회 이상` : '',
+  ].filter(Boolean).join(' · ');
+}
+
 /** 예전 임시 타이틀 9개 → 원작 타이틀 (저장 이전용). 랭크가 유지되도록 쉬운 것부터 8개, 인피니티 소울은 무한의 영혼 */
 export const OLD_TITLE_IDS: Record<string, string> = Object.fromEntries([
   ...TITLES.slice(0, 8).map((m, i) => [`t${i + 1}`, m.id]),
   ['t9', 'm52'],
 ]);
 
-/** 랭크 이름. 레드 테이머(랭크 4 = 타이틀 3개)만 영상으로 확인, 나머지는 임시 */
+/** 랭크 이름 10단계 (원작 글 txt_list #1798~1807: 그린·블루·레드·화이트·브론즈·실버·골드·플래티넘·챔프·마스터) */
+export const RANK_NAMES = ['', '그린', '블루', '레드', '화이트', '브론즈', '실버', '골드', '플래티넘', '챔프', '마스터'];
 export function rankName(rank: number): string {
-  return ['', '루키 테이머', '테이머 랭크 2', '테이머 랭크 3', '레드 테이머', '테이머 랭크 5', '테이머 랭크 6', '테이머 랭크 7', '테이머 랭크 8', '챔피언', '그랜드 챔피언'][rank] ?? `랭크 ${rank}`;
+  return `${RANK_NAMES[rank]} 테이머`;
 }
+/**
+ * 랭크별 필요 타이틀(뱃지) 수. 레드 = 3개만 영상으로 확인, 나머지는 임시(1·3·6·10·15·21·28).
+ * 원작 실행 코드에서 이 기준을 아직 찾지 못했다. 챔프는 챔피언십 우승, 마스터는 챔프 + 빅7 전부(임시).
+ */
+export const RANK_BADGES = [0, 0, 1, 3, 6, 10, 15, 21, 28];
 
 /** 랭크별 최대 사육 용량(G). 레드 테이머 96G만 영상 확인 값 */
-export const CAPACITY_BY_RANK = [0, 32, 48, 74, 96, 120, 144, 172, 200, 200, 200];
+export const CAPACITY_BY_RANK = [0, 32, 64, 96, 120, 144, 172, 200, 200, 200, 200];
 /** 랭크별 케이지 공간(칸). 레드 테이머 16칸만 영상 확인 값 */
-export const CAGE_SPACE_BY_RANK = [0, 8, 10, 12, 16, 20, 24, 28, 30, 30, 30];
+export const CAGE_SPACE_BY_RANK = [0, 8, 12, 16, 20, 24, 28, 30, 30, 30, 30];
 export const capacityOf = (save: Pick<SaveData, 'titles' | 'champion'>) => CAPACITY_BY_RANK[tamerRank(save)] ?? 200;
 export const cageSpaceOf = (save: Pick<SaveData, 'titles' | 'champion'>) => CAGE_SPACE_BY_RANK[tamerRank(save)] ?? 30;
 
@@ -83,7 +131,7 @@ export const cageSpaceOf = (save: Pick<SaveData, 'titles' | 'champion'>) => CAGE
 export const CHAMP_SEASON = 2;
 export const PRELIM_DAYS = [1, 2, 3, 4, 5];
 export const CHAMP_DAY = 5;
-export const PRELIM_MIN_RANK = 4;
+export const PRELIM_MIN_RANK = 3;
 export const PRELIM_WINS = 3;
 export const PRELIM: Match = { id: 'prelim', name: '챔피언십 예선', minRank: PRELIM_MIN_RANK, season: CHAMP_SEASON, day: 1, format: 3, stage: 4, scale: 1.15, prize: 1500 };
 export const FINAL_ROUNDS: Match[] = [
@@ -100,11 +148,11 @@ function prelimOf(save: SaveData, year: number) {
 }
 
 export function tamerRank(save: Pick<SaveData, 'titles' | 'champion'>): number {
-  // 임시 규칙: 타이틀 하나마다 랭크 +1 (세 번째 타이틀에서 레드 테이머가 되는 것만 영상 확인), 최대 8.
-  // 챔피언은 9, 빅7(등급 4)까지 모두 따면 10.
-  const won = TITLES.filter((t) => save.titles.includes(t.id));
+  const won = TITLES.filter((t) => save.titles.includes(t.id)).length;
   if (save.champion) return TITLES.filter((t) => t.grade === 4).every((t) => save.titles.includes(t.id)) ? 10 : 9;
-  return Math.min(8, 1 + won.length);
+  let rank = 1;
+  while (rank < 8 && won >= RANK_BADGES[rank + 1]) rank += 1;
+  return rank;
 }
 
 /** 타이틀 매치 엔트리 시간 (원작 텍스트 txt_list #634: 7:00~15:00) */
@@ -140,7 +188,7 @@ export function upcoming(save: SaveData): string[] {
   const lines = TITLES.filter((t) => rank >= t.minRank && !save.titles.includes(t.id))
     .sort((a, b) => ahead(a) - ahead(b))
     .slice(0, 6)
-    .map((t) => `${t.name}: ${['봄', '여름', '가을', '겨울'][t.season]} ${t.day}일 (${t.format} VS ${t.foes ?? t.format}${t.limitStage ? ` · ${STAGE_NAME[t.limitStage]} 한정` : ''}${t.limitNote ? ` · ${t.limitNote}` : ''})`);
+    .map((t) => `${t.name}: ${['봄', '여름', '가을', '겨울'][t.season]} ${t.day}일 (${t.format} VS ${t.foes ?? t.format}${entryLimits(t) ? ` · ${entryLimits(t)}` : ''})`);
   if (!save.champion) {
     if (save.qualifiedYear !== null) lines.push(`챔피언십 본선: ${save.qualifiedYear + 1}년차 가을 ${CHAMP_DAY}일 (8강·4강·결승)`);
     else if (rank < PRELIM_MIN_RANK) lines.push(`챔피언십 예선: 가을 1~5일 (${rankName(PRELIM_MIN_RANK)}부터 참가)`);

@@ -8,7 +8,8 @@
 // 출현표: 나무위키 진화 목록의 출현 장소(src/data/habitats.txt). 성숙기·완전체는 그 단계 로프가 있어야 잡힌다.
 // 임시 값: 세대별 HP(유년기I 1, 유년기II 2, 성장기 3), 성장기 25%·성숙기 이상 10% 출현, 밤 18시~, 드묾 1/5, 와이어 가격·개수.
 import { dateOf, FIELDS, getSpecies, SEASON_CODE, type Field } from './data';
-import { tamerRank } from './titles';
+import { rankName, tamerRank, TITLES } from './titles';
+import shopRaw from '../data/shop.txt?raw';
 import type { SaveData } from './types';
 
 /** 사냥 가능한 시간: 08:00 ~ 22:00 (22시 이후 불가는 원작, 시작 시각은 영상 화면 08:00 기준) */
@@ -33,7 +34,8 @@ export interface HuntField extends Field {
 export function huntFields(save: SaveData): HuntField[] {
   const rank = tamerRank(save);
   return FIELDS.map((f) => {
-    if (rank < f.minRank) return { ...f, open: false, reason: f.minRank >= 9 ? '챔피언십 우승 뒤 열림' : `테이머 랭크 ${f.minRank} 필요` };
+    if (rank < f.minRank) return { ...f, open: false, reason: `${rankName(f.minRank)}부터 열림` };
+    if (f.needTitle && !save.titles.includes(f.needTitle)) return { ...f, open: false, reason: `타이틀 '${TITLES.find((t) => t.id === f.needTitle)?.name}' 획득 시 열림` };
     const p = huntPool(f, save.clock);
     if (!p.babies.length && !p.rookies.length && !p.strong.length) return { ...f, open: false, reason: '지금은 디지몬이 없음' };
     return { ...f, open: true };
@@ -291,3 +293,36 @@ export const POISON_TICK = 3;
 /** 마그넷 와이어에 달라붙는 초, 다시 걸리기까지의 초 (임시) */
 export const WIRE_STICK = 4;
 export const WIRE_COOLDOWN = 3;
+
+// ---------- 원본 가격·해금 조건 ----------
+// 원본 실행 코드의 아이템 표 값으로 위 목록의 가격을 덮어쓴다 (src/data/shop.txt, tools/extract_shop.py).
+// 가격은 한 개 값이다. 묶음으로 파는 것은 한 개 값 × 묶음 수(묶음 수는 이 게임의 편의).
+// 해금: 0 처음부터, 1 테이머 랭크(값 1~8 → 이 게임의 랭크 2~9), 2 타이틀(그 번호의 타이틀을 따면 열린다).
+export interface OriginalItem { price: number; kind: number; value: number; start: number; max: number }
+export const ORIGINAL_ITEMS: Record<string, OriginalItem> = {};
+for (const line of shopRaw.split(/\r?\n/)) {
+  if (!line.trim() || line.startsWith('#')) continue;
+  const [name, price, kind, value, start, max] = line.split('|');
+  ORIGINAL_ITEMS[name] = { price: Number(price), kind: Number(kind), value: Number(value), start: Number(start), max: Number(max) };
+}
+const priceOf = (name: string, fallback: number, pack = 1) => (ORIGINAL_ITEMS[name] ? ORIGINAL_ITEMS[name].price * pack : fallback);
+for (const r of ROPES) r.price = priceOf(r.name, r.price);
+for (const x of SHOTS) x.price = priceOf(x.name, x.price, SHOT_PACK);
+for (const x of BAITS) x.price = priceOf(x.name, x.price, BAIT_PACK);
+for (const x of GEARS) x.price = priceOf(x.name, x.price, x.pack);
+for (const c of MEMORY_CARDS) c.price = priceOf(c.name, c.price);
+WIRE_PACK.price = priceOf('노멀 와이어α', WIRE_PACK.price, WIRE_PACK.count);
+/** 이 물품이 상점에 열렸는가 (원본 해금 조건). 표에 없는 물품은 열려 있다 */
+export function itemUnlocked(save: Pick<SaveData, 'titles' | 'champion'>, name: string): boolean {
+  const o = ORIGINAL_ITEMS[name];
+  if (!o || o.kind === 0) return true;
+  if (o.kind === 1) return tamerRank(save) >= o.value + 1;
+  return save.titles.includes(`m${o.value}`);
+}
+/** 해금 조건 설명 (상점 안내용) */
+export function unlockText(name: string): string {
+  const o = ORIGINAL_ITEMS[name];
+  if (!o || o.kind === 0) return '';
+  if (o.kind === 1) return `${rankName(o.value + 1)}부터`;
+  return `타이틀 '${TITLES.find((t) => t.id === `m${o.value}`)?.name ?? o.value}' 획득 시`;
+}

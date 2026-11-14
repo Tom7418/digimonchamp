@@ -43,11 +43,11 @@ function hash(s: string) {
 }
 
 /** 원본 표의 속성·종족 (이름 → 값) */
-const ORIGINAL: Record<string, { attr: SpeciesAttr; family: string; stage: number; size: number; life: number; stats: number[]; speed: number; awake: number[]; sleep: number[] }> = {};
+const ORIGINAL: Record<string, { attr: SpeciesAttr; family: string; stage: number; size: number; life: number; stats: number[]; speed: number; awake: number[]; sleep: number[]; kind: number }> = {};
 for (const line of speciesRaw.split(/\r?\n/)) {
   if (!line.trim() || line.startsWith('#')) continue;
-  const [name, attr, family, stage, , size, life, stats, speed, awake, sleep] = line.split('|');
-  ORIGINAL[name] = { attr: attr as SpeciesAttr, family, stage: Number(stage), size: Number(size), life: Number(life), stats: stats.split(',').map(Number), speed: Number(speed), awake: awake.split(',').map(Number), sleep: sleep.split(',').map(Number) };
+  const [name, attr, family, stage, , size, life, stats, speed, awake, sleep, kind] = line.split('|');
+  ORIGINAL[name] = { attr: attr as SpeciesAttr, family, stage: Number(stage), size: Number(size), life: Number(life), stats: stats.split(',').map(Number), speed: Number(speed), awake: awake.split(',').map(Number), sleep: sleep.split(',').map(Number), kind: Number(kind) };
 }
 export const originalSpecies = (id: string) => ORIGINAL[id];
 /** 원본에서 프리·없음인 종의 속성을 디지몬 API 값으로 보완한 표 (src/data/species-api.txt) */
@@ -265,26 +265,31 @@ export interface Field {
   id: string;
   minRank: number;
   fee: number;
+  /** 이 타이틀을 따야 열린다 (타이틀 id) */
+  needTitle?: string;
   /** [이름, 출현 계절(봄여가겨) + '밤'/'낮'(그 시간대에만) + '드묾'(낮은 확률)] */
   spawns: [string, string][];
 }
+// 입장료와 해금 조건은 원본 실행 코드의 사냥터 표 값이다 (arm9.bin 0xC8A84, 36바이트씩 16곳:
+//   +12 아래 16비트 입장료, +16 해금 종류(0 처음, 1 랭크, 2 타이틀), +20 해금 값 — 아이템 표와 같은 형식).
+//   랭크 값 1~8은 이 게임의 랭크 2~9(블루~챔프), 타이틀 값은 타이틀 매치 번호.
 const FIELD_LIST: Omit<Field, 'spawns'>[] = [
   { id: '다이나 초원', minRank: 1, fee: 0 },
-  { id: '미끌미끌 늪', minRank: 1, fee: 0 },
-  { id: '파도치는 해변', minRank: 2, fee: 100 },
-  { id: '바위산', minRank: 2, fee: 100 },
-  { id: '모쥬라의 숲', minRank: 2, fee: 100 },
-  { id: '하수도', minRank: 2, fee: 100 },
-  { id: '이글이글 사막', minRank: 3, fee: 200 },
-  { id: '대초원', minRank: 3, fee: 200 },
-  { id: '오아시스', minRank: 3, fee: 200 },
-  { id: '암반 계곡', minRank: 3, fee: 200 },
-  { id: '용암지대', minRank: 4, fee: 300 },
-  { id: '부츠 정글', minRank: 4, fee: 300 },
-  { id: '크롬 광산', minRank: 4, fee: 300 },
-  { id: '기계 공장', minRank: 4, fee: 300 },
-  { id: '눈의 왕국', minRank: 5, fee: 400 },
-  { id: '잉카 유적', minRank: 9, fee: 400 },
+  { id: '대초원', minRank: 4, fee: 300 },
+  { id: '모쥬라의 숲', minRank: 2, fee: 50 },
+  { id: '부츠 정글', minRank: 1, fee: 230, needTitle: 'm46' },
+  { id: '미끌미끌 늪', minRank: 2, fee: 0 },
+  { id: '파도치는 해변', minRank: 5, fee: 500 },
+  { id: '암반 계곡', minRank: 4, fee: 450 },
+  { id: '크롬 광산', minRank: 5, fee: 830 },
+  { id: '기계 공장', minRank: 1, fee: 1000, needTitle: 'm45' },
+  { id: '하수도', minRank: 3, fee: 110 },
+  { id: '눈의 왕국', minRank: 1, fee: 1200, needTitle: 'm7' },
+  { id: '바위산', minRank: 6, fee: 600 },
+  { id: '용암지대', minRank: 7, fee: 1350 },
+  { id: '이글이글 사막', minRank: 3, fee: 300 },
+  { id: '오아시스', minRank: 7, fee: 2800 },
+  { id: '잉카 유적', minRank: 9, fee: 4000 },
 ];
 
 /** habitats.txt: `이름|장소:계절, 장소:계절` */

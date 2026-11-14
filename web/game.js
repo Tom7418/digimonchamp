@@ -858,7 +858,7 @@
   function tamerInfo() {
     const d = C.dateOf(save.clock), rank = C.tamerRank(save);
     const battles = save.digimon.reduce((n, x) => n + (x.battles || 0), 0), wins = save.digimon.reduce((n, x) => n + (x.wins || 0), 0);
-    const open = C.huntFields(save).filter((f) => f.minRank <= rank).length;
+    const open = C.huntFields(save).filter((f) => f.minRank <= rank && (!f.needTitle || save.titles.includes(f.needTitle))).length;
     const field = (x, y, w, text, cls = '') => `<span class="info-field ${cls}" style="left:${(x / 256) * 100}%;top:${(y / 192) * 100}%;width:${(w / 256) * 100}%">${esc(String(text))}</span>`;
     const body =
       `<div class="info-screen" style="background-image:url(assets/ui/tamer_info.png)">` +
@@ -982,11 +982,10 @@
     const titleHtml = titles.length
       ? titles
           .map((m, i) => {
-            // 원작 타이틀의 참가 조건: 디지에그화 횟수, 세대 한정 (속성·종족 한정은 표시만 하고 아직 검사하지 않는다)
-            const eggsOk = !m.needEggs || members(m.format).every((x) => x.eggs >= m.needEggs);
-            const stageOk = !m.limitStage || members(m.format).every((x) => C.getSpecies(x.speciesId).stage === m.limitStage);
-            const limits = [m.limitStage ? `${C.STAGE_LABEL[m.limitStage]} 한정` : '', m.limitNote || '', m.needEggs ? `디지에그화 ${m.needEggs}회 이상` : ''].filter(Boolean).join(' · ');
-            return `<button data-title="${i}"${eggsOk && stageOk ? '' : ' disabled'}><b>★ ${esc(m.name)}</b><small>${m.format} VS ${m.foes ?? m.format} · 상대 ${C.STAGE_LABEL[m.stage]} · 상금 ${m.prize.toLocaleString('ko-KR')} ฿${limits ? ` · ${esc(limits)}` : ''}${eggsOk && stageOk ? '' : ' (조건 미충족)'}</small></button>`;
+            // 원작 타이틀의 참가 조건(세대·종족·속성·성격·타입·디지에그화)은 엔진이 원본 조건 표로 검사한다
+            const problems = C.entryProblems(m, members(m.format));
+            const limits = C.entryLimits(m);
+            return `<button data-title="${i}"${problems.length ? ' disabled' : ''}><b>★ ${esc(m.name)}</b><small>${m.format} VS ${m.foes ?? m.format} · 상대 ${C.STAGE_LABEL[m.stage]} · 상금 ${m.prize.toLocaleString('ko-KR')} ฿${limits ? ` · ${esc(limits)}` : ''}${problems.length ? ` (조건 미충족: ${esc(problems.join(', '))})` : ''}</small></button>`;
           })
           .join('')
       : `<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은 07:00~15:00, 일정: ${esc(C.upcoming(save)[0] || '-')}</p>`;

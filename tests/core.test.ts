@@ -5,7 +5,7 @@ import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, i
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
-import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
+import { entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
@@ -215,10 +215,10 @@ describe('evolution', () => {
     expect(findEvolution(only(base), 1, 100)).toEqual({ kind: 'evolve', to: '아구몬' });
     const agu = { ...only(base), speciesId: '아구몬', battles: 6, stageAge: 2400 };
     expect(findEvolution(agu, 1, 100)).toEqual({ kind: 'blocked', to: '그레이몬', reason: 'rank' });
-    expect(findEvolution(agu, 3, 100)).toEqual({ kind: 'blocked', to: '그레이몬', reason: 'rank' });
-    expect(findEvolution(agu, 4, 100)).toEqual({ kind: 'evolve', to: '그레이몬' });
-    expect(findEvolution(agu, 4, 2)).toEqual({ kind: 'blocked', to: '그레이몬', reason: 'capacity' });
-    expect(maxStageForRank(8)).toBe(6);
+    expect(findEvolution(agu, 2, 100)).toEqual({ kind: 'blocked', to: '그레이몬', reason: 'rank' });
+    expect(findEvolution(agu, 3, 100)).toEqual({ kind: 'evolve', to: '그레이몬' }); // 레드 테이머부터 성숙기
+    expect(findEvolution(agu, 3, 2)).toEqual({ kind: 'blocked', to: '그레이몬', reason: 'capacity' });
+    expect(maxStageForRank(7)).toBe(6);
   });
   it('rotten meat causes sickness and a penalty', () => {
     let s = { ...freshSave(0), rotten: 2 };
@@ -273,9 +273,14 @@ describe('titles and hunting', () => {
     expect(tamerRank(s)).toBe(1);
     s = applyWin(s, TITLES[0]);
     expect(tamerRank(s)).toBe(2);
-    expect(s.bits).toBe(500 + 1060); // 봄의 시작: 원본 상금 5300의 1/5
-    s = applyWin(applyWin(s, TITLES[1]), TITLES[2]);
+    expect(rankName(tamerRank(s))).toBe('블루 테이머');
+    expect(s.bits).toBe(500 + 5300); // 봄의 시작: 원본 상금 그대로
+    s = applyWin(s, TITLES[1]);
+    expect(tamerRank(s)).toBe(2); // 레드는 뱃지 3개부터 (영상 확인)
+    s = applyWin(s, TITLES[2]);
     expect(rankName(tamerRank(s))).toBe('레드 테이머');
+    expect(tamerRank({ ...s, titles: won(28) })).toBe(8);
+    expect(rankName(tamerRank({ ...s, champion: true }))).toBe('챔프 테이머');
     expect(capacityOf(s)).toBe(96);
   });
   it('타이틀 매치 61개는 원본 표를 따른다', () => {
@@ -287,6 +292,17 @@ describe('titles and hunting', () => {
     expect(by('장군의 힘')).toMatchObject({ format: 3, foes: 2, limitStage: 4 });
     expect(by('은빛의 결정체')).toMatchObject({ format: 1, foes: 3 });
     expect(by('용의 군주').limitNote).toBe('용 한정');
+    // 참가 조건은 원본 조건 표로 검사한다
+    const mon = (speciesId: string, patch: Partial<Digimon> = {}) => ({ ...newDigimon(1, speciesId), ...patch });
+    expect(entryProblems(by('용의 군주'), [mon('아구몬')])).toEqual([]);
+    expect(entryProblems(by('용의 군주'), [mon('아구몬'), mon('피요몬')])).toEqual(['용 종족 한정']);
+    expect(entryProblems(by('악의 파괴자'), [mon('아구몬')])).toEqual(['바이러스 속성 한정']);
+    expect(entryProblems(by('장군의 힘'), [mon('아구몬')])).toEqual(['성숙기 한정']);
+    expect(entryProblems(by('에메랄드 바다'), [mon('팔몬')])).toEqual([]);
+    expect(entryProblems(by('에메랄드 바다'), [mon('아구몬')])).toEqual(['식물 한정']);
+    expect(entryProblems(by('고독한 하늘'), [mon('아구몬', { personality: '겁쟁이' })])).toEqual([]);
+    expect(entryProblems(by('무한의 영혼'), [mon('아구몬', { eggs: 9 })])).toEqual(['디지에그화 10회 이상']);
+    expect(by('그라비티 나이츠').needEggs).toBe(24);
     expect(TITLES.filter((t) => t.grade === 4)).toHaveLength(8);
     // 예전 임시 타이틀을 가진 저장은 랭크를 유지한 채 원작 타이틀로 옮겨진다
     const old = upgradeSave({ ...freshSave(0), titles: ['t1', 't2', 't3', 't9'] });
@@ -343,12 +359,14 @@ describe('hunting', () => {
   it('rope shop opens each family (α·β·γ) by tamer rank, durability from the original text', () => {
     const base = { ...freshSave(0), bits: 99999 };
     const ropes = (s: typeof base) => shopItems(s).filter((i) => i.id.startsWith('rope:')).map((i) => i.id.slice(5));
-    expect(ropes(base)).toEqual(['digi2', 'digi3']);
-    expect(ropes({ ...base, titles: won(1) })).toEqual(['digi2', 'digi3', 'hard1', 'hard2', 'hard3']);
-    expect(ropes({ ...base, titles: won(5) })).toHaveLength(11);
+    // 원본 해금 조건: 디지β는 처음부터, 디지γ는 '작은 도전자'(25번) 타이틀, 하드α는 블루, 하드β는 '벡터 파티션'(3번) 타이틀
+    expect(ropes(base)).toEqual(['digi2']);
+    expect(ropes({ ...base, titles: ['m25'] })).toEqual(['digi2', 'digi3', 'hard1']);
+    expect(ropes({ ...base, titles: ['m25', 'm3'] })).toEqual(['digi2', 'digi3', 'hard1', 'hard2']);
+    expect(ROPES.map((r) => r.price)).toEqual([1000, 2500, 5500, 9000, 14000, 18000, 20000, 25000, 32000, 45000, 60000, 90000]);
     expect(ROPES.map((r) => r.durability)).toEqual([10, 15, 20, 32, 44, 56, 60, 80, 100, 150, 150, 250]);
     // 사면 가장 좋은 로프를 든다
-    const item = shopItems({ ...base, titles: won(1) }).find((i) => i.id === 'rope:hard2')!;
+    const item = shopItems({ ...base, titles: ['m3'] }).find((i) => i.id === 'rope:hard2')!;
     expect(item.apply(base).rope).toBe('hard2');
   });
   it('stronger rope breaks less often', () => {
@@ -382,7 +400,7 @@ describe('hunting', () => {
     expect(pickWild(field('눈의 왕국'), at(0, 10), seeded(1))).not.toBeNull();
     const ruins = huntFields(s).find((f) => f.id === '잉카 유적')!;
     expect(ruins.open).toBe(false);
-    expect(ruins.reason).toContain('챔피언십');
+    expect(ruins.reason).toContain('챔프');
   });
   it('rookies need the 성장기 로프', () => {
     expect(wildHp('뿔몬')).toBe(2);
@@ -459,11 +477,19 @@ describe('사냥 장비', () => {
   });
   it('장비는 쓸 때마다 줄고, 상점에서 묶음으로 산다. 예전 저장에는 빈 장비 칸이 생긴다', () => {
     const s = freshSave(0);
-    expect(gearCount(s, 'hand1')).toBe(10);
-    expect(gearCount(useGear(s, 'hand1')!, 'hand1')).toBe(9);
+    expect(gearCount(s, 'hand1')).toBe(20); // 원본의 처음 가진 수
+    expect(gearCount(s, 'bait1')).toBe(10);
+    expect(gearCount(useGear(s, 'hand1')!, 'hand1')).toBe(19);
     expect(useGear(s, 'stun2')).toBeNull();
     const item = shopItems({ ...s, bits: 9999 }).find((i) => i.id === 'gear:hand1')!;
-    expect(gearCount(item.apply(s), 'hand1')).toBe(20);
+    expect(gearCount(item.apply(s), 'hand1')).toBe(30);
+    expect(item.price).toBe(50); // 핸드 건α 한 발 5 × 10발
+    // 원본 해금: 핸드 건β는 실버가 아니라 레드(랭크 값 2), 샷 건α는 '자연의 신'(17번) 타이틀
+    const ids = (x: SaveData) => shopItems({ ...x, bits: 99999 }).map((i) => i.id);
+    expect(ids(s)).not.toContain('gear:hand2');
+    expect(ids({ ...s, titles: won(3) })).toContain('gear:hand2');
+    expect(ids({ ...s, titles: won(3) })).not.toContain('gear:shotgun1');
+    expect(ids({ ...s, titles: ['m17'] })).toContain('gear:shotgun1');
     const old = { ...s } as SaveData;
     delete old.gear;
     expect(upgradeSave(old).gear).toEqual({});

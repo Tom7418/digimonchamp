@@ -45,11 +45,11 @@ def cstr(pointer):
 
 
 lines = ['# 원본 실행 코드의 디지몬 표에서 뽑은 속성·종족 (tools/extract_species.py). 손으로 고치지 말 것',
-         '# 이름|속성|종족|세대|원본 영문 이름|용량|세대 지속 분|능력치 곡선 인덱스(HP,TP,공격,방어,지능,민첩)|속도 배율|각성 범위|수면 범위']
+         '# 이름|속성|종족|세대|원본 영문 이름|용량|세대 지속 분|능력치 곡선 인덱스(HP,TP,공격,방어,지능,민첩)|속도 배율|각성 범위|수면 범위|타입 번호(+24, 타이틀 참가 조건에 쓰임)']
 for i in range(COUNT):
     rec = arm9[TABLE + i*SIZE: TABLE + (i+1)*SIZE]
     english = cstr(struct.unpack_from('<I', rec, 4)[0])
-    stage, attr, _, family = struct.unpack_from('<4I', rec, 16)
+    stage, attr, kind, family = struct.unpack_from('<4I', rec, 16)
     stats = list(struct.unpack_from('<4H', rec, 52)) + list(rec[60:62])
     speed = round(struct.unpack_from('<f', rec, 48)[0], 2)
     # overlay18 b888에서 수면 동작13과 +40/+42 범위, b984에서 +36/+38 범위를 사용.
@@ -58,7 +58,7 @@ for i in range(COUNT):
     sleep = struct.unpack_from('<2H', rec, 40)
     lines.append('|'.join([RENAME.get(english, names[i]), ATTR[attr], FAMILY[family], str(stage), english,
                            str(rec[32]), str(struct.unpack_from('<I', rec, 44)[0]), ','.join(map(str, stats)), str(speed),
-                           ','.join(map(str, awake)), ','.join(map(str, sleep))]))
+                           ','.join(map(str, awake)), ','.join(map(str, sleep)), str(kind)]))
 out = REPO / 'src/data/species.txt'
 out.write_text('\n'.join(lines) + '\n', encoding='utf-8', newline='\n')
 print(len(lines) - 2, '종 →', out)
