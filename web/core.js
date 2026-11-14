@@ -1040,12 +1040,16 @@ var ChampCore = (function(exports) {
 	];
 	/** 한 계절 8일 (원작 달력 화면 1~8일 확인) */
 	var DAYS_PER_SEASON = 8;
-	/** 하루는 아침 7시에 시작해 밤 9시에 끝난다 (밤 9시 마감은 영상 확인, 7시 시작은 임시) */
+	/** 하루는 아침 7시에 시작해 23시59분에 끝난다 (마감은 사용자 지정,7시 시작은 임시) */
 	var DAY_START_HOUR = 7;
-	var DAY_END_HOUR = 21;
+	var DAY_END_HOUR = 23;
+	/** 사용자 지정 하루 마감:23:59. */
+	var DAY_END_MINUTE = 1439;
 	var MIN_PER_DAY = 1440;
-	/** 사용자 지정: 실제1초 = 게임10분(×1). 온라인·오프라인 모두 같은 배율. */
-	var MINUTES_PER_SECOND = 10;
+	/** 사용자 지정: 실제10초 = 게임10분(×1). 온라인·오프라인 모두 같은 배율. */
+	var MINUTES_PER_SECOND = 1;
+	/** 실제10초마다 게임10분을 한 번에 진행한다. 내부 돌봄 계산은1분씩 유지. */
+	var CLOCK_STEP_MINUTES = 10;
 	var START_CLOCK = 480;
 	function dateOf(clock) {
 		const dayIndex = Math.floor(clock / MIN_PER_DAY);
@@ -3089,10 +3093,10 @@ var ChampCore = (function(exports) {
 			events
 		};
 	}
-	/** 밤 9시가 지났는가 (하루 마감) */
+	/**23:59 이후 또는 아침7시 이전은 하루 마감/수면 구간이다. */
 	function isNight(save) {
 		const h = dateOf(save.clock).hour;
-		return h >= 21 || h < 7;
+		return (save.clock % 1440 + 1440) % 1440 >= 1439 || h < 7;
 	}
 	/** 달력 예고와 실제 수면 종료가 같은 날짜를 사용한다. 새벽이면 그날 아침이다. */
 	function nextMorningClock(save) {
@@ -3882,9 +3886,11 @@ var ChampCore = (function(exports) {
 	exports.CAPACITY_BY_RANK = CAPACITY_BY_RANK;
 	exports.CHAMP_DAY = CHAMP_DAY;
 	exports.CHAMP_SEASON = CHAMP_SEASON;
+	exports.CLOCK_STEP_MINUTES = CLOCK_STEP_MINUTES;
 	exports.CURE_CHANCE = CURE_CHANCE;
 	exports.DAYS_PER_SEASON = DAYS_PER_SEASON;
 	exports.DAY_END_HOUR = DAY_END_HOUR;
+	exports.DAY_END_MINUTE = DAY_END_MINUTE;
 	exports.DAY_START_HOUR = DAY_START_HOUR;
 	exports.EFFECT_SECONDS = EFFECT_SECONDS;
 	exports.EGG_MINUTES = EGG_MINUTES;

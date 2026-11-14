@@ -521,11 +521,11 @@ describe('day flow', () => {
     expect(matchEntryNotice(finals)?.names).toEqual(['챔피언십 본선 4강']);
   });
   it('offline progress stops at the calendar instead of silently skipping the night', () => {
-    const s = { ...freshSave(0), clock: 20 * 60 + 58 };
+    const s = { ...freshSave(0), clock: 23 * 60 + 57 };
     const r = advanceOffline(s, 720, seeded(1));
     expect(r.elapsedMinutes).toBe(2);
-    expect(r.save.clock).toBe(21 * 60);
-    expect(s.clock).toBe(20 * 60 + 58);
+    expect(r.save.clock).toBe(23 * 60 + 59);
+    expect(s.clock).toBe(23 * 60 + 57);
     expect(advanceOffline(r.save, 720).elapsedMinutes).toBe(0);
     expect(advanceOffline(r.save, 1).save).toBe(r.save);
   });
@@ -545,15 +545,15 @@ describe('day flow', () => {
     expect(nextMorningClock(s)).toBe(morning);
     expect(endDay(s, seeded(1)).save.clock).toBe(morning);
   });
-  it('the day ends at 21:00 and the night is slept through to 07:00 without hunger or poop', () => {
+  it('the day ends at 23:59 and the night is slept through to 07:00 without hunger or poop', () => {
     const base = freshSave(0);
-    const s: SaveData = { ...base, clock: 21 * 60, digimon: [{ ...only(base), hunger: 50, poop: 0, stageAge: 100 }] };
+    const s: SaveData = { ...base, clock: 23 * 60 + 59, digimon: [{ ...only(base), hunger: 50, poop: 0, stageAge: 100 }] };
     expect(isNight(s)).toBe(true);
     const r = endDay(s, seeded(1));
     expect(dateOf(r.save.clock)).toMatchObject({ day: 2, hour: 7, minute: 0 });
     expect(only(r.save).hunger).toBe(50);
     expect(only(r.save).poop).toBe(0);
-    expect(only(r.save).stageAge).toBe(100 + 10 * 60);
+    expect(only(r.save).stageAge).toBe(100 + 7 * 60 + 1);
     expect(isNight(r.save)).toBe(false);
   });
   it('poop comes less often: every 4 game hours for babies, 8 hours after', () => {
@@ -739,9 +739,9 @@ describe('종별 낮잠 주기', () => {
 
 describe('원본 훈련 결과와 실제 변화량', () => {
   const rolls = (...values: number[]) => { let i = 0; return () => values[i++] ?? 0.5; };
-  it('실제1초에 게임10분, 기본15분 훈련은1.5초다', () => {
-    expect(MINUTES_PER_SECOND).toBe(10);
-    expect(15 / MINUTES_PER_SECOND).toBe(1.5);
+  it('시간 배율은 실제10초에 게임10분이며 화면은10분씩 갱신한다', () => {
+    expect(MINUTES_PER_SECOND).toBe(1);
+    expect(10 / MINUTES_PER_SECOND).toBe(10);
   });
   it('시설은70/20/10 경계에서 서로 다른 결과를 선택한다', () => {
     const train = (roll: number) => {
@@ -873,4 +873,10 @@ describe('유년기Ⅱ 입문 프리 배틀',()=>{
    expect(runBattle(mine,foes,seeded(33)).over).toBe(true);
   }
  });
+});
+
+it('하루 마감은23:58까지 진행하고23:59부터 멈춘다',()=>{
+ const s=freshSave(0);expect(isNight({...s,clock:21*60})).toBe(false);
+ expect(isNight({...s,clock:23*60+58})).toBe(false);
+ expect(isNight({...s,clock:23*60+59})).toBe(true);
 });

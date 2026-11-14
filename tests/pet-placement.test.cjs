@@ -92,3 +92,15 @@ test('시설 안에 생성되거나 옛 저장의 소속이 비어 있는 개체
  s.draw();assert.equal(p.cageId,'clinic');assert.equal(s.board.movePet(p,{x:c.x+30,y:c.y}),true);
  assert.equal(s.board.canMove(p,s.board.center(0,0)),false);
 });
+
+test('케이지 이동·회전에 먹이·프로틴·똥이 함께 따라가고 다른 시설 물건은 유지한다',()=>{
+ const s=setup(),c=s.board.center(1,1),other=s.board.center(2,2);
+ const meat={kind:'meat',x:c.x+25,y:c.y+20,remaining:70},pill={kind:'pill',x:c.x-20,y:c.y},poop={uid:1,x:c.x,y:c.y+30};
+ const unmoved={kind:'meat',x:other.x,y:other.y};s.state.foods=[meat,pill,unmoved];s.state.poops=[poop];
+ s.nodes['#edit-cages'].onclick();
+ s.canvas.onpointerdown(s.event(c));const next=s.board.center(2,1);s.canvas.onpointermove(s.event(next));s.canvas.onpointerup(s.event(next));
+ near(meat.x,next.x+25);near(meat.y,next.y+20);assert.equal(meat.remaining,70);near(pill.x,next.x-20);near(poop.y,next.y+30);
+ near(unmoved.x,other.x);near(unmoved.y,other.y);
+ s.nodes['#rotate-cage'].onclick();near(meat.x,next.x+25*0.5-20*Math.sqrt(3)/2);near(meat.y,next.y+25*Math.sqrt(3)/2+20*0.5);
+ const reload=setup(JSON.parse(JSON.stringify(s.state)));reload.draw();near(reload.state.foods[0].x,meat.x);
+});

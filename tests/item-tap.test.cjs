@@ -21,6 +21,8 @@ function setup() {
   const source=fs.readFileSync(path.join(__dirname,'../web/game.js'),'utf8');
   const a=source.indexOf('  function dropItem('),b=source.indexOf('  // 머리 위 상태',a);
   assert.ok(a>0&&b>a);
+  const sa=source.indexOf('  function sweepAt('),sb=source.indexOf('  function drawSweeps(',sa);
+  vm.runInContext('const sweeps=[],SWEEP_FRAME=0.3,SWEEP_LOOPS=2,SPARKLE_FRAME=0.15;function sweepRotten(){}'+source.slice(sa,sb),ctx);
   vm.runInContext(source.slice(a,b)+'\ninitFarmInput();globalThis.api={seekFood};',ctx);
   const event=(patch={})=>({pointerId:1,button:0,isPrimary:true,clientX:200,clientY:300,preventDefault(){},stopImmediatePropagation(){this.stopped=true;},...patch});
   const choose=kind=>tray.fire('click',{target:{closest:()=>({dataset:{item:kind}})}});
@@ -106,3 +108,14 @@ test('다른 손가락·중복 이벤트·편집 모드에서는 추가 배치�
  const p=s.ctx.view.team[0],d=s.ctx.save.digimon[0];p.x=100;
  assert.equal(s.seekFood(p,d,1),false);assert.equal(p.x,100);assert.equal(p.cageId,'cage');assert.equal(s.ctx.save.meat,2);
  });
+
+test('빗자루 클릭·빠른 드래그로 경로의 똥을 한 번씩 모두 청소한다',()=>{
+ const s=setup();s.ctx.save.digimon[0].poop=4;
+ s.ctx.view.poops=[{uid:1,x:100,y:314},{uid:1,x:100,y:314},{uid:1,x:250,y:314},{uid:1,x:400,y:314}];
+ s.choose('broom');s.canvas.fire('pointerdown',s.event({clientX:100}));
+ assert.equal(s.ctx.view.poops.filter(p=>p.sweeping).length,2);
+ s.canvas.fire('pointermove',s.event({clientX:400}));s.canvas.fire('pointerup',s.event({clientX:400}));
+ assert.equal(s.ctx.view.poops.filter(p=>p.sweeping).length,4);
+ s.ctx.updateSweeps(1200);assert.equal(s.ctx.view.poops.length,0);assert.equal(s.ctx.save.digimon[0].poop,0);
+ s.ctx.updateSweeps(1300);assert.equal(s.ctx.save.digimon[0].poop,0);
+});

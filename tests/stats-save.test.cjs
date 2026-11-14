@@ -23,3 +23,14 @@ test('실제 이어하기는 배치·먹이·훈련을 보존하고 능력치 �
   const once=JSON.stringify(ctx.save);ctx.load();
   assert.equal(JSON.stringify(ctx.save),once);assert.equal(ctx.view.logs.length,1);
 });
+
+test('재접속도10분 묶음으로 진행하며 미완료10초 구간을 이어받는다',()=>{
+ const source=fs.readFileSync('web/game.js','utf8'),a=source.indexOf('  function load()'),b=source.indexOf('  function persist()',a);
+ const ctx=vm.createContext({window:{},save:null,view:null,clock:0,Date:{now:()=>6000},KEY:'x',freshView:()=>({logs:[]}),stamp:()=>'',logEvent(){},localStorage:{getItem(){return ctx.stored;}}});
+ vm.runInContext(fs.readFileSync('web/core.js','utf8'),ctx);
+ vm.runInContext(`const C=ChampCore,MINUTES_PER_SECOND=C.MINUTES_PER_SECOND;
+   globalThis.stored=JSON.stringify({save:C.freshSave(1000),view:{logs:[],timeRemainder:5}});`+source.slice(a,b),ctx);
+ ctx.load();assert.equal(ctx.save.clock,490);assert.equal(ctx.clock,0);
+ const old=JSON.parse(ctx.stored);old.view.timeRemainder=4;ctx.stored=JSON.stringify(old);
+ ctx.load();assert.equal(ctx.save.clock,480);assert.equal(ctx.clock,9);
+});

@@ -1,6 +1,6 @@
 import { applyTraining } from './training';
 import { evolvedStats, upgradeStats } from './stats';
-import { CAGE_RENAMES, CAGES, dateOf, DAY_END_HOUR, DAY_START_HOUR, EGG_MINUTES, initialStats, getCage, getSpecies, originalSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK } from './data';
+import { CAGE_RENAMES, CAGES, dateOf, DAY_END_MINUTE, DAY_START_HOUR, EGG_MINUTES, initialStats, getCage, getSpecies, originalSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK } from './data';
 import { endOfLife, findEvolution } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, tamerRank } from './titles';
@@ -372,10 +372,10 @@ export function advance(save: SaveData, minutes: number, rng: Rng = defaultRng) 
   return { save: cur, events };
 }
 
-/** 밤 9시가 지났는가 (하루 마감) */
+/**23:59 이후 또는 아침7시 이전은 하루 마감/수면 구간이다. */
 export function isNight(save: SaveData): boolean {
   const h = dateOf(save.clock).hour;
-  return h >= DAY_END_HOUR || h < DAY_START_HOUR;
+  return ((save.clock % MIN_PER_DAY) + MIN_PER_DAY) % MIN_PER_DAY >= DAY_END_MINUTE || h < DAY_START_HOUR;
 }
 
 /** 달력 예고와 실제 수면 종료가 같은 날짜를 사용한다. 새벽이면 그날 아침이다. */

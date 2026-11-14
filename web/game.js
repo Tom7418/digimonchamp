@@ -1,7 +1,7 @@
 'use strict';
 // 디지몬 챔피언십 웹판 화면.
 // 게임 규칙(사육·진화·배틀·타이틀·상점)은 web/core.js(ChampCore, src/core에서 빌드)를 그대로 쓰고,
-// 이 파일은 화면 그리기, 입력, 저장만 담당한다. 시간: 현실 1초 = 게임10분(사용자 지정).
+// 이 파일은 화면 그리기, 입력, 저장만 담당한다. 시간: 현실10초 = 게임10분(사용자 지정).
 (() => {
   const C = window.ChampCore;
   const animations = window.createAnimationPlayer(window.DIGIMON_ANIMATIONS);
@@ -16,7 +16,7 @@
       return false;
     }
   })();
-  // 온라인·오프라인 시간에 같은 엔진 배율을 쓴다(현실1초 = 게임10분, 사용자 지정).
+  // 온라인·오프라인 시간에 같은 엔진 배율을 쓴다(현실10초 = 게임10분, 사용자 지정).
   const MINUTES_PER_SECOND = C.MINUTES_PER_SECOND;
   const pad = (n) => String(n).padStart(2, '0');
   const clamp = (n, a = 0, b = 100) => Math.min(b, Math.max(a, n));
@@ -65,12 +65,15 @@
       if (raw && raw.save && raw.save.version === 2 && Array.isArray(raw.save.digimon) && raw.save.digimon.length && raw.view) {
         save = C.upgradeSave(raw.save);
         view = { ...freshView(), ...raw.view };
+        view.poops=(view.poops||[]).map(({sweeping,...poop})=>poop);
         if (raw.save.digimon.some(d => d.statVersion !== 1))
           view.logs.unshift({ time: stamp(), text: '디지몬 능력치를 원작 수치 기준으로 갱신했습니다.' });
         view.farmWorld = raw.view.farmWorld; // 없으면 옛 좌표 → 시작할 때 새 월드 크기로 옮긴다
         // 먹이 좌표 복원은 board 생성과 옛 월드 좌표 변환을 마친 뒤 수행한다.
-        // 재접속도 21시에서 멈춘다. 수면은 달력의 '다음 날로'를 누를 때만 진행한다.
-        const away = Math.min(C.OFFLINE_CAP_MINUTES, Math.max(0, Math.floor(((Date.now() - save.lastSavedAt) / 1000) * MINUTES_PER_SECOND)));
+        // 재접속도23:59에서 멈춘다. 수면은 달력의 '다음 날로'를 누를 때만 진행한다.
+        const pending = Math.min(C.OFFLINE_CAP_MINUTES, Math.max(0,(Date.now()-save.lastSavedAt)/1000*MINUTES_PER_SECOND)) + Math.max(0,Math.min(9.999,Number(view.timeRemainder)||0));
+        const away = Math.floor(pending/C.CLOCK_STEP_MINUTES)*C.CLOCK_STEP_MINUTES;
+        clock = pending % C.CLOCK_STEP_MINUTES;
         if (away > 0) {
           const r = C.advanceOffline(save, away);
           save = r.save;
@@ -104,6 +107,7 @@
             tips: view.tips,
             entryNoticeRead: view.entryNoticeRead,
             farmWorld: view.farmWorld,
+            timeRemainder: clock,
           },
         }),
       );
@@ -368,7 +372,7 @@
   }
 
   // ---------- 하루 흐름 ----------
-  // 밤 9시가 되면 하루가 끝나고 달력 화면을 거쳐 다음 날 아침 7시로 넘어간다 (밤에는 잔다).
+  // 23:59가 되면 하루가 끝나고 달력 화면을 거쳐 다음 날 아침 7시로 넘어간다 (밤에는 잔다).
   // 엔트리 시간 내 재접속에도 안내한다. 이미 읽었거나 대기 중인 같은 날 안내는 중복하지 않는다.
   let dayEnding = false;
   function checkSchedule() {
@@ -391,8 +395,9 @@
   }
   function openDayEnd() {
     if (dayEnding) return;
-    if (hunt) endHunt('밤 9시');
+    if (hunt) endHunt('23:59 하루 마감');
     dayEnding = true;
+    clock = 0;
     const morning = C.dateOf(C.nextMorningClock(save));
     const nextIdx = morning.day;
     const nextSeason = morning.season;
@@ -431,7 +436,7 @@
   function dropPoop(uid) {
     const p = view.team.find((x) => x.uid === uid);
     if (!p) return;
-    view.poops.push({ uid, x: p.x + (Math.random() - 0.5) * 50, y: p.y + 4 + Math.random() * 14 });
+    view.poops.push({ uid, cageId:p.cageId, x: p.x + (Math.random() - 0.5) * 50, y: p.y + 4 + Math.random() * 14 });
   }
   function syncPoops() {
     for (const d of save.digimon) {
@@ -491,7 +496,7 @@
         ITEMS.map((it) => `<button class="tray-item tool" data-item="${it.kind}" aria-pressed="${selectedItem === it.kind}"${it.count() > 0 ? '' : ' disabled'} title="${it.label}"><img src="${TOOL_ICON[it.kind]}" alt=""><b>${it.label}</b><small>×${Math.max(0, it.count())}</small></button>`).join('') +
         '<button class="tray-item tool" data-item="broom" aria-pressed="' + (selectedItem === 'broom') + '" title="빗자루: 똥만 눌러 치우기"><img src="assets/ui/broom_1.png" alt=""><b>빗자루</b>' + (view.poops.length ? `<small>${view.poops.length}</small>` : '') + '</button>' +
         '<button class="tray-item tool" data-tool="cage" title="케이지 편집"><img src="assets/facilities/cm01.png" alt=""><b>케이지</b></button>' +
-        '<span class="tray-hint">' + (selectedItem === 'broom' ? '치울 똥을 터치하세요 · 빗자루를 든 동안은 똥만 눌립니다 · Esc로 취소' : selectedItem === 'meat' ? '사육장 바닥을 터치해 고기를 놓으세요 · Esc로 취소' : selectedItem === 'pill' ? '바닥에 알약(프로틴)을 놓으면 디지몬이 먹고 다음 배틀에서 힘이 세집니다 · 과식 주의' : selectedItem === 'shot' ? '병에 걸린 디지몬을 터치해 주사를 놓으세요 · Esc로 취소' : selectedItem === 'heal' ? '다친 디지몬을 터치해 상처약을 바르세요 · Esc로 취소' : '고기·알약 → 바닥 터치 · 약·상처약 → 디지몬 터치') + '</span>',
+        '<span class="tray-hint">' + (selectedItem === 'broom' ? '똥을 클릭하거나 드래그해서 여러 개를 치우세요 · 빗자루를 든 동안은 똥만 눌립니다 · Esc로 취소' : selectedItem === 'meat' ? '사육장 바닥을 터치해 고기를 놓으세요 · Esc로 취소' : selectedItem === 'pill' ? '바닥에 알약(프로틴)을 놓으면 디지몬이 먹고 다음 배틀에서 힘이 세집니다 · 과식 주의' : selectedItem === 'shot' ? '병에 걸린 디지몬을 터치해 주사를 놓으세요 · Esc로 취소' : selectedItem === 'heal' ? '다친 디지몬을 터치해 상처약을 바르세요 · Esc로 취소' : '고기·알약 → 바닥 터치 · 약·상처약 → 디지몬 터치') + '</span>',
     );
     $('#tray').querySelectorAll('button').forEach((button,i)=>{
       if(i>=9)return;
@@ -545,11 +550,12 @@
     return true;
   }
   function sweepAt(pt) {
-    const hit = view.poops.filter((x) => !x.sweeping).sort((a, b) => Math.hypot(pt.x - a.x, pt.y - a.y) - Math.hypot(pt.x - b.x, pt.y - b.y))[0];
-    if (!hit || Math.hypot(pt.x - hit.x, pt.y - (hit.y - 14)) > 40) return void sweepRotten(pt);
-    hit.sweeping = true;
-    sweeps.push({ poop: hit, start: performance.now(), done: false });
+    const hits=view.poops.filter(x=>!x.sweeping&&Math.hypot(pt.x-x.x,pt.y-(x.y-14))<=40);
+    for(const hit of hits){hit.sweeping=true;sweeps.push({poop:hit,start:performance.now(),done:false});}
+    if(!hits.length)sweepRotten(pt);
   }
+  // 빠른 드래그에서도 포인터 사이 구간의 똥을 놓치지 않는다.
+  function sweepStroke(from,to){const n=Math.max(1,Math.ceil(Math.hypot(to.x-from.x,to.y-from.y)/12));for(let i=0;i<=n;i++)sweepAt({x:from.x+(to.x-from.x)*i/n,y:from.y+(to.y-from.y)*i/n});}
   function updateSweeps(now) {
     for (const sw of sweeps) {
       if (!sw.done && now - sw.start >= SWEEP_FRAME * 2 * SWEEP_LOOPS * 1000) {
@@ -678,13 +684,20 @@
         e.stopImmediatePropagation();
         e.preventDefault();
         if (e.button !== 0 || e.isPrimary === false || itemPress) return;
-        itemPress = { id: e.pointerId, kind: selectedItem };
+        itemPress = { id: e.pointerId, kind: selectedItem, last: farmPoint(e) };
+        if(selectedItem==='broom'&&itemPress.last)sweepAt(itemPress.last);
         canceledPress = null;
         canvas.setPointerCapture?.(e.pointerId);
         return;
       }
       // 똥은 빗자루 도구로만 치운다 (형규 요청)
     }, true);
+    canvas.addEventListener('pointermove',e=>{
+      if(itemPress?.kind!=='broom'||itemPress.id!==e.pointerId)return;
+      e.stopImmediatePropagation();e.preventDefault();
+      if(farmInputBlocked())return;
+      const pt=farmPoint(e);if(pt&&itemPress.last)sweepStroke(itemPress.last,pt);if(pt)itemPress.last=pt;
+    },true);
     canvas.addEventListener('pointerup', (e) => {
       if (e.pointerId === canceledPress) {
         canceledPress = null;
@@ -696,10 +709,10 @@
         e.preventDefault();
         swallowUp = false;
         if (itemPress?.id !== e.pointerId) return;
-        const kind = itemPress.kind;
+        const kind = itemPress.kind, last = itemPress.last;
         itemPress = null;
         const pt = farmPoint(e);
-        if (pt && !farmInputBlocked()) dropItem(kind, pt);
+        if (pt && !farmInputBlocked()) {if(kind==='broom'&&last)sweepStroke(last,pt);else dropItem(kind, pt);}
       }
     }, true);
     canvas.addEventListener('pointercancel', (e) => {
@@ -751,7 +764,7 @@
         if (r.foods.length === oldCount && left && left.x === eating.food.x && left.y === eating.food.y && left.remaining > 0 && (eater.hunger < 100 || left.kind === 'pill'))
           feeding.set(d.uid, {food: left, elapsed: 0, species: d.speciesId,cageId:p.cageId});
         log(`${nameOf(d)}: ${r.message}`);
-        effect = { text: r.boosted ? '힘이 솟는다!' : eating.food.kind === 'pill' ? '오독오독' : eating.food.kind === 'meat' ? '♥ 냠냠!' : '우웩…', color: r.boosted ? '#9dff8a' : '#ffe4a0', until: performance.now() + 1500, uid: d.uid };
+        effect = eating.food.kind === 'meat' ? null : { text: r.boosted ? '힘이 솟는다!' : eating.food.kind === 'pill' ? '오독오독' : '우웩…', color: r.boosted ? '#9dff8a' : '#ffe4a0', until: performance.now() + 1500, uid: d.uid };
         if (r.boosted && typeof startCareFx === 'function') startCareFx('aura', p, true);
       }
       render();
@@ -2026,7 +2039,7 @@
   // 도구 줄은 원작처럼 사육장 화면 안 아래쪽에 겹쳐 둔다 (휠이 확대·축소라 화면 밖 버튼은 쓰기 불편하다)
   document.querySelector('.canvas-wrap').append($('#tray'));
   initFarmInput();
-  tipMail('welcome', '디지몬 챔피언십에 참가하게 된 것을 환영합니다!\n디지에그가 곧 부화합니다. 고기를 선택한 뒤 바닥을 터치해 놓고, 똥은 눌러서 치워 주세요.\n밤 9시가 되면 하루가 끝납니다.');
+  tipMail('welcome', '디지몬 챔피언십에 참가하게 된 것을 환영합니다!\n디지에그가 곧 부화합니다. 고기를 선택한 뒤 바닥을 터치해 놓고, 똥은 눌러서 치워 주세요.\n23:59가 되면 하루가 끝납니다.');
 
   document.querySelectorAll('[data-action]').forEach((b) => (b.onclick = () => act(b.dataset.action)));
   $('#partner-tabs').onclick = (e) => {
@@ -2057,7 +2070,7 @@
     showModal(
       '디지몬 챔피언십 웹판',
       `<ol>
-        <li>디지에그에서 시작합니다. 현실 1초가 게임 2분이고, 아침 7시부터 밤 9시까지가 하루입니다. 밤 9시가 되면 달력을 보고 다음 날로 넘어갑니다.</li>
+        <li>디지에그에서 시작합니다. 현실10초마다 게임 시간이10분씩 바뀌며, 아침7시부터23:59까지가 하루입니다.23:59가 되면 달력을 보고 다음 날로 넘어갑니다.</li>
         <li>고기를 선택한 뒤 사육장 바닥을 터치하면 배치됩니다. 배고픈 디지몬은 훈련을 멈추고 걸어와 먹습니다. 알약(프로틴)도 바닥에 놓으면 디지몬이 먹고 다음 배틀에서 공격이 오릅니다(과식하면 부상 위험). 병은 약(주사기), 부상은 상처약을 선택한 뒤 디지몬을 터치해 치료합니다. 선택 / 이동 버튼이나 Esc로 도구를 해제합니다. 바닥의 똥은 빗자루를 선택한 뒤 눌러 치웁니다(빗자루를 든 동안은 똥만 눌립니다).</li>
         <li>디지몬을 끌어 케이지에 넣으면 1시간마다 정해진 능력치와 종족·속성 수치가 오릅니다. 양호실은 피로와 부상을 회복합니다.</li>
         <li>진화는 자동입니다. 오른쪽 진화 조건표의 위에서부터 먼저 채운 쪽으로 진화하고, 아무것도 채우지 못하면 수명이 다할 때 ‘시간 경과’ 진화를 합니다.</li>
@@ -2214,8 +2227,9 @@
         if (hunt) huntTick(dt);
         clock += elapsed * speed * MINUTES_PER_SECOND;
         let changed = false;
-        while (clock >= 1 && !dayEnding) {
-          clock -= 1;
+        while (clock+1e-8 >= C.CLOCK_STEP_MINUTES && !dayEnding) {
+          clock = Math.max(0,clock-C.CLOCK_STEP_MINUTES);
+          for(let minute=0;minute<C.CLOCK_STEP_MINUTES&&!dayEnding;minute++){
           syncTeam();
           const r = C.tickFarm(save);
           save = r.save;
@@ -2223,10 +2237,12 @@
           spoilFoods();
           changed = true;
           checkSchedule();
+          }
         }
+        if(dayEnding)clock=0;
         if (changed) {
           render();
-          if (save.clock % 10 === 0) persist();
+          persist();
         }
       }
       if (hunt) drawHunt(now / 1000, !titleOpen && !paused && !board.editing && !mailOpen && !dayEnding ? dt : 0);

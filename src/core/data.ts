@@ -151,12 +151,16 @@ export const speciesByStage = (stage: Stage) => Object.values(SPECIES).filter((s
 export const SEASONS = ['봄', '여름', '가을', '겨울'] as const;
 /** 한 계절 8일 (원작 달력 화면 1~8일 확인) */
 export const DAYS_PER_SEASON = 8;
-/** 하루는 아침 7시에 시작해 밤 9시에 끝난다 (밤 9시 마감은 영상 확인, 7시 시작은 임시) */
+/** 하루는 아침 7시에 시작해 23시59분에 끝난다 (마감은 사용자 지정,7시 시작은 임시) */
 export const DAY_START_HOUR = 7;
-export const DAY_END_HOUR = 21;
+export const DAY_END_HOUR = 23;
+/** 사용자 지정 하루 마감:23:59. */
+export const DAY_END_MINUTE = 23 * 60 + 59;
 export const MIN_PER_DAY = 1440;
-/** 사용자 지정: 실제1초 = 게임10분(×1). 온라인·오프라인 모두 같은 배율. */
-export const MINUTES_PER_SECOND = 10;
+/** 사용자 지정: 실제10초 = 게임10분(×1). 온라인·오프라인 모두 같은 배율. */
+export const MINUTES_PER_SECOND = 1;
+/** 실제10초마다 게임10분을 한 번에 진행한다. 내부 돌봄 계산은1분씩 유지. */
+export const CLOCK_STEP_MINUTES = 10;
 export const START_CLOCK = 8 * 60;
 
 export function dateOf(clock: number) {
