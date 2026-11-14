@@ -286,3 +286,29 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 #evolution-dialog h2{font-size:16px;margin:0 0 12px}
 #evolution-canvas{width:100%;height:auto;display:block;image-rendering:pixelated;border-radius:6px}
 #evolution-skip{margin-top:12px;color:#c4e5ed;border-color:#527984}
+
+/* 배틀은 원본416×272를1배/2배로 표시. 정보와 기록이 맵을 덮지 않는다. */
+#modal.battle-modal{max-width:738px;width:calc(100% - 24px);padding:16px;max-height:calc(100dvh - 24px);overflow:auto}
+.battle-layout{display:grid;grid-template-columns:416px minmax(0,1fr);gap:14px;align-items:start}
+.battle-stage{min-width:0}
+.battle-map-info{height:28px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#e5f7ff}
+.battle-map-info span{font-variant-numeric:tabular-nums;color:#ffd96c}
+.battle-side{min-width:0;padding-top:28px}
+.battle-modal .battle-health{display:flex;flex-direction:column;gap:12px}
+.battle-modal .hp-row{grid-template-columns:minmax(66px,1fr) minmax(34px,1fr) 38px}
+.battle-modal .battle-log{max-height:145px;overflow:auto;margin-top:14px;overscroll-behavior:contain}
+.battle-modal .battle-log p{font-size:11px;line-height:1.45;margin:0 0 6px}
+#arena{height:auto;aspect-ratio:26/17}
+@media(min-width:1200px) and (min-height:860px){
+ #modal.battle-modal{max-width:1154px}
+ .battle-layout{grid-template-columns:832px minmax(0,1fr)}
+ .battle-modal .battle-log{max-height:360px}
+}
+@media(max-width:760px){
+ #modal.battle-modal{max-width:454px}
+ .battle-layout{grid-template-columns:minmax(0,1fr);gap:10px}
+ .battle-side{padding-top:0}
+ .battle-modal .battle-health{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+ .battle-modal .hp-row{grid-template-columns:minmax(45px,1fr) 1fr 26px;font-size:10px;gap:3px}
+ .battle-modal .battle-log{max-height:66px;margin-top:8px}
+}

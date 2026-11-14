@@ -13,15 +13,15 @@
     duration:event.type==='heal'?1:data.hit.frames.reduce((s,f)=>s+f[1],0)/data.tickRate});
   }
   function tick(dt){for(const e of effects)e.age+=Math.max(0,dt);effects=effects.filter(e=>e.age<e.duration);}
-  function draw(ctx){
+  function draw(ctx,scale=1){
    for(const e of effects){
     if(e.kind==='hit'){
      let t=e.age*data.tickRate,cell=data.hit.frames[0][0];
      for(const f of data.hit.frames){cell=f[0];if(t<f[1])break;t-=f[1];}
-     if(hitImage.complete&&hitImage.naturalWidth)ctx.drawImage(hitImage,cell*data.width,0,data.width,data.height,e.x-data.width/2,e.y-data.height/2,data.width,data.height);
+     if(hitImage.complete&&hitImage.naturalWidth)ctx.drawImage(hitImage,cell*data.width,0,data.width,data.height,e.x-data.width*scale/2,e.y-data.height*scale/2,data.width*scale,data.height*scale);
     }else{
      const image=healImages[Math.min(5,Math.floor(e.age*6))];
-     if(image.complete&&image.naturalWidth)ctx.drawImage(image,e.x-16,e.y-16,32,32);
+     if(image.complete&&image.naturalWidth)ctx.drawImage(image,e.x-16*scale,e.y-16*scale,32*scale,32*scale);
     }
    }
   }

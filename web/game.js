@@ -966,6 +966,7 @@
     showModal('테이머 정보', body, 'TAMER INFO');
   }
   function showModal(title, body, kicker = 'TAMER GUIDE', ok = '사육장으로 돌아가기') {
+    $('#modal').classList.remove('battle-modal');
     $('#modal-title').textContent = title;
     $('#modal-body').innerHTML = body;
     $('#modal-kicker').textContent = kicker;
@@ -1126,14 +1127,16 @@
     // 맵은 시작 시 한 번 선택한다. 타이틀의 원본 지정값이 있으면 무작위보다 우선한다.
     const map=C.battleMapFor(setup.match?.id,Math.random);
     battleBackdrop.preload(map);
-    battle = { setup, state, map, acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
+    for(const u of state.units)spriteOf(u.speciesId,false); // 배경과 출전 그림을 함께 미리 읽는다.
+    battle = { setup, state, map, assetWait:0, acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
     log(`${setup.title} 출전: ${team.map(nameOf).join(', ')}`);
     showModal(
       setup.title,
-      '<canvas id="arena" width="480" height="314"></canvas><div class="battle-health" id="battle-hp"></div><div class="battle-log" id="battle-log"></div>',
+      '<div class="battle-layout"><div class="battle-stage"><div class="battle-map-info"><b id="battle-map-name"></b><span id="battle-time"></span></div><canvas id="arena" width="416" height="272" aria-label="배틀 경기장"></canvas></div><div class="battle-side"><div class="battle-health" id="battle-hp"></div><div class="battle-log" id="battle-log" aria-label="전투 기록"></div></div></div>',
       'AUTO BATTLE',
       '결과 확인',
     );
+    $('#modal').classList?.add('battle-modal');
     $('#modal-ok').disabled = true;
     $('#close-modal').disabled = true;
     render();
@@ -1141,6 +1144,11 @@
   function battleTick(dt) {
     const b = battle;
     if (!b) return;
+    // 그림을 읽는 동안 보이지 않는 전투가 먼저 진행되지 않는다. 실패/지연은 최대4초만 기다린다.
+    if(!b.done&&b.map&&(b.assetWait??0)<4&&
+      (battleBackdrop.status(b.map)==='loading'||b.state.units.some(u=>{const a=spriteOf(u.speciesId,false);return a&&!a.image.complete;}))){
+      b.assetWait=(b.assetWait??0)+dt;drawArena(0);return;
+    }
     if(b.done){
       b.effects.tick(dt);
       for(const [id,a] of b.actions){a.left-=dt*2;if(a.left<=0)b.actions.delete(id);}
@@ -1190,6 +1198,7 @@
     const el = $('#battle-log');
     if (!el) return;
     el.insertAdjacentHTML('beforeend', `<p>${esc(t)}</p>`);
+    while(el.children.length>40)el.firstElementChild.remove();
     el.scrollTop = el.scrollHeight;
   }
   function finishBattle() {
@@ -1247,10 +1256,12 @@
     const ctx = el.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     const s = battle.state;
-    battleBackdrop.draw(ctx,battle.map,el.width,el.height);
+    const backgroundReady=battleBackdrop.draw(ctx,battle.map,el.width,el.height);
     ctx.save();
-    ctx.translate(0,32);
-    for (const u of s.units) {
+    const viewport=battleBackdrop.viewport;
+    ctx.translate(viewport.x,viewport.y);ctx.scale(viewport.scale,viewport.scale);
+    // 아래쪽 개체를 나중에 그려 뒤쪽 디지몬이 앞쪽을 덮지 않게 한다.
+    for (const u of [...s.units].sort((a,b)=>a.y-b.y||a.id-b.id)) {
       if (!u.alive) ctx.globalAlpha = 0.3;
       const m=battle.done?{dx:0,dy:0}:battle.motion.get(u.id)||{dx:u.team===0?0.001:-0.001,dy:0};
       const spriteId=SPRITE_BY_NAME[C.getSpecies(u.speciesId).name];
@@ -1258,7 +1269,9 @@
       const action=battle.actions.get(u.id);
       // 피격 시 해당 종의 원본 셀을 원본 유지 시간으로 재생한다. 인위적 흔들림/점멸 없음.
       const frame=!u.alive?animations.sample(spriteId,'ko',0):action?animations.sample(spriteId,action.state,action.duration-action.left):pose.frame;
-      body(ctx,u.speciesId,false,u.x,u.y+14,1.6,frame,pose.flip);
+      const art=spriteOf(u.speciesId,false),scale=battleBackdrop.spriteScale(art);
+      ctx.fillStyle='#081c3044';ctx.beginPath();ctx.ellipse(u.x,u.y+14,Math.max(10,(art?.body||24)*scale*.4),5,0,0,Math.PI*2);ctx.fill();
+      body(ctx,u.speciesId,false,u.x,u.y+14,scale,frame,pose.flip);
       ctx.globalAlpha = 1;
       if(!u.alive){ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle='#5c6570';ctx.fillText('전투 불능',u.x,u.y-25);}
       ctx.fillStyle = '#30404a';
@@ -1266,7 +1279,7 @@
       ctx.fillStyle = u.team === 0 ? '#58c27d' : '#e0795b';
       ctx.fillRect(u.x - 20, u.y + 18, 40 * Math.max(0, u.hp / u.maxHp), 4);
     }
-    battle.effects.draw(ctx);
+    battle.effects.draw(ctx,1/viewport.scale);
     const now = performance.now();
     battle.flashes = battle.flashes.filter((f) => f.until > now);
     for (const f of battle.flashes) {
@@ -1283,15 +1296,14 @@
       ctx.fillText(f.text, x, y, f.skill?220:480);
     }
     ctx.restore();
-    // 흰 눈·밝은 모래 위에서도 시간/장소를 읽을 수 있게 정보 띠를 둔다.
-    ctx.fillStyle='rgba(15,30,38,.7)';ctx.fillRect(0,0,el.width,30);
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 12px monospace';
-    ctx.textAlign = 'center';
-    ctx.textAlign='left';ctx.fillText(battle.map.name,12,20);
-    ctx.textAlign='right';ctx.fillText(`TIME ${Math.max(0, Math.ceil(C.TIME_LIMIT - s.t))}`,468,20);
+    if(!backgroundReady){
+      ctx.fillStyle='#e1f5ff';ctx.font='12px sans-serif';ctx.textAlign='center';
+      ctx.fillText(battleBackdrop.status(battle.map)==='failed'?'배경을 불러오지 못했습니다.':'경기장을 불러오는 중…',el.width/2,18);
+    }
+    $('#battle-map-name').textContent=battle.map.name;
+    $('#battle-time').textContent=`TIME ${Math.max(0,Math.ceil(C.TIME_LIMIT-s.t))}`;
     const team = (t) => s.units.filter((u) => u.team === t);
-    $('#battle-hp').innerHTML = [0, 1]
+    const hpHtml = [0, 1]
       .map(
         (t) =>
           `<div>${t === 0 ? '내 팀' : '상대'}${team(t)
@@ -1302,6 +1314,7 @@
             .join('')}</div>`,
       )
       .join('');
+    if(battle.hpHtml!==hpHtml){$('#battle-hp').innerHTML=hpHtml;battle.hpHtml=hpHtml;}
   }
 
   // ---------- 그리기 (캔버스) ----------

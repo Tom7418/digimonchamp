@@ -48,6 +48,15 @@ assert len(maps['maps'])==11 and len(maps['titles'])==61
 for battle_map in maps['maps']:
     image=web/battle_map['asset']
     assert struct.unpack_from('>II',image.read_bytes(),16)==(416,272), f'Invalid battle map: {image}'
+optimization=json.loads((web.parent/'docs/battle-image-optimization.json').read_text(encoding='utf-8'))
+import hashlib
+for battle_map in maps['maps']:
+    path=(web/battle_map['asset']).with_suffix('.webp');raw=path.read_bytes()
+    assert raw[:4]==b'RIFF' and raw[8:16]==b'WEBPVP8L' and raw[20]==0x2f,path
+    size=struct.unpack_from('<I',raw,21)[0]
+    assert ((size&0x3fff)+1,((size>>14)&0x3fff)+1)==(416,272),path
+    record=optimization['maps'][str(battle_map['id'])]
+    assert hashlib.sha256(raw).hexdigest()==record['webpSha256'] and len(raw)==record['webpBytes']<=record['pngBytes'],path
 assert all(value is None or 0<=value<11 for value in maps['titles'].values())
 evolution_js=(web/'assets/evolution/effects.js').read_text(encoding='utf-8')
 evolution=json.loads(evolution_js.removeprefix('window.EVOLUTION_DATA=').removesuffix(';\n'))
