@@ -733,7 +733,7 @@
     if (C.isSleeping(d)) { feeding.delete(d.uid); return true; }
     const eating = feeding.get(d.uid);
     if (eating) {
-      if (!view.foods.includes(eating.food) || d.isEgg || p.cageId || eating.species !== d.speciesId) {
+      if (!view.foods.includes(eating.food) || d.isEgg || eating.cageId !== p.cageId || eating.species !== d.speciesId) {
         feeding.delete(d.uid);
         return false;
       }
@@ -749,7 +749,7 @@
         // 부분 섭취는 새 먹이 객체를 예약하고, 배가 차면 남은 고기를 놓아둔다.
         const left = r.foods[foodIndex], eater = save.digimon.find(x => x.uid === d.uid);
         if (r.foods.length === oldCount && left && left.x === eating.food.x && left.y === eating.food.y && left.remaining > 0 && (eater.hunger < 100 || left.kind === 'pill'))
-          feeding.set(d.uid, {food: left, elapsed: 0, species: d.speciesId});
+          feeding.set(d.uid, {food: left, elapsed: 0, species: d.speciesId,cageId:p.cageId});
         log(`${nameOf(d)}: ${r.message}`);
         effect = { text: r.boosted ? '힘이 솟는다!' : eating.food.kind === 'pill' ? '오독오독' : eating.food.kind === 'meat' ? '♥ 냠냠!' : '우웩…', color: r.boosted ? '#9dff8a' : '#ffe4a0', until: performance.now() + 1500, uid: d.uid };
         if (r.boosted && typeof startCareFx === 'function') startCareFx('aura', p, true);
@@ -767,20 +767,19 @@
       if ([...feeding.values()].some((e) => e.food === f)) continue;
       // 병든 디지몬은 썩은 먹이를 거부한다. 먹지 못하는 먹이 앞에서 계속 멈추지 않는다.
       if (f.kind === 'rotten' && d.sick) continue;
+      if (!board.canMove(p, f)) continue; // 울타리 너머의 먹이로 자동 탈출하지 않는다.
       const dist = Math.hypot(f.x - p.x, f.y - p.y);
       if (!best || dist < best.dist) best = { f, dist };
     }
     if (!best) return false;
     const { f, dist } = best;
-    if (p.cageId) { p.cageId = null; p.cage = 'free'; syncTeam(); }
     if (dist < 10) {
-      feeding.set(d.uid, { food: f, elapsed: 0, species: d.speciesId });
+      feeding.set(d.uid, { food: f, elapsed: 0, species: d.speciesId,cageId:p.cageId });
       return true;
     }
     const v = Math.min(dist, 34 * dt);
     p.direction = f.x > p.x ? 1 : -1;
-    p.x += ((f.x - p.x) / dist) * v;
-    p.y += ((f.y - p.y) / dist) * v;
+    board.movePet(p, {x:p.x+((f.x-p.x)/dist)*v,y:p.y+((f.y-p.y)/dist)*v});
     p.target = p.x;
     return true;
   }
@@ -1234,6 +1233,7 @@
     ctx.save();
     ctx.scale(board.zoom, board.zoom);
     ctx.translate(-board.cam.x, -board.cam.y);
+    board.advance(animDt);
     board.draw(ctx);
     for (const f of view.foods) drawFood(f);
     for (const pp of view.poops) drawPoop(pp.x, pp.y);
@@ -1246,12 +1246,12 @@
       const oldX = p.x, oldY = p.y;
       // 잡고 옮기는 동안에는 자율 이동·먹기 예약이 드롭 위치를 덮어쓰지 않는다.
       if (board.isDragging(d.uid)) feeding.delete(d.uid);
-      if (animDt > 0 && !board.isDragging(d.uid) && !d.isEgg && !seekFood(p, d, dt) && !p.cageId) {
+      if (animDt > 0 && !board.isDragging(d.uid) && !board.isBouncing(d.uid) && !d.isEgg && !seekFood(p, d, dt) && !p.cageId) {
         if (Math.abs(p.target - p.x) < 3) {
           if (Math.random() < 0.008) p.target = Math.max(board.roam.x0, Math.min(board.roam.x1, p.x + (Math.random() - 0.5) * 500));
         } else {
           p.direction = p.target > p.x ? 1 : -1;
-          p.x += p.direction * dt * 16 * (d.fatigue > 80 ? 0.4 : 1);
+          if (!board.movePet(p,{x:p.x+p.direction*dt*16*(d.fatigue>80?0.4:1),y:p.y})) p.target=p.x;
         }
       }
       const selected = i === view.selected;
@@ -1272,7 +1272,7 @@
       const facilityNo=({field:'cm30',gym:'cm34',clinic:'cm16'})[p.cage] || facility?.img?.match(/cm[0-9]+/)?.[0];
       const trainingSequence=window.DIGIMON_ANIMATIONS.training[facilityNo];
       // 훈련은 원작 시설 행동표의 동작으로 표시. 복합 행동의 첫 동작만 연결.
-      const state=C.isSleeping(d) ? 'seq_13' : p.cageId&&p.motion!=='eat'&&trainingSequence!==undefined&&!d.isEgg&&!d.trainDone
+      const state=board.isBouncing(d.uid) ? 'hurtAlt' : C.isSleeping(d) ? 'seq_13' : p.cageId&&p.motion!=='eat'&&trainingSequence!==undefined&&!d.isEgg&&!d.trainDone
         ? 'seq_'+trainingSequence : p.motion||'idle';
       const frame = animations.pose(p, animationId(d), state, animDt);
       body(ctx, d.speciesId, d.isEgg, p.x, p.y, scale, frame, p.direction > 0); // 원본 도트는 왼쪽을 향하므로 오른쪽 이동에서만 반전

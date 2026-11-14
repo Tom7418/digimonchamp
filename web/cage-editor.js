@@ -23,6 +23,22 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  const inHex=(p,c)=>{const x=Math.abs(p.x-c.x),y=Math.abs(p.y-c.y);return x<=Math.sqrt(3)*R/2+1e-6&&y+x/Math.sqrt(3)<=R+1e-6;};
  const tile=p=>{for(let r=0;r<5;r++)for(let q=-Math.floor(r/2);q<5+(r%2===0?1:0)-Math.floor(r/2);q++)if(inHex(p,center(q,r)))return {q,r};return null;};
  const inCage=(p,c)=>L.cells(c).some(([q,r])=>inHex(p,center(q,r)));
+ // 벽의 바깥 변만 검사한다. 여러 칸짜리 케이지의 내부 이음선은 벽이 아니다.
+ const edges=c=>{const map=new Map();for(const [q,r] of L.cells(c)){const o=center(q,r),v=Array.from({length:6},(_,i)=>({x:o.x+R*Math.cos((i*60-30)*Math.PI/180),y:o.y+R*Math.sin((i*60-30)*Math.PI/180)}));for(let i=0;i<6;i++){const a=v[i],b=v[(i+1)%6],k=[a,b].map(p=>`${Math.round(p.x)},${Math.round(p.y)}`).sort().join('/');if(map.has(k))map.delete(k);else map.set(k,[a,b]);}}return [...map.values()];};
+ const onSegment=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy)));return {x:a.x+t*dx,y:a.y+t*dy};};
+ const safeInCage=(p,c)=>inCage(p,c)&&edges(c).every(([a,b])=>{const n=onSegment(p,a,b);return Math.hypot(n.x-p.x,n.y-p.y)>=12;});
+ // 각 육각의 안쪽 다각형에 가장 가까운 지점을 찾아 안전하게 착지한다(중앙 스냅 아님).
+ function nearestCage(p){let best=null;for(const c of getState().layout)for(const [q,r] of L.cells(c)){
+   const o=center(q,r),radius=R-24,v=Array.from({length:6},(_,i)=>({x:o.x+radius*Math.cos((i*60-30)*Math.PI/180),y:o.y+radius*Math.sin((i*60-30)*Math.PI/180)}));
+   const x=Math.abs(p.x-o.x),y=Math.abs(p.y-o.y),inside=x<=Math.sqrt(3)*radius/2&&y+x/Math.sqrt(3)<=radius;
+   const candidates=inside?[p]:v.map((a,i)=>onSegment(p,a,v[(i+1)%6]));
+   for(const point of candidates){const distance=Math.hypot(point.x-p.x,point.y-p.y);if(!best||distance<best.distance)best={cage:c,point,distance};}
+ }return best;}
+ const bounces=new Map();
+ function bouncePet(p,from){const landing=nearestCage(from);if(!landing)return false;L.assign(getState(),p,landing.cage.id);placePet(p,landing.point,landing.cage);bounces.set(p.uid,{from:{...from},elapsed:0,duration:0.4});return true;}
+ // 이동 선분을 작은 간격으로 검사해 프레임이 커도 다른 시설을 관통하지 않는다.
+ const canMove=(p,to)=>{const s=getState(),own=s.layout.find(c=>c.id===p.cageId),n=Math.max(1,Math.ceil(Math.hypot(to.x-p.x,to.y-p.y)/6));for(let i=1;i<=n;i++){const point={x:p.x+(to.x-p.x)*i/n,y:p.y+(to.y-p.y)*i/n};if(own?!inCage(point,own):s.layout.some(c=>inCage(point,c)))return false;}return true;};
+ const movePet=(p,to)=>{if(!canMove(p,to))return false;const c=getState().layout.find(c=>c.id===p.cageId);placePet(p,to,c);return true;};
  // 케이지를 옮기거나 회전해도 같은 바닥 위치를 따라가도록 내부 좌표를 저장한다.
  const localPoint=(p,c)=>{const a=-(c.rotation||0)*Math.PI/3,o=center(c.q,c.r),x=p.x-o.x,y=p.y-o.y;return {id:c.id,x:x*Math.cos(a)-y*Math.sin(a),y:x*Math.sin(a)+y*Math.cos(a)};};
  const worldPoint=(p,c)=>{const a=(c.rotation||0)*Math.PI/3,o=center(c.q,c.r);return {x:o.x+p.x*Math.cos(a)-p.y*Math.sin(a),y:o.y+p.x*Math.sin(a)+p.y*Math.cos(a)};};
@@ -51,7 +67,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  canvas.style.touchAction='none';canvas.onclick=null;
  canvas.onpointerdown=e=>{if(isBlocked())return;const s=getState(),p=coordinate(e),t=tile(p);hover=t;canvas.setPointerCapture(e.pointerId);
    if(editing){const cage=t&&L.at(s.layout,t.q,t.r);if(cage&&!tool){selected=cage.id;drag={cage:cage.id,offsetQ:t.q-cage.q,offsetR:t.r-cage.r};}else if(!tool){selected=null;}status();}
-   else{let best=-1,distance=65;s.team.forEach((pet,i)=>{const d=Math.hypot(p.x-pet.x,p.y-(pet.y-25));if(d<distance){best=i;distance=d;}});if(best>=0){s.selected=best;drag={pet:best,start:p,point:p,offset:{x:s.team[best].x-p.x,y:s.team[best].y-p.y},original:{x:s.team[best].x,y:s.team[best].y,target:s.team[best].target}};onGrab?.(s.team[best].uid);changed();}else drag={click:true};}
+   else{let best=-1,distance=65;s.team.forEach((pet,i)=>{const d=Math.hypot(p.x-pet.x,p.y-(pet.y-25));if(d<distance){best=i;distance=d;}});if(best>=0){s.selected=best;drag={pet:best,start:p,point:p,offset:{x:s.team[best].x-p.x,y:s.team[best].y-p.y},original:{x:s.team[best].x,y:s.team[best].y,target:s.team[best].target}};bounces.delete(s.team[best].uid);onGrab?.(s.team[best].uid);changed();}else drag={click:true};}
    // 디지몬·케이지를 잡지 않았으면 끌어서 사육장을 둘러본다
    if(drag?.click||(editing&&!tool&&!drag)){drag={...(drag||{}),pan:{x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y,moved:false}};}
  };
@@ -62,7 +78,8 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
    else if(drag?.pet!==undefined&&Math.hypot(point.x-drag.start.x,point.y-drag.start.y)<8){restoreDrag();onPet?.(drag.pet);}
    else if(t){
      const cage=L.at(s.layout,t.q,t.r),pet=s.team[drag?.pet??s.selected];
-     if(pet&&cage){
+     if(pet&&(!cage||!safeInCage(foot,cage))&&bouncePet(pet,foot)){changed('케이지 안으로 튕겨 들어갔습니다.');}
+     else if(pet&&cage){
        if(L.assign(s,pet,cage.id)){placePet(pet,foot,cage);changed(L.over(s,cage.id)?`${L.types[cage.kind].name}의 정원을 넘었습니다. 이대로 하루가 지나면 스트레스를 받습니다.`:`${L.types[cage.kind].name}에 입장했습니다.`);}
      }else if(pet&&(drag?.pet!==undefined||drag?.click)){
        pet.cageId=null;pet.cage='free';pet.cageSeconds=0;placePet(pet,foot,null);changed('자유 활동으로 전환했습니다.');
@@ -75,8 +92,11 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  return {
    set onPet(f){onPet=f;},
    set onGrab(f){onGrab=f;},
+   canMove,movePet,
+   isBouncing(uid){return bounces.has(uid);},
+   advance(dt){for(const [uid,b] of bounces){b.elapsed+=Math.max(0,dt);if(!getState().team.some(p=>p.uid===uid)||b.elapsed>=b.duration)bounces.delete(uid);}},
    isDragging(uid){return drag?.pet!==undefined&&getState().team[drag.pet]?.uid===uid;},
-   reset(){selected=null;drag=null;tool=null;init();status();},
+   reset(){selected=null;drag=null;tool=null;bounces.clear();init();status();},
    world:WORLD, view:VIEW, cam, center, R, get zoom(){return zoom;},
    // 화면(캔버스) 좌표 이벤트 → 월드 좌표
    toWorld:e=>coordinate(e),
@@ -131,7 +151,9 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
      const next=editing&&candidate(hover);if(next){const valid=L.valid(s.layout,next);for(const [q,r] of L.cells(next)){polygon(ctx,q,r);ctx.fillStyle=valid?'#79efa588':'#ff5a6e99';ctx.fill();}}
      // 중앙 정렬은 최초의 잘못된 옛 좌표에만 사용한다. 이후에는 놓은 위치를 매 프레임 보존한다.
      for(const p of s.team){
-       const c=s.layout.find(c=>c.id===p.cageId);
+       let c=s.layout.find(c=>c.id===p.cageId);
+       // 새 개체/옛 저장이 시설 안에 있는데 소속만 비어 있으면 벽 안에 갇히지 않도록 복구한다.
+       if(!c&&!p.cageId&&s.team[drag?.pet]!==p){c=s.layout.find(c=>inCage(p,c));if(c){L.assign(s,p,c.id);p.cagePosition=localPoint(p,c);}}
        if(c){
          if(p.cagePosition?.id!==c.id||!Number.isFinite(p.cagePosition.x)||!Number.isFinite(p.cagePosition.y)){
            const point=Number.isFinite(p.x)&&Number.isFinite(p.y)&&inCage(p,c)?p:center(...L.cells(c)[0]);
@@ -142,6 +164,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
          p.x=point.x;p.y=point.y;p.target=p.x;p.cage=c.kind;
        }else if(p.cageId||p.cage!=='free'){p.cage='free';p.cageId=null;p.cagePosition=null;}
      }
+     for(const p of s.team){const b=bounces.get(p.uid);if(b){const cage=s.layout.find(c=>c.id===p.cageId);if(!cage||!p.cagePosition){bounces.delete(p.uid);continue;}const t=b.elapsed/b.duration,e=1-(1-t)**2,to=worldPoint(p.cagePosition,cage);p.x=b.from.x+(to.x-b.from.x)*e;p.y=b.from.y+(to.y-b.from.y)*e-35*Math.sin(Math.PI*t);}}
      if(drag?.pet!==undefined){const p=s.team[drag.pet],point=draggedPoint(drag.point);p.x=point.x;p.y=point.y;p.target=p.x;}
    }
  };

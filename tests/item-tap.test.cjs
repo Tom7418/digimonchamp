@@ -8,7 +8,7 @@ function setup() {
   const target = () => ({ handlers: {}, addEventListener(t,f) { (this.handlers[t]??=[]).push(f); }, fire(t,e={}) { for(const f of this.handlers[t]??[]) f(e); } });
   const tray=target(), window=target(), document=Object.assign(target(),{hidden:false});
   const canvas=Object.assign(target(),{setPointerCapture(){},getBoundingClientRect:()=>({left:0,right:960,top:0,bottom:560,width:960,height:560})});
-  const modal={open:false},board={editing:false,cam:{x:0,y:0},roam:{x0:60,x1:1900,y0:120,y1:1150},toWorld(e){return {x:e.clientX+this.cam.x,y:e.clientY+this.cam.y};}},mail={};
+  const modal={open:false},board={canMove:()=>true,movePet(p,to){Object.assign(p,to);return true;},editing:false,cam:{x:0,y:0},roam:{x0:60,x1:1900,y0:120,y1:1150},toWorld(e){return {x:e.clientX+this.cam.x,y:e.clientY+this.cam.y};}},mail={};
   const ctx=vm.createContext({window,document,canvas,board,titleOpen:false,battle:null,hunt:null,mailOpen:false,dayEnding:false,
     $:id=>({'#tray':tray,'#modal':modal,'#mail':mail})[id],renderTray(){},persist(){},nextMail(){},toast(){},render(){},log(){},syncTeam(){},nameOf:()=> '깜몬',performance:{now:()=>0},effect:null});
   vm.runInContext(fs.readFileSync(path.join(__dirname,'../web/core.js'),'utf8'),ctx);
@@ -32,9 +32,9 @@ test('디지몬 위 터치도 직접 급여하지 않고 바닥에 놓으며 재
   assert.equal(s.ctx.save.digimon[0].hunger,0);assert.equal(s.ctx.view.foods.length,1);assert.equal(s.ctx.save.meat,2);
   s.tap();s.tap();assert.equal(s.ctx.view.foods.length,2);
 });
-test('케이지에서 걸어와 한 입씩 먹고 배가 차면 남은 고기를 보존한다',()=>{
+test('케이지 안에서 걸어와 한 입씩 먹고 배가 차면 남은 고기를 보존한다',()=>{
   const s=setup();s.choose('meat');s.tap();const p=s.ctx.view.team[0],d=s.ctx.save.digimon[0];p.x=100;
-  s.seekFood(p,d,1);assert.equal(p.cageId,null);assert.ok(p.x>100);
+  s.seekFood(p,d,1);assert.equal(p.cageId,'cage');assert.ok(p.x>100);
   p.x=200;p.y=300;s.seekFood(p,d,0);
   assert.equal(s.ctx.view.foods.length,1);assert.equal(s.ctx.save.meat,2);
   s.seekFood(p,d,0); // 일시정지에서는 씹기 시간도 흐르지 않는다.
@@ -100,3 +100,9 @@ test('다른 손가락·중복 이벤트·편집 모드에서는 추가 배치�
   assert.equal(s.ctx.view.foods.length,0);s.canvas.fire('pointerup',s.event());s.canvas.fire('pointerup',s.event());
   assert.equal(s.ctx.view.foods.length,1);s.board.editing=true;s.tap();assert.equal(s.ctx.view.foods.length,1);
 });
+
+ test('울타리 너머의 먹이는 찾아가지 않으며 재고도 소비하지 않는다',()=>{
+ const s=setup();s.choose('meat');s.tap();s.board.canMove=()=>false;
+ const p=s.ctx.view.team[0],d=s.ctx.save.digimon[0];p.x=100;
+ assert.equal(s.seekFood(p,d,1),false);assert.equal(p.x,100);assert.equal(p.cageId,'cage');assert.equal(s.ctx.save.meat,2);
+ });
