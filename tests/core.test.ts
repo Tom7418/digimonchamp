@@ -9,7 +9,7 @@ import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMa
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
-import { ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
+import { discardFloorFood, ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
 describe('floor food reservations', () => {
   it('restores food in the expanded farm without clipping to the old viewport', () => {
@@ -19,6 +19,19 @@ describe('floor food reservations', () => {
     const restored = restoreFloorFood(s, foods, bounds);
     expect(restored).toEqual(foods);
     expect(restoreFloorFood(s, JSON.parse(JSON.stringify(restored)), bounds)).toEqual(foods);
+  });
+  it('먹이 청소는 남은 양과 관계없이 해당 재고 한 개만 폐기하고 육성 상태는 바꾸지 않는다', () => {
+    for (const [kind,key] of [['meat','meat'],['pill','pills'],['rotten','rotten']] as const) {
+      const s={...freshSave(0),meat:2,pills:2,rotten:2};
+      const r=discardFloorFood(s,[{kind,x:200,y:300,remaining:5}],0);
+      expect(r.ok).toBe(true);expect(r.foods).toEqual([]);expect(r.save[key]).toBe(1);
+      expect(r.save.digimon).toBe(s.digimon);
+      expect(discardFloorFood(r.save,r.foods,0)).toMatchObject({ok:false,save:r.save});
+    }
+  });
+  it('청소 중 재접속한 먹이는 청소 표시 없이 복원하여 다시 치울 수 있다', () => {
+    const foods=[{kind:'meat',x:200,y:300,sweeping:true,remaining:25}];
+    expect(restoreFloorFood(freshSave(0),foods)).toEqual([{kind:'meat',x:200,y:300,remaining:25}]);
   });
   const foods: FloorFood[] = [{ kind: 'meat', x: 200, y: 300 }];
   it('direct feeding cannot consume the last meat reserved on the floor', () => {

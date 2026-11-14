@@ -33,6 +33,14 @@ export function restoreFloorFood(save: SaveData, raw: unknown, bounds: FoodBound
   return foods;
 }
 
+/** 남은 먹이는 돌려받지 않고 폐기한다. 바닥 예약 한 개에 해당하는 재고만 차감한다. */
+export function discardFloorFood(save: SaveData, foods: readonly FloorFood[], index: number) {
+  const food = foods[index];
+  if (!food) return { ok: false, save, foods, message: '치울 먹이가 없어요.' };
+  return { ok: true, save: { ...save, [STOCK[food.kind]]: Math.max(0, save[STOCK[food.kind]] - 1) },
+    foods: foods.filter((_, i) => i !== index), message: '남은 먹이를 치웠습니다.' };
+}
+
 /** 직접 급여도 바닥에 예약한 수량을 제외한다. 버튼과 끌어 주기가 같은 규칙을 쓴다. */
 export function feedFromTray(save: SaveData, foods: readonly FloorFood[], uid: number, kind: FoodKind): ActionResult {
   if (availableFood(save, foods, kind) <= 0) return { ok: false, save, message: '사용 가능한 먹이가 없어요. 바닥에 놓인 먹이는 따로 예약되어 있어요.' };
