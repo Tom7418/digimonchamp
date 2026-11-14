@@ -1006,7 +1006,11 @@
   function battleTick(dt) {
     const b = battle;
     if (!b) return;
-    if(b.done){b.effects.tick(dt);drawArena(0);return;}
+    if(b.done){
+      b.effects.tick(dt);
+      for(const [id,a] of b.actions){a.left-=dt*2;if(a.left<=0)b.actions.delete(id);}
+      drawArena(dt*2);return;
+    }
     b.effects.tick(dt);
     b.acc += dt * 2; // 화면에서는 2배속으로 진행
     while (b.acc >= 0.1 && !b.state.over) {
@@ -1019,9 +1023,14 @@
       }
       for (const e of events) {
         b.effects.add(e,b.state.units);
-        // 공격/피격 시각은 실제 전투 이벤트에만 반응한다. 임시 연출 길이 0.2초.
+        // 실제 적중 이벤트로 공격/피격을 연결하고 각 종 NANR 유지 시간을 사용한다.
         if(e.type==='hit'){
           const attacker=b.state.units.find(u=>u.id===e.from),target=b.state.units.find(u=>u.id===e.to);
+          // 공격1/2의 일반·특수 배정은 웹판 표시 정책. 원작 기술별7~10 선택은 후속.
+          const attackState=e.special?'attack2':'attack1';
+          const attackId=SPRITE_BY_NAME[C.getSpecies(attacker.speciesId).name];
+          const attackDuration=animations.duration(attackId,attackState);
+          if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:attackDuration,duration:attackDuration,state:attackState});
           const id=SPRITE_BY_NAME[C.getSpecies(target.speciesId).name];
           const state=Math.random()<0.5?'hurt':'hurtAlt';
           const duration=animations.duration(id,state);
@@ -1033,7 +1042,7 @@
         if (e.type === 'ko') battleLog(`${b.state.units[e.id].name} 쓰러짐!`);
       }
     }
-    for(const [id,a] of b.actions){a.left-=dt;if(a.left<=0)b.actions.delete(id);}
+    for(const [id,a] of b.actions){a.left-=dt*2;if(a.left<=0)b.actions.delete(id);}
     drawArena(dt * 2);
     if (b.state.over) finishBattle();
   }
@@ -1109,12 +1118,12 @@
     ctx.stroke();
     for (const u of s.units) {
       if (!u.alive) ctx.globalAlpha = 0.3;
-      const m=battle.motion.get(u.id)||{dx:u.team===0?0.001:-0.001,dy:0};
+      const m=battle.done?{dx:0,dy:0}:battle.motion.get(u.id)||{dx:u.team===0?0.001:-0.001,dy:0};
       const spriteId=SPRITE_BY_NAME[C.getSpecies(u.speciesId).name];
       const pose=animations.movement(u,spriteId,m.dx,m.dy,dt,!u.alive);
       const action=battle.actions.get(u.id);
       // 피격 시 해당 종의 원본 셀을 원본 유지 시간으로 재생한다. 인위적 흔들림/점멸 없음.
-      const frame=!u.alive?animations.sample(spriteId,'ko',0):action?.kind==='hit'?animations.sample(spriteId,action.state,action.duration-action.left):pose.frame;
+      const frame=!u.alive?animations.sample(spriteId,'ko',0):action?animations.sample(spriteId,action.state,action.duration-action.left):pose.frame;
       body(ctx,u.speciesId,false,u.x,u.y+14,1.6,frame,pose.flip);
       ctx.globalAlpha = 1;
       if(!u.alive){ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle='#5c6570';ctx.fillText('전투 불능',u.x,u.y-25);}

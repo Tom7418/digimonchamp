@@ -55,7 +55,10 @@ def main():
         if name.startswith('field_cm'):
             training[name[6:10]] = commands.get(row[2], 0)
     states = {f'seq_{i}':i for i in range(40)}
-    states.update({'idle':0,'walk':2,'eat':14,'hurt':5,'hurtAlt':6,'ko':15,'boundIdle':16,'boundRun':19})
+    states.update({'idle':0,'walk':2,'eat':14,'hurt':5,'hurtAlt':6,'ko':37,'boundIdle':16,'boundRun':19})
+    # 사용자 제공 GIF 분류. 명칭과 원작이 어떤 상황에서 선택하는지는 구분한다.
+    names=['idle','eyesClosed','walk','run','surprised','hurt','hurtAlt','attack1','attack2','attack3','attack4','runScared','walkEyesClosed','sleep','eat','sleep2','boundIdle','boundEyesClosed','boundWalk','boundRun','boundSurprised','boundRunScared','boundWalkEyesClosed','boundSleep','boundEat','boundSleep2','zapped',None,'happy','angry','cheering','guard','train','shout','guard2','shoutFrame2',None,'ko','jumpHit',None]
+    states.update({name:i for i,name in enumerate(names) if name})
     data = {'tickRate':60,'states':states,'sourceSequences':states,'banks':banks,'sprites':ids,'training':training}
     (PROJECT / 'web/assets/animations.js').write_text('window.DIGIMON_ANIMATIONS = ' + json.dumps(data, separators=(',', ':')) + ';\n', encoding='utf-8')
     print(f'{len(ids)} sprites / {len(banks)} unique animation banks')

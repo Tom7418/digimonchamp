@@ -29,8 +29,9 @@
     "exceptions": "status and attack-specific reactions use other sequences; not all special branches implemented"
   },
   "ko": {
-    "sequence": 15,
-    "select": "overlay19 0x02116540..0x02116580 tests HP and sets sequence15"
+    "sequence": 37,
+    "source": "user-provided GIF classification: Knocked Out",
+    "correction": "previous sequence15 code branch is Sleep2 pose, not the general visual knockout mapping"
   },
   "rope": {
     "userVerifiedAgumonCells": [

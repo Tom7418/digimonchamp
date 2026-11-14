@@ -30,11 +30,11 @@ def main():
  report={'method':'static ARM code paths and NANR; no emulator trace','hashes':{'arm9':hashlib.sha256(arm).hexdigest(),**{f'overlay{k}':hashlib.sha256(v).hexdigest() for k,v in files.items()}},
  'eat':{'sequence':14,'select':'overlay18 0x0211bb7c/0x0211bb80','consume':'0x0211bc24 -> 0x0210f220; subtracts target data+0x10 and updates depleted object','agumonFrames':[24,25],'toyagumonFrames':[24,25]},
  'hurt':{'sequences':[5,6],'select':'overlay19 0x021168ec..0x021168fc','ordinaryReaction':'0x021189c8..0x021189f4 chooses reaction1/2; 0x02118a88 sets action15; dispatcher0x02116890','exceptions':'status and attack-specific reactions use other sequences; not all special branches implemented'},
- 'ko':{'sequence':15,'select':'overlay19 0x02116540..0x02116580 tests HP and sets sequence15'},
+ 'ko':{'sequence':37,'source':'user-provided GIF classification: Knocked Out','correction':'previous sequence15 code branch is Sleep2 pose, not the general visual knockout mapping'},
  'rope':{'userVerifiedAgumonCells':[27,43],'sequenceRange':[16,25],'codeCorroboration':'overlay0 0x02121c58..0x02121c78 selects sequence19 instead of3 with bound flag+0x118'},
  'sleep':{'sequence':13,'entry':'overlay18 0x0211b888/0x0211b894','status':'rest-state path, not knockout'},
  'training':{'table':'ARM9 0x020c81e0; 37 records of40 bytes','dispatch':'overlay18 0x021191d4..0x02119300 -> 0x02118cfc -> 0x02118a10 -> 0x0211ceb0','facilities':facilities},
  'correction':'Previous eat=29 and hurt=4 were visual guesses and wrong for these code paths. Previous eat=30 candidate withdrawn: common effect actor+0x1d8 was not proof of a food object.',
  'limitations':['training table includes alternative and multi-stage actions; web currently uses first mapped action only','special hit reactions remain partially decoded','60Hz playback remains previous interpretation']}
- out=PROJECT/'docs/animation-code-audit.json';out.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8');print('Verified eat14 / normal hit5,6 / KO15; facility table37; rope code branch19 vs3')
+ out=PROJECT/'docs/animation-code-audit.json';out.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8');print('Verified eat14 / normal hit5,6 / GIF KO37; facility table37; rope code branch19 vs3')
 if __name__=='__main__':main()

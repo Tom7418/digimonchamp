@@ -3,7 +3,7 @@ import argparse,json,hashlib
 from pathlib import Path
 from extract_animations import decode
 PROJECT=Path(__file__).resolve().parents[1]
-ACTIONS={'idle':0,'walk':2,'eat':14,'hurt':5,'hurtAlt':6,'ko':15,'boundIdle':16,'boundRun':19}
+ACTIONS={'idle':0,'walk':2,'eat':14,'hurt':5,'hurtAlt':6,'ko':37,'boundIdle':16,'boundRun':19}
 def audit(root):
  meta=json.loads((PROJECT/'web/assets/sprites.json').read_text(encoding='utf-8'))
  raw=(PROJECT/'web/assets/animations.js').read_text(encoding='utf-8')
@@ -22,7 +22,7 @@ def audit(root):
    'sourceSha256':hashlib.sha256(source.read_bytes()).hexdigest(),
    'actions':{} if egg else {state:sequences[index] for state,index in ACTIONS.items()}})
  creatures=[r for r in rows if r['actions']]
- report={'method':'Byte-decoded source NANR vs deployed data; role mapping from animation-code-audit.json; not visual approval of every pose',
+ report={'method':'Byte-decoded source NANR vs deployed data; role mapping from user GIF classification and animation-code-audit.json; not visual approval of every pose',
   'digimonCount':len(creatures),'eggCount':len(rows)-len(creatures),
   'differentEatCellsFromAgumon':sum([f[0] for f in r['actions']['eat']['frames']]!=[24,25] for r in creatures),
   'species':rows}

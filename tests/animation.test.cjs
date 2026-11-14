@@ -50,9 +50,9 @@ test('사냥 일시정지는 방향·상태·프레임을 유지하고 재개 �
   assert.equal(p.movement(a,id,2,0,0.1).frame,p.sample(id,'walk',0));
 });
 
-test('먹기·일반 피격·전투 불능·로프 동작은 ROM 추적 시퀀스와 일치한다',()=>{
+test('먹기·피격·로프 코드와 사용자 GIF 전투 불능37 분류를 따른다',()=>{
  assert.equal(data.states.eat,14);assert.equal(data.states.hurt,5);assert.equal(data.states.hurtAlt,6);
- assert.equal(data.states.ko,15);assert.equal(data.states.boundIdle,16);
+ assert.equal(data.states.ko,37);assert.equal(data.states.boundIdle,16);
  assert.deepEqual(Array.from(data.banks[data.sprites.m201_agumon][14].frames,f=>f[0]),[24,25]);
  assert.equal(data.training.cm07,29);assert.equal(data.training.cm05,8);assert.equal(data.training.cm04,33);
 });
@@ -70,5 +70,31 @@ test('아구몬 셀 번호를 다른 종에 복사하지 않는다',()=>{
  for(const [id,cells] of [['m208_gabumon',[22,23]],['m205_gaomon',[29,30]],['m102_koromon',[23,24]]]){
   const seq=data.banks[data.sprites[id]][data.states.eat];
   assert.deepEqual(Array.from(seq.frames,f=>f[0]),cells);
+ }
+});
+
+test('제공된 GIF 역할은40개 슬롯을 유지하고 모르는27/36/39는 단정하지 않는다',()=>{
+ for(const [name,n] of Object.entries({run:3,surprised:4,attack1:7,attack2:8,attack3:9,attack4:10,sleep:13,sleep2:15,boundEat:24,happy:28,angry:29,cheering:30,guard:31,train:32,shout:33,guard2:34,jumpHit:38}))assert.equal(data.states[name],n);
+ for(const n of [27,36,39])assert.equal(data.states['seq_'+n],n);
+ assert.notDeepEqual(data.banks[data.sprites.m201_agumon][data.states.ko].frames,data.banks[data.sprites.m201_agumon][data.states.sleep2].frames);
+});
+
+test('실제 적중 이벤트는 공격과 피격을 분리하며 결과 화면에서도 재생을 마친다',()=>{
+ const source=fs.readFileSync('web/game.js','utf8');
+ const a=source.indexOf('  function battleTick(dt)'),b=source.indexOf('  function battleLog(',a);
+ for(const special of [false,true]){
+  const sandbox=vm.createContext({window:{},performance:{now:()=>0},drawArena(){},finishBattle(){},battleLog(){}});
+  for(const f of ['core.js','assets/sprites.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),sandbox);
+  vm.runInContext(`const animations=window.createAnimationPlayer(window.DIGIMON_ANIMATIONS);
+    const SPRITE_BY_NAME=Object.fromEntries(window.SPRITES.map(s=>[s.name,s.id]));
+    const C={getSpecies:ChampCore.getSpecies,stepBattle:()=>[{type:'hit',from:0,to:1,damage:10,special:${special}}]};
+    let battle={done:false,acc:0.1,state:{over:false,units:[{id:0,speciesId:'아구몬',x:0,y:0},{id:1,speciesId:'토이아구몬',x:50,y:0}]},actions:new Map(),motion:new Map(),flashes:[],effects:{tick(){},add(){}}};
+    globalThis.current=battle;
+  `+source.slice(a,b),sandbox);
+  sandbox.battleTick(0.01);
+  assert.equal(sandbox.current.actions.get(0).state,special?'attack2':'attack1');
+  assert.ok(['hurt','hurtAlt'].includes(sandbox.current.actions.get(1).state));
+  sandbox.current.done=true;sandbox.battleTick(10);
+  assert.equal(sandbox.current.actions.size,0);
  }
 });
