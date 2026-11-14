@@ -101,11 +101,17 @@ export function entryLimits(m: Match): string {
   ].filter(Boolean).join(' · ');
 }
 
-/** 예전 임시 타이틀 9개 → 원작 타이틀 (저장 이전용). 랭크가 유지되도록 쉬운 것부터 8개, 인피니티 소울은 무한의 영혼 */
-export const OLD_TITLE_IDS: Record<string, string> = Object.fromEntries([
-  ...TITLES.slice(0, 8).map((m, i) => [`t${i + 1}`, m.id]),
-  ['t9', 'm52'],
-]);
+/** 옛 웹판 임시 타이틀 ID의 호환 대응표(웹판 이전 정책, 원작 규칙 아님).
+ * 표 정렬이 바뀌어도 이전 결과가 달라지지 않도록 ID를 고정한다.
+ * 보유 기록만 옮기며 랭크 보존용 승리 기록이나 보정값을 추가하지 않는다.
+ */
+export const OLD_TITLE_IDS: Readonly<Record<string, string>> = Object.freeze({
+  t1:'m8', t2:'m4', t3:'m55', t4:'m25', t5:'m30', t6:'m38', t7:'m0', t8:'m3', t9:'m52',
+});
+/** 혼합된 옛/새 기록도 중복 없이 이전한다. 랭크·용량·진화 제한은 이후 현재 규칙으로 계산한다. */
+export function migrateTitleIds(ids: readonly string[]): string[] {
+  return [...new Set(ids.map(id=>Object.hasOwn(OLD_TITLE_IDS,id)?OLD_TITLE_IDS[id]:id))];
+}
 
 /** 랭크 이름 10단계 (원작 글 txt_list #1798~1807: 그린·블루·레드·화이트·브론즈·실버·골드·플래티넘·챔프·마스터) */
 export const RANK_NAMES = ['', '그린', '블루', '레드', '화이트', '브론즈', '실버', '골드', '플래티넘', '챔프', '마스터'];

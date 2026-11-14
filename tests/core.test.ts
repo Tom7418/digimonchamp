@@ -5,7 +5,7 @@ import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, i
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
-import { entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
+import { migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
@@ -304,7 +304,7 @@ describe('titles and hunting', () => {
     expect(entryProblems(by('무한의 영혼'), [mon('아구몬', { eggs: 9 })])).toEqual(['디지에그화 10회 이상']);
     expect(by('그라비티 나이츠').needEggs).toBe(24);
     expect(TITLES.filter((t) => t.grade === 4)).toHaveLength(8);
-    // 예전 임시 타이틀을 가진 저장은 랭크를 유지한 채 원작 타이틀로 옮겨진다
+    // 예전 임시 타이틀 기록을 옮긴 뒤 현재 승급 기준으로 재계산한다
     const old = upgradeSave({ ...freshSave(0), titles: ['t1', 't2', 't3', 't9'] });
     expect(old.titles).toEqual([...won(3), 'm52']);
     expect(rankName(tamerRank({ ...old, titles: won(3) }))).toBe('레드 테이머');
@@ -979,5 +979,29 @@ describe('training effect preview',()=>{
     const cage=getCage('체육관'),before=JSON.stringify(cage);
     expect(trainingPreview(cage,1)).toEqual(trainingPreview(cage,1));expect(JSON.stringify(cage)).toBe(before);
     expect(trainingPreview({...cage,no:999},0).source).toBe('temporary');
+  });
+});
+
+describe('legacy title migration follows current rank rules',()=>{
+  it('임시 타이틀6개 저장은 승리 기록을 더하지 않고 새 기준으로 랭크·용량·진화 제한을 계산한다',()=>{
+    const before={...freshSave(0),titles:['t1','t2','t3','t4','t5','t6']};
+    const copy=JSON.stringify(before),after=upgradeSave(before),rank=tamerRank(after);
+    expect(after.titles).toEqual(['m8','m4','m55','m25','m30','m38']);
+    expect(rankName(rank)).toBe('화이트 테이머');expect(rank).toBe(4);
+    expect(capacityOf(after)).toBe(120);expect(cageSpaceOf(after)).toBe(20);expect(maxStageForRank(rank)).toBe(4);
+    expect(after.digimon.length).toBe(before.digimon.length);expect(JSON.stringify(before)).toBe(copy);
+  });
+  it('옛/새 ID 혼합·중복 기록은 한 번만 집계하고 여러 번 불러와도 승리가 추가되지 않는다',()=>{
+    const ids=['t1','m8','t2','t2','m4','t9','m52'];
+    expect(migrateTitleIds(ids)).toEqual(['m8','m4','m52']);
+    const once=upgradeSave({...freshSave(0),titles:ids}),twice=upgradeSave(JSON.parse(JSON.stringify(once)));
+    expect(twice.titles).toEqual(once.titles);expect(tamerRank(twice)).toBe(tamerRank(once));
+    expect(capacityOf(twice)).toBe(capacityOf(once));expect(ids).toHaveLength(7);
+  });
+  it('새 저장/이미 변환된 ID는 유지하고 챔피언십 우승도 현재 규칙으로 계산한다',()=>{
+    expect(migrateTitleIds([])).toEqual([]);
+    expect(migrateTitleIds(['future-title','constructor'])).toEqual(['future-title','constructor']);
+    const now=upgradeSave({...freshSave(0),titles:['m8','m4','m55']});expect(now.titles).toEqual(['m8','m4','m55']);expect(tamerRank(now)).toBe(3);
+    const champion=upgradeSave({...freshSave(0),titles:['t1'],champion:true});expect(champion.champion).toBe(true);expect(tamerRank(champion)).toBe(9);
   });
 });
