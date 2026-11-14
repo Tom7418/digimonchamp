@@ -1560,14 +1560,13 @@
   /** 로프에 묶인 디지몬이 끌고 도망치는 속도(지도 px/초). 임시 */
   const BOUND_RUN_SPEED = 38;
   /**
-   * 로프 색: 계열(디지·하드·클론·알테마)마다 색, α·β·γ로 갈수록 진하게.
-   * 원작 로프 그림을 아직 찾지 못해 정한 임시 색이다.
+   * 로프 색: 디지 파랑·하드 노랑·클론 초록·알테마 빨강(형규 지정), α·β·γ로 갈수록 진하게.
    */
   const ROPE_COLORS = {
-    digi: ['#f5e6a8', '#f0d277', '#e8bb45'],
-    hard: ['#9fd3ff', '#5fb0ff', '#2f86e8'],
+    digi: ['#9fd3ff', '#5fb0ff', '#2f86e8'],
+    hard: ['#f5e6a8', '#f0d277', '#e8bb45'],
     clone: ['#b8f0a8', '#71d965', '#36b43a'],
-    ultima: ['#ffb0d8', '#ff6fb4', '#e83a8c'],
+    ultima: ['#ff9a8a', '#f2503c', '#c41e1e'],
   };
   function ropeColor() {
     const id = save?.rope || 'digi1';
