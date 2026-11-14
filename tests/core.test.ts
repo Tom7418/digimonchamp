@@ -2,6 +2,7 @@ import { HUNT_MAP, huntTerrain, huntTerrainAt, canStandOnHuntTerrain, huntTerrai
 import terrainAudit from '../docs/hunt-terrain-audit.json';
 import skillTable from '../src/data/battle-skills.json';
 import skillAudit from '../docs/battle-skills-audit.json';
+import { BATTLE_MAPS, RANDOM_BATTLE_MAPS, TITLE_BATTLE_MAPS, battleMapFor } from '../src/core/battle-maps';
 import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
@@ -15,6 +16,32 @@ import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
 import { discardFloorFood, ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
+
+describe('원본 배틀 장소', () => {
+  it('일반 배틀은 원본 일반 장소7종에서 무작위 선택한다', () => {
+    expect(BATTLE_MAPS).toHaveLength(11);
+    expect(RANDOM_BATTLE_MAPS).toEqual([0,1,2,3,4,5,7]);
+    const rng=seeded(89),seen=new Set<number>();
+    for(let i=0;i<200;i++)seen.add(battleMapFor(undefined,rng).id);
+    expect([...seen].sort((a,b)=>a-b)).toEqual([0,1,2,3,4,5,7]);
+  });
+  it('환경 지정 타이틀은 번호별 원본 맵, 조건 없는 타이틀은 스타디움을 쓴다', () => {
+    const noRandom=()=>{throw new Error('고정 맵은 RNG를 쓰지 않는다');};
+    for(const [id,map] of [['m15',3],['m35',3],['m36',4],['m37',2],['m38',5],['m39',8],['m2',9]] as const)
+      expect(battleMapFor(id,noRandom).id).toBe(map);
+    expect(battleMapFor('m37',noRandom).stem).toBe('field_bm03_01');
+    expect(Object.keys(TITLE_BATTLE_MAPS)).toHaveLength(61);
+    expect(Object.values(TITLE_BATTLE_MAPS).filter(v=>v!==null)).toHaveLength(20);
+    expect(Object.values(TITLE_BATTLE_MAPS).filter(v=>v===null)).toHaveLength(41);
+    for(const title of TITLES)expect(TITLE_BATTLE_MAPS).toHaveProperty(title.id);
+    // 원작도 환경 -1인 타이틀은 무작위다. -1을 맵 배열 인덱스로 쓰지 않는다.
+    expect(TITLE_BATTLE_MAPS.m0).toBeNull();
+    expect(battleMapFor('m0',()=>0).id).toBe(0);
+    expect(battleMapFor('m0',()=>0.999).id).toBe(7);
+    expect(battleMapFor('prelim',noRandom).id).toBe(10);
+    expect(battleMapFor('final',noRandom).id).toBe(10);
+  });
+});
 
 describe('원본 종별 배틀 기술', () => {
   it('216종 중 유년기I를 제외한204종의361기술만 연결한다', () => {

@@ -7347,6 +7347,192 @@ var ChampCore = (function(exports) {
 			injured: d.injured || rng() < injuryChance
 		};
 	}
+	var battle_maps_default = {
+		maps: [
+			{
+				"id": 0,
+				"name": "일반 경기장",
+				"originalName": "BATTLE_NORMAL",
+				"stem": "field_bm01_01",
+				"asset": "assets/battle/maps/0.png",
+				"width": 416,
+				"height": 272
+			},
+			{
+				"id": 1,
+				"name": "초원",
+				"originalName": "BATTLE_GRASS",
+				"stem": "field_bm02_01",
+				"asset": "assets/battle/maps/1.png",
+				"width": 416,
+				"height": 272
+			},
+			{
+				"id": 2,
+				"name": "화산",
+				"originalName": "BATTLE_VOLCANO",
+				"stem": "field_bm03_01",
+				"asset": "assets/battle/maps/2.png",
+				"width": 416,
+				"height": 272
+			},
+			{
+				"id": 3,
+				"name": "섬",
+				"originalName": "BATTLE_ISLAND",
+				"stem": "field_bm04_01",
+				"asset": "assets/battle/maps/3.png",
+				"width": 416,
+				"height": 272
+			},
+			{
+				"id": 4,
+				"name": "설원",
+				"originalName": "BATTLE_SOUTHPOLE",
+				"stem": "field_bm05_01",
+				"asset": "assets/battle/maps/4.png",
+				"width": 416,
+				"height": 272
+			},
+			{
+				"id": 5,
+				"name": "사막",
+				"originalName": "BATTLE_DESERT",
+				"stem": "field_bm06_01",
+				"asset": "assets/battle/maps/5.png",
+				"width": 416,
+				"height": 272
+			},
+			{
+				"id": 6,
+				"name": "사이버 공간",
+				"originalName": "BATTLE_CYBERSPACE",
+				"stem": "field_bm07_01",
+				"asset": "assets/battle/maps/6.png",
+				"width": 416,
+				"height": 272
+			},
+			{
+				"id": 7,
+				"name": "지옥",
+				"originalName": "BATTLE_HELL",
+				"stem": "field_bm08_01",
+				"asset": "assets/battle/maps/7.png",
+				"width": 416,
+				"height": 272
+			},
+			{
+				"id": 8,
+				"name": "콜로세움",
+				"originalName": "BATTLE_COLOSSEUM",
+				"stem": "field_bm09_01",
+				"asset": "assets/battle/maps/8.png",
+				"width": 416,
+				"height": 272
+			},
+			{
+				"id": 9,
+				"name": "스타디움",
+				"originalName": "BATTLE_STADIUM",
+				"stem": "field_bm10_01",
+				"asset": "assets/battle/maps/9.png",
+				"width": 416,
+				"height": 272
+			},
+			{
+				"id": 10,
+				"name": "돔 스타디움",
+				"originalName": "BATTLE_DOMESTADIUM",
+				"stem": "field_bm11_01",
+				"asset": "assets/battle/maps/10.png",
+				"width": 416,
+				"height": 272
+			}
+		],
+		randomPool: [
+			0,
+			1,
+			2,
+			3,
+			4,
+			5,
+			7
+		],
+		titles: {
+			"m0": null,
+			"m1": null,
+			"m2": 9,
+			"m3": 9,
+			"m4": 9,
+			"m5": null,
+			"m6": null,
+			"m7": null,
+			"m8": null,
+			"m9": null,
+			"m10": null,
+			"m11": null,
+			"m51": null,
+			"m13": null,
+			"m14": null,
+			"m15": 3,
+			"m16": null,
+			"m17": null,
+			"m18": null,
+			"m19": null,
+			"m20": null,
+			"m21": null,
+			"m22": null,
+			"m23": null,
+			"m24": 9,
+			"m25": null,
+			"m26": null,
+			"m27": null,
+			"m28": null,
+			"m29": null,
+			"m30": null,
+			"m31": null,
+			"m32": null,
+			"m33": null,
+			"m34": null,
+			"m35": 3,
+			"m36": 4,
+			"m37": 2,
+			"m38": 5,
+			"m39": 8,
+			"m40": 9,
+			"m41": 9,
+			"m42": null,
+			"m43": null,
+			"m44": null,
+			"m45": 9,
+			"m46": 9,
+			"m47": 9,
+			"m48": null,
+			"m49": null,
+			"m50": null,
+			"m12": null,
+			"m52": null,
+			"m53": null,
+			"m54": null,
+			"m55": null,
+			"m56": 9,
+			"m57": 9,
+			"m58": 9,
+			"m59": 9,
+			"m60": 9
+		}
+	};
+	// src/core/battle-maps.ts
+	/** 원본 ARM9의24바이트 배틀 장소 표. 이름은 웹판 한글 표시명. */
+	var BATTLE_MAPS = battle_maps_default.maps;
+	/** 원본 일반 배틀 선택: 사이버 공간·콜로세움·스타디움·돔 제외. */
+	var RANDOM_BATTLE_MAPS = battle_maps_default.randomPool;
+	var TITLE_BATTLE_MAPS = battle_maps_default.titles;
+	/** 경기를 시작할 때 한 번만 선택한다. null은 원본의 장소 미지정(무작위) 조건. */
+	function battleMapFor(matchId, rng) {
+		const fixed = matchId ? TITLE_BATTLE_MAPS[matchId] : null;
+		return BATTLE_MAPS[matchId === "prelim" || matchId === "final" ? 10 : fixed ?? pick(rng, RANDOM_BATTLE_MAPS)];
+	}
 	// src/core/food.ts
 	/** 바닥 먹이 종류 → 저장의 재고 칸 */
 	var STOCK = {
@@ -7678,6 +7864,7 @@ var ChampCore = (function(exports) {
 	exports.AUTO_FEED_BELOW = AUTO_FEED_BELOW;
 	exports.BAITS = BAITS;
 	exports.BAIT_PACK = BAIT_PACK;
+	exports.BATTLE_MAPS = BATTLE_MAPS;
 	exports.CAGES = CAGES;
 	exports.CAGE_RENAMES = CAGE_RENAMES;
 	exports.CAGE_SPACE_BY_RANK = CAGE_SPACE_BY_RANK;
@@ -7725,6 +7912,7 @@ var ChampCore = (function(exports) {
 	exports.PROTEIN_ATK = PROTEIN_ATK;
 	exports.PROTEIN_SAFE = PROTEIN_SAFE;
 	exports.PROTEIN_TRAIN_INJURY = PROTEIN_TRAIN_INJURY;
+	exports.RANDOM_BATTLE_MAPS = RANDOM_BATTLE_MAPS;
 	exports.RANK_BADGES = RANK_BADGES;
 	exports.RANK_NAMES = RANK_NAMES;
 	exports.RARE_WEIGHT = RARE_WEIGHT;
@@ -7750,6 +7938,7 @@ var ChampCore = (function(exports) {
 	exports.SUMMER = SUMMER;
 	exports.TIME_LIMIT = TIME_LIMIT;
 	exports.TITLES = TITLES;
+	exports.TITLE_BATTLE_MAPS = TITLE_BATTLE_MAPS;
 	exports.TRAINING_MINUTES = TRAINING_MINUTES;
 	exports.TRAIN_INJURY = TRAIN_INJURY;
 	exports.TREAT_CHANCE = TREAT_CHANCE;
@@ -7770,6 +7959,7 @@ var ChampCore = (function(exports) {
 	exports.applyWin = applyWin;
 	exports.availableFood = availableFood;
 	exports.baitOf = baitOf;
+	exports.battleMapFor = battleMapFor;
 	exports.battleSkills = battleSkills;
 	exports.bestRope = bestRope;
 	exports.biteFloorFood = biteFloorFood;

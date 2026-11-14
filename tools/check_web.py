@@ -43,4 +43,10 @@ for no,grid in terrain['maps'].items():
         path=web/'assets/fields'/f'{no}_{suffix}.png'
         if suffix=='02' and not path.exists():continue
         assert struct.unpack_from('>II',path.read_bytes(),16)==(grid['width']*8,grid['height']*8)
-print(f'Pages check passed: {len(sprites)} sprite sheets, relative paths and all entrypoint files verified.')
+maps=json.loads((web.parent/'src/data/battle-maps.json').read_text(encoding='utf-8'))
+assert len(maps['maps'])==11 and len(maps['titles'])==61
+for battle_map in maps['maps']:
+    image=web/battle_map['asset']
+    assert struct.unpack_from('>II',image.read_bytes(),16)==(416,272), f'Invalid battle map: {image}'
+assert all(value is None or 0<=value<11 for value in maps['titles'].values())
+print(f'Pages check passed: {len(sprites)} sprite sheets, 11 battle maps, relative paths and all entrypoint files verified.')

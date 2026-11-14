@@ -5,6 +5,7 @@
 (() => {
   const C = window.ChampCore;
   const animations = window.createAnimationPlayer(window.DIGIMON_ANIMATIONS);
+  const battleBackdrop = window.createBattleMapRenderer();
   const L = window.CageLayout;
   const $ = (s) => document.querySelector(s);
   const KEY = 'champion-web-v2';
@@ -1096,11 +1097,14 @@
       team.map((d) => C.entrantOf(d, mode)),
       foes,
     );
-    battle = { setup, state, acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
+    // 맵은 시작 시 한 번 선택한다. 타이틀의 원본 지정값이 있으면 무작위보다 우선한다.
+    const map=C.battleMapFor(setup.match?.id,Math.random);
+    battleBackdrop.preload(map);
+    battle = { setup, state, map, acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
     log(`${setup.title} 출전: ${team.map(nameOf).join(', ')}`);
     showModal(
       setup.title,
-      '<canvas id="arena" width="480" height="250"></canvas><div class="battle-health" id="battle-hp"></div><div class="battle-log" id="battle-log"></div>',
+      '<canvas id="arena" width="480" height="314"></canvas><div class="battle-health" id="battle-hp"></div><div class="battle-log" id="battle-log"></div>',
       'AUTO BATTLE',
       '결과 확인',
     );
@@ -1217,15 +1221,9 @@
     const ctx = el.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     const s = battle.state;
-    ctx.fillStyle = '#dfe9ee';
-    ctx.fillRect(0, 0, 480, 250);
-    ctx.strokeStyle = '#b7c8d2';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(10, 10, 460, 230);
-    ctx.beginPath();
-    ctx.moveTo(240, 10);
-    ctx.lineTo(240, 240);
-    ctx.stroke();
+    battleBackdrop.draw(ctx,battle.map,el.width,el.height);
+    ctx.save();
+    ctx.translate(0,32);
     for (const u of s.units) {
       if (!u.alive) ctx.globalAlpha = 0.3;
       const m=battle.done?{dx:0,dy:0}:battle.motion.get(u.id)||{dx:u.team===0?0.001:-0.001,dy:0};
@@ -1258,10 +1256,14 @@
       ctx.strokeText(f.text, x, y, f.skill?220:480);
       ctx.fillText(f.text, x, y, f.skill?220:480);
     }
-    ctx.fillStyle = '#203040';
+    ctx.restore();
+    // 흰 눈·밝은 모래 위에서도 시간/장소를 읽을 수 있게 정보 띠를 둔다.
+    ctx.fillStyle='rgba(15,30,38,.7)';ctx.fillRect(0,0,el.width,30);
+    ctx.fillStyle = '#fff';
     ctx.font = 'bold 12px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(`TIME ${Math.max(0, Math.ceil(C.TIME_LIMIT - s.t))}`, 240, 26);
+    ctx.textAlign='left';ctx.fillText(battle.map.name,12,20);
+    ctx.textAlign='right';ctx.fillText(`TIME ${Math.max(0, Math.ceil(C.TIME_LIMIT - s.t))}`,468,20);
     const team = (t) => s.units.filter((u) => u.team === t);
     $('#battle-hp').innerHTML = [0, 1]
       .map(
