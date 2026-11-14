@@ -10,9 +10,24 @@
   "species": 216,
   "battleSpecies": 204,
   "skills": 361,
+  "localizedNames": {
+    "count": 361,
+    "databaseRange": [
+      432,
+      793
+    ],
+    "battleRange": [
+      1301,
+      1662
+    ],
+    "instructionChecks": 15,
+    "databaseOverlaySha256": "e35aea7c2cd504a89398444697c8590f2057648e86a4514fc36c8d935bae7396",
+    "databaseTextSha256": "6b23477771721a7808c91b0a8dc17c2ba46b33e2e99fdb4e873b702abb4ca369",
+    "battleTextSha256": "2044132b7d70d5c42f05680b38b7d97882741ead7dacdb9803e45b9b38e06e58",
+    "evidence": "overlay16 0x02112bdc..0x02112c40 counts non-first owner rows; 0x02111fe0..0x021120d8 reads database text group1 index432 + species skill start + selected slot"
+  },
   "evidence": "overlay19 0x0211fa88..0x0211fb0c: owner grouping and skill-name lookup; species internal ID = row + 8",
   "unverified": [
-    "Korean localized name correspondence",
     "skill slot to animation correspondence",
     "power, TP cost, range, effects, AI and opponent rosters"
   ]

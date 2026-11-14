@@ -108,13 +108,13 @@ test('기술 이벤트의 슬롯 동작과 이름을 재생하고 공격자 로�
   for(const file of ['core.js','assets/sprites.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync('web/'+file,'utf8'),sandbox);
   vm.runInContext(`const animations=window.createAnimationPlayer(window.DIGIMON_ANIMATIONS);
    const SPRITE_BY_NAME=Object.fromEntries(window.SPRITES.map(s=>[s.name,s.id]));
-   const C={getSpecies:ChampCore.getSpecies,stepBattle:()=>[{type:'hit',from:0,to:1,damage:12,special:true,skill:{slot:${slot},animation:'${animation}',name:'Test Skill'}}]};
+   const C={getSpecies:ChampCore.getSpecies,stepBattle:()=>[{type:'hit',from:0,to:1,damage:12,special:true,skill:{slot:${slot},animation:'${animation}',name:'헤비 플레임'}}]};
    let battle={done:false,acc:0.1,state:{over:false,units:[{id:0,name:'아구몬',speciesId:'아구몬',x:0,y:0},{id:1,name:'토이아구몬',speciesId:'토이아구몬',x:50,y:0}]},actions:new Map(),motion:new Map(),flashes:[],effects:{tick(){},add(){}}};
    globalThis.current=battle;
   `+source.slice(start,end),sandbox);
   sandbox.battleTick(0.01);
   assert.equal(sandbox.current.actions.get(0).state,animation);
-  assert.ok(sandbox.current.flashes.some(f=>f.id===0&&f.text==='Test Skill'&&f.skill));
-  assert.deepEqual(logs,['아구몬 · Test Skill → 토이아구몬 (12)']);
+  assert.ok(sandbox.current.flashes.some(f=>f.id===0&&f.text==='헤비 플레임'&&f.skill));
+  assert.deepEqual(logs,['아구몬 · 헤비 플레임 → 토이아구몬 (12)']);
  }
 });

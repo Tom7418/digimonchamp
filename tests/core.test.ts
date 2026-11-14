@@ -1,6 +1,7 @@
 import { HUNT_MAP, huntTerrain, huntTerrainAt, canStandOnHuntTerrain, huntTerrainLineClear, moveOnHuntTerrain, huntSpawnPoints, pickHuntSpawn, type HuntTerrain } from '../src/core/hunt-terrain';
 import terrainAudit from '../docs/hunt-terrain-audit.json';
 import skillTable from '../src/data/battle-skills.json';
+import skillAudit from '../docs/battle-skills-audit.json';
 import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
@@ -34,9 +35,9 @@ describe('원본 종별 배틀 기술', () => {
     expect(fighters).toBe(204); expect(total).toBe(361);
   });
   it('아구몬·토이아구몬·가루다몬 기술을 섞지 않고 각 슬롯을 선택한다', () => {
-    expect(battleSkills('아구몬').map(s => s.name)).toEqual(['Pepper Breath', 'Spitfire Blast']);
-    expect(battleSkills('토이아구몬').map(s => s.name)).toEqual(['Toy Flame']);
-    expect(battleSkills('가루다몬').map(s => s.name)).toEqual(['Wing Blade', 'Fire Hurricane']);
+    expect(battleSkills('아구몬').map(s => s.name)).toEqual(['헤비 플레임', '헤비 버너']);
+    expect(battleSkills('토이아구몬').map(s => s.name)).toEqual(['토이 플레임']);
+    expect(battleSkills('가루다몬').map(s => s.name)).toEqual(['쉐도우 윙', '파이어 허리케인']);
     for (const sp of Object.keys(skillTable)) {
       const skills = battleSkills(sp);
       if (!skills.length) { expect(pickBattleSkill(sp, () => 0)).toBeNull(); continue; }
@@ -67,11 +68,19 @@ describe('원본 종별 배틀 기술', () => {
     state.units[0].x = state.units[1].x; state.units[0].cd = 0;
     const rolls = [0, 0.99, 0.5];
     const hit = stepBattle(state, () => rolls.shift() ?? 0.5).find(e => e.type === 'hit' && e.from === 0);
-    expect(hit).toMatchObject({special:true,skill:{name:'Spitfire Blast',slot:1,animation:'attack2'}});
+    expect(hit).toMatchObject({special:true,skill:{name:'헤비 버너',englishName:'Spitfire Blast',dbTextIndex:447,slot:1,animation:'attack2'}});
     const baby = createBattle([{...entrant,speciesId:'즈루몬'}], [entrant]);
     baby.units[0].x = baby.units[1].x; baby.units[0].cd = 0;
     expect(stepBattle(baby, () => 0).find(e => e.type === 'hit' && e.from === 0)).toMatchObject({special:false});
     expect(baby.units[0].tp).toBe(100);
+  });
+  it('도감361개 한글 이름을 빠짐없이 연결하고 영문 원본은 별도로 보존한다', () => {
+    const skills = Object.values(skillTable).flatMap(entry => entry.skills);
+    expect(skills.map(s => s.dbTextIndex).sort((a,b) => a-b)).toEqual(Array.from({length:361},(_,i) => 432+i));
+    expect(skills.every(s => /[가-힣]/.test(s.name) && s.englishName.length > 0)).toBe(true);
+    expect(skillAudit.localizedNames).toMatchObject({count:361,databaseRange:[432,793],battleRange:[1301,1662],instructionChecks:15});
+    expect(battleSkills('파닥몬').map(s => s.name)).toEqual(['날개 따귀','에어 샷']);
+    expect(battleSkills('아구몬').map(s => s.englishName)).toEqual(['Pepper Breath','Spitfire Blast']);
   });
 });
 

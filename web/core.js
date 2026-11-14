@@ -3659,132 +3659,172 @@ var ChampCore = (function(exports) {
 			"basicRecord": 31,
 			"skills": [{
 				"record": 32,
-				"name": "Howling Blow"
+				"name": "하울링 헬츠",
+				"englishName": "Howling Blow",
+				"dbTextIndex": 432
 			}]
 		},
 		코로몬: {
 			"basicRecord": 33,
 			"skills": [{
 				"record": 34,
-				"name": "Froth"
+				"name": "물방울",
+				"englishName": "Froth",
+				"dbTextIndex": 433
 			}]
 		},
 		시드몬: {
 			"basicRecord": 35,
 			"skills": [{
 				"record": 36,
-				"name": "Tackle"
+				"name": "태클",
+				"englishName": "Tackle",
+				"dbTextIndex": 434
 			}]
 		},
 		뿔몬: {
 			"basicRecord": 37,
 			"skills": [{
 				"record": 38,
-				"name": "Tackle"
+				"name": "태클",
+				"englishName": "Tackle",
+				"dbTextIndex": 435
 			}]
 		},
 		토코몬: {
 			"basicRecord": 39,
 			"skills": [{
 				"record": 40,
-				"name": "Bite"
+				"name": "물어뜯기",
+				"englishName": "Bite",
+				"dbTextIndex": 436
 			}]
 		},
 		야옹몬: {
 			"basicRecord": 41,
 			"skills": [{
 				"record": 42,
-				"name": "Tail Whip"
+				"name": "폭스테일",
+				"englishName": "Tail Whip",
+				"dbTextIndex": 437
 			}]
 		},
 		퍼그몬: {
 			"basicRecord": 43,
 			"skills": [{
 				"record": 44,
-				"name": "Tackle"
+				"name": "태클",
+				"englishName": "Tackle",
+				"dbTextIndex": 438
 			}]
 		},
 		어니몬: {
 			"basicRecord": 45,
 			"skills": [{
 				"record": 46,
-				"name": "Flower Bubbles"
+				"name": "방울 플라워",
+				"englishName": "Flower Bubbles",
+				"dbTextIndex": 439
 			}]
 		},
 		둥실몬: {
 			"basicRecord": 47,
 			"skills": [{
 				"record": 48,
-				"name": "Froth Bubbles"
+				"name": "비누방울",
+				"englishName": "Froth Bubbles",
+				"dbTextIndex": 440
 			}]
 		},
 		쁘띠메라몬: {
 			"basicRecord": 49,
 			"skills": [{
 				"record": 50,
-				"name": "Flame Shot"
+				"name": "화염탄",
+				"englishName": "Flame Shot",
+				"dbTextIndex": 441
 			}]
 		},
 		모티몬: {
 			"basicRecord": 51,
 			"skills": [{
 				"record": 52,
-				"name": "Elastic Froth"
+				"name": "신축성 있는 방울",
+				"englishName": "Elastic Froth",
+				"dbTextIndex": 442
 			}]
 		},
 		베비도몬: {
 			"basicRecord": 53,
 			"skills": [{
 				"record": 54,
-				"name": "Hot Steam"
+				"name": "뜨거운 가스",
+				"englishName": "Hot Steam",
+				"dbTextIndex": 443
 			}]
 		},
 		산몬: {
 			"basicRecord": 55,
 			"skills": [{
 				"record": 56,
-				"name": "Starlight"
+				"name": "스타라이트",
+				"englishName": "Starlight",
+				"dbTextIndex": 444
 			}]
 		},
 		문몬: {
 			"basicRecord": 57,
 			"skills": [{
 				"record": 58,
-				"name": "Dark Burst"
+				"name": "어둠 버스트",
+				"englishName": "Dark Burst",
+				"dbTextIndex": 445
 			}]
 		},
 		아구몬: {
 			"basicRecord": 59,
 			"skills": [{
 				"record": 60,
-				"name": "Pepper Breath"
+				"name": "헤비 플레임",
+				"englishName": "Pepper Breath",
+				"dbTextIndex": 446
 			}, {
 				"record": 61,
-				"name": "Spitfire Blast"
+				"name": "헤비 버너",
+				"englishName": "Spitfire Blast",
+				"dbTextIndex": 447
 			}]
 		},
 		아르마몬: {
 			"basicRecord": 62,
 			"skills": [{
 				"record": 63,
-				"name": "Scratch"
+				"name": "스크래치 비트",
+				"englishName": "Scratch",
+				"dbTextIndex": 448
 			}, {
 				"record": 64,
-				"name": "Diamond Shell"
+				"name": "롤링 스톤",
+				"englishName": "Diamond Shell",
+				"dbTextIndex": 449
 			}]
 		},
 		에렉몬: {
 			"basicRecord": 65,
 			"skills": [{
 				"record": 66,
-				"name": "Super Thunder Strike"
+				"name": "스파클링 선더",
+				"englishName": "Super Thunder Strike",
+				"dbTextIndex": 450
 			}]
 		},
 		올챙몬: {
 			"basicRecord": 67,
 			"skills": [{
 				"record": 68,
-				"name": "Stun Bubble"
+				"name": "라라바이 버블",
+				"englishName": "Stun Bubble",
+				"dbTextIndex": 451
 			}]
 		},
 		가오몬: {
@@ -3792,15 +3832,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 70,
-					"name": "Rolling Upper"
+					"name": "롤링 어퍼",
+					"englishName": "Rolling Upper",
+					"dbTextIndex": 452
 				},
 				{
 					"record": 71,
-					"name": "Double Back Hand"
+					"name": "더블 백 핸드",
+					"englishName": "Double Back Hand",
+					"dbTextIndex": 453
 				},
 				{
 					"record": 72,
-					"name": "Gao Rush"
+					"name": "가오 러시",
+					"englishName": "Gao Rush",
+					"dbTextIndex": 454
 				}
 			]
 		},
@@ -3808,138 +3854,182 @@ var ChampCore = (function(exports) {
 			"basicRecord": 73,
 			"skills": [{
 				"record": 74,
-				"name": "Electric Stun Blast"
+				"name": "패럴라이즈 브레스",
+				"englishName": "Electric Stun Blast",
+				"dbTextIndex": 455
 			}]
 		},
 		파피몬: {
 			"basicRecord": 75,
 			"skills": [{
 				"record": 76,
-				"name": "Blue Blaster"
+				"name": "뿌띠 파이어",
+				"englishName": "Blue Blaster",
+				"dbTextIndex": 456
 			}, {
 				"record": 77,
-				"name": "Petit Fire Hook"
+				"name": "뿌띠 파이어 후크",
+				"englishName": "Petit Fire Hook",
+				"dbTextIndex": 457
 			}]
 		},
 		거북몬: {
 			"basicRecord": 78,
 			"skills": [{
 				"record": 79,
-				"name": "Pointer Arrow"
+				"name": "포인터 애로우",
+				"englishName": "Pointer Arrow",
+				"dbTextIndex": 458
 			}, {
 				"record": 80,
-				"name": "Met Tackle"
+				"name": "헬멧 태클",
+				"englishName": "Met Tackle",
+				"dbTextIndex": 459
 			}]
 		},
 		기자몬: {
 			"basicRecord": 81,
 			"skills": [{
 				"record": 82,
-				"name": "Spiral Saw"
+				"name": "스파이럴 에지",
+				"englishName": "Spiral Saw",
+				"dbTextIndex": 460
 			}]
 		},
 		캔들몬: {
 			"basicRecord": 83,
 			"skills": [{
 				"record": 84,
-				"name": "Bonfire"
+				"name": "본 파이어",
+				"englishName": "Bonfire",
+				"dbTextIndex": 461
 			}]
 		},
 		쿠네몬: {
 			"basicRecord": 85,
 			"skills": [{
 				"record": 86,
-				"name": "Electric Thread"
+				"name": "일렉트릭 스레드",
+				"englishName": "Electric Thread",
+				"dbTextIndex": 462
 			}]
 		},
 		울퉁몬: {
 			"basicRecord": 87,
 			"skills": [{
 				"record": 88,
-				"name": "Rock Fist"
+				"name": "앵그리 록",
+				"englishName": "Rock Fist",
+				"dbTextIndex": 463
 			}]
 		},
 		고부리몬: {
 			"basicRecord": 89,
 			"skills": [{
 				"record": 90,
-				"name": "Goburi Strike"
+				"name": "고브리 스트라이크",
+				"englishName": "Goburi Strike",
+				"dbTextIndex": 464
 			}]
 		},
 		쉬라몬: {
 			"basicRecord": 91,
 			"skills": [{
 				"record": 92,
-				"name": "Marching Fishes"
+				"name": "머칭 피시즈",
+				"englishName": "Marching Fishes",
+				"dbTextIndex": 465
 			}]
 		},
 		테리어몬: {
 			"basicRecord": 93,
 			"skills": [{
 				"record": 94,
-				"name": "Bunny Blast"
+				"name": "뿌띠 트위스터",
+				"englishName": "Bunny Blast",
+				"dbTextIndex": 466
 			}, {
 				"record": 95,
-				"name": "Blazing Fire"
+				"name": "블레이징 파이어",
+				"englishName": "Blazing Fire",
+				"dbTextIndex": 467
 			}]
 		},
 		텐타몬: {
 			"basicRecord": 96,
 			"skills": [{
 				"record": 97,
-				"name": "Super Shocker"
+				"name": "뿌띠 선더",
+				"englishName": "Super Shocker",
+				"dbTextIndex": 468
 			}]
 		},
 		토이아구몬: {
 			"basicRecord": 98,
 			"skills": [{
 				"record": 99,
-				"name": "Toy Flame"
+				"name": "토이 플레임",
+				"englishName": "Toy Flame",
+				"dbTextIndex": 469
 			}]
 		},
 		테이파몬: {
 			"basicRecord": 104,
 			"skills": [{
 				"record": 105,
-				"name": "Walking Dream"
+				"name": "나이트메어 신드롬",
+				"englishName": "Walking Dream",
+				"dbTextIndex": 473
 			}]
 		},
 		톱니몬: {
 			"basicRecord": 106,
 			"skills": [{
 				"record": 107,
-				"name": "Darkness Gear"
+				"name": "다크니스 기어",
+				"englishName": "Darkness Gear",
+				"dbTextIndex": 474
 			}]
 		},
 		파닥몬: {
 			"basicRecord": 108,
 			"skills": [{
 				"record": 109,
-				"name": "Wing Slap"
+				"name": "날개 따귀",
+				"englishName": "Wing Slap",
+				"dbTextIndex": 475
 			}, {
 				"record": 110,
-				"name": "Boom Bubble"
+				"name": "에어 샷",
+				"englishName": "Boom Bubble",
+				"dbTextIndex": 476
 			}]
 		},
 		팔몬: {
 			"basicRecord": 111,
 			"skills": [{
 				"record": 112,
-				"name": "Poison Ivy"
+				"name": "포이즌 아이비",
+				"englishName": "Poison Ivy",
+				"dbTextIndex": 477
 			}]
 		},
 		피코데블몬: {
 			"basicRecord": 113,
 			"skills": [{
 				"record": 114,
-				"name": "Demi Dart"
+				"name": "피코 다트",
+				"englishName": "Demi Dart",
+				"dbTextIndex": 478
 			}]
 		},
 		피요몬: {
 			"basicRecord": 115,
 			"skills": [{
 				"record": 116,
-				"name": "Spiral Twister"
+				"name": "매지컬 파이어",
+				"englishName": "Spiral Twister",
+				"dbTextIndex": 479
 			}]
 		},
 		팔코몬: {
@@ -3947,15 +4037,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 118,
-					"name": "Scratch Smash"
+					"name": "스크래치 스매시",
+					"englishName": "Scratch Smash",
+					"dbTextIndex": 480
 				},
 				{
 					"record": 119,
-					"name": "Falco Rush"
+					"name": "팔코 러시",
+					"englishName": "Falco Rush",
+					"dbTextIndex": 481
 				},
 				{
 					"record": 120,
-					"name": "Ninja Blade"
+					"name": "수리검",
+					"englishName": "Ninja Blade",
+					"dbTextIndex": 482
 				}
 			]
 		},
@@ -3963,35 +4059,45 @@ var ChampCore = (function(exports) {
 			"basicRecord": 121,
 			"skills": [{
 				"record": 122,
-				"name": "Puppy Howling"
+				"name": "퍼피 하울링",
+				"englishName": "Puppy Howling",
+				"dbTextIndex": 483
 			}]
 		},
 		플로라몬: {
 			"basicRecord": 123,
 			"skills": [{
 				"record": 124,
-				"name": "Rain of Pollen"
+				"name": "알러지 샤워",
+				"englishName": "Rain of Pollen",
+				"dbTextIndex": 484
 			}]
 		},
 		머슈몬: {
 			"basicRecord": 125,
 			"skills": [{
 				"record": 126,
-				"name": "Fungus Cruncher"
+				"name": "포이즌 스매시",
+				"englishName": "Fungus Cruncher",
+				"dbTextIndex": 485
 			}]
 		},
 		스노우아구몬: {
 			"basicRecord": 127,
 			"skills": [{
 				"record": 128,
-				"name": "Little Blizzard"
+				"name": "리틀 블리저드",
+				"englishName": "Little Blizzard",
+				"dbTextIndex": 486
 			}]
 		},
 		레나몬: {
 			"basicRecord": 129,
 			"skills": [{
 				"record": 130,
-				"name": "Leaf Blade"
+				"name": "허용설",
+				"englishName": "Leaf Blade",
+				"dbTextIndex": 487
 			}]
 		},
 		드라코몬: {
@@ -3999,15 +4105,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 101,
-					"name": "Baby Breath"
+					"name": "헤비 브레스",
+					"englishName": "Baby Breath",
+					"dbTextIndex": 470
 				},
 				{
 					"record": 102,
-					"name": "Tail Smash"
+					"name": "테일 스매시",
+					"englishName": "Tail Smash",
+					"dbTextIndex": 471
 				},
 				{
 					"record": 103,
-					"name": "G Shurunen"
+					"name": "디 슈르넌",
+					"englishName": "G Shurunen",
+					"dbTextIndex": 472
 				}
 			]
 		},
@@ -4016,15 +4128,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 132,
-					"name": "Coro-Knuckle"
+					"name": "코로너",
+					"englishName": "Coro-Knuckle",
+					"dbTextIndex": 488
 				},
 				{
 					"record": 133,
-					"name": "Corona Flame"
+					"name": "코로너 플레임",
+					"englishName": "Corona Flame",
+					"dbTextIndex": 489
 				},
 				{
 					"record": 134,
-					"name": "Petit Prominence"
+					"name": "부띠 프로미넌스",
+					"englishName": "Petit Prominence",
+					"dbTextIndex": 490
 				}
 			]
 		},
@@ -4033,15 +4151,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 136,
-					"name": "Luna Claw"
+					"name": "루나 크로우",
+					"englishName": "Luna Claw",
+					"dbTextIndex": 491
 				},
 				{
 					"record": 137,
-					"name": "Tear Shot"
+					"name": "티어 샷",
+					"englishName": "Tear Shot",
+					"dbTextIndex": 492
 				},
 				{
 					"record": 138,
-					"name": "Lop Ear Ripple"
+					"name": "롭이어 리플",
+					"englishName": "Lop Ear Ripple",
+					"dbTextIndex": 493
 				}
 			]
 		},
@@ -4049,47 +4173,65 @@ var ChampCore = (function(exports) {
 			"basicRecord": 139,
 			"skills": [{
 				"record": 140,
-				"name": "Spit Fire"
+				"name": "스핏 파이어",
+				"englishName": "Spit Fire",
+				"dbTextIndex": 494
 			}, {
 				"record": 141,
-				"name": "Pepper Breath"
+				"name": "헤비 플레임",
+				"englishName": "Pepper Breath",
+				"dbTextIndex": 495
 			}]
 		},
 		사이케몬: {
 			"basicRecord": 142,
 			"skills": [{
 				"record": 143,
-				"name": "Colored Sparkle"
+				"name": "컬러풀 스파크",
+				"englishName": "Colored Sparkle",
+				"dbTextIndex": 496
 			}, {
 				"record": 144,
-				"name": "Psyche Horn"
+				"name": "사이케 혼",
+				"englishName": "Psyche Horn",
+				"dbTextIndex": 497
 			}]
 		},
 		오로라몬: {
 			"basicRecord": 145,
 			"skills": [{
 				"record": 146,
-				"name": "Nemesis Ivy"
+				"name": "네메시스 아이비",
+				"englishName": "Nemesis Ivy",
+				"dbTextIndex": 498
 			}]
 		},
 		츄카이몬: {
 			"basicRecord": 147,
 			"skills": [{
 				"record": 148,
-				"name": "Purple Fog"
+				"name": "배드 메시지",
+				"englishName": "Purple Fog",
+				"dbTextIndex": 499
 			}, {
 				"record": 149,
-				"name": "Soft Attack"
+				"name": "둥실둥실 어택",
+				"englishName": "Soft Attack",
+				"dbTextIndex": 500
 			}]
 		},
 		브이몬: {
 			"basicRecord": 150,
 			"skills": [{
 				"record": 151,
-				"name": "Vee Head Butt"
+				"name": "브이몬 헤드",
+				"englishName": "Vee Head Butt",
+				"dbTextIndex": 501
 			}, {
 				"record": 152,
-				"name": "Gyral Punch"
+				"name": "붕붕 펀치",
+				"englishName": "Gyral Punch",
+				"dbTextIndex": 502
 			}]
 		},
 		길몬: {
@@ -4097,15 +4239,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 154,
-					"name": "Pyrosphere"
+					"name": "파이어 볼",
+					"englishName": "Pyrosphere",
+					"dbTextIndex": 503
 				},
 				{
 					"record": 155,
-					"name": "Rock Breaker"
+					"name": "록 브레이커",
+					"englishName": "Rock Breaker",
+					"dbTextIndex": 504
 				},
 				{
 					"record": 156,
-					"name": "Fire Mitt"
+					"name": "파이어 미트",
+					"englishName": "Fire Mitt",
+					"dbTextIndex": 505
 				}
 			]
 		},
@@ -4113,55 +4261,73 @@ var ChampCore = (function(exports) {
 			"basicRecord": 157,
 			"skills": [{
 				"record": 158,
-				"name": "Megaton Press"
+				"name": "메가톤 프레스",
+				"englishName": "Megaton Press",
+				"dbTextIndex": 506
 			}, {
 				"record": 159,
-				"name": "Tail Hammer"
+				"name": "테일 해머",
+				"englishName": "Tail Hammer",
+				"dbTextIndex": 507
 			}]
 		},
 		원뿔몬: {
 			"basicRecord": 160,
 			"skills": [{
 				"record": 161,
-				"name": "Harpoon Torpedo"
+				"name": "하픈 발칸",
+				"englishName": "Harpoon Torpedo",
+				"dbTextIndex": 508
 			}]
 		},
 		위자몬: {
 			"basicRecord": 162,
 			"skills": [{
 				"record": 163,
-				"name": "Thundercloud"
+				"name": "선더 클라우드",
+				"englishName": "Thundercloud",
+				"dbTextIndex": 509
 			}]
 		},
 		우드몬: {
 			"basicRecord": 164,
 			"skills": [{
 				"record": 165,
-				"name": "Twig Tap"
+				"name": "브런치 드레인",
+				"englishName": "Twig Tap",
+				"dbTextIndex": 510
 			}]
 		},
 		에어드라몬: {
 			"basicRecord": 166,
 			"skills": [{
 				"record": 167,
-				"name": "Tornado"
+				"name": "회오리",
+				"englishName": "Tornado",
+				"dbTextIndex": 511
 			}, {
 				"record": 168,
-				"name": "Spinning Needle　"
+				"name": "스피닝 니들",
+				"englishName": "Spinning Needle　",
+				"dbTextIndex": 512
 			}]
 		},
 		엔젤몬: {
 			"basicRecord": 169,
 			"skills": [{
 				"record": 170,
-				"name": "Hand of Fate"
+				"name": "헤븐즈 너클",
+				"englishName": "Hand of Fate",
+				"dbTextIndex": 513
 			}]
 		},
 		우가몬: {
 			"basicRecord": 171,
 			"skills": [{
 				"record": 172,
-				"name": "Pummel Whack"
+				"name": "봉황권",
+				"englishName": "Pummel Whack",
+				"dbTextIndex": 514
 			}]
 		},
 		가오가몬: {
@@ -4169,15 +4335,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 174,
-					"name": "Dash Double Claw"
+					"name": "대시 블로 크로우",
+					"englishName": "Dash Double Claw",
+					"dbTextIndex": 515
 				},
 				{
 					"record": 175,
-					"name": "Gaoga Hound"
+					"name": "가오가 하운드",
+					"englishName": "Gaoga Hound",
+					"dbTextIndex": 516
 				},
 				{
 					"record": 176,
-					"name": "Spiral Blow"
+					"name": "스파이럴 블로",
+					"englishName": "Spiral Blow",
+					"dbTextIndex": 517
 				}
 			]
 		},
@@ -4185,124 +4357,164 @@ var ChampCore = (function(exports) {
 			"basicRecord": 177,
 			"skills": [{
 				"record": 178,
-				"name": "Electro Shocker"
+				"name": "메가 블래스터",
+				"englishName": "Electro Shocker",
+				"dbTextIndex": 518
 			}]
 		},
 		가르고몬: {
 			"basicRecord": 179,
 			"skills": [{
 				"record": 180,
-				"name": "Bunny Pummel"
+				"name": "개틀링 암",
+				"englishName": "Bunny Pummel",
+				"dbTextIndex": 519
 			}, {
 				"record": 181,
-				"name": "Bunny Upper"
+				"name": "댐댐 어퍼",
+				"englishName": "Bunny Upper",
+				"dbTextIndex": 520
 			}]
 		},
 		가루몬: {
 			"basicRecord": 182,
 			"skills": [{
 				"record": 183,
-				"name": "Howling Blaster"
+				"name": "폭스 파이어",
+				"englishName": "Howling Blaster",
+				"dbTextIndex": 521
 			}]
 		},
 		"가루몬(흑)": {
 			"basicRecord": 184,
 			"skills": [{
 				"record": 185,
-				"name": "Howling Blaster"
+				"name": "폭스 파이어",
+				"englishName": "Howling Blaster",
+				"dbTextIndex": 522
 			}]
 		},
 		가드로몬: {
 			"basicRecord": 186,
 			"skills": [{
 				"record": 187,
-				"name": "Protect Grenade"
+				"name": "디스트럭션 그레네이드",
+				"englishName": "Protect Grenade",
+				"dbTextIndex": 523
 			}]
 		},
 		키위몬: {
 			"basicRecord": 188,
 			"skills": [{
 				"record": 189,
-				"name": "Pummel Peck"
+				"name": "리틀 페커",
+				"englishName": "Pummel Peck",
+				"dbTextIndex": 524
 			}]
 		},
 		구미호몬: {
 			"basicRecord": 190,
 			"skills": [{
 				"record": 191,
-				"name": "Will O' Wisp Ball"
+				"name": "귀신불",
+				"englishName": "Will O' Wisp Ball",
+				"dbTextIndex": 525
 			}, {
 				"record": 192,
-				"name": "Fox Tail Inferno"
+				"name": "호염룡",
+				"englishName": "Fox Tail Inferno",
+				"dbTextIndex": 526
 			}]
 		},
 		그레이몬: {
 			"basicRecord": 193,
 			"skills": [{
 				"record": 194,
-				"name": "Mega Flame"
+				"name": "메가 프레임",
+				"englishName": "Mega Flame",
+				"dbTextIndex": 527
 			}, {
 				"record": 195,
-				"name": "Horn Impulse"
+				"name": "혼 임펄스",
+				"englishName": "Horn Impulse",
+				"dbTextIndex": 528
 			}]
 		},
 		타임몬: {
 			"basicRecord": 196,
 			"skills": [{
 				"record": 197,
-				"name": "Chrono Breaker"
+				"name": "크로노 브레이커",
+				"englishName": "Chrono Breaker",
+				"dbTextIndex": 529
 			}]
 		},
 		쿠가몬: {
 			"basicRecord": 198,
 			"skills": [{
 				"record": 199,
-				"name": "Scissow Claw"
+				"name": "시저 암즈",
+				"englishName": "Scissow Claw",
+				"dbTextIndex": 530
 			}]
 		},
 		개굴몬: {
 			"basicRecord": 200,
 			"skills": [{
 				"record": 201,
-				"name": "Symphony Crusher"
+				"name": "크래시 심포니",
+				"englishName": "Symphony Crusher",
+				"dbTextIndex": 531
 			}]
 		},
 		연체몬: {
 			"basicRecord": 202,
 			"skills": [{
 				"record": 203,
-				"name": "Coral Crusher"
+				"name": "데들리 세이드",
+				"englishName": "Coral Crusher",
+				"dbTextIndex": 532
 			}, {
 				"record": 204,
-				"name": "Devil Bashing"
+				"name": "데빌 배싱",
+				"englishName": "Devil Bashing",
+				"dbTextIndex": 533
 			}]
 		},
 		켄터스몬: {
 			"basicRecord": 205,
 			"skills": [{
 				"record": 206,
-				"name": "Solar Ray"
+				"name": "헌팅 캐논",
+				"englishName": "Solar Ray",
+				"dbTextIndex": 534
 			}]
 		},
 		꼬끼몬: {
 			"basicRecord": 207,
 			"skills": [{
 				"record": 208,
-				"name": "Frozen Fire Shot"
+				"name": "페트라 파이어",
+				"englishName": "Frozen Fire Shot",
+				"dbTextIndex": 535
 			}]
 		},
 		번개콩알몬: {
 			"basicRecord": 209,
 			"skills": [{
 				"record": 210,
-				"name": "Thunder Ball"
+				"name": "선더 볼",
+				"englishName": "Thunder Ball",
+				"dbTextIndex": 536
 			}]
 		},
 		쉘몬: {
 			"basicRecord": 211,
 			"skills": [{
 				"record": 212,
-				"name": "Hydro Blaster"
+				"name": "하이드로 프레셔",
+				"englishName": "Hydro Blaster",
+				"dbTextIndex": 537
 			}]
 		},
 		지오그레이몬: {
@@ -4310,15 +4522,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 214,
-					"name": "Mega Flame"
+					"name": "메가 플레임",
+					"englishName": "Mega Flame",
+					"dbTextIndex": 538
 				},
 				{
 					"record": 215,
-					"name": "Mega Burst"
+					"name": "메가 버스트",
+					"englishName": "Mega Burst",
+					"dbTextIndex": 539
 				},
 				{
 					"record": 216,
-					"name": "Horn Impulse"
+					"name": "혼 임펄스",
+					"englishName": "Horn Impulse",
+					"dbTextIndex": 540
 				}
 			]
 		},
@@ -4326,114 +4544,150 @@ var ChampCore = (function(exports) {
 			"basicRecord": 217,
 			"skills": [{
 				"record": 218,
-				"name": "Constriction"
+				"name": "짓뭉개기",
+				"englishName": "Constriction",
+				"dbTextIndex": 541
 			}, {
 				"record": 219,
-				"name": "Ice Blast"
+				"name": "아이스 애로우",
+				"englishName": "Ice Blast",
+				"dbTextIndex": 542
 			}]
 		},
 		스카몬: {
 			"basicRecord": 220,
 			"skills": [{
 				"record": 221,
-				"name": "Compost Bomber"
+				"name": "배설물 던지기",
+				"englishName": "Compost Bomber",
+				"dbTextIndex": 543
 			}]
 		},
 		스타몬: {
 			"basicRecord": 222,
 			"skills": [{
 				"record": 223,
-				"name": "Halley's Squall"
+				"name": "메테오 스콜",
+				"englishName": "Halley's Squall",
+				"dbTextIndex": 544
 			}]
 		},
 		다르크몬: {
 			"basicRecord": 224,
 			"skills": [{
 				"record": 225,
-				"name": "Dancing Sword"
+				"name": "버팀 드 아무르",
+				"englishName": "Dancing Sword",
+				"dbTextIndex": 545
 			}]
 		},
 		다크티라노몬: {
 			"basicRecord": 226,
 			"skills": [{
 				"record": 227,
-				"name": "Fire Blast"
+				"name": "파이어 블래스트",
+				"englishName": "Fire Blast",
+				"dbTextIndex": 546
 			}]
 		},
 		티라노몬: {
 			"basicRecord": 228,
 			"skills": [{
 				"record": 229,
-				"name": "Blaze Blast"
+				"name": "파이어 브레스",
+				"englishName": "Blaze Blast",
+				"dbTextIndex": 547
 			}]
 		},
 		가트몬: {
 			"basicRecord": 230,
 			"skills": [{
 				"record": 231,
-				"name": "Lightning Paw"
+				"name": "고양이 펀치",
+				"englishName": "Lightning Paw",
+				"dbTextIndex": 548
 			}, {
 				"record": 232,
-				"name": "Feline's Eye"
+				"name": "캣츠 아이",
+				"englishName": "Feline's Eye",
+				"dbTextIndex": 549
 			}]
 		},
 		데블드라몬: {
 			"basicRecord": 233,
 			"skills": [{
 				"record": 234,
-				"name": "Crimson Claw"
+				"name": "크림즌 네일",
+				"englishName": "Crimson Claw",
+				"dbTextIndex": 550
 			}]
 		},
 		데블몬: {
 			"basicRecord": 235,
 			"skills": [{
 				"record": 236,
-				"name": "The Touch of Evil"
+				"name": "데스 크로우",
+				"englishName": "The Touch of Evil",
+				"dbTextIndex": 551
 			}]
 		},
 		니드몬: {
 			"basicRecord": 237,
 			"skills": [{
 				"record": 238,
-				"name": "Needle Spray"
+				"name": "따끔따끔 팡팡",
+				"englishName": "Needle Spray",
+				"dbTextIndex": 552
 			}]
 		},
 		토타몬: {
 			"basicRecord": 239,
 			"skills": [{
 				"record": 240,
-				"name": "Strong Carapace"
+				"name": "쉘 팔랑크스",
+				"englishName": "Strong Carapace",
+				"dbTextIndex": 553
 			}]
 		},
 		워매몬: {
 			"basicRecord": 241,
 			"skills": [{
 				"record": 242,
-				"name": "Compost Bomber"
+				"name": "배설물 던지기",
+				"englishName": "Compost Bomber",
+				"dbTextIndex": 554
 			}]
 		},
 		고스몬: {
 			"basicRecord": 243,
 			"skills": [{
 				"record": 244,
-				"name": "Night Claw"
+				"name": "헬즈 핸드",
+				"englishName": "Night Claw",
+				"dbTextIndex": 555
 			}, {
 				"record": 245,
-				"name": "Death Charm"
+				"name": "데스 참",
+				"englishName": "Death Charm",
+				"dbTextIndex": 556
 			}]
 		},
 		버드라몬: {
 			"basicRecord": 246,
 			"skills": [{
 				"record": 247,
-				"name": "Meteor Wing"
+				"name": "메테오 윙",
+				"englishName": "Meteor Wing",
+				"dbTextIndex": 557
 			}]
 		},
 		베지몬: {
 			"basicRecord": 248,
 			"skills": [{
 				"record": 249,
-				"name": "Compost Bomber"
+				"name": "배설물 던지기",
+				"englishName": "Compost Bomber",
+				"dbTextIndex": 558
 			}]
 		},
 		페크몬: {
@@ -4441,15 +4695,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 251,
-					"name": "Spiral Claw"
+					"name": "스파이럴 크로우",
+					"englishName": "Spiral Claw",
+					"dbTextIndex": 559
 				},
 				{
 					"record": 252,
-					"name": "Kunai Wing"
+					"name": "고무 던지기",
+					"englishName": "Kunai Wing",
+					"dbTextIndex": 560
 				},
 				{
 					"record": 253,
-					"name": "Thousand Beaks"
+					"name": "사우전드 비크",
+					"englishName": "Thousand Beaks",
+					"dbTextIndex": 561
 				}
 			]
 		},
@@ -4457,79 +4717,105 @@ var ChampCore = (function(exports) {
 			"basicRecord": 254,
 			"skills": [{
 				"record": 255,
-				"name": "Fireball"
+				"name": "버닝 피스트",
+				"englishName": "Fireball",
+				"dbTextIndex": 562
 			}]
 		},
 		모털몬: {
 			"basicRecord": 256,
 			"skills": [{
 				"record": 257,
-				"name": "Ice Cloud"
+				"name": "아이시클 로드",
+				"englishName": "Ice Cloud",
+				"dbTextIndex": 563
 			}, {
 				"record": 258,
-				"name": "Bone Boomerang"
+				"name": "뼈다귀 부메랑",
+				"englishName": "Bone Boomerang",
+				"dbTextIndex": 564
 			}]
 		},
 		모노크로몬: {
 			"basicRecord": 259,
 			"skills": [{
 				"record": 260,
-				"name": "Tomahawk Slash"
+				"name": "토마호크 슬래시",
+				"englishName": "Tomahawk Slash",
+				"dbTextIndex": 565
 			}, {
 				"record": 261,
-				"name": "Volcanic Strike"
+				"name": "볼케이노 스트라이크",
+				"englishName": "Volcanic Strike",
+				"dbTextIndex": 566
 			}]
 		},
 		프리지몬: {
 			"basicRecord": 262,
 			"skills": [{
 				"record": 263,
-				"name": "Absolute Zero Ice Punch"
+				"name": "절대영도 펀치",
+				"englishName": "Absolute Zero Ice Punch",
+				"dbTextIndex": 567
 			}]
 		},
 		유니몬: {
 			"basicRecord": 264,
 			"skills": [{
 				"record": 265,
-				"name": "Aerial Attack"
+				"name": "홀리 샷",
+				"englishName": "Aerial Attack",
+				"dbTextIndex": 568
 			}]
 		},
 		블랙구미호몬: {
 			"basicRecord": 266,
 			"skills": [{
 				"record": 267,
-				"name": "Tail Flame"
+				"name": "불꽃탄",
+				"englishName": "Tail Flame",
+				"dbTextIndex": 569
 			}, {
 				"record": 268,
-				"name": "Jaenryu"
+				"name": "자염룡",
+				"englishName": "Jaenryu",
+				"dbTextIndex": 570
 			}]
 		},
 		링스몬: {
 			"basicRecord": 269,
 			"skills": [{
 				"record": 270,
-				"name": "Howling Buster"
+				"name": "서멀 메인",
+				"englishName": "Howling Buster",
+				"dbTextIndex": 571
 			}]
 		},
 		레어몬: {
 			"basicRecord": 271,
 			"skills": [{
 				"record": 272,
-				"name": "Slime Pelter"
+				"name": "헤드로",
+				"englishName": "Slime Pelter",
+				"dbTextIndex": 572
 			}]
 		},
 		레오몬: {
 			"basicRecord": 273,
 			"skills": [{
 				"record": 274,
-				"name": "Fist of the Beast King"
+				"name": "수왕권",
+				"englishName": "Fist of the Beast King",
+				"dbTextIndex": 573
 			}]
 		},
 		레드베지몬: {
 			"basicRecord": 275,
 			"skills": [{
 				"record": 276,
-				"name": "Rotten Rainballs"
+				"name": "해저드 브레스",
+				"englishName": "Rotten Rainballs",
+				"dbTextIndex": 574
 			}]
 		},
 		"코어드라몬(청)": {
@@ -4537,15 +4823,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 278,
-					"name": "Blue Flare Breath"
+					"name": "블루 플레어 브레스",
+					"englishName": "Blue Flare Breath",
+					"dbTextIndex": 575
 				},
 				{
 					"record": 279,
-					"name": "Strike Bomber"
+					"name": "스트라이크 보머",
+					"englishName": "Strike Bomber",
+					"dbTextIndex": 576
 				},
 				{
 					"record": 280,
-					"name": "G Shurunen-II"
+					"name": "디 슈르넌-Ⅱ",
+					"englishName": "G Shurunen-II",
+					"dbTextIndex": 577
 				}
 			]
 		},
@@ -4554,15 +4846,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 282,
-					"name": "Green Flare Breath"
+					"name": "그린 플레어 브레스",
+					"englishName": "Green Flare Breath",
+					"dbTextIndex": 578
 				},
 				{
 					"record": 283,
-					"name": "Strike Bomber"
+					"name": "스트라이크 보머",
+					"englishName": "Strike Bomber",
+					"dbTextIndex": 579
 				},
 				{
 					"record": 284,
-					"name": "G Shurunen-II"
+					"name": "디 슈르넌-Ⅱ",
+					"englishName": "G Shurunen-II",
+					"dbTextIndex": 580
 				}
 			]
 		},
@@ -4571,15 +4869,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 286,
-					"name": "Flame Dive"
+					"name": "플레임 다이브",
+					"englishName": "Flame Dive",
+					"dbTextIndex": 581
 				},
 				{
 					"record": 287,
-					"name": "Fira Claw"
+					"name": "파이라 크로우",
+					"englishName": "Fira Claw",
+					"dbTextIndex": 582
 				},
 				{
 					"record": 288,
-					"name": "Fira Bomb"
+					"name": "파이라 봄",
+					"englishName": "Fira Bomb",
+					"dbTextIndex": 583
 				}
 			]
 		},
@@ -4588,15 +4892,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 290,
-					"name": "Moon Night Bomb"
+					"name": "문 나이트 봄",
+					"englishName": "Moon Night Bomb",
+					"dbTextIndex": 584
 				},
 				{
 					"record": 291,
-					"name": "Tear Arrow"
+					"name": "티어 애로우",
+					"englishName": "Tear Arrow",
+					"dbTextIndex": 585
 				},
 				{
 					"record": 292,
-					"name": "Moon Night Kick"
+					"name": "문 나이트 킥",
+					"englishName": "Moon Night Kick",
+					"dbTextIndex": 586
 				}
 			]
 		},
@@ -4604,71 +4914,97 @@ var ChampCore = (function(exports) {
 			"basicRecord": 293,
 			"skills": [{
 				"record": 294,
-				"name": "Frost Claw"
+				"name": "프로스트 크로우",
+				"englishName": "Frost Claw",
+				"dbTextIndex": 587
 			}, {
 				"record": 295,
-				"name": "Zero Freeze"
+				"name": "제로 프리즈",
+				"englishName": "Zero Freeze",
+				"dbTextIndex": 588
 			}]
 		},
 		구루몬: {
 			"basicRecord": 296,
 			"skills": [{
 				"record": 297,
-				"name": "Chaos Blaster"
+				"name": "카오스 파이어",
+				"englishName": "Chaos Blaster",
+				"dbTextIndex": 589
 			}, {
 				"record": 298,
-				"name": "Killer Bite"
+				"name": "킬러 바이트",
+				"englishName": "Killer Bite",
+				"dbTextIndex": 590
 			}]
 		},
 		옐로우워매몬: {
 			"basicRecord": 299,
 			"skills": [{
 				"record": 300,
-				"name": "Compost Bomber"
+				"name": "배설물 던지기",
+				"englishName": "Compost Bomber",
+				"dbTextIndex": 591
 			}]
 		},
 		화이트위자몬: {
 			"basicRecord": 301,
 			"skills": [{
 				"record": 302,
-				"name": "Crystal Cloud"
+				"name": "크리스탈 클라우드",
+				"englishName": "Crystal Cloud",
+				"dbTextIndex": 592
 			}, {
 				"record": 303,
-				"name": "Ice Illusion"
+				"name": "아이스 일루전",
+				"englishName": "Ice Illusion",
+				"dbTextIndex": 593
 			}]
 		},
 		레드꼬끼몬: {
 			"basicRecord": 304,
 			"skills": [{
 				"record": 305,
-				"name": "Chicken Red Eyes"
+				"name": "스카레 아이",
+				"englishName": "Chicken Red Eyes",
+				"dbTextIndex": 594
 			}]
 		},
 		블랙버드라몬: {
 			"basicRecord": 306,
 			"skills": [{
 				"record": 307,
-				"name": "Black Saber"
+				"name": "블랙 세이버",
+				"englishName": "Black Saber",
+				"dbTextIndex": 595
 			}, {
 				"record": 308,
-				"name": "Night Roar"
+				"name": "나이트 애로우",
+				"englishName": "Night Roar",
+				"dbTextIndex": 596
 			}]
 		},
 		아이스몬: {
 			"basicRecord": 309,
 			"skills": [{
 				"record": 310,
-				"name": "Iceball Bomb"
+				"name": "아이스 볼 봄",
+				"englishName": "Iceball Bomb",
+				"dbTextIndex": 597
 			}]
 		},
 		브이드라몬: {
 			"basicRecord": 311,
 			"skills": [{
 				"record": 312,
-				"name": "V-Nova Blast"
+				"name": "브이 브레스 애로우",
+				"englishName": "V-Nova Blast",
+				"dbTextIndex": 598
 			}, {
 				"record": 313,
-				"name": "Magnum Punch"
+				"name": "매그넘 펀치",
+				"englishName": "Magnum Punch",
+				"dbTextIndex": 599
 			}]
 		},
 		그라우몬: {
@@ -4676,15 +5012,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 315,
-					"name": "Plasma Blade"
+					"name": "플라즈마 블레이드",
+					"englishName": "Plasma Blade",
+					"dbTextIndex": 600
 				},
 				{
 					"record": 316,
-					"name": "Pyro Blaster"
+					"name": "엑소시스트 플레임",
+					"englishName": "Pyro Blaster",
+					"dbTextIndex": 601
 				},
 				{
 					"record": 317,
-					"name": "Raiden Blade"
+					"name": "라이덴 블레이드",
+					"englishName": "Raiden Blade",
+					"dbTextIndex": 602
 				}
 			]
 		},
@@ -4692,270 +5034,378 @@ var ChampCore = (function(exports) {
 			"basicRecord": 318,
 			"skills": [{
 				"record": 319,
-				"name": "Horn Buster"
+				"name": "혼 버스터",
+				"englishName": "Horn Buster",
+				"dbTextIndex": 603
 			}, {
 				"record": 320,
-				"name": "Electro Shocker"
+				"name": "메가 블래스터",
+				"englishName": "Electro Shocker",
+				"dbTextIndex": 604
 			}]
 		},
 		스콜피온몬: {
 			"basicRecord": 321,
 			"skills": [{
 				"record": 322,
-				"name": "Stinger Surprise"
+				"name": "스팅거 서프라이즈",
+				"englishName": "Stinger Surprise",
+				"dbTextIndex": 605
 			}, {
 				"record": 323,
-				"name": "Tail Blade"
+				"name": "테일 블레이드",
+				"englishName": "Tail Blade",
+				"dbTextIndex": 606
 			}]
 		},
 		안드로몬: {
 			"basicRecord": 324,
 			"skills": [{
 				"record": 325,
-				"name": "Gatling Missile"
+				"name": "개틀링 미사일",
+				"englishName": "Gatling Missile",
+				"dbTextIndex": 607
 			}, {
 				"record": 326,
-				"name": "Lightning Blade"
+				"name": "스파이럴 소드",
+				"englishName": "Lightning Blade",
+				"dbTextIndex": 608
 			}]
 		},
 		에테몬: {
 			"basicRecord": 327,
 			"skills": [{
 				"record": 328,
-				"name": "DarkNetwork&C.Crush"
+				"name": "러브 세레나데",
+				"englishName": "DarkNetwork&C.Crush",
+				"dbTextIndex": 609
 			}, {
 				"record": 329,
-				"name": "Dark Spirits"
+				"name": "다크 스피릿츠",
+				"englishName": "Dark Spirits",
+				"dbTextIndex": 610
 			}]
 		},
 		엔젤우몬: {
 			"basicRecord": 330,
 			"skills": [{
 				"record": 331,
-				"name": "Celestial Arrow"
+				"name": "홀리 애로우",
+				"englishName": "Celestial Arrow",
+				"dbTextIndex": 611
 			}, {
 				"record": 332,
-				"name": "Heaven's Charm"
+				"name": "헤븐즈 참",
+				"englishName": "Heaven's Charm",
+				"dbTextIndex": 612
 			}]
 		},
 		오쿠와몬: {
 			"basicRecord": 333,
 			"skills": [{
 				"record": 334,
-				"name": "Double Scissor Claw"
+				"name": "시저 암즈 오메가",
+				"englishName": "Double Scissor Claw",
+				"dbTextIndex": 613
 			}, {
 				"record": 335,
-				"name": "Destructive Impulse"
+				"name": "파괴충동",
+				"englishName": "Destructive Impulse",
+				"dbTextIndex": 614
 			}]
 		},
 		가루다몬: {
 			"basicRecord": 336,
 			"skills": [{
 				"record": 337,
-				"name": "Wing Blade"
+				"name": "쉐도우 윙",
+				"englishName": "Wing Blade",
+				"dbTextIndex": 615
 			}, {
 				"record": 338,
-				"name": "Fire Hurricane"
+				"name": "파이어 허리케인",
+				"englishName": "Fire Hurricane",
+				"dbTextIndex": 616
 			}]
 		},
 		가비지몬: {
 			"basicRecord": 339,
 			"skills": [{
 				"record": 340,
-				"name": "Junk Chunker"
+				"name": "배설물 바주카",
+				"englishName": "Junk Chunker",
+				"dbTextIndex": 617
 			}, {
 				"record": 341,
-				"name": "Dirty Saucer"
+				"name": "더티 소서",
+				"englishName": "Dirty Saucer",
+				"dbTextIndex": 618
 			}]
 		},
 		사이버드라몬: {
 			"basicRecord": 342,
 			"skills": [{
 				"record": 343,
-				"name": "Erase Claw"
+				"name": "이레이즈 크로우",
+				"englishName": "Erase Claw",
+				"dbTextIndex": 619
 			}, {
 				"record": 344,
-				"name": "Cyber Nail"
+				"name": "사이버 네일",
+				"englishName": "Cyber Nail",
+				"dbTextIndex": 620
 			}]
 		},
 		쥬레이몬: {
 			"basicRecord": 345,
 			"skills": [{
 				"record": 346,
-				"name": "Pit Pelter"
+				"name": "체리 봄",
+				"englishName": "Pit Pelter",
+				"dbTextIndex": 621
 			}, {
 				"record": 347,
-				"name": "Vine Attack"
+				"name": "나뭇가지 공격",
+				"englishName": "Vine Attack",
+				"dbTextIndex": 622
 			}]
 		},
 		스컬그레이몬: {
 			"basicRecord": 348,
 			"skills": [{
 				"record": 349,
-				"name": "Dark Shot"
+				"name": "그라운드 제로",
+				"englishName": "Dark Shot",
+				"dbTextIndex": 623
 			}, {
 				"record": 350,
-				"name": "Cursed Breath"
+				"name": "커스 브레스",
+				"englishName": "Cursed Breath",
+				"dbTextIndex": 624
 			}]
 		},
 		쥬드몬: {
 			"basicRecord": 351,
 			"skills": [{
 				"record": 352,
-				"name": "Vulcan's Hammer"
+				"name": "해머 스파크",
+				"englishName": "Vulcan's Hammer",
+				"dbTextIndex": 625
 			}, {
 				"record": 353,
-				"name": "Glacial Spear"
+				"name": "그레이셔 스피어",
+				"englishName": "Glacial Spear",
+				"dbTextIndex": 626
 			}]
 		},
 		드라고몬: {
 			"basicRecord": 354,
 			"skills": [{
 				"record": 355,
-				"name": "Tentacle Claw"
+				"name": "포비든 트라이던트",
+				"englishName": "Tentacle Claw",
+				"dbTextIndex": 627
 			}, {
 				"record": 356,
-				"name": "Thousand Whips"
+				"name": "사우전드 윕",
+				"englishName": "Thousand Whips",
+				"dbTextIndex": 628
 			}]
 		},
 		데드메라몬: {
 			"basicRecord": 357,
 			"skills": [{
 				"record": 358,
-				"name": "Metal Fireball"
+				"name": "헤비메탈 파이어",
+				"englishName": "Metal Fireball",
+				"dbTextIndex": 629
 			}, {
 				"record": 359,
-				"name": "Heat Chain"
+				"name": "히트 체인",
+				"englishName": "Heat Chain",
+				"dbTextIndex": 630
 			}]
 		},
 		뿌띠몬: {
 			"basicRecord": 360,
 			"skills": [{
 				"record": 361,
-				"name": "Royal Smasher"
+				"name": "로얄 너츠",
+				"englishName": "Royal Smasher",
+				"dbTextIndex": 631
 			}, {
 				"record": 362,
-				"name": "Gorgeous Beak"
+				"name": "고저스 비크",
+				"englishName": "Gorgeous Beak",
+				"dbTextIndex": 632
 			}]
 		},
 		왕개굴몬: {
 			"basicRecord": 363,
 			"skills": [{
 				"record": 364,
-				"name": "Musical Fist"
+				"name": "고브시톤",
+				"englishName": "Musical Fist",
+				"dbTextIndex": 633
 			}, {
 				"record": 365,
-				"name": "Symphony Crusher"
+				"name": "크래시 심포니",
+				"englishName": "Symphony Crusher",
+				"dbTextIndex": 634
 			}]
 		},
 		트리세라몬: {
 			"basicRecord": 366,
 			"skills": [{
 				"record": 367,
-				"name": "Tri-horn Attack"
+				"name": "트라이 혼 어택",
+				"englishName": "Tri-horn Attack",
+				"dbTextIndex": 635
 			}, {
 				"record": 368,
-				"name": "Golden Tri-horn Attack"
+				"name": "골든 트라이 혼 어택",
+				"englishName": "Golden Tri-horn Attack",
+				"dbTextIndex": 636
 			}]
 		},
 		나이트몬: {
 			"basicRecord": 369,
 			"skills": [{
 				"record": 370,
-				"name": "Berserk Sword"
+				"name": "베르세르크 소드",
+				"englishName": "Berserk Sword",
+				"dbTextIndex": 637
 			}, {
 				"record": 371,
-				"name": "Grand Smash"
+				"name": "그랜드 스매시",
+				"englishName": "Grand Smash",
+				"dbTextIndex": 638
 			}]
 		},
 		패롯몬: {
 			"basicRecord": 372,
 			"skills": [{
 				"record": 373,
-				"name": "Sonic Destroyer"
+				"name": "소닉 디스트로이어",
+				"englishName": "Sonic Destroyer",
+				"dbTextIndex": 639
 			}, {
 				"record": 374,
-				"name": "Mjollnir Lightning"
+				"name": "묘르닐 선더",
+				"englishName": "Mjollnir Lightning",
+				"dbTextIndex": 640
 			}]
 		},
 		다이버몬: {
 			"basicRecord": 375,
 			"skills": [{
 				"record": 376,
-				"name": "Striking Fish"
+				"name": "스트라이크 피싱",
+				"englishName": "Striking Fish",
+				"dbTextIndex": 641
 			}, {
 				"record": 377,
-				"name": "Abyss Dive"
+				"name": "헬 다이브",
+				"englishName": "Abyss Dive",
+				"dbTextIndex": 642
 			}]
 		},
 		팬더몬: {
 			"basicRecord": 378,
 			"skills": [{
 				"record": 379,
-				"name": "Animal Nail"
+				"name": "애니멀 네일",
+				"englishName": "Animal Nail",
+				"dbTextIndex": 643
 			}, {
 				"record": 380,
-				"name": "Bamboo Punch"
+				"name": "대나무 펀치",
+				"englishName": "Bamboo Punch",
+				"dbTextIndex": 644
 			}]
 		},
 		왕콩알몬: {
 			"basicRecord": 381,
 			"skills": [{
 				"record": 382,
-				"name": "Big Smiley Bomb"
+				"name": "빅 스마일리 봄버",
+				"englishName": "Big Smiley Bomb",
+				"dbTextIndex": 645
 			}, {
 				"record": 383,
-				"name": "Buster Dive"
+				"name": "버스터 다이브",
+				"englishName": "Buster Dive",
+				"dbTextIndex": 646
 			}]
 		},
 		피콜몬: {
 			"basicRecord": 384,
 			"skills": [{
 				"record": 385,
-				"name": "Pit Bomb"
+				"name": "비트 봄",
+				"englishName": "Pit Bomb",
+				"dbTextIndex": 647
 			}, {
 				"record": 386,
-				"name": "Fairy Tale"
+				"name": "페어리 테일",
+				"englishName": "Fairy Tale",
+				"dbTextIndex": 648
 			}]
 		},
 		팬텀몬: {
 			"basicRecord": 387,
 			"skills": [{
 				"record": 388,
-				"name": "Shadow Scythe"
+				"name": "소울 초퍼",
+				"englishName": "Shadow Scythe",
+				"dbTextIndex": 649
 			}, {
 				"record": 389,
-				"name": "Words of Death"
+				"name": "죽음의 선고",
+				"englishName": "Words of Death",
+				"dbTextIndex": 650
 			}]
 		},
 		베이더몬: {
 			"basicRecord": 390,
 			"skills": [{
 				"record": 391,
-				"name": "Unidentified Flying Kiss"
+				"name": "악마의 키스",
+				"englishName": "Unidentified Flying Kiss",
+				"dbTextIndex": 651
 			}, {
 				"record": 392,
-				"name": "Abduction Beam"
+				"name": "애브덕션 광선",
+				"englishName": "Abduction Beam",
+				"dbTextIndex": 652
 			}]
 		},
 		고래몬: {
 			"basicRecord": 393,
 			"skills": [{
 				"record": 394,
-				"name": "Tidal Wave"
+				"name": "타이달 웨이브",
+				"englishName": "Tidal Wave",
+				"dbTextIndex": 653
 			}, {
 				"record": 395,
-				"name": "Blasting Spout"
+				"name": "제트 애로우",
+				"englishName": "Blasting Spout",
+				"dbTextIndex": 654
 			}]
 		},
 		홀리엔젤몬: {
 			"basicRecord": 396,
 			"skills": [{
 				"record": 397,
-				"name": "Excalibur"
+				"name": "엑스칼리버",
+				"englishName": "Excalibur",
+				"dbTextIndex": 655
 			}, {
 				"record": 398,
-				"name": "The Gate of Destiny"
+				"name": "헤븐즈 게이트",
+				"englishName": "The Gate of Destiny",
+				"dbTextIndex": 656
 			}]
 		},
 		마하가오가몬: {
@@ -4963,15 +5413,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 400,
-					"name": "Gaoga Tornade"
+					"name": "가오가 토네이도",
+					"englishName": "Gaoga Tornade",
+					"dbTextIndex": 657
 				},
 				{
 					"record": 401,
-					"name": "Winning Knuckle"
+					"name": "위닝 너클",
+					"englishName": "Winning Knuckle",
+					"dbTextIndex": 658
 				},
 				{
 					"record": 402,
-					"name": "Howling Cannon"
+					"name": "하울링 캐논",
+					"englishName": "Howling Cannon",
+					"dbTextIndex": 659
 				}
 			]
 		},
@@ -4979,90 +5435,126 @@ var ChampCore = (function(exports) {
 			"basicRecord": 403,
 			"skills": [{
 				"record": 404,
-				"name": "Smiley Bomb"
+				"name": "스마일리 봄버",
+				"englishName": "Smiley Bomb",
+				"dbTextIndex": 660
 			}, {
 				"record": 405,
-				"name": "Buster Dive"
+				"name": "버스터 다이브",
+				"englishName": "Buster Dive",
+				"dbTextIndex": 661
 			}]
 		},
 		맘모스몬: {
 			"basicRecord": 406,
 			"skills": [{
 				"record": 407,
-				"name": "Tusk Crusher"
+				"name": "터스크 스트라익스",
+				"englishName": "Tusk Crusher",
+				"dbTextIndex": 662
 			}, {
 				"record": 408,
-				"name": "Tundra Breath"
+				"name": "툰드라 브레스",
+				"englishName": "Tundra Breath",
+				"dbTextIndex": 663
 			}]
 		},
 		메가시드라몬: {
 			"basicRecord": 409,
 			"skills": [{
 				"record": 410,
-				"name": "Lightning Javelin"
+				"name": "선더 자벨린",
+				"englishName": "Lightning Javelin",
+				"dbTextIndex": 664
 			}, {
 				"record": 411,
-				"name": "Maelstrom"
+				"name": "메일슈트롬",
+				"englishName": "Maelstrom",
+				"dbTextIndex": 665
 			}]
 		},
 		메가드라몬: {
 			"basicRecord": 412,
 			"skills": [{
 				"record": 413,
-				"name": "Darkside Attack"
+				"name": "제노사이드 어택",
+				"englishName": "Darkside Attack",
+				"dbTextIndex": 666
 			}, {
 				"record": 414,
-				"name": "Ultimate Slicer"
+				"name": "얼티밋 슬라이서",
+				"englishName": "Ultimate Slicer",
+				"dbTextIndex": 667
 			}]
 		},
 		"메탈그레이몬(청)": {
 			"basicRecord": 415,
 			"skills": [{
 				"record": 416,
-				"name": "Giga Blaster"
+				"name": "기가 디스트로이어",
+				"englishName": "Giga Blaster",
+				"dbTextIndex": 668
 			}, {
 				"record": 417,
-				"name": "Trident Arm"
+				"name": "트라이던트 암",
+				"englishName": "Trident Arm",
+				"dbTextIndex": 669
 			}]
 		},
 		메탈그레이몬: {
 			"basicRecord": 418,
 			"skills": [{
 				"record": 419,
-				"name": "Giga Blaster"
+				"name": "기가 디스트로이어",
+				"englishName": "Giga Blaster",
+				"dbTextIndex": 670
 			}, {
 				"record": 420,
-				"name": "Trident Arm"
+				"name": "트라이던트 암",
+				"englishName": "Trident Arm",
+				"dbTextIndex": 671
 			}]
 		},
 		메탈티라노몬: {
 			"basicRecord": 421,
 			"skills": [{
 				"record": 422,
-				"name": "Giga Blaster II"
+				"name": "기가 디스트로이어Ⅱ",
+				"englishName": "Giga Blaster II",
+				"dbTextIndex": 672
 			}, {
 				"record": 423,
-				"name": "Nuclear Laser"
+				"name": "뉴클리어 레이저",
+				"englishName": "Nuclear Laser",
+				"dbTextIndex": 673
 			}]
 		},
 		퍼펫몬: {
 			"basicRecord": 424,
 			"skills": [{
 				"record": 425,
-				"name": "Hearts Attack"
+				"name": "러블리 어택",
+				"englishName": "Hearts Attack",
+				"dbTextIndex": 674
 			}, {
 				"record": 426,
-				"name": "Gyral Punch"
+				"name": "붕붕 펀치",
+				"englishName": "Gyral Punch",
+				"dbTextIndex": 675
 			}]
 		},
 		야타가라몬: {
 			"basicRecord": 427,
 			"skills": [{
 				"record": 428,
-				"name": "Savage Emperor"
+				"name": "신비의 종",
+				"englishName": "Savage Emperor",
+				"dbTextIndex": 676
 			}, {
 				"record": 429,
-				"name": "Blackout"
+				"name": "검은날개",
+				"englishName": "Blackout",
+				"dbTextIndex": 677
 			}]
 		},
 		라이즈그레이몬: {
@@ -5070,15 +5562,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 431,
-					"name": "Trident Revolver"
+					"name": "트라이던트 리볼버",
+					"englishName": "Trident Revolver",
+					"dbTextIndex": 678
 				},
 				{
 					"record": 432,
-					"name": "Rising Destroyer"
+					"name": "라이징 디스트로이어",
+					"englishName": "Rising Destroyer",
+					"dbTextIndex": 679
 				},
 				{
 					"record": 433,
-					"name": "Solid Strike"
+					"name": "솔리드 스트라이크",
+					"englishName": "Solid Strike",
+					"dbTextIndex": 680
 				}
 			]
 		},
@@ -5086,60 +5584,84 @@ var ChampCore = (function(exports) {
 			"basicRecord": 434,
 			"skills": [{
 				"record": 435,
-				"name": "Rapid Fire"
+				"name": "래피드 바이어",
+				"englishName": "Rapid Fire",
+				"dbTextIndex": 681
 			}, {
 				"record": 436,
-				"name": "Golden Triangle"
+				"name": "골든 트라이앵글",
+				"englishName": "Golden Triangle",
+				"dbTextIndex": 682
 			}]
 		},
 		릴리몬: {
 			"basicRecord": 437,
 			"skills": [{
 				"record": 438,
-				"name": "Flower Cannon"
+				"name": "플라워 캐논",
+				"englishName": "Flower Cannon",
+				"dbTextIndex": 683
 			}, {
 				"record": 439,
-				"name": "Fairy Vine"
+				"name": "페어리 바인",
+				"englishName": "Fairy Vine",
+				"dbTextIndex": 684
 			}]
 		},
 		레이디데블몬: {
 			"basicRecord": 440,
 			"skills": [{
 				"record": 441,
-				"name": "Darkness Wave"
+				"name": "다크니스 웨이브",
+				"englishName": "Darkness Wave",
+				"dbTextIndex": 685
 			}, {
 				"record": 442,
-				"name": "Poison Spray"
+				"name": "푸와존",
+				"englishName": "Poison Spray",
+				"dbTextIndex": 686
 			}]
 		},
 		나쁜퍼펫몬: {
 			"basicRecord": 443,
 			"skills": [{
 				"record": 444,
-				"name": "Hearts Break Attack"
+				"name": "하트 브레이크 어택",
+				"englishName": "Hearts Break Attack",
+				"dbTextIndex": 687
 			}, {
 				"record": 445,
-				"name": "Bear Claw"
+				"name": "베어 크로우",
+				"englishName": "Bear Claw",
+				"dbTextIndex": 688
 			}]
 		},
 		워가루몬: {
 			"basicRecord": 446,
 			"skills": [{
 				"record": 447,
-				"name": "Wolf Claw"
+				"name": "카이저 네일",
+				"englishName": "Wolf Claw",
+				"dbTextIndex": 689
 			}, {
 				"record": 448,
-				"name": "Howling Blaster"
+				"name": "폭스 파이어",
+				"englishName": "Howling Blaster",
+				"dbTextIndex": 690
 			}]
 		},
 		"워가루몬(흑)": {
 			"basicRecord": 449,
 			"skills": [{
 				"record": 450,
-				"name": "Wolf Claw"
+				"name": "카이저 네일",
+				"englishName": "Wolf Claw",
+				"dbTextIndex": 691
 			}, {
 				"record": 451,
-				"name": "Garuru Kick"
+				"name": "가루루 킥",
+				"englishName": "Garuru Kick",
+				"dbTextIndex": 692
 			}]
 		},
 		윙드라몬: {
@@ -5147,15 +5669,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 453,
-					"name": "Blaze Sonic Breath"
+					"name": "블레이즈 소닉 브레스",
+					"englishName": "Blaze Sonic Breath",
+					"dbTextIndex": 693
 				},
 				{
 					"record": 454,
-					"name": "Exploding Sonic Breath"
+					"name": "익스플로드 소닉 랜스",
+					"englishName": "Exploding Sonic Breath",
+					"dbTextIndex": 694
 				},
 				{
 					"record": 455,
-					"name": "Wing Blast"
+					"name": "윙 블래스트",
+					"englishName": "Wing Blast",
+					"dbTextIndex": 695
 				}
 			]
 		},
@@ -5164,15 +5692,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 457,
-					"name": "Scrap Claw"
+					"name": "스크랩레스 크로우",
+					"englishName": "Scrap Claw",
+					"dbTextIndex": 696
 				},
 				{
 					"record": 458,
-					"name": "Megaton Hammer Crush"
+					"name": "메가톤 해머 크래시",
+					"englishName": "Megaton Hammer Crush",
+					"dbTextIndex": 697
 				},
 				{
 					"record": 459,
-					"name": "Giga Crack"
+					"name": "기가 크랙",
+					"englishName": "Giga Crack",
+					"dbTextIndex": 698
 				}
 			]
 		},
@@ -5181,15 +5715,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 461,
-					"name": "Guren Juuouha"
+					"name": "홍련수왕파",
+					"englishName": "Guren Juuouha",
+					"dbTextIndex": 699
 				},
 				{
 					"record": 462,
-					"name": "Kurenai Shishinomai"
+					"name": "홍련사자춤",
+					"englishName": "Kurenai Shishinomai",
+					"dbTextIndex": 700
 				},
 				{
 					"record": 463,
-					"name": "Purifying Howl"
+					"name": "공포의 포효",
+					"englishName": "Purifying Howl",
+					"dbTextIndex": 701
 				}
 			]
 		},
@@ -5198,15 +5738,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 465,
-					"name": "Lunatic Dance"
+					"name": "루나틱 댄스",
+					"englishName": "Lunatic Dance",
+					"dbTextIndex": 702
 				},
 				{
 					"record": 466,
-					"name": "Ice Archery"
+					"name": "아이스 아체리",
+					"englishName": "Ice Archery",
+					"dbTextIndex": 703
 				},
 				{
 					"record": 467,
-					"name": "Dark Archery"
+					"name": "다크 아체리",
+					"englishName": "Dark Archery",
+					"dbTextIndex": 704
 				}
 			]
 		},
@@ -5214,110 +5760,154 @@ var ChampCore = (function(exports) {
 			"basicRecord": 468,
 			"skills": [{
 				"record": 469,
-				"name": "Halley's Squall"
+				"name": "하레이 스콜",
+				"englishName": "Halley's Squall",
+				"dbTextIndex": 705
 			}, {
 				"record": 470,
-				"name": "Superstar Upper"
+				"name": "슈퍼스타 어퍼",
+				"englishName": "Superstar Upper",
+				"dbTextIndex": 706
 			}]
 		},
 		블랙래비드몬: {
 			"basicRecord": 471,
 			"skills": [{
 				"record": 472,
-				"name": "Rapid Fire"
+				"name": "래피드 파이어",
+				"englishName": "Rapid Fire",
+				"dbTextIndex": 707
 			}, {
 				"record": 473,
-				"name": "Golden Triangle"
+				"name": "골든 트라이앵글",
+				"englishName": "Golden Triangle",
+				"dbTextIndex": 708
 			}]
 		},
 		블루메라몬: {
 			"basicRecord": 474,
 			"skills": [{
 				"record": 475,
-				"name": "Ice Phantom"
+				"name": "아이스 팬텀",
+				"englishName": "Ice Phantom",
+				"dbTextIndex": 709
 			}, {
 				"record": 476,
-				"name": "Cold Flame"
+				"name": "골든 플레임",
+				"englishName": "Cold Flame",
+				"dbTextIndex": 710
 			}]
 		},
 		바이킹몬: {
 			"basicRecord": 477,
 			"skills": [{
 				"record": 478,
-				"name": "Arctic Blizzard"
+				"name": "아크틱 블리저드",
+				"englishName": "Arctic Blizzard",
+				"dbTextIndex": 711
 			}, {
 				"record": 479,
-				"name": "Mjollnir"
+				"name": "묘르닐 선더",
+				"englishName": "Mjollnir",
+				"dbTextIndex": 712
 			}]
 		},
 		발키리몬: {
 			"basicRecord": 480,
 			"skills": [{
 				"record": 481,
-				"name": "Feral Sword"
+				"name": "펜릴 소드",
+				"englishName": "Feral Sword",
+				"dbTextIndex": 713
 			}, {
 				"record": 482,
-				"name": "Aurvandil's Arrow"
+				"name": "아울반딜의 화살",
+				"englishName": "Aurvandil's Arrow",
+				"dbTextIndex": 714
 			}]
 		},
 		워그레이몬: {
 			"basicRecord": 483,
 			"skills": [{
 				"record": 484,
-				"name": "Terra Force"
+				"name": "가이아 포스",
+				"englishName": "Terra Force",
+				"dbTextIndex": 715
 			}, {
 				"record": 485,
-				"name": "Iron Claws"
+				"name": "드라몬 킬러",
+				"englishName": "Iron Claws",
+				"dbTextIndex": 716
 			}]
 		},
 		기가시드라몬: {
 			"basicRecord": 486,
 			"skills": [{
 				"record": 487,
-				"name": "Giga Sea Destroyer"
+				"name": "기가 시 디스트로이어",
+				"englishName": "Giga Sea Destroyer",
+				"dbTextIndex": 717
 			}, {
 				"record": 488,
-				"name": "Sky Wave"
+				"name": "스카이 웨이브",
+				"englishName": "Sky Wave",
+				"dbTextIndex": 718
 			}]
 		},
 		그랜쿠가몬: {
 			"basicRecord": 489,
 			"skills": [{
 				"record": 490,
-				"name": "Dimension Scissors"
+				"name": "디멘션 시저",
+				"englishName": "Dimension Scissors",
+				"dbTextIndex": 719
 			}, {
 				"record": 491,
-				"name": "Grand Death Screw"
+				"name": "그랜 데스 스크류",
+				"englishName": "Grand Death Screw",
+				"dbTextIndex": 720
 			}]
 		},
 		그리폰몬: {
 			"basicRecord": 492,
 			"skills": [{
 				"record": 493,
-				"name": "Legendary Blade"
+				"name": "슈퍼 소닉 보이스",
+				"englishName": "Legendary Blade",
+				"dbTextIndex": 721
 			}, {
 				"record": 494,
-				"name": "Mobius Bite"
+				"name": "메비우스 바이트",
+				"englishName": "Mobius Bite",
+				"dbTextIndex": 722
 			}]
 		},
 		이글몬: {
 			"basicRecord": 495,
 			"skills": [{
 				"record": 496,
-				"name": "Phoenix Claw"
+				"name": "카이저 피닉스",
+				"englishName": "Phoenix Claw",
+				"dbTextIndex": 723
 			}, {
 				"record": 497,
-				"name": "Mystic Break"
+				"name": "미스틱 브레이크",
+				"englishName": "Mystic Break",
+				"dbTextIndex": 724
 			}]
 		},
 		샤벨레오몬: {
 			"basicRecord": 498,
 			"skills": [{
 				"record": 499,
-				"name": "Howling Crusher"
+				"name": "네일 크래셔",
+				"englishName": "Howling Crusher",
+				"dbTextIndex": 725
 			}, {
 				"record": 500,
-				"name": "Infinity Arrow"
+				"name": "인피니티 애로우",
+				"englishName": "Infinity Arrow",
+				"dbTextIndex": 726
 			}]
 		},
 		샤잉레이몬: {
@@ -5325,15 +5915,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 502,
-					"name": "Glorious Burst"
+					"name": "글로리어스 버스트",
+					"englishName": "Glorious Burst",
+					"dbTextIndex": 727
 				},
 				{
 					"record": 503,
-					"name": "Shining Blast"
+					"name": "샤이닝 블래스트",
+					"englishName": "Shining Blast",
+					"dbTextIndex": 728
 				},
 				{
 					"record": 504,
-					"name": "Geogrey Sword"
+					"name": "지오 그레이 소드",
+					"englishName": "Geogrey Sword",
+					"dbTextIndex": 729
 				}
 			]
 		},
@@ -5341,130 +5937,182 @@ var ChampCore = (function(exports) {
 			"basicRecord": 505,
 			"skills": [{
 				"record": 506,
-				"name": "Spiral Bone Crusher"
+				"name": "스파이럴 본",
+				"englishName": "Spiral Bone Crusher",
+				"dbTextIndex": 730
 			}, {
 				"record": 507,
-				"name": "Grand Charge"
+				"name": "그랜 차져",
+				"englishName": "Grand Charge",
+				"dbTextIndex": 731
 			}]
 		},
 		세인트가르고몬: {
 			"basicRecord": 508,
 			"skills": [{
 				"record": 509,
-				"name": "Burst Shot"
+				"name": "버스트 샷",
+				"englishName": "Burst Shot",
+				"dbTextIndex": 732
 			}, {
 				"record": 510,
-				"name": "Magna Blaster"
+				"name": "자이언트 미사일",
+				"englishName": "Magna Blaster",
+				"dbTextIndex": 733
 			}]
 		},
 		하이안드로몬: {
 			"basicRecord": 511,
 			"skills": [{
 				"record": 512,
-				"name": "Atomic Ray"
+				"name": "아토믹 레이",
+				"englishName": "Atomic Ray",
+				"dbTextIndex": 734
 			}, {
 				"record": 513,
-				"name": "Lightning Blade"
+				"name": "스파이럴 소드",
+				"englishName": "Lightning Blade",
+				"dbTextIndex": 735
 			}]
 		},
 		반쵸레오몬: {
 			"basicRecord": 514,
 			"skills": [{
 				"record": 515,
-				"name": "Lion King Slash"
+				"name": "사자뇌왕참",
+				"englishName": "Lion King Slash",
+				"dbTextIndex": 736
 			}, {
 				"record": 516,
-				"name": "Flash Bancho Punch"
+				"name": "플래시 반쵸 펀치",
+				"englishName": "Flash Bancho Punch",
+				"dbTextIndex": 737
 			}]
 		},
 		피에몬: {
 			"basicRecord": 517,
 			"skills": [{
 				"record": 518,
-				"name": "Trump Sword"
+				"name": "트럼프 소드",
+				"englishName": "Trump Sword",
+				"dbTextIndex": 738
 			}, {
 				"record": 519,
-				"name": "Ending Snipe"
+				"name": "엔딩 스나이프",
+				"englishName": "Ending Snipe",
+				"dbTextIndex": 739
 			}]
 		},
 		피노키몬: {
 			"basicRecord": 520,
 			"skills": [{
 				"record": 521,
-				"name": "Puppet Pummel"
+				"name": "블리트 해머",
+				"englishName": "Puppet Pummel",
+				"dbTextIndex": 740
 			}, {
 				"record": 522,
-				"name": "Wood Cross"
+				"name": "우드 크로스",
+				"englishName": "Wood Cross",
+				"dbTextIndex": 741
 			}]
 		},
 		파라오몬: {
 			"basicRecord": 523,
 			"skills": [{
 				"record": 524,
-				"name": "Necro Mist"
+				"name": "네크로 미스트",
+				"englishName": "Necro Mist",
+				"dbTextIndex": 742
 			}, {
 				"record": 525,
-				"name": "Necro Mist"
+				"name": "네크로 미스트",
+				"englishName": "Necro Mist",
+				"dbTextIndex": 743
 			}]
 		},
 		푸쿠몬: {
 			"basicRecord": 526,
 			"skills": [{
 				"record": 527,
-				"name": "Needle Squall"
+				"name": "니들 스콜",
+				"englishName": "Needle Squall",
+				"dbTextIndex": 744
 			}, {
 				"record": 528,
-				"name": "Britain Punch"
+				"name": "브리튼 펀치",
+				"englishName": "Britain Punch",
+				"dbTextIndex": 745
 			}]
 		},
 		블랙워그레이몬: {
 			"basicRecord": 529,
 			"skills": [{
 				"record": 530,
-				"name": "Dark Gaia Force"
+				"name": "암흑의 가이아 포스",
+				"englishName": "Dark Gaia Force",
+				"dbTextIndex": 746
 			}, {
 				"record": 531,
-				"name": "Iron Claws"
+				"name": "드라몬 킬러",
+				"englishName": "Iron Claws",
+				"dbTextIndex": 747
 			}]
 		},
 		프린스콩알몬: {
 			"basicRecord": 532,
 			"skills": [{
 				"record": 533,
-				"name": "Smiley Warhead"
+				"name": "스마일리 워 헤드",
+				"englishName": "Smiley Warhead",
+				"dbTextIndex": 748
 			}, {
 				"record": 534,
-				"name": "Purple Rain"
+				"name": "퍼플 레인",
+				"englishName": "Purple Rain",
+				"dbTextIndex": 749
 			}]
 		},
 		프레시오몬: {
 			"basicRecord": 535,
 			"skills": [{
 				"record": 536,
-				"name": "Water Tail Blaster"
+				"name": "솔로 블루",
+				"englishName": "Water Tail Blaster",
+				"dbTextIndex": 750
 			}, {
 				"record": 537,
-				"name": "Pulse Blast"
+				"name": "쉐이킹 펄스",
+				"englishName": "Pulse Blast",
+				"dbTextIndex": 751
 			}]
 		},
 		헤라크레스캅테리몬: {
 			"basicRecord": 538,
 			"skills": [{
 				"record": 539,
-				"name": "Giga Scissor Claw"
+				"name": "기가 블래스터",
+				"englishName": "Giga Scissor Claw",
+				"dbTextIndex": 752
 			}, {
 				"record": 540,
-				"name": "Electro Blaster"
+				"name": "하이 메가 블래스터",
+				"englishName": "Electro Blaster",
+				"dbTextIndex": 753
 			}]
 		},
 		페닉스몬: {
 			"basicRecord": 541,
 			"skills": [{
 				"record": 542,
-				"name": "Starlight Explosion"
+				"name": "스타라이트 익스플로전",
+				"englishName": "Starlight Explosion",
+				"dbTextIndex": 754
 			}, {
 				"record": 543,
-				"name": "Crimson Flame"
+				"name": "크림즌 플레어",
+				"englishName": "Crimson Flame",
+				"dbTextIndex": 755
 			}]
 		},
 		미러지가오몬: {
@@ -5472,15 +6120,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 545,
-					"name": "Double Crescent Mirage"
+					"name": "더블 크레센트 미러지",
+					"englishName": "Double Crescent Mirage",
+					"dbTextIndex": 756
 				},
 				{
 					"record": 546,
-					"name": "Full Moon Blaster"
+					"name": "풀문 블래스터",
+					"englishName": "Full Moon Blaster",
+					"dbTextIndex": 757
 				},
 				{
 					"record": 547,
-					"name": "Gale Claw"
+					"name": "게일 크로우",
+					"englishName": "Gale Claw",
+					"dbTextIndex": 758
 				}
 			]
 		},
@@ -5488,60 +6142,84 @@ var ChampCore = (function(exports) {
 			"basicRecord": 548,
 			"skills": [{
 				"record": 549,
-				"name": "Giga Cannon"
+				"name": "무한 캐논",
+				"englishName": "Giga Cannon",
+				"dbTextIndex": 759
 			}, {
 				"record": 550,
-				"name": "Infinite Hand"
+				"name": "무한 핸드",
+				"englishName": "Infinite Hand",
+				"dbTextIndex": 760
 			}]
 		},
 		메탈에테몬: {
 			"basicRecord": 551,
 			"skills": [{
 				"record": 552,
-				"name": "Banana Slip"
+				"name": "바나나 슬립",
+				"englishName": "Banana Slip",
+				"dbTextIndex": 761
 			}, {
 				"record": 553,
-				"name": "DarkNetwork&C.Crush"
+				"name": "러브 세레나데",
+				"englishName": "DarkNetwork&C.Crush",
+				"dbTextIndex": 762
 			}]
 		},
 		메탈가루몬: {
 			"basicRecord": 554,
 			"skills": [{
 				"record": 555,
-				"name": "Freezing Breath"
+				"name": "코퀴터스 브레스",
+				"englishName": "Freezing Breath",
+				"dbTextIndex": 763
 			}, {
 				"record": 556,
-				"name": "Grace Cross Freezer"
+				"name": "그레이 스크로스 프리저",
+				"englishName": "Grace Cross Freezer",
+				"dbTextIndex": 764
 			}]
 		},
 		"메탈가루몬(흑)": {
 			"basicRecord": 557,
 			"skills": [{
 				"record": 558,
-				"name": "Freezing Breath"
+				"name": "코퀴터스 브레스",
+				"englishName": "Freezing Breath",
+				"dbTextIndex": 765
 			}, {
 				"record": 559,
-				"name": "Blizzard Wolf Claw"
+				"name": "블리저드 울프 크로우",
+				"englishName": "Blizzard Wolf Claw",
+				"dbTextIndex": 766
 			}]
 		},
 		메탈시드라몬: {
 			"basicRecord": 560,
 			"skills": [{
 				"record": 561,
-				"name": "River of Power"
+				"name": "얼티밋 스트림",
+				"englishName": "River of Power",
+				"dbTextIndex": 767
 			}, {
 				"record": 562,
-				"name": "Poseidon Divide"
+				"name": "포세이돈 디바이드",
+				"englishName": "Poseidon Divide",
+				"dbTextIndex": 768
 			}]
 		},
 		로제몬: {
 			"basicRecord": 563,
 			"skills": [{
 				"record": 564,
-				"name": "Thorn Whipping"
+				"name": "손 윕",
+				"englishName": "Thorn Whipping",
+				"dbTextIndex": 769
 			}, {
 				"record": 565,
-				"name": "Forbidden Temptation"
+				"name": "포비든 템테이션",
+				"englishName": "Forbidden Temptation",
+				"dbTextIndex": 770
 			}]
 		},
 		지드가루몬: {
@@ -5549,15 +6227,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 567,
-					"name": "Zeed Cannon"
+					"name": "지드 포",
+					"englishName": "Zeed Cannon",
+					"dbTextIndex": 771
 				},
 				{
 					"record": 568,
-					"name": "Full Metal Breath"
+					"name": "풀메탈 블레이즈",
+					"englishName": "Full Metal Breath",
+					"dbTextIndex": 772
 				},
 				{
 					"record": 569,
-					"name": "Blowback Breath"
+					"name": "블로우 백 브레스",
+					"englishName": "Blowback Breath",
+					"dbTextIndex": 773
 				}
 			]
 		},
@@ -5566,15 +6250,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 571,
-					"name": "Dramon Breaker"
+					"name": "드라몬 브레이커",
+					"englishName": "Dramon Breaker",
+					"dbTextIndex": 774
 				},
 				{
 					"record": 572,
-					"name": "Trident Gaia"
+					"name": "트라이던트 가이아",
+					"englishName": "Trident Gaia",
+					"dbTextIndex": 775
 				},
 				{
 					"record": 573,
-					"name": "Victory Charge"
+					"name": "빅토리 차지",
+					"englishName": "Victory Charge",
+					"dbTextIndex": 776
 				}
 			]
 		},
@@ -5583,15 +6273,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 575,
-					"name": "Tenryu Slash"
+					"name": "천룡참파",
+					"englishName": "Tenryu Slash",
+					"dbTextIndex": 777
 				},
 				{
 					"record": 576,
-					"name": "Shoryu Slash"
+					"name": "승룡참파",
+					"englishName": "Shoryu Slash",
+					"dbTextIndex": 778
 				},
 				{
 					"record": 577,
-					"name": "Koryu Slash"
+					"name": "황룡참파",
+					"englishName": "Koryu Slash",
+					"dbTextIndex": 779
 				}
 			]
 		},
@@ -5600,15 +6296,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 579,
-					"name": "Destroyed Rush"
+					"name": "디스트로이드 러시",
+					"englishName": "Destroyed Rush",
+					"dbTextIndex": 780
 				},
 				{
 					"record": 580,
-					"name": "Infinity Bowling"
+					"name": "인피니티 볼링",
+					"englishName": "Infinity Bowling",
+					"dbTextIndex": 781
 				},
 				{
 					"record": 581,
-					"name": "Gravity Press"
+					"name": "그래비티 프레스",
+					"englishName": "Gravity Press",
+					"dbTextIndex": 782
 				}
 			]
 		},
@@ -5617,15 +6319,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 583,
-					"name": "Solblaster"
+					"name": "솔 블래스터",
+					"englishName": "Solblaster",
+					"dbTextIndex": 783
 				},
 				{
 					"record": 584,
-					"name": "Foibos Blow"
+					"name": "포보스 블로우",
+					"englishName": "Foibos Blow",
+					"dbTextIndex": 784
 				},
 				{
 					"record": 585,
-					"name": "Arrow of Apollo"
+					"name": "애로우 오브 아폴로",
+					"englishName": "Arrow of Apollo",
+					"dbTextIndex": 785
 				}
 			]
 		},
@@ -5634,15 +6342,21 @@ var ChampCore = (function(exports) {
 			"skills": [
 				{
 					"record": 587,
-					"name": "Crescent Harken"
+					"name": "크레센트 하켄",
+					"englishName": "Crescent Harken",
+					"dbTextIndex": 786
 				},
 				{
 					"record": 588,
-					"name": "Arrow of Artemis"
+					"name": "애로우 오브 알테미스",
+					"englishName": "Arrow of Artemis",
+					"dbTextIndex": 787
 				},
 				{
 					"record": 589,
-					"name": "Goodnight Moon"
+					"name": "굿나잇 문",
+					"englishName": "Goodnight Moon",
+					"dbTextIndex": 788
 				}
 			]
 		},
@@ -5650,20 +6364,28 @@ var ChampCore = (function(exports) {
 			"basicRecord": 590,
 			"skills": [{
 				"record": 591,
-				"name": "Positron Laser"
+				"name": "포지트론 레이저",
+				"englishName": "Positron Laser",
+				"dbTextIndex": 789
 			}, {
 				"record": 592,
-				"name": "Giga Fire"
+				"name": "기가데스",
+				"englishName": "Giga Fire",
+				"dbTextIndex": 790
 			}]
 		},
 		듀크몬: {
 			"basicRecord": 593,
 			"skills": [{
 				"record": 594,
-				"name": "Royal Saber"
+				"name": "로얄 세이버",
+				"englishName": "Royal Saber",
+				"dbTextIndex": 791
 			}, {
 				"record": 595,
-				"name": "Final Elision"
+				"name": "파이널 엘리시온",
+				"englishName": "Final Elision",
+				"dbTextIndex": 792
 			}]
 		}
 	};
@@ -5672,7 +6394,7 @@ var ChampCore = (function(exports) {
 		"attack2",
 		"attack3"
 	];
-	/** 영문 기술명은 원본 표기 그대로 사용한다. 한글 텍스트 표는 순서가 달라 별도 대조가 필요하다. */
+	/** 한글 이름은 원본 도감의 조회 규칙으로 연결한다. 영문 직역으로 대체하지 않는다. */
 	function battleSkills(speciesId) {
 		return (TABLE[getSpecies(speciesId).name]?.skills ?? []).map((skill, index) => ({
 			...skill,

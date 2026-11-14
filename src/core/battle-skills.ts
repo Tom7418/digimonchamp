@@ -6,15 +6,18 @@ export interface BattleSkill {
   /** 원본 공격 표의 레코드 번호. 이름과 소유 종은 원본에서 확인. */
   record: number;
   name: string;
+  /** 원본 도감의 한글 이름과 실행 파일의 영문 이름을 별도로 보존한다. */
+  englishName: string;
+  dbTextIndex: number;
   slot: 0 | 1 | 2;
   /** 기본 공격10 / 스킬7~9는 사용자 확인. 슬롯 순서와7~9의 대응은 웹판 임시 정책. */
   animation: 'attack1' | 'attack2' | 'attack3';
 }
 
-const TABLE: Readonly<Record<string, { basicRecord: number | null; skills: { record: number; name: string }[] }>> = original;
+const TABLE: Readonly<Record<string, { basicRecord: number | null; skills: { record: number; name: string; englishName: string; dbTextIndex: number }[] }>> = original;
 const ANIMATIONS = ['attack1', 'attack2', 'attack3'] as const;
 
-/** 영문 기술명은 원본 표기 그대로 사용한다. 한글 텍스트 표는 순서가 달라 별도 대조가 필요하다. */
+/** 한글 이름은 원본 도감의 조회 규칙으로 연결한다. 영문 직역으로 대체하지 않는다. */
 export function battleSkills(speciesId: string): BattleSkill[] {
   return (TABLE[getSpecies(speciesId).name]?.skills ?? []).map((skill, index) => ({
     ...skill, slot: index as 0 | 1 | 2, animation: ANIMATIONS[index],
