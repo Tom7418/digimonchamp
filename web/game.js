@@ -941,9 +941,7 @@
           })
           .join('')
       : `<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은 07:00~15:00, 일정: ${esc(C.upcoming(save)[0] || '-')}</p>`;
-    const free = [];
-    for (const stars of [1, 2, 3])
-      for (const format of [1, 3]) free.push({ stars, format, stage: Math.min(6, 2 + stars), prize: 60 * stars * (format === 3 ? 2 : 1) });
+    const free = C.FREE_BATTLES;
     showModal(
       '배틀',
       `<p>출전: <b>${esc(nameOf(d))}</b> (3:3은 함께 지내는 디지몬 중 건강한 순서로 둘이 더 나갑니다)</p>
@@ -952,7 +950,7 @@
        <h3>프리 배틀 ${freeOpen ? '' : '(08:00~21:00)'}</h3><div class="menu-list two">${free
          .map(
            (f, i) =>
-             `<button data-free="${i}"${freeOpen ? '' : ' disabled'}><b>${'★'.repeat(f.stars)} ${f.format}:${f.format}</b><small>상대 ${C.STAGE_LABEL[f.stage]} · ${f.prize} ฿</small></button>`,
+             `<button data-free="${i}"${freeOpen ? '' : ' disabled'}><b>${f.label} ${f.format}:${f.format}</b><small>상대 ${C.STAGE_LABEL[f.stage]} · ${f.prize} ฿</small></button>`,
          )
          .join('')}</div>`,
       'BATTLE ENTRY',
@@ -977,7 +975,7 @@
       (b) =>
         (b.onclick = () => {
           const f = free[+b.dataset.free];
-          startBattle({ title: `프리 배틀 ${'★'.repeat(f.stars)}`, format: f.format, stage: f.stage, scale: 1, prize: f.prize }, mode);
+          startBattle({ title: `프리 배틀 ${f.label}`, format: f.format, stage: f.stage, scale: 1, prize: f.prize }, mode);
         }),
     );
   }

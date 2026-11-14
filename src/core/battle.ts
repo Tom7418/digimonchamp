@@ -6,6 +6,15 @@ export const ARENA = { w: 480, h: 250 };
 export const TIME_LIMIT = 90;
 const DT = 0.1;
 
+/** 웹판 프리 배틀.입문은 사용자 요청으로 유년기Ⅱ 상대를 추가, 상금은 임시30/60비트.
+ * 기존 ★1~3의 상대 세대·상금은 유지한다.
+ */
+export const FREE_BATTLES = [0, 1, 2, 3].flatMap(stars => ([1, 3] as const).map(format => ({
+  label: stars === 0 ? '입문' : '★'.repeat(stars),
+  format, stage: (stars === 0 ? 2 : 2 + stars) as Stage,
+  prize: (stars === 0 ? 30 : 60 * stars) * (format === 3 ? 2 : 1),
+})));
+
 export interface Unit {
   id: number;
   team: 0 | 1;

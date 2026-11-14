@@ -3509,6 +3509,20 @@ var ChampCore = (function(exports) {
 	};
 	var TIME_LIMIT = 90;
 	var DT = .1;
+	/** 웹판 프리 배틀.입문은 사용자 요청으로 유년기Ⅱ 상대를 추가, 상금은 임시30/60비트.
+	* 기존 ★1~3의 상대 세대·상금은 유지한다.
+	*/
+	var FREE_BATTLES = [
+		0,
+		1,
+		2,
+		3
+	].flatMap((stars) => [1, 3].map((format) => ({
+		label: stars === 0 ? "입문" : "★".repeat(stars),
+		format,
+		stage: stars === 0 ? 2 : 2 + stars,
+		prize: (stars === 0 ? 30 : 60 * stars) * (format === 3 ? 2 : 1)
+	})));
 	/** 알약(프로틴) 하나당 공격 +15%, 최대 3개분 (임시 값) */
 	var PROTEIN_ATK = .15;
 	var PROTEIN_SAFE = 3;
@@ -3880,6 +3894,7 @@ var ChampCore = (function(exports) {
 	exports.FIELDS = FIELDS;
 	exports.FINAL = FINAL;
 	exports.FINAL_ROUNDS = FINAL_ROUNDS;
+	exports.FREE_BATTLES = FREE_BATTLES;
 	exports.GEARS = GEARS;
 	exports.HUNT_CLOSE_HOUR = HUNT_CLOSE_HOUR;
 	exports.HUNT_NIGHT_HOUR = HUNT_NIGHT_HOUR;

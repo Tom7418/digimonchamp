@@ -4,7 +4,7 @@ import { applyTraining, trainingBounds, trainingDelta } from '../src/core/traini
 import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
-import { applyBattleResult, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
+import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
@@ -856,4 +856,21 @@ describe('원본 능력치 생성·진화·저장 이전', () => {
     expect(s.over).toBe(true);
     expect(s.units.every(u => Number.isFinite(u.hp) && u.hp >= 0 && u.hp <= u.maxHp)).toBe(true);
   });
+});
+
+
+describe('유년기Ⅱ 입문 프리 배틀',()=>{
+ it('입문1:1/3:3을 추가하며 기존★1~3은 유지한다',()=>{
+  expect(FREE_BATTLES.slice(0,2)).toEqual([{label:'입문',format:1,stage:2,prize:30},{label:'입문',format:3,stage:2,prize:60}]);
+  expect(FREE_BATTLES.slice(2).map(x=>[x.stage,x.format,x.prize])).toEqual([[3,1,60],[3,3,120],[4,1,120],[4,3,240],[5,1,180],[5,3,360]]);
+ });
+ it('입문 상대는 유년기Ⅱ만 생성하며 실제 배틀이 종료된다',()=>{
+  for(const entry of FREE_BATTLES.filter(x=>x.stage===2)){
+   const foes=makeEnemies(entry.stage,entry.format,1,seeded(12));
+   expect(foes).toHaveLength(entry.format);
+   expect(foes.every(x=>getSpecies(x.speciesId).stage===2)).toBe(true);
+   const mine=Array.from({length:entry.format},(_,i)=>entrantOf(newDigimon(i+1,'코로몬',seeded(i)),'일반'));
+   expect(runBattle(mine,foes,seeded(33)).over).toBe(true);
+  }
+ });
 });
