@@ -1,6 +1,6 @@
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
-import { applyTraining, trainingBounds, trainingDelta } from '../src/core/training';
+import { trainingPreview, applyTraining, trainingBounds, trainingDelta } from '../src/core/training';
 import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
@@ -902,4 +902,30 @@ it('하루 마감은23:58까지 진행하고23:59부터 멈춘다',()=>{
  const s=freshSave(0);expect(isNight({...s,clock:21*60})).toBe(false);
  expect(isNight({...s,clock:23*60+58})).toBe(false);
  expect(isNight({...s,clock:23*60+59})).toBe(true);
+});
+
+describe('training effect preview',()=>{
+  it('결과 비율은100%이며 원본 표의 계절·난수·HP 반올림 범위를 그대로 포함한다',()=>{
+    for(const season of [0,1,2,3])for(const cage of CAGES){
+      const preview=trainingPreview(cage,season);
+      expect(preview.outcomes.reduce((n,r)=>n+r.weight,0)).toBe(100);
+      for(let roll=0;roll<100;roll++){
+        const d=newDigimon(1,'아구몬');
+        const changes=applyTraining(d,cage,season,()=>roll/100);
+        let left=roll;const row=preview.outcomes.find(r=>{if(left<r.weight)return true;left-=r.weight;return false;})!;
+        for(const text of changes){
+          const match=text.match(/^(.+) ([+-]\d+)/);if(!match)continue;
+          if(match[1]==='배틀 수')continue;
+          const predicted=row.changes.find(c=>c.label===match[1]);expect(predicted).toBeDefined();
+          // 실제 개체 상/하한이 범위를0방향으로 줄일 수 있다.
+          const n=Number(match[2]);expect(n).toBeGreaterThanOrEqual(Math.min(0,predicted!.min));expect(n).toBeLessThanOrEqual(Math.max(0,predicted!.max));
+        }
+      }
+    }
+  });
+  it('조회는 개체나 표를 변경하지 않으며 원본 표에 없는 시설은 임시 효과로 구별한다',()=>{
+    const cage=getCage('체육관'),before=JSON.stringify(cage);
+    expect(trainingPreview(cage,1)).toEqual(trainingPreview(cage,1));expect(JSON.stringify(cage)).toBe(before);
+    expect(trainingPreview({...cage,no:999},0).source).toBe('temporary');
+  });
 });

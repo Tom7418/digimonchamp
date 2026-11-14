@@ -1,0 +1,632 @@
+{
+  "hashes": {
+    "arm9": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
+    "overlay18": "44183ea85e90332dca3747699c2ff6033d8c0cd1e5deb3d6e2b0350f112d386e"
+  },
+  "modeField": "facility+0x61",
+  "multipliers": [
+    {
+      "mode": 1,
+      "factor": 2,
+      "tableAddress": "0x209fc14"
+    },
+    {
+      "mode": 2,
+      "factor": 3,
+      "tableAddress": "0x209fc84"
+    }
+  ],
+  "supplementaryTable": "0x020c87a4+12 (16-byte records)",
+  "supplementary": {
+    "1": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          1
+        ]
+      }
+    ],
+    "2": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          2
+        ]
+      }
+    ],
+    "3": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          2
+        ]
+      }
+    ],
+    "4": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          2
+        ]
+      }
+    ],
+    "5": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -200
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          2
+        ]
+      }
+    ],
+    "6": [
+      {
+        "command": 1,
+        "args": [
+          -100
+        ]
+      },
+      {
+        "command": 2,
+        "args": [
+          10
+        ]
+      }
+    ],
+    "7": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -240
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          1
+        ]
+      }
+    ],
+    "8": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      }
+    ],
+    "9": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -240
+        ]
+      }
+    ],
+    "10": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -240
+        ]
+      }
+    ],
+    "11": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      }
+    ],
+    "12": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -220
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          1
+        ]
+      }
+    ],
+    "13": [
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          2
+        ]
+      }
+    ],
+    "14": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -200
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          2
+        ]
+      }
+    ],
+    "15": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -220
+        ]
+      }
+    ],
+    "16": [
+      {
+        "command": 6,
+        "args": [
+          2,
+          1,
+          8
+        ]
+      },
+      {
+        "command": 6,
+        "args": [
+          6,
+          2,
+          -1
+        ]
+      }
+    ],
+    "17": [
+      {
+        "command": 1,
+        "args": [
+          -100
+        ]
+      },
+      {
+        "command": 2,
+        "args": [
+          10
+        ]
+      }
+    ],
+    "18": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -180
+        ]
+      }
+    ],
+    "19": [
+      {
+        "command": 6,
+        "args": [
+          2,
+          1,
+          20
+        ]
+      },
+      {
+        "command": 6,
+        "args": [
+          3,
+          2,
+          -1
+        ]
+      },
+      {
+        "command": 6,
+        "args": [
+          120,
+          3,
+          1
+        ]
+      }
+    ],
+    "20": [
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          2
+        ]
+      }
+    ],
+    "21": [
+      {
+        "command": 1,
+        "args": [
+          -200
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          2
+        ]
+      }
+    ],
+    "22": [
+      {
+        "command": 1,
+        "args": [
+          -200
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          2
+        ]
+      }
+    ],
+    "23": [
+      {
+        "command": 1,
+        "args": [
+          -250
+        ]
+      },
+      {
+        "command": 2,
+        "args": [
+          10
+        ]
+      }
+    ],
+    "24": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          2
+        ]
+      }
+    ],
+    "25": [
+      {
+        "command": 6,
+        "args": [
+          3,
+          1,
+          5
+        ]
+      },
+      {
+        "command": 6,
+        "args": [
+          240,
+          2,
+          1
+        ]
+      }
+    ],
+    "26": [
+      {
+        "command": 6,
+        "args": [
+          3,
+          1,
+          10
+        ]
+      },
+      {
+        "command": 6,
+        "args": [
+          6,
+          2,
+          -1
+        ]
+      }
+    ],
+    "27": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -300
+        ]
+      },
+      {
+        "command": 4,
+        "args": [
+          1
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          4
+        ]
+      }
+    ],
+    "30": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          2
+        ]
+      }
+    ],
+    "31": [
+      {
+        "command": 6,
+        "args": [
+          2,
+          1,
+          12
+        ]
+      },
+      {
+        "command": 6,
+        "args": [
+          6,
+          2,
+          -1
+        ]
+      }
+    ],
+    "32": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -80
+        ]
+      }
+    ],
+    "34": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          2
+        ]
+      }
+    ],
+    "35": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          1
+        ]
+      }
+    ],
+    "37": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      }
+    ],
+    "39": [
+      {
+        "command": 0,
+        "args": [
+          -1
+        ]
+      },
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      }
+    ],
+    "40": [
+      {
+        "command": 1,
+        "args": [
+          -120
+        ]
+      },
+      {
+        "command": 5,
+        "args": [
+          2
+        ]
+      }
+    ],
+    "28": [],
+    "29": []
+  },
+  "limits": [
+    "모드 필드의 실제 변경 조건/화면 대응은 미확인: 배수를 게임에 적용하지 않음",
+    "부가 명령6은4워드, 나머지0~5는2워드임을 확인. 인자의 의미와 시간 단위는 미확정",
+    "AP 11개 항목의 훈련 경로는 단순 가산. 전체 게임의 최종 정규화/상한은 별도 추적 필요",
+    "웹판 AP 0~99·내성0~310 정책은 유지. 원작으로 확정하지 않음"
+  ]
+}

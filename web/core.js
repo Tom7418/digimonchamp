@@ -1563,6 +1563,41 @@ var ChampCore = (function(exports) {
 		if (variation !== 0 && value + variation !== 0) value += variation;
 		return key === 16 ? Math.trunc((value + (value < 0 ? -5 : 5)) / 10) * 10 : value;
 	}
+	var fallbackChanges = (cage) => [
+		...(cage.up ?? []).map((k) => [16 + STAT_KEYS.indexOf(k), cage.gain ?? 1]),
+		...(cage.down ?? []).map((k) => [16 + STAT_KEYS.indexOf(k), -1]),
+		...(cage.apUp ?? []).map((k) => [AP_ORDER.indexOf(k), 3 * (cage.gain ?? 1)]),
+		...(cage.apDown ?? []).map((k) => [AP_ORDER.indexOf(k), -1])
+	];
+	/** 현재 웹 엔진이 사용하는 결과표 안내. 난수100가지를 열거하므로 HP 반올림·계절 보정도 실제 처리와 같다.
+	* 시설 모드/부가 효과의 미확인 동작을 예측에 섞지 않는다. 개체별 상하한 적용 전 범위다.
+	*/
+	function trainingPreview(cage, season) {
+		const original = outcomes[String(cage.no)];
+		const rows = (original ?? [{
+			weight: 100,
+			changes: fallbackChanges(cage)
+		}]).filter((c) => c.weight > 0).map((c) => ({
+			weight: c.weight,
+			changes: c.changes.map(([key, base]) => {
+				const values = original ? Array.from({ length: 100 }, (_, i) => trainingDelta(key, base, season, () => i / 100)) : [base];
+				return {
+					label: key < 11 ? `${AP_ORDER[key]} 수치` : key < 16 ? `${RESIST_KEYS[key - 11]} 내성` : STAT_LABEL[STAT_KEYS[key - 16]],
+					min: Math.min(...values),
+					max: Math.max(...values)
+				};
+			})
+		}));
+		const unused = 100 - rows.reduce((sum, c) => sum + c.weight, 0);
+		if (unused > 0) rows.push({
+			weight: unused,
+			changes: []
+		});
+		return {
+			source: original ? "original" : "temporary",
+			outcomes: rows
+		};
+	}
 	/** 실제 적용 뒤의 차이만 표시한다. 기존 저장이 원작 범위 밖이면 경계로 강제 이동시키지 않는다. */
 	function applyTraining(d, cage, season, rng) {
 		const choices = outcomes[String(cage.no)];
@@ -1576,12 +1611,7 @@ var ChampCore = (function(exports) {
 				}
 				roll -= choice.weight;
 			}
-		} else changes = [
-			...(cage.up ?? []).map((k) => [16 + STAT_KEYS.indexOf(k), cage.gain ?? 1]),
-			...(cage.down ?? []).map((k) => [16 + STAT_KEYS.indexOf(k), -1]),
-			...(cage.apUp ?? []).map((k) => [AP_ORDER.indexOf(k), 3 * (cage.gain ?? 1)]),
-			...(cage.apDown ?? []).map((k) => [AP_ORDER.indexOf(k), -1])
-		];
+		} else changes = fallbackChanges(cage);
 		const result = [];
 		for (const [key, base] of changes) {
 			const amount = choices ? trainingDelta(key, base, season, rng) : base;
@@ -4066,6 +4096,7 @@ var ChampCore = (function(exports) {
 	exports.todaysMatches = todaysMatches;
 	exports.trainingBounds = trainingBounds;
 	exports.trainingDelta = trainingDelta;
+	exports.trainingPreview = trainingPreview;
 	exports.treat = treat;
 	exports.typicalStats = typicalStats;
 	exports.upcoming = upcoming;

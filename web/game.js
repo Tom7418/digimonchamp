@@ -255,6 +255,7 @@
       : `성격: ${d.personality} · 배틀 ${d.battles}회 (승 ${d.wins}) · 페널티 ${d.penalties}${d.sick ? ' · 병' : ''}${d.injured ? ' · 부상' : ''}`;
     $('#xp-label').textContent = `${Math.floor(d.stageAge / 60)}시간 / ${Math.floor(life / 60)}시간`;
     $('#xp-bar').style.width = `${clamp((d.stageAge / life) * 100)}%`;
+    $('#training-info').disabled=!!battle||!!hunt;
     const where = view.team[view.selected];
     $('#cage-status').textContent = where?.cageId ? `${L.types[where.cage]?.name} 안에서 지내는 중` : '자유 활동 (훈련 없음)';
     setHtml(
@@ -895,6 +896,21 @@
       render();
       persist();
     }
+  }
+
+  // 설치된 시설의 현재 계절 결과표를 읽기만 한다. 안내 열기로 훈련/재고/선택 개체를 바꾸지 않는다.
+  function trainingMenu(cageId=view.team[view.selected]?.cageId) {
+    const cages=view.layout,chosen=cages.find(c=>c.id===cageId)||cages[0];
+    if(!chosen)return toast('설치된 케이지가 없습니다.');
+    const cage=C.getCage(L.types[chosen.kind].core),date=C.dateOf(save.clock),preview=C.trainingPreview(cage,date.season);
+    const signed=n=>n>0?`+${n}`:String(n);
+    const rows=preview.outcomes.map(row=>`<tr><td>${row.weight}%</td><td>${row.changes.length?row.changes.map(c=>`${esc(c.label)} ${signed(c.min)}${c.min===c.max?'':` ~ ${signed(c.max)}`}`).join('<br>'):'능력치·종족·속성·내성 변화 없음'}</td></tr>`).join('');
+    showModal('케이지 훈련 효과',`<label>시설 <select id="training-cage">${cages.map(c=>`<option value="${esc(c.id)}"${c.id===chosen.id?' selected':''}>${esc(L.types[c.kind].name)}</option>`).join('')}</select></label>
+      <p>${esc(date.seasonName)} 기준 · ${preview.source==='original'?'원본 시설 결과표':'웹판 임시 효과'}</p>
+      <table class="training-effects-table"><thead><tr><th>발생 비율</th><th>예상 변화 범위</th></tr></thead><tbody>${rows}</tbody></table>
+      <p class="hint">한 번의 훈련에서 위 결과 중 하나가 선택됩니다. 계절과 난수 보정을 포함한 범위이며, 실제 증감은 개체의 상·하한에 따라 줄어들 수 있습니다. 훈련은 배치당 한 번이며, 잠든 동안에는 진행되지 않습니다.</p>
+      ${cage.battleUp?`<p>웹판 추가 효과: 배틀 수 +${cage.battleUp}</p>`:''}`,'TRAINING');
+    $('#training-cage').onchange=e=>trainingMenu(e.target.value);
   }
 
   function shopMenu() {
@@ -2058,6 +2074,7 @@
   initFarmInput();
   tipMail('welcome', '디지몬 챔피언십에 참가하게 된 것을 환영합니다!\n디지에그가 곧 부화합니다. 고기를 선택한 뒤 바닥을 터치해 놓고, 똥은 눌러서 치워 주세요.\n23:59가 되면 하루가 끝납니다.');
 
+  $('#training-info').onclick=()=>{if(!battle&&!hunt)trainingMenu();};
   document.querySelectorAll('[data-action]').forEach((b) => (b.onclick = () => act(b.dataset.action)));
   $('#partner-tabs').onclick = (e) => {
     const b = e.target.closest('[data-partner]');
