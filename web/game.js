@@ -145,7 +145,12 @@
       return log(`${e.name}(은)는 ${e.changes}`);
     }
     if (e.type === 'poop') return dropPoop(e.uid);
-    if (e.type === 'hatched') log(`디지에그가 부화해 ${n(e.to)}이(가) 태어났습니다!`);
+    if (e.type === 'hatched') {
+      // 원본 디지에그 그림의 두 번째 동작(금이 가고 갈라지며 빛이 퍼지는 9칸)을 재생한 뒤 새 디지몬을 보여 준다
+      hatching.set(e.uid, 0);
+      asset(SPRITE_BY_NAME[n(e.to)]);
+      log(`디지에그가 부화해 ${n(e.to)}이(가) 태어났습니다!`);
+    }
     else if (e.type === 'evolved') {
       log(`✦ ${n(e.from)}이(가) ${n(e.to)}(으)로 진화했습니다!`);
       toast(`${n(e.from)} → ${n(e.to)} 진화!`);
@@ -806,6 +811,9 @@
   // 먹는 동안의 예약은 화면에서만 유지한다. 저장 후 재접속하면 바닥 먹이는 남고 다시 접근한다.
   const feeding = new Map();
   const animationId = (d) => SPRITE_BY_NAME[d.isEgg ? '디지에그' : C.getSpecies(d.speciesId).name];
+  /** 부화 연출 중인 디지몬: uid → 지난 초 */
+  const hatching = new Map();
+  const HATCH = { id: 'e000_digitama', state: 'seq_1' };
   // 먹이 중앙을 밟지 않고 몸 크기에 맞춘 좌/우 식사 자리 중 도달 가능한 쪽을 고른다.
   function foodSide(p,d,f,preferred){
     const body=window.SPRITES.find(x=>x.id===animationId(d))?.body??24,gap=Math.max(26,body+12);
@@ -1301,10 +1309,12 @@
     context.restore();
     return true;
   }
-  // 스프라이트가 없는 종은 종족 색 원과 이름 첫 글자로 표시한다
+  // 원본 그림이 아예 없는 종만 종족 색 원과 이름 첫 글자로 표시한다.
+  // 그림은 있는데 아직 불러오는 중이면 아무것도 그리지 않는다 (부화·진화 직후 임시 원이 번쩍이지 않게).
   function body(context, speciesId, isEgg, x, y, scale, frame, flip) {
     const name = isEgg ? '디지에그' : C.getSpecies(speciesId).name;
     if (sprite(context, SPRITE_BY_NAME[name], x, y, scale, frame, flip)) return;
+    if (SPRITE_BY_NAME[name] && asset(SPRITE_BY_NAME[name])) return;
     const sp = C.getSpecies(speciesId);
     const r = (6 + sp.stage * 3) * scale * 0.8;
     context.fillStyle = FAMILY_COLOR[sp.family] || '#ccc';
@@ -1388,6 +1398,19 @@
       // 훈련은 원작 시설 행동표의 동작으로 표시. 복합 행동의 첫 동작만 연결.
       const state=board.isBouncing(d.uid) ? 'hurtAlt' : C.isSleeping(d) ? 'seq_13' : p.cageId&&p.motion!=='eat'&&trainingSequence!==undefined&&!d.isEgg&&!d.trainDone
         ? 'seq_'+trainingSequence : p.motion||'idle';
+      if (d.isEgg) asset(SPRITE_BY_NAME[C.getSpecies(d.originBaby || d.speciesId).name]); // 부화 전에 미리 불러 둔다
+      if (hatching.has(d.uid)) {
+        const elapsed = hatching.get(d.uid) + animDt;
+        hatching.set(d.uid, elapsed);
+        const born = asset(SPRITE_BY_NAME[C.getSpecies(d.speciesId).name]);
+        if (elapsed < animations.duration(HATCH.id, HATCH.state) || (born && !born.image.complete)) {
+          const hatchFrame = animations.sample(HATCH.id, HATCH.state, elapsed);
+          spriteFrames.set(p, { frame: hatchFrame, speciesId: d.speciesId, isEgg: true });
+          sprite(ctx, HATCH.id, p.x, p.y, 1.6, hatchFrame, false);
+          continue;
+        }
+        hatching.delete(d.uid);
+      }
       const frame = animations.pose(p, animationId(d), state, animDt);
       spriteFrames.set(p,{frame,speciesId:d.speciesId,isEgg:!!d.isEgg});
       body(ctx, d.speciesId, d.isEgg, p.x, p.y, scale, frame, p.direction > 0); // 원본 도트는 왼쪽을 향하므로 오른쪽 이동에서만 반전
@@ -2404,6 +2427,9 @@
     },
     get hunt() {
       return hunt;
+    },
+    get debugState() {
+      return { titleOpen, paused, mailOpen, dayEnding, editing: board.editing, speed, clock, battle: !!battle };
     },
   };
   render();
