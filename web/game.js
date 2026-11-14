@@ -1026,8 +1026,9 @@
         // 실제 적중 이벤트로 공격/피격을 연결하고 각 종 NANR 유지 시간을 사용한다.
         if(e.type==='hit'){
           const attacker=b.state.units.find(u=>u.id===e.from),target=b.state.units.find(u=>u.id===e.to);
-          // 공격1/2의 일반·특수 배정은 웹판 표시 정책. 원작 기술별7~10 선택은 후속.
-          const attackState=e.special?'attack2':'attack1';
+          // 사용자 가루다몬 확인: 기본 공격10, 스킬7~9. 다른 종은 같은 분류를 우선 적용.
+          // 엔진은 아직 스킬을1종만 구분하므로7 사용. 기술별8/9 선택은 후속.
+          const attackState=e.special?'attack1':'attack4';
           const attackId=SPRITE_BY_NAME[C.getSpecies(attacker.speciesId).name];
           const attackDuration=animations.duration(attackId,attackState);
           if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:attackDuration,duration:attackDuration,state:attackState});

@@ -27,8 +27,12 @@ for sp in meta:
  sheet=Image.open(REPO/'web/assets'/f"{sp['id']}.png").convert('RGBA')
  for n,seq in enumerate(data['banks'][data['sprites'][sp['id']]]):
   name=f"{sp['id']}_main_{n}.gif"
-  if name not in paths:missing.append(name);continue
-  gif=Image.open(io.BytesIO(z.read(paths[name])));gf=[]
+  # 같은 종/동작이 ZIP에서 다른 철자나 접미사로 저장된 경우를 명시적으로 대응한다.
+  sourceName=name
+  if sourceName not in paths:sourceName=name.replace('m326_cockatrimon','m326_kokatorimon')
+  if sourceName not in paths and name=='m357_unimon_main_5.gif':sourceName='m357_unimon_main_5_1.gif'
+  if sourceName not in paths:missing.append(name);continue
+  gif=Image.open(io.BytesIO(z.read(paths[sourceName])));gf=[]
   for j in range(gif.n_frames):gif.seek(j);gf.append(pixels(gif,True))
   expected=[]
   for cell,ticks in seq['frames']:

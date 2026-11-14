@@ -92,7 +92,7 @@ test('실제 적중 이벤트는 공격과 피격을 분리하며 결과 화면�
     globalThis.current=battle;
   `+source.slice(a,b),sandbox);
   sandbox.battleTick(0.01);
-  assert.equal(sandbox.current.actions.get(0).state,special?'attack2':'attack1');
+  assert.equal(sandbox.current.actions.get(0).state,special?'attack1':'attack4');
   assert.ok(['hurt','hurtAlt'].includes(sandbox.current.actions.get(1).state));
   sandbox.current.done=true;sandbox.battleTick(10);
   assert.equal(sandbox.current.actions.size,0);
