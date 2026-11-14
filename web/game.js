@@ -1849,9 +1849,8 @@
       if(next.blockedX||next.blockedY)w.turn=Math.min(w.turn,0.3);
       w.x = next.x;
       w.y = next.y;
-      // 지도 끝에 닿거나, 도망치다 화면 밖으로 사라지면 놓친다
-      const vw = hunt.cam ? { x0: hunt.cam.x - 40, y0: hunt.cam.y - 40, x1: hunt.cam.x + 960 / hunt.zoom + 40, y1: hunt.cam.y + 560 / hunt.zoom + 40 } : null;
-      const out = w.x < AREA.x0 || w.x > AREA.x1 || w.y < AREA.y0 + 20 || w.y > AREA.y1 || (vw && (w.x < vw.x0 || w.x > vw.x1 || w.y < vw.y0 || w.y > vw.y1));
+      // 도망치다 사냥 지도 끝(바깥)에 닿으면 놓친다. 테이머가 보고 있는 화면 밖으로 나가는 것은 상관없다
+      const out = w.x < AREA.x0 || w.x > AREA.x1 || w.y < AREA.y0 + 20 || w.y > AREA.y1;
       if (out && w.flee > 0) {
         w.gone = true;
         huntNote(`${C.getSpecies(w.id).name}이(가) 도망쳤다!`);
@@ -2057,9 +2056,10 @@
     if (type === 'up') hunt.pan = null;
     return true;
   }
-  /** 화면 오른쪽 아래 미니맵의 위치와 배율 */
+  /** 화면 오른쪽 아래 미니맵의 위치와 배율. 원작은 사냥 플러그인(레이더 등)을 달아야 지도가 보이므로 지금은 끈다 */
+  const HUNT_MINIMAP = false;
   function huntMinimapBox() {
-    if (!hunt?.size) return null;
+    if (!HUNT_MINIMAP || !hunt?.size) return null;
     const k = 150 / Math.max(hunt.size.w, hunt.size.h);
     return { x: 960 - hunt.size.w * k - 12, y: 560 - hunt.size.h * k - 12, w: hunt.size.w * k, h: hunt.size.h * k, k };
   }
