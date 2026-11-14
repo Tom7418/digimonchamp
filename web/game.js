@@ -1557,6 +1557,23 @@
   let hunt = null;
   const BIND_SECONDS = 4;
   const PULL_DISTANCE = 45; // 지도 좌표(디지몬 1배 기준)
+  /** 로프에 묶인 디지몬이 끌고 도망치는 속도(지도 px/초). 임시 */
+  const BOUND_RUN_SPEED = 38;
+  /**
+   * 로프 색: 계열(디지·하드·클론·알테마)마다 색, α·β·γ로 갈수록 진하게.
+   * 원작 로프 그림을 아직 찾지 못해 정한 임시 색이다.
+   */
+  const ROPE_COLORS = {
+    digi: ['#f5e6a8', '#f0d277', '#e8bb45'],
+    hard: ['#9fd3ff', '#5fb0ff', '#2f86e8'],
+    clone: ['#b8f0a8', '#71d965', '#36b43a'],
+    ultima: ['#ffb0d8', '#ff6fb4', '#e83a8c'],
+  };
+  function ropeColor() {
+    const id = save?.rope || 'digi1';
+    const family = id.replace(/[0-9]+$/, ''), tier = Math.max(1, Math.min(3, Number(id.match(/[0-9]+$/)?.[0]) || 1));
+    return (ROPE_COLORS[family] || ROPE_COLORS.digi)[tier - 1];
+  }
 
   function huntMenu() {
     const can = C.canHuntNow(save);
@@ -1763,7 +1780,24 @@
       const oldX = w.x, oldY = w.y;
       w.flash = Math.max(0, w.flash - dt);
       if (w.bound > 0) {
-        // 로프에 묶인 동안 이동 정지. 전용 버둥거림 동작을 확인하기 전에는 대기.
+        // 로프에 묶이면 로프를 감은 자리 반대쪽으로 끌고 도망친다. 당기지 않으면 지도 끝으로 빠져나가 놓친다
+        if (!(w.stun > 0)) {
+          const ax = w.anchor?.x ?? w.x, ay = w.anchor?.y ?? w.y + 1;
+          let dx = w.x - ax, dy = w.y - ay;
+          const len = Math.hypot(dx, dy) || 1;
+          if (len < 1) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; }
+          const target = { x: w.x + (dx / len) * BOUND_RUN_SPEED * dt, y: w.y + (dy / len) * BOUND_RUN_SPEED * dt };
+          const move = huntGroundMove(w, target);
+          w.x = move.x; w.y = move.y;
+          w.movedX = w.x - oldX; w.movedY = w.y - oldY;
+          if (w.movedX) w.vx = w.movedX; // 그림 방향
+          if (w.x <= AREA.x0 || w.x >= AREA.x1 || w.y <= AREA.y0 + 20 || w.y >= AREA.y1) {
+            w.bound = 0;
+            w.gone = true;
+            huntNote(`${C.getSpecies(w.id).name}이(가) 로프째 도망쳤다!`);
+            continue;
+          }
+        }
         w.bound -= dt;
         if (w.bound <= 0) {
           w.bound = 0;
@@ -1898,13 +1932,16 @@
         continue;
       }
       w.bound = BIND_SECONDS;
-      huntNote(`${name}에게 로프를 감았다! 디지몬을 눌러 바깥으로 당기세요`);
+      // 감은 고리의 가운데. 묶인 디지몬은 이 반대쪽으로 도망친다
+      w.anchor = poly.reduce((a, p) => ({ x: a.x + p.x / poly.length, y: a.y + p.y / poly.length }), { x: 0, y: 0 });
+      if (Math.hypot(w.x - w.anchor.x, w.y - w.anchor.y) < 4) w.anchor = { x: w.x + (Math.random() - 0.5) * 8, y: w.y + 6 };
+      huntNote(`${name}에게 로프를 감았다! 도망치기 전에 디지몬을 눌러 바깥으로 당기세요`);
     }
     if (!any) huntNote('둘러싼 디지몬이 없습니다.');
   }
 
   // 감긴 디지몬을 당긴다: 내구력에 따라 끊어지거나, HP 1 감소, 0이면 포획
-  function pullRope(w) {
+  function pullRope(w, to) {
     const name = C.getSpecies(w.id).name;
     if (Math.random() < C.ropeBreakChance(save, w.id)) {
       // 원작 도움말: 끊어져도 몇 번이고 다시 쓸 수 있다
@@ -1918,6 +1955,8 @@
     w.flash = 0.4;
     if (w.hp > 0) {
       w.bound = BIND_SECONDS;
+      // 당긴 쪽(테이머 쪽) 반대로 다시 도망친다
+      w.anchor = to ? { x: to.x, y: to.y } : w.anchor;
       huntNote(`당겼다! ${name} HP ${w.hp}/${w.max}`);
       return;
     }
@@ -1971,7 +2010,7 @@
       const { w } = hunt.pull;
       hunt.pull = null;
       if (w.gone || !(w.bound > 0)) return;
-      if (Math.hypot(p.x - w.x, p.y - (w.y - 15)) >= PULL_DISTANCE) pullRope(w);
+      if (Math.hypot(p.x - w.x, p.y - (w.y - 15)) >= PULL_DISTANCE) pullRope(w, p);
       else huntNote('더 멀리 끌어당기세요.');
     } else if (type === 'move' && hunt.drawing) {
       const last = hunt.trail[hunt.trail.length - 1];
@@ -2164,8 +2203,8 @@
       ctx.ellipse(w.x, w.y + 1, rx, Math.max(5, rx * 0.3), 0, 0, 7);
       ctx.fill();
       if (w.bound > 0) {
-        // 감긴 로프 (남은 시간만큼 고리가 줄어든다)
-        ctx.strokeStyle = '#f5e6a8';
+        // 감긴 로프 (남은 시간만큼 고리가 줄어든다). 색은 쓰는 로프에 따라
+        ctx.strokeStyle = ropeColor();
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.ellipse(w.x, w.y - 7, rx + 5, rx * 0.55 + 6, 0, 0, Math.PI * 2 * (w.bound / BIND_SECONDS));
@@ -2174,7 +2213,7 @@
       if (w.flash > 0 && Math.floor(w.flash * 20) % 2) ctx.globalAlpha = 0.4;
       const spriteId = SPRITE_BY_NAME[C.getSpecies(w.id).name];
       const motion = w.bound>0
-        ? {frame:animations.pose(w,spriteId,'boundIdle',dt),flip:w.vx>0}
+        ? {frame:animations.pose(w,spriteId,(w.movedX||w.movedY)?'boundRun':'boundIdle',dt),flip:w.vx>0}
         : animations.movement(w, spriteId, w.movedX || 0, w.movedY || 0, dt);
       spriteFrames.set(w,{frame:motion.frame,speciesId:w.id,flip:motion.flip});
       body(ctx, w.id, false, w.x, w.y, HUNT_SPRITE_SCALE, motion.frame, motion.flip);
@@ -2207,7 +2246,7 @@
     if (hunt.pull) {
       const { w, to } = hunt.pull;
       const far = Math.hypot(to.x - w.x, to.y - (w.y - 15)) >= PULL_DISTANCE;
-      ctx.strokeStyle = far ? '#ffd36a' : '#f5e6a8';
+      ctx.strokeStyle = ropeColor();
       ctx.lineWidth = far ? 4 : 2;
       ctx.beginPath();
       ctx.moveTo(w.x, w.y - 15);
@@ -2215,14 +2254,14 @@
       ctx.stroke();
     }
     if (hunt.trail.length > 1) {
-      ctx.strokeStyle = wireMode() ? '#d8dde0' : '#f5e6a8';
+      ctx.strokeStyle = wireMode() ? '#d8dde0' : ropeColor();
       ctx.lineWidth = wireMode() ? 4 : 3;
       ctx.beginPath();
       ctx.moveTo(hunt.trail[0].x, hunt.trail[0].y);
       for (const p of hunt.trail) ctx.lineTo(p.x, p.y);
       ctx.stroke();
       if (hunt.tool === 'rope') {
-        ctx.strokeStyle = '#f5e6a888';
+        ctx.strokeStyle = ropeColor() + '88';
         ctx.beginPath();
         ctx.arc(hunt.trail[0].x, hunt.trail[0].y, 45, 0, 7);
         ctx.stroke();
