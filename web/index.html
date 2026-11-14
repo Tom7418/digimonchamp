@@ -3,7 +3,7 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#172a27"><title>디지몬 챔피언십 · 웹판</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="championship.css?v=shop1">
+<link rel="stylesheet" href="championship.css?v=layout1">
 </head>
 <body>
 <div id="title-screen" class="title-screen" role="dialog" aria-label="타이틀 화면">
@@ -25,26 +25,24 @@
 <main>
 <div class="layout"><section class="world-panel"><div class="world-top"><div><span class="live-dot"></span> <strong id="scene-title">사육장</strong></div><div class="band" id="band"></div><span class="hunt-tools"><button class="quiet" id="tool-rope">로프</button><button class="quiet" id="tool-wire">와이어</button><button class="quiet" id="tool-gear">장비</button><select id="gear-select" aria-label="사냥 장비"></select><button class="quiet" id="hunt-leave">사냥 종료</button></span><button class="quiet" id="speed">▶▶ ×1</button><div class="wallet"><span>BIT</span><strong><span id="coins">0</span> <small>฿</small></strong></div></div>
 <div class="canvas-wrap"><div id="mail" class="mail" hidden><div class="mail-from"></div><div class="mail-text"></div><div class="mail-next">▼ 눌러서 닫기</div></div><canvas id="world" width="960" height="560" aria-label="사육장. 디지몬을 눌러 선택하고 케이지로 끌어 넣으세요."></canvas></div>
-<div class="world-bottom"><span><i class="live-dot"></i> <span id="save-status">자동 저장 준비</span></span><button class="quiet" id="pause">Ⅱ 일시 정지</button></div>
 <div class="tray" id="tray"></div>
-<div class="section-label"><h2>오늘은 무엇을 할까요?</h2><span id="inventory"></span></div>
-<div class="actions">
-<button data-action="battle"><span class="action-icon pink">⚔</span><b>배틀</b><small>타이틀 · 프리 배틀</small></button>
-<button data-action="hunt"><span class="action-icon green">⌁</span><b>사냥</b><small>로프로 둘러 포획</small></button>
-<button data-action="shop"><span class="action-icon orange">฿</span><b>상점</b><small>고기 · 알약 · 케이지</small></button>
-<button data-action="release"><span class="action-icon blue">↩</span><b>놓아주기</b><small>용량 비우기</small></button>
-<button data-action="tamer"><span class="action-icon gold">★</span><b>테이머 정보</b><small>랭크 · 달성률</small></button>
+<div class="dock"><div class="actions">
+<button data-action="battle" title="타이틀 · 프리 배틀"><span class="action-icon pink">⚔</span><b>배틀</b><small>타이틀 · 프리 배틀</small></button>
+<button data-action="hunt" title="로프로 둘러 포획"><span class="action-icon green">⌁</span><b>사냥</b><small>로프로 둘러 포획</small></button>
+<button data-action="shop" title="고기 · 알약 · 케이지"><span class="action-icon orange">฿</span><b>상점</b><small>고기 · 알약 · 케이지</small></button>
+<button data-action="release" title="용량 비우기"><span class="action-icon blue">↩</span><b>놓아주기</b><small>용량 비우기</small></button>
+<button data-action="tamer" title="랭크 · 달성률"><span class="action-icon gold">★</span><b>테이머 정보</b><small>랭크 · 달성률</small></button>
 </div>
-<section class="journal"><div class="section-label"><h2>테이머 일지</h2><span>최근 기록</span></div><ol id="journal"></ol></section>
+<div class="world-bottom"><span><i class="live-dot"></i> <span id="save-status">자동 저장 준비</span></span><span id="inventory"></span><button class="quiet" id="pause">Ⅱ 일시 정지</button></div></div>
 </section>
-<aside><section class="partner card"><div class="section-label"><h2>디지몬</h2><span class="pill">육성 중</span></div><div id="partner-tabs" class="partner-tabs" aria-label="디지몬 선택"></div><div class="portrait"><canvas id="portrait" width="240" height="150" aria-label="선택한 디지몬"></canvas><span id="stage" class="stage"></span></div><div class="partner-name"><h2 id="name"></h2><span id="level"></span></div><p class="personality" id="mood"></p><div class="xp-row"><span>이 세대에서 지난 시간 (수명)</span><span id="xp-label"></span></div><div class="track xp"><i id="xp-bar"></i></div><p id="cage-status" class="cage-status"></p><button id="training-info" type="button">케이지 훈련 효과</button><div id="vitals"></div><div class="stats six" id="stats"></div><div class="ap" id="ap"></div>
-<div class="section-label evo-head"><h2>진화 조건</h2><span>위에서부터 먼저 채운 쪽</span></div><div id="evo"></div></section>
-<section class="card objective"><div class="eyebrow">NEXT TITLE</div><h2 id="milestone"></h2><ul id="schedule" class="schedule"></ul></section>
-<button class="reset" id="reset">새로 시작</button>
-</aside></div>
+<aside data-pane="digimon"><nav class="side-tabs" aria-label="정보 패널"><button data-pane="digimon" class="on">디지몬</button><button data-pane="evo">진화</button><button data-pane="title">타이틀</button><button data-pane="log">일지</button></nav><div class="side-body"><section class="partner card pane-digimon"><div class="section-label"><h2>디지몬</h2><span class="pill">육성 중</span></div><div id="partner-tabs" class="partner-tabs" aria-label="디지몬 선택"></div><div class="portrait"><canvas id="portrait" width="240" height="150" aria-label="선택한 디지몬"></canvas><span id="stage" class="stage"></span></div><div class="partner-name"><h2 id="name"></h2><span id="level"></span></div><p class="personality" id="mood"></p><div class="xp-row"><span>이 세대에서 지난 시간 (수명)</span><span id="xp-label"></span></div><div class="track xp"><i id="xp-bar"></i></div><p id="cage-status" class="cage-status"></p><button id="training-info" type="button">케이지 훈련 효과</button><div id="vitals"></div><div class="stats six" id="stats"></div><div class="ap" id="ap"></div></section>
+<section class="card evo-card pane-evo"><div class="section-label evo-head"><h2>진화 조건</h2><span>위에서부터 먼저 채운 쪽</span></div><div id="evo"></div></section>
+<section class="card objective pane-title"><div class="eyebrow">NEXT TITLE</div><h2 id="milestone"></h2><ul id="schedule" class="schedule"></ul></section>
+<section class="journal card pane-log"><div class="section-label"><h2>테이머 일지</h2><span>최근 기록</span></div><ol id="journal"></ol><button class="reset" id="reset">새로 시작</button></section>
+</div></aside></div>
 <footer><span>DIGIMON CHAMPIONSHIP <b> / </b> FAN GAME</span><span>비공식 비영리 팬게임 · 디지몬 © 본고 아키요시 · 토에이 애니메이션 / 반다이남코 · 사운드 미구현</span></footer>
 </main>
 <dialog id="modal"><div class="modal-head"><span class="eyebrow" id="modal-kicker">TAMER GUIDE</span><button id="close-modal" class="quiet" aria-label="닫기">✕</button></div><h2 id="modal-title"></h2><div id="modal-body"></div><button class="primary" id="modal-ok">사육장으로 돌아가기</button></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
-<script src="assets/sprites.js?v=20261114-careclock"></script><script src="assets/animations.js?v=20261114-careclock"></script><script src="animation.js?v=20261114-careclock"></script><script src="core.js?v=20261114-battlemaps"></script><script src="cage-layout.js?v=20261114-careclock"></script><script src="cage-editor.js?v=20261114-spritehit"></script><script src="assets/battle/effects.js?v=shop1"></script><script src="battle-effects.js?v=shop1"></script><script src="battle-map.js?v=20261114-battlemaps"></script><script src="game.js?v=20261114-battlemaps"></script>
+<script src="assets/sprites.js?v=20261114-careclock"></script><script src="assets/animations.js?v=20261114-careclock"></script><script src="animation.js?v=20261114-careclock"></script><script src="core.js?v=20261114-battlemaps"></script><script src="cage-layout.js?v=20261114-careclock"></script><script src="cage-editor.js?v=20261114-spritehit"></script><script src="assets/battle/effects.js?v=shop1"></script><script src="battle-effects.js?v=shop1"></script><script src="battle-map.js?v=20261114-battlemaps"></script><script src="game.js?v=20261114-layout1"></script>
 </body></html>

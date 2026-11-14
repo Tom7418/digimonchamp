@@ -192,3 +192,90 @@ dialog p,dialog li{color:#e3f2ff}
 .training-effects-table { width:100%; border-collapse:collapse; margin:14px 0; }
 .training-effects-table th,.training-effects-table td { padding:10px; text-align:left; vertical-align:top; border-bottom:1px solid #ffffff26; line-height:1.7; }
 .training-effects-table th:first-child { width:6em; }
+
+/* ===== 한 화면 배치 (2026-11-14): 페이지 세로 스크롤을 없애고 사육장 + 오른쪽 탭 패널로 나눈다 ===== */
+.dock{display:flex;flex-direction:column}
+.world-bottom{display:flex;align-items:center;gap:10px}
+.world-bottom #inventory{flex:1;min-width:0;text-align:right;font-size:11px;color:#bcd3e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px;background:#082a63;border:3px solid #f2b13a;border-bottom:0;border-radius:6px 6px 0 0}
+.side-tabs button{background:#173f7a;color:#cfe3ff;border:1px solid #3d6fb0;border-radius:4px;padding:7px 0;font-size:13px;font-weight:700}
+.side-tabs button.on{background:#f2b13a;color:#132c3b;border-color:#ffe08a}
+aside[data-pane] .side-body>section{display:none}
+aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side-body>.pane-evo,aside[data-pane="title"] .side-body>.pane-title,aside[data-pane="log"] .side-body>.pane-log{display:block!important}
+.side-body{border:3px solid #f2b13a;border-top-width:2px;border-radius:0 0 6px 6px;background:linear-gradient(135deg,#0d3f86,#0a2b62)}
+.side-body>.card{margin:0;border:0;border-radius:0;box-shadow:none;background:transparent}
+.evo-card,.objective,.side-body>.journal{padding:10px 12px;color:var(--ink)}
+.evo-card .section-label,.side-body>.journal .section-label{margin:0 0 8px}
+.objective:after{display:none}
+.objective h2{color:#ffe36a}
+.side-body>.journal #journal{margin:0;padding:0}
+.side-body .reset{display:block;margin:14px auto 4px}
+.actions{display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:6px;padding:6px 8px!important}
+.actions button{min-height:0;padding:6px 4px 8px!important;display:flex;flex-direction:column;align-items:center;gap:1px}
+.actions button b{font-size:14px}
+.actions .action-icon{width:22px;height:22px;font-size:13px;line-height:22px}
+.actions small{font-size:10px}
+.cage-toolbar{padding:6px 10px}
+.cage-toolbar-head button{padding:5px 9px;font-size:13px}
+#cage-instruction{margin:4px 0 0;font-size:11px;line-height:1.35}
+.cage-toolbar:not(.editing) #cage-instruction{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cage-toolbar.editing .cage-palette{max-height:30vh;overflow:auto}
+.cage-toolbar:not(.editing) .cage-toolbar-head{display:inline-flex;vertical-align:middle;margin-right:8px}
+.cage-toolbar:not(.editing) #cage-instruction{display:inline-block;vertical-align:middle;max-width:calc(100% - 340px);margin:0}
+.cage-toolbar:not(.editing) #rotate-cage,.cage-toolbar:not(.editing) #remove-cage{display:none}
+/* 넓은 화면: 브라우저 높이에 맞춰 한 화면에 */
+@media (min-width:1000px) and (min-height:560px){
+ html,body{height:100%;overflow:hidden}
+ body{display:flex;flex-direction:column}
+ header{height:46px!important;flex:none;padding-top:0;padding-bottom:0}
+ header .brand-logo{height:36px}
+ main{flex:1;min-height:0;max-width:none!important;width:100%;padding:8px 12px 2px!important;display:flex;flex-direction:column}
+ .layout{flex:1;min-height:0;display:grid!important;grid-template-columns:minmax(0,1fr) clamp(320px,26vw,400px);gap:10px}
+ .world-panel{display:flex;flex-direction:column;min-height:0}
+ .world-top{flex:none}
+ .canvas-wrap{flex:1;min-height:180px;container-type:size;align-items:center}
+ #world{width:min(100cqw,calc(100cqh * 960 / 560))!important;height:auto!important;max-height:100cqh}
+ .cage-toolbar,.dock{flex:none}
+ aside{display:flex!important;flex-direction:column;min-height:0}
+ .side-body{flex:1;min-height:0;overflow:auto}
+ .side-body>.journal #journal{max-height:none;overflow:visible}
+ .side-body>.partner{padding:10px 12px!important}
+ .partner .portrait{height:120px}
+ .partner .portrait canvas{height:100%;width:auto;max-width:100%}
+ footer{flex:none;margin:2px 0 0!important;padding:2px 0!important;border:0!important;font-size:9px}
+ footer>span:first-child{display:none}
+}
+/* 좁은 화면: 세로로 쌓되 오른쪽 패널은 탭 하나만 */
+@media (max-width:999px){
+ .layout{display:flex!important;flex-direction:column}
+ aside{display:block!important}
+ .side-body{max-height:none}
+ .actions{grid-template-columns:repeat(5,1fr)!important}
+ .actions small{display:none}
+ .actions .action-icon{display:none}
+ .cage-toolbar:not(.editing) #cage-instruction{display:none}
+}
+
+/* 한 화면 배치 2차: 아래쪽 줄을 얇게 해서 사육장을 키운다 */
+.actions button{flex-direction:row!important;justify-content:center;gap:6px!important;padding:5px 4px 7px!important;min-height:38px}
+.actions button small{display:none}
+.actions button b{font-size:14px;line-height:1}
+.world-bottom{padding:3px 12px!important;min-height:0;font-size:11px}
+.world-bottom #pause{padding:2px 8px;font-size:11px}
+.side-body>.partner>.section-label{display:none}
+.partner .portrait{height:140px}
+@media (min-width:1000px) and (min-height:560px){
+ header .brand small{display:none}
+ header .brand{line-height:1.05}
+}
+@media (max-width:999px){
+ .canvas-wrap>.tray{position:static;border-top-width:2px}
+ .actions button b{font-size:13px}
+}
+/* 케이지 편집 중 시설 목록은 가로 한 줄로 (사육장이 줄어들지 않게) */
+.cage-toolbar.editing .cage-palette{display:flex!important;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-height:none;gap:6px;padding:6px 0 2px}
+.cage-toolbar.editing .cage-palette button{flex:none;width:96px;padding:4px;font-size:11px;display:flex;flex-direction:column;align-items:center}
+.cage-toolbar.editing .cage-palette img{width:64px;height:44px}
+.cage-toolbar.editing .cage-palette .footprint{display:none}
+.cage-toolbar.editing .cage-palette small{font-size:10px}
+.cage-toolbar.editing #cage-instruction{margin-top:2px}

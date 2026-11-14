@@ -2159,6 +2159,19 @@
   board.centerLayout();
   // 도구 줄은 원작처럼 사육장 화면 안 아래쪽에 겹쳐 둔다 (휠이 확대·축소라 화면 밖 버튼은 쓰기 불편하다)
   document.querySelector('.canvas-wrap').append($('#tray'));
+  // 오른쪽 정보 패널은 탭으로 한 번에 한 묶음만 보여 준다 (세로 스크롤을 줄이려고)
+  const aside = document.querySelector('aside');
+  document.querySelectorAll('.side-tabs button').forEach((b) => {
+    b.onclick = () => {
+      aside.dataset.pane = b.dataset.pane;
+      document.querySelectorAll('.side-tabs button').forEach((x) => x.classList.toggle('on', x === b));
+      aside.querySelector('.side-body').scrollTop = 0;
+      if (b.dataset.pane === 'log') {
+        const j = $('#journal');
+        j.scrollTop = j.scrollHeight;
+      }
+    };
+  });
   initFarmInput();
   tipMail('welcome', '디지몬 챔피언십에 참가하게 된 것을 환영합니다!\n디지에그가 곧 부화합니다. 고기를 선택한 뒤 바닥을 터치해 놓고, 똥은 눌러서 치워 주세요.\n23:59가 되면 하루가 끝납니다.');
 
