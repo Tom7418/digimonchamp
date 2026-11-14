@@ -191,6 +191,7 @@
       (d, i) => old.get(d.uid) || spawnPet(d.uid, i),
     );
     view.selected = clamp(view.selected, 0, view.team.length - 1);
+    if (view.pickedUid != null && !view.team.some((p) => p.uid === view.pickedUid)) view.pickedUid = null;
     const coreCage = new Map(view.team.map((p) => [p.uid, (p.cageId && L.types[p.cage]?.core) || '기본 케이지']));
     save = { ...save, digimon: save.digimon.map((d) => (d.cage === coreCage.get(d.uid) ? d : { ...d, cage: coreCage.get(d.uid) })) };
   }
@@ -1378,7 +1379,7 @@
           if (!board.movePet(p,{x:p.x+p.direction*dt*16*(d.fatigue>80?0.4:1),y:p.y})) p.target=p.x;
         }
       }
-      const selected = i === view.selected;
+      const selected = p.uid === view.pickedUid; // 고른 디지몬만 발밑 테두리를 표시
       const scale = d.isEgg ? 1.6 : 2;
       const rx = footprint(d.speciesId, d.isEgg, scale) + (selected ? 4 : 0);
       ctx.fillStyle = selected ? '#ffffff33' : '#00000022';
@@ -1494,7 +1495,7 @@
       }
     }
     for (const p of view.team) {
-      ctx.fillStyle = view.team.indexOf(p) === view.selected ? '#ffe36e' : '#9fe6ff';
+      ctx.fillStyle = p.uid === view.pickedUid ? '#ffe36e' : '#9fe6ff';
       ctx.fillRect(x0 + p.x * k - 2, y0 + p.y * k - 2, 4, 4);
     }
     ctx.strokeStyle = '#ffffffcc';

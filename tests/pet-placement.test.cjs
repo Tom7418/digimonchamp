@@ -53,8 +53,18 @@ test('케이지가 없는 옛 저장은 기본 케이지를 복원하고 내부�
  s.draw();near(p.x,s.board.center(c.q,c.r).x-55);near(p.y,s.board.center(c.q,c.r).y+40);
 });
 
+test('고르지 않은 디지몬은 바닥을 눌러도 움직이지 않고, 다시 누르면 선택이 풀린다',()=>{
+ const s=setup(),c=s.board.center(1,1),p=s.state.team[0],start={x:p.x,y:p.y},point={x:c.x+60,y:c.y};
+ s.canvas.onpointerdown(s.event(point));s.canvas.onpointerup(s.event(point));
+ near(p.x,start.x);near(p.y,start.y);assert.equal(p.cageId,null);assert.equal(s.state.pickedUid,undefined);
+ const tap=()=>{s.canvas.onpointerdown(s.event({x:p.x,y:p.y-25}));s.canvas.onpointerup(s.event({x:p.x,y:p.y-25}));};
+ tap();assert.equal(s.state.pickedUid,p.uid);
+ tap();assert.equal(s.state.pickedUid,null);
+ s.canvas.onpointerdown(s.event(point));s.canvas.onpointerup(s.event(point));near(p.x,start.x);assert.equal(p.cageId,null);
+});
 test('선택 후 클릭도 클릭한 바닥 위치를 쓰고 마지막 pointerup 좌표로 드롭한다',()=>{
  const s=setup(),c=s.board.center(1,1),p=s.state.team[0],point={x:c.x+60,y:c.y};
+ s.state.pickedUid=p.uid;
  s.canvas.onpointerdown(s.event(point));s.canvas.onpointerup(s.event(point));s.draw();
  near(p.x,point.x);near(p.y,point.y);assert.equal(p.cageId,'clinic');
  const end={x:c.x-60,y:c.y+20};
