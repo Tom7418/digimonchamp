@@ -1,4 +1,4 @@
-import { feed, feedRotten, isSleeping, type ActionResult } from './care';
+import { feed, feedRotten, isSleeping, scheduleMealPoop, type ActionResult } from './care';
 import { getSpecies } from './data';
 import type { SaveData } from './types';
 
@@ -77,7 +77,7 @@ export function biteFloorFood(save: SaveData, foods: readonly FloorFood[], uid: 
   const bite = Math.min(amount, remaining, (100 - d.hunger) / 2);
   const rest = remaining - bite;
   const next = {...save, meat: save.meat - (rest <= 0 ? 1 : 0),
-    digimon: save.digimon.map(p => p.uid === uid ? {...p, hunger: p.hunger + bite * 2, starvingMinutes: 0} : p)};
+    digimon: save.digimon.map(p => p.uid === uid ? scheduleMealPoop({...p, hunger: p.hunger + bite * 2, starvingMinutes: 0},save.clock) : p)};
   return {ok: true, save: next,
     foods: rest <= 0 ? foods.filter((_, i) => i !== index) : foods.map((f, i) => i === index ? {...f, remaining: rest} : f),
     message: '고기를 한 입 먹었다.'};

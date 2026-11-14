@@ -7,7 +7,7 @@ import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta } from '../src/core/training';
-import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isNight, feedRotten, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
+import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isNight, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -229,6 +229,80 @@ describe('floor food reservations', () => {
 const freshSave = (now: number): SaveData => ({ ...freshEggSave(now), digimon: [newDigimon(1, '깜몬')] });
 const only = (s: SaveData): Digimon => s.digimon[0];
 const withMon = (s: SaveData, patch: Partial<Digimon>): SaveData => ({ ...s, digimon: [{ ...s.digimon[0], ...patch }] });
+
+describe('하루3~4회와 식사 후 배설',()=>{
+  const awake=():SaveData=>({...freshEggSave(0),clock:7*60,meat:20,rotten:3,
+    digimon:[{...newDigimon(1,'워그레이몬',()=>.5),personality:'솔직',hunger:100,
+      restCycle:{species:'워그레이몬',awakeLeft:5000,sleepLeft:0}}]});
+  it('배고픔과 수면에 방해받지 않는 하루에도 기본 배설은3~4회다',()=>{
+    const r=advance(awake(),17*60-1,()=>.5);
+    expect(r.events.filter(e=>e.type==='poop')).toHaveLength(3);
+    expect(only(r.save).bowel?.count).toBe(3);
+  });
+  it('첫 식사 후120~180분에 한 번 배설하고 직전 기본 타이머는 겹치지 않는다',()=>{
+    for(const [roll,delay] of [[0,120],[.999,180]]){
+      const s=awake();s.digimon=[scheduleMealPoop({...only(s),poopTimer:299},s.clock,()=>roll)];
+      const r=advance(s,delay-1,()=>.5);
+      expect(r.events.some(e=>e.type==='poop')).toBe(false);
+      const due=tickFarm(r.save,()=>.5);
+      expect(due.events.filter(e=>e.type==='poop')).toHaveLength(1);
+      expect(only(due.save)).toMatchObject({poop:1,poopTimer:0,bowel:{count:1}});
+      expect(only(due.save).bowel?.mealDueAt).toBeUndefined();
+      expect(advance(due.save,1,()=>.5).events.some(e=>e.type==='poop')).toBe(false);
+    }
+  });
+  it('한 입씩 먹거나 고기를 더 먹어도 최초 예약이 늘거나 미뤄지지 않는다',()=>{
+    let s=awake();s.digimon[0]={...only(s),speciesId:'아구몬',hunger:0};const original=s;
+    const first=biteFloorFood(s,[{kind:'meat',x:0,y:0}],1,0);s=first.save;
+    const due=only(s).bowel!.mealDueAt!;
+    expect(due).toBeGreaterThanOrEqual(s.clock+120);expect(due).toBeLessThanOrEqual(s.clock+180);
+    const second=biteFloorFood({...s,clock:s.clock+10},first.foods,1,0);
+    expect(second.ok).toBe(true);
+    expect(only(second.save).bowel?.mealDueAt).toBe(due);
+    const more=feed({...second.save,clock:s.clock+20},1);
+    expect(more.ok).toBe(true);expect(only(more.save).bowel?.mealDueAt).toBe(due);
+    expect(only(original).bowel).toBeUndefined();
+  });
+  it('성공한 고기/상한 고기만 예약하며 알약과 실패한 급여는 예약하지 않는다',()=>{
+    const s=awake();s.digimon[0].hunger=30;
+    for(const result of [feed(s,1),feedRotten(s,1)])expect(only(result.save).bowel?.mealDueAt).toBeGreaterThan(s.clock);
+    expect(only(biteFloorFood({...s,pills:2},[{kind:'pill',x:0,y:0}],1,0).save).bowel).toBeUndefined();
+    expect(only(feed({...s,meat:0},1).save).bowel).toBeUndefined();
+    expect(only(feed({...s,digimon:[{...only(s),hunger:100}]},1).save).bowel).toBeUndefined();
+  });
+  it('청소/재접속을 해도 일일 한도4회를 넘기지 않고 예약을 보존한다',()=>{
+    let s=awake();
+    for(let i=0;i<4;i++){
+      s={...s,digimon:[scheduleMealPoop(only(s),s.clock,()=>0)]};
+      const r=advance(s,120,()=>.5);expect(r.events.filter(e=>e.type==='poop')).toHaveLength(1);
+      s=cleanOne(r.save,1).save;expect(only(s).bowel?.count).toBe(i+1);
+    }
+    s={...s,digimon:[scheduleMealPoop(only(s),s.clock,()=>0)]};
+    const saved=upgradeSave(JSON.parse(JSON.stringify(s)));expect(only(saved).bowel).toEqual(only(s).bowel);
+    expect(advance(saved,180,()=>.5).events.some(e=>e.type==='poop')).toBe(false);
+    expect(only(upgradeSave(saved)).bowel?.count).toBe(4);
+  });
+  it('수면/야간에는 배설하지 않고 다음 날에 횟수를 초기화한다',()=>{
+    let s=awake();s={...s,clock:23*60+59,digimon:[{...only(s),bowel:{day:0,count:4,mealDueAt:23*60},poopTimer:999}]};
+    const night=endDay(s,()=>.5);expect(night.events.some(e=>e.type==='poop')).toBe(false);
+    expect(only(night.save).bowel?.count).toBe(0);
+    const morning=tickFarm(night.save,()=>.5);expect(morning.events.filter(e=>e.type==='poop')).toHaveLength(1);
+    expect(only(morning.save).bowel?.count).toBe(1);
+    const sleeping=awake();sleeping.digimon[0]={...only(sleeping),restCycle:{species:'워그레이몬',awakeLeft:0,sleepLeft:10},bowel:{day:0,count:0,mealDueAt:sleeping.clock+1}};
+    const r=advance(sleeping,9,()=>.5);expect(r.events.some(e=>e.type==='poop')).toBe(false);
+    expect(tickFarm(r.save,()=>.5).events.filter(e=>e.type==='poop')).toHaveLength(1);
+  });
+  it('옛 저장과 자동 관리 시설을 처리하되 기존 배설물은 삭제하지 않는다',()=>{
+    const s=awake();s.digimon[0].poop=2;
+    const loaded=upgradeSave(JSON.parse(JSON.stringify(s)));
+    expect(only(loaded)).toMatchObject({poop:2,bowel:{day:0,count:0}});
+    for(const cage of ['동물원','목장']){
+      const next=tickFarm({...loaded,digimon:[{...only(loaded),cage,poopTimer:999,bowel:{day:0,count:2,mealDueAt:s.clock}}]},()=>.5);
+      expect(next.events.some(e=>e.type==='poop')).toBe(false);expect(only(next.save).poop).toBe(2);
+      expect(only(next.save).bowel?.mealDueAt).toBeUndefined();
+    }
+  });
+});
 
 describe('data', () => {
   it('parses the evolution table', () => {
@@ -762,11 +836,8 @@ describe('day flow', () => {
     expect(only(r.save).stageAge).toBe(100 + 7 * 60 + 1);
     expect(isNight(r.save)).toBe(false);
   });
-  it('poop comes less often: every 4 game hours for babies, 8 hours after', () => {
-    expect(poopInterval(1)).toBe(240);
-    expect(poopInterval(2)).toBe(240);
-    expect(poopInterval(3)).toBe(480);
-    expect(poopInterval(5)).toBe(480);
+  it('사용자 지정 기본 배설 간격은 세대와 관계없이5시간이다', () => {
+    for(const stage of [1,2,3,4,5,6])expect(poopInterval(stage)).toBe(300);
   });
   it('training reports what changed, and poop is cleaned one at a time', () => {
     const base = freshSave(0);
@@ -1037,7 +1108,9 @@ describe('원본 능력치 생성·진화·저장 이전', () => {
     expect(migrated).toMatchObject({ statVersion:1, ap:d.ap, trainMinutes:9, uid:d.uid });
     expect(JSON.stringify(d)).toBe(old);
     const s = { ...freshSave(0), digimon:[migrated] };
-    expect(upgradeSave(JSON.parse(JSON.stringify(s)))).toEqual(s);
+    const loaded=upgradeSave(JSON.parse(JSON.stringify(s)));
+    expect(loaded.digimon[0].stats).toEqual(migrated.stats);
+    expect(upgradeSave(JSON.parse(JSON.stringify(loaded)))).toEqual(loaded);
     const egg = upgradeStats({ ...d, isEgg:true });
     expect(Object.values(egg.stats)).toEqual([0,0,0,0,0,0]);
   });

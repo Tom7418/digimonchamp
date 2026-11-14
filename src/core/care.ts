@@ -43,11 +43,26 @@ export function newDigimon(uid: number, speciesId: string, rng: Rng = defaultRng
   };
 }
 
-/** 옛 저장을 지금 형식으로: 로프 단계(ropeLevel 1~4) → 로프 목록, 메모리카드 기본값 */
-/** 똥 누는 간격(게임 분). 형규 요청으로 이전(유년기 120 / 그 뒤 240)의 두 배로 줄임 (임시 값) */
-export const POOP_INTERVAL = { baby: 240, grown: 480 };
-export function poopInterval(stage: number): number {
-  return stage <= 2 ? POOP_INTERVAL.baby : POOP_INTERVAL.grown;
+/** 사용자 지정 균형값. 원작 수치가 아니다. 깨어 있는5시간마다 기본 배설, 하루 최대4회. */
+export const POOP_INTERVAL = { baby: 300, grown: 300 };
+export const POOP_LIMIT_PER_DAY = 4;
+export const MEAL_POOP_DELAY = { min: 120, max: 180 };
+export function poopInterval(_stage: number): number {
+  return POOP_INTERVAL.baby;
+}
+
+function bowelAt(d: Digimon, clock: number): NonNullable<Digimon['bowel']> {
+  const day = Math.floor(clock / MIN_PER_DAY), old = d.bowel;
+  return { day, count: old?.day === day && Number.isFinite(old.count) ? Math.max(0,Math.min(POOP_LIMIT_PER_DAY,Math.floor(old.count))) : 0,
+    ...(Number.isFinite(old?.mealDueAt) ? {mealDueAt:old!.mealDueAt} : {}) };
+}
+
+/** 한 입마다 늘리지 않고 첫 식사 예약을 유지한다. 이후 섭취로 기한을 미루지 않는다. */
+export function scheduleMealPoop(d: Digimon, clock: number, rng: Rng = defaultRng): Digimon {
+  const bowel = bowelAt(d, clock);
+  if (bowel.mealDueAt === undefined)
+    bowel.mealDueAt = clock + MEAL_POOP_DELAY.min + Math.floor(rng() * (MEAL_POOP_DELAY.max - MEAL_POOP_DELAY.min + 1));
+  return {...d,bowel};
 }
 
 /** 원본 표의 각성/수면 범위. 분 단위 진행과 야간 일괄 수면의 병합은 웹판 정책이다. */
@@ -97,7 +112,9 @@ export function upgradeSave(save: SaveData): SaveData {
   const renamed = (id: string) => CAGE_RENAMES[id] ?? id;
   if (s.cages.some((c) => CAGE_RENAMES[c])) s.cages = [...new Set(s.cages.map(renamed))];
   if (s.digimon.some((d) => CAGE_RENAMES[d.cage])) s.digimon = s.digimon.map((d) => (CAGE_RENAMES[d.cage] ? { ...d, cage: renamed(d.cage) } : d));
-  s.digimon = s.digimon.map(upgradeStats);
+  // 기존 바닥 똥/배치/능력치는 보존한다. 새 예약/일일 횟수만 추가하며 재접속으로 초기화하지 않는다.
+  s.digimon = s.digimon.map(d => ({...upgradeStats(d),bowel:bowelAt(d,s.clock),
+    poopTimer:Number.isFinite(d.poopTimer)?Math.max(0,d.poopTimer):0}));
   return s;
 }
 
@@ -206,6 +223,8 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
     hungerStress: 0,
     stressSick: false,
     poop: 0,
+    poopTimer: 0,
+    bowel: undefined,
     hunger: 70,
     fatigue: 0,
     cage: '기본 케이지',
@@ -215,7 +234,7 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
 }
 
 /** 디지몬 한 마리의 게임 시간 1분. null이면 로스트 */
-function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; sleep?: boolean; season?: number }, events: FarmEvent[]): Digimon | null {
+function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number }, events: FarmEvent[]): Digimon | null {
   let d: Digimon = { ...prev, stats: { ...prev.stats }, ap: { ...prev.ap } };
   d.stageAge += 1;
 
@@ -230,22 +249,27 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   const sp = getSpecies(d.speciesId);
   const cage = getCage(d.cage);
   const sleeping = tickRestCycle(d, ctx.rng, !!ctx.sleep) || !!ctx.sleep;
+  d.bowel = bowelAt(d, ctx.clock);
   if (sleeping) {
     // 밤과 종별 낮잠: 배고픔·똥·훈련 없이 피로만 풀린다. 병·부상은 계속 진행된다
     d.fatigue = Math.max(0, d.fatigue - 0.3);
   } else {
     d.hunger = Math.max(0, d.hunger - (d.personality === '열혈' ? 0.11 : 0.08));
     d.fatigue = Math.max(0, d.fatigue - (cage.rest ? 0.5 : cage.autoCare ? AUTO_CARE_REST : 0.04));
-    d.poopTimer += 1;
+    if (d.bowel.count < POOP_LIMIT_PER_DAY) d.poopTimer += 1;
   }
   // 동물원·목장: 먹이와 배설물을 알아서 처리한다 (원작 설명). 고기는 쓰지 않는다 (임시)
   if (cage.autoCare) {
     d.poopTimer = 0;
+    d.bowel.mealDueAt = undefined;
     if (d.hunger < AUTO_FEED_BELOW) d.hunger = 100;
   }
-  if (d.poopTimer >= poopInterval(sp.stage)) {
+  const poopDue = d.bowel.mealDueAt !== undefined ? ctx.clock >= d.bowel.mealDueAt : d.poopTimer >= poopInterval(sp.stage);
+  if (!sleeping && !cage.autoCare && d.bowel.count < POOP_LIMIT_PER_DAY && poopDue) {
     d.poopTimer = 0;
+    d.bowel.mealDueAt = undefined;
     if (d.poop < 5) {
+      d.bowel.count += 1;
       d.poop += 1;
       events.push({ type: 'poop', uid: d.uid });
     }
@@ -351,7 +375,7 @@ export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false): 
   save.digimon.forEach((d, i) => {
     const before = d.isEgg ? 0 : getSpecies(d.speciesId).size;
     const isLast = next.length + (save.digimon.length - i) <= 1;
-    const r = tickOne(d, { rank, free, isLast, rng, sleep, season }, events);
+    const r = tickOne(d, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1 }, events);
     if (!r) {
       free += before;
       return;
@@ -442,7 +466,7 @@ export function feed(save: SaveData, uid: number): ActionResult {
   if (!d || d.isEgg || isSleeping(d)) return fail(save, '먹이를 줄 수 없어요.');
   if (save.meat <= 0) return fail(save, '고기가 없어요. 상점에서 사세요.');
   if (d.hunger >= 100) return fail(save, '배가 불러서 안 먹어요.');
-  return { ok: true, message: '고기를 먹었다.', save: { ...update(save, uid, (x) => ({ ...x, hunger: Math.min(100, x.hunger + 35) })), meat: save.meat - 1 } };
+  return { ok: true, message: '고기를 먹었다.', save: { ...update(save, uid, (x) => scheduleMealPoop({ ...x, hunger: Math.min(100, x.hunger + 35) },save.clock)), meat: save.meat - 1 } };
 }
 
 /** 썩은 고기 두 개를 먹으면 병에 걸린다 (페널티 진화용) */
@@ -453,7 +477,7 @@ export function feedRotten(save: SaveData, uid: number): ActionResult {
   if (d.sick) return fail(save, '이미 병에 걸려 있어요.');
   const events: FarmEvent[] = [];
   const s = update(save, uid, (x) => {
-    const y = { ...x, hunger: Math.min(100, x.hunger + 15), rottenEaten: x.rottenEaten + 1 };
+    const y = scheduleMealPoop({ ...x, hunger: Math.min(100, x.hunger + 15), rottenEaten: x.rottenEaten + 1 },save.clock);
     addStress(y, STRESS.rotten);
     if (y.rottenEaten >= 2) {
       y.rottenEaten = 0;

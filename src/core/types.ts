@@ -76,6 +76,8 @@ export interface Digimon {
   dirtyMinutes: number;
   sickMinutes: number;
   poopTimer: number;
+  /** 사용자 지정 배설 균형: 하루 최대4회, 첫 식사 후2~3시간 예약. 옛 저장은 로드/첫 틱에 초기화. */
+  bowel?: { day: number; count: number; mealDueAt?: number };
   /** 종별 낮잠 주기. 옛 저장은 첫 틱에 초기화, 진화·부화 때 새 종의 주기를 시작한다. */
   restCycle?: { species: string; awakeLeft: number; sleepLeft: number };
   /** 오늘 먹은 알약(프로틴) 수. 다음 배틀 공격 상승, 많으면 부상 위험. 배틀 뒤·밤에 0 */
