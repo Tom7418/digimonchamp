@@ -1,0 +1,2514 @@
+{
+  "즈루몬": {
+    "basicRecord": null,
+    "skills": []
+  },
+  "뽈뽈몬": {
+    "basicRecord": null,
+    "skills": []
+  },
+  "새싹몬": {
+    "basicRecord": null,
+    "skills": []
+  },
+  "뽀글몬": {
+    "basicRecord": null,
+    "skills": []
+  },
+  "피치몬": {
+    "basicRecord": null,
+    "skills": []
+  },
+  "푸니몬": {
+    "basicRecord": null,
+    "skills": []
+  },
+  "깜몬": {
+    "basicRecord": null,
+    "skills": []
+  },
+  "포요몬": {
+    "basicRecord": null,
+    "skills": []
+  },
+  "모크몬": {
+    "basicRecord": null,
+    "skills": []
+  },
+  "하얀몬": {
+    "basicRecord": null,
+    "skills": []
+  },
+  "유라몬": {
+    "basicRecord": null,
+    "skills": []
+  },
+  "푸치몬": {
+    "basicRecord": null,
+    "skills": []
+  },
+  "카프리몬": {
+    "basicRecord": 31,
+    "skills": [
+      {
+        "record": 32,
+        "name": "Howling Blow"
+      }
+    ]
+  },
+  "코로몬": {
+    "basicRecord": 33,
+    "skills": [
+      {
+        "record": 34,
+        "name": "Froth"
+      }
+    ]
+  },
+  "시드몬": {
+    "basicRecord": 35,
+    "skills": [
+      {
+        "record": 36,
+        "name": "Tackle"
+      }
+    ]
+  },
+  "뿔몬": {
+    "basicRecord": 37,
+    "skills": [
+      {
+        "record": 38,
+        "name": "Tackle"
+      }
+    ]
+  },
+  "토코몬": {
+    "basicRecord": 39,
+    "skills": [
+      {
+        "record": 40,
+        "name": "Bite"
+      }
+    ]
+  },
+  "야옹몬": {
+    "basicRecord": 41,
+    "skills": [
+      {
+        "record": 42,
+        "name": "Tail Whip"
+      }
+    ]
+  },
+  "퍼그몬": {
+    "basicRecord": 43,
+    "skills": [
+      {
+        "record": 44,
+        "name": "Tackle"
+      }
+    ]
+  },
+  "어니몬": {
+    "basicRecord": 45,
+    "skills": [
+      {
+        "record": 46,
+        "name": "Flower Bubbles"
+      }
+    ]
+  },
+  "둥실몬": {
+    "basicRecord": 47,
+    "skills": [
+      {
+        "record": 48,
+        "name": "Froth Bubbles"
+      }
+    ]
+  },
+  "쁘띠메라몬": {
+    "basicRecord": 49,
+    "skills": [
+      {
+        "record": 50,
+        "name": "Flame Shot"
+      }
+    ]
+  },
+  "모티몬": {
+    "basicRecord": 51,
+    "skills": [
+      {
+        "record": 52,
+        "name": "Elastic Froth"
+      }
+    ]
+  },
+  "베비도몬": {
+    "basicRecord": 53,
+    "skills": [
+      {
+        "record": 54,
+        "name": "Hot Steam"
+      }
+    ]
+  },
+  "산몬": {
+    "basicRecord": 55,
+    "skills": [
+      {
+        "record": 56,
+        "name": "Starlight"
+      }
+    ]
+  },
+  "문몬": {
+    "basicRecord": 57,
+    "skills": [
+      {
+        "record": 58,
+        "name": "Dark Burst"
+      }
+    ]
+  },
+  "아구몬": {
+    "basicRecord": 59,
+    "skills": [
+      {
+        "record": 60,
+        "name": "Pepper Breath"
+      },
+      {
+        "record": 61,
+        "name": "Spitfire Blast"
+      }
+    ]
+  },
+  "아르마몬": {
+    "basicRecord": 62,
+    "skills": [
+      {
+        "record": 63,
+        "name": "Scratch"
+      },
+      {
+        "record": 64,
+        "name": "Diamond Shell"
+      }
+    ]
+  },
+  "에렉몬": {
+    "basicRecord": 65,
+    "skills": [
+      {
+        "record": 66,
+        "name": "Super Thunder Strike"
+      }
+    ]
+  },
+  "올챙몬": {
+    "basicRecord": 67,
+    "skills": [
+      {
+        "record": 68,
+        "name": "Stun Bubble"
+      }
+    ]
+  },
+  "가오몬": {
+    "basicRecord": 69,
+    "skills": [
+      {
+        "record": 70,
+        "name": "Rolling Upper"
+      },
+      {
+        "record": 71,
+        "name": "Double Back Hand"
+      },
+      {
+        "record": 72,
+        "name": "Gao Rush"
+      }
+    ]
+  },
+  "가지몬": {
+    "basicRecord": 73,
+    "skills": [
+      {
+        "record": 74,
+        "name": "Electric Stun Blast"
+      }
+    ]
+  },
+  "파피몬": {
+    "basicRecord": 75,
+    "skills": [
+      {
+        "record": 76,
+        "name": "Blue Blaster"
+      },
+      {
+        "record": 77,
+        "name": "Petit Fire Hook"
+      }
+    ]
+  },
+  "거북몬": {
+    "basicRecord": 78,
+    "skills": [
+      {
+        "record": 79,
+        "name": "Pointer Arrow"
+      },
+      {
+        "record": 80,
+        "name": "Met Tackle"
+      }
+    ]
+  },
+  "기자몬": {
+    "basicRecord": 81,
+    "skills": [
+      {
+        "record": 82,
+        "name": "Spiral Saw"
+      }
+    ]
+  },
+  "캔들몬": {
+    "basicRecord": 83,
+    "skills": [
+      {
+        "record": 84,
+        "name": "Bonfire"
+      }
+    ]
+  },
+  "쿠네몬": {
+    "basicRecord": 85,
+    "skills": [
+      {
+        "record": 86,
+        "name": "Electric Thread"
+      }
+    ]
+  },
+  "울퉁몬": {
+    "basicRecord": 87,
+    "skills": [
+      {
+        "record": 88,
+        "name": "Rock Fist"
+      }
+    ]
+  },
+  "고부리몬": {
+    "basicRecord": 89,
+    "skills": [
+      {
+        "record": 90,
+        "name": "Goburi Strike"
+      }
+    ]
+  },
+  "쉬라몬": {
+    "basicRecord": 91,
+    "skills": [
+      {
+        "record": 92,
+        "name": "Marching Fishes"
+      }
+    ]
+  },
+  "테리어몬": {
+    "basicRecord": 93,
+    "skills": [
+      {
+        "record": 94,
+        "name": "Bunny Blast"
+      },
+      {
+        "record": 95,
+        "name": "Blazing Fire"
+      }
+    ]
+  },
+  "텐타몬": {
+    "basicRecord": 96,
+    "skills": [
+      {
+        "record": 97,
+        "name": "Super Shocker"
+      }
+    ]
+  },
+  "토이아구몬": {
+    "basicRecord": 98,
+    "skills": [
+      {
+        "record": 99,
+        "name": "Toy Flame"
+      }
+    ]
+  },
+  "테이파몬": {
+    "basicRecord": 104,
+    "skills": [
+      {
+        "record": 105,
+        "name": "Walking Dream"
+      }
+    ]
+  },
+  "톱니몬": {
+    "basicRecord": 106,
+    "skills": [
+      {
+        "record": 107,
+        "name": "Darkness Gear"
+      }
+    ]
+  },
+  "파닥몬": {
+    "basicRecord": 108,
+    "skills": [
+      {
+        "record": 109,
+        "name": "Wing Slap"
+      },
+      {
+        "record": 110,
+        "name": "Boom Bubble"
+      }
+    ]
+  },
+  "팔몬": {
+    "basicRecord": 111,
+    "skills": [
+      {
+        "record": 112,
+        "name": "Poison Ivy"
+      }
+    ]
+  },
+  "피코데블몬": {
+    "basicRecord": 113,
+    "skills": [
+      {
+        "record": 114,
+        "name": "Demi Dart"
+      }
+    ]
+  },
+  "피요몬": {
+    "basicRecord": 115,
+    "skills": [
+      {
+        "record": 116,
+        "name": "Spiral Twister"
+      }
+    ]
+  },
+  "팔코몬": {
+    "basicRecord": 117,
+    "skills": [
+      {
+        "record": 118,
+        "name": "Scratch Smash"
+      },
+      {
+        "record": 119,
+        "name": "Falco Rush"
+      },
+      {
+        "record": 120,
+        "name": "Ninja Blade"
+      }
+    ]
+  },
+  "플롯트몬": {
+    "basicRecord": 121,
+    "skills": [
+      {
+        "record": 122,
+        "name": "Puppy Howling"
+      }
+    ]
+  },
+  "플로라몬": {
+    "basicRecord": 123,
+    "skills": [
+      {
+        "record": 124,
+        "name": "Rain of Pollen"
+      }
+    ]
+  },
+  "머슈몬": {
+    "basicRecord": 125,
+    "skills": [
+      {
+        "record": 126,
+        "name": "Fungus Cruncher"
+      }
+    ]
+  },
+  "스노우아구몬": {
+    "basicRecord": 127,
+    "skills": [
+      {
+        "record": 128,
+        "name": "Little Blizzard"
+      }
+    ]
+  },
+  "레나몬": {
+    "basicRecord": 129,
+    "skills": [
+      {
+        "record": 130,
+        "name": "Leaf Blade"
+      }
+    ]
+  },
+  "드라코몬": {
+    "basicRecord": 100,
+    "skills": [
+      {
+        "record": 101,
+        "name": "Baby Breath"
+      },
+      {
+        "record": 102,
+        "name": "Tail Smash"
+      },
+      {
+        "record": 103,
+        "name": "G Shurunen"
+      }
+    ]
+  },
+  "코로나몬": {
+    "basicRecord": 131,
+    "skills": [
+      {
+        "record": 132,
+        "name": "Coro-Knuckle"
+      },
+      {
+        "record": 133,
+        "name": "Corona Flame"
+      },
+      {
+        "record": 134,
+        "name": "Petit Prominence"
+      }
+    ]
+  },
+  "루나몬": {
+    "basicRecord": 135,
+    "skills": [
+      {
+        "record": 136,
+        "name": "Luna Claw"
+      },
+      {
+        "record": 137,
+        "name": "Tear Shot"
+      },
+      {
+        "record": 138,
+        "name": "Lop Ear Ripple"
+      }
+    ]
+  },
+  "크로아구몬": {
+    "basicRecord": 139,
+    "skills": [
+      {
+        "record": 140,
+        "name": "Spit Fire"
+      },
+      {
+        "record": 141,
+        "name": "Pepper Breath"
+      }
+    ]
+  },
+  "사이케몬": {
+    "basicRecord": 142,
+    "skills": [
+      {
+        "record": 143,
+        "name": "Colored Sparkle"
+      },
+      {
+        "record": 144,
+        "name": "Psyche Horn"
+      }
+    ]
+  },
+  "오로라몬": {
+    "basicRecord": 145,
+    "skills": [
+      {
+        "record": 146,
+        "name": "Nemesis Ivy"
+      }
+    ]
+  },
+  "츄카이몬": {
+    "basicRecord": 147,
+    "skills": [
+      {
+        "record": 148,
+        "name": "Purple Fog"
+      },
+      {
+        "record": 149,
+        "name": "Soft Attack"
+      }
+    ]
+  },
+  "브이몬": {
+    "basicRecord": 150,
+    "skills": [
+      {
+        "record": 151,
+        "name": "Vee Head Butt"
+      },
+      {
+        "record": 152,
+        "name": "Gyral Punch"
+      }
+    ]
+  },
+  "길몬": {
+    "basicRecord": 153,
+    "skills": [
+      {
+        "record": 154,
+        "name": "Pyrosphere"
+      },
+      {
+        "record": 155,
+        "name": "Rock Breaker"
+      },
+      {
+        "record": 156,
+        "name": "Fire Mitt"
+      }
+    ]
+  },
+  "황금아르마몬": {
+    "basicRecord": 157,
+    "skills": [
+      {
+        "record": 158,
+        "name": "Megaton Press"
+      },
+      {
+        "record": 159,
+        "name": "Tail Hammer"
+      }
+    ]
+  },
+  "원뿔몬": {
+    "basicRecord": 160,
+    "skills": [
+      {
+        "record": 161,
+        "name": "Harpoon Torpedo"
+      }
+    ]
+  },
+  "위자몬": {
+    "basicRecord": 162,
+    "skills": [
+      {
+        "record": 163,
+        "name": "Thundercloud"
+      }
+    ]
+  },
+  "우드몬": {
+    "basicRecord": 164,
+    "skills": [
+      {
+        "record": 165,
+        "name": "Twig Tap"
+      }
+    ]
+  },
+  "에어드라몬": {
+    "basicRecord": 166,
+    "skills": [
+      {
+        "record": 167,
+        "name": "Tornado"
+      },
+      {
+        "record": 168,
+        "name": "Spinning Needle　"
+      }
+    ]
+  },
+  "엔젤몬": {
+    "basicRecord": 169,
+    "skills": [
+      {
+        "record": 170,
+        "name": "Hand of Fate"
+      }
+    ]
+  },
+  "우가몬": {
+    "basicRecord": 171,
+    "skills": [
+      {
+        "record": 172,
+        "name": "Pummel Whack"
+      }
+    ]
+  },
+  "가오가몬": {
+    "basicRecord": 173,
+    "skills": [
+      {
+        "record": 174,
+        "name": "Dash Double Claw"
+      },
+      {
+        "record": 175,
+        "name": "Gaoga Hound"
+      },
+      {
+        "record": 176,
+        "name": "Spiral Blow"
+      }
+    ]
+  },
+  "캅테리몬": {
+    "basicRecord": 177,
+    "skills": [
+      {
+        "record": 178,
+        "name": "Electro Shocker"
+      }
+    ]
+  },
+  "가르고몬": {
+    "basicRecord": 179,
+    "skills": [
+      {
+        "record": 180,
+        "name": "Bunny Pummel"
+      },
+      {
+        "record": 181,
+        "name": "Bunny Upper"
+      }
+    ]
+  },
+  "가루몬": {
+    "basicRecord": 182,
+    "skills": [
+      {
+        "record": 183,
+        "name": "Howling Blaster"
+      }
+    ]
+  },
+  "가루몬(흑)": {
+    "basicRecord": 184,
+    "skills": [
+      {
+        "record": 185,
+        "name": "Howling Blaster"
+      }
+    ]
+  },
+  "가드로몬": {
+    "basicRecord": 186,
+    "skills": [
+      {
+        "record": 187,
+        "name": "Protect Grenade"
+      }
+    ]
+  },
+  "키위몬": {
+    "basicRecord": 188,
+    "skills": [
+      {
+        "record": 189,
+        "name": "Pummel Peck"
+      }
+    ]
+  },
+  "구미호몬": {
+    "basicRecord": 190,
+    "skills": [
+      {
+        "record": 191,
+        "name": "Will O' Wisp Ball"
+      },
+      {
+        "record": 192,
+        "name": "Fox Tail Inferno"
+      }
+    ]
+  },
+  "그레이몬": {
+    "basicRecord": 193,
+    "skills": [
+      {
+        "record": 194,
+        "name": "Mega Flame"
+      },
+      {
+        "record": 195,
+        "name": "Horn Impulse"
+      }
+    ]
+  },
+  "타임몬": {
+    "basicRecord": 196,
+    "skills": [
+      {
+        "record": 197,
+        "name": "Chrono Breaker"
+      }
+    ]
+  },
+  "쿠가몬": {
+    "basicRecord": 198,
+    "skills": [
+      {
+        "record": 199,
+        "name": "Scissow Claw"
+      }
+    ]
+  },
+  "개굴몬": {
+    "basicRecord": 200,
+    "skills": [
+      {
+        "record": 201,
+        "name": "Symphony Crusher"
+      }
+    ]
+  },
+  "연체몬": {
+    "basicRecord": 202,
+    "skills": [
+      {
+        "record": 203,
+        "name": "Coral Crusher"
+      },
+      {
+        "record": 204,
+        "name": "Devil Bashing"
+      }
+    ]
+  },
+  "켄터스몬": {
+    "basicRecord": 205,
+    "skills": [
+      {
+        "record": 206,
+        "name": "Solar Ray"
+      }
+    ]
+  },
+  "꼬끼몬": {
+    "basicRecord": 207,
+    "skills": [
+      {
+        "record": 208,
+        "name": "Frozen Fire Shot"
+      }
+    ]
+  },
+  "번개콩알몬": {
+    "basicRecord": 209,
+    "skills": [
+      {
+        "record": 210,
+        "name": "Thunder Ball"
+      }
+    ]
+  },
+  "쉘몬": {
+    "basicRecord": 211,
+    "skills": [
+      {
+        "record": 212,
+        "name": "Hydro Blaster"
+      }
+    ]
+  },
+  "지오그레이몬": {
+    "basicRecord": 213,
+    "skills": [
+      {
+        "record": 214,
+        "name": "Mega Flame"
+      },
+      {
+        "record": 215,
+        "name": "Mega Burst"
+      },
+      {
+        "record": 216,
+        "name": "Horn Impulse"
+      }
+    ]
+  },
+  "시드라몬": {
+    "basicRecord": 217,
+    "skills": [
+      {
+        "record": 218,
+        "name": "Constriction"
+      },
+      {
+        "record": 219,
+        "name": "Ice Blast"
+      }
+    ]
+  },
+  "스카몬": {
+    "basicRecord": 220,
+    "skills": [
+      {
+        "record": 221,
+        "name": "Compost Bomber"
+      }
+    ]
+  },
+  "스타몬": {
+    "basicRecord": 222,
+    "skills": [
+      {
+        "record": 223,
+        "name": "Halley's Squall"
+      }
+    ]
+  },
+  "다르크몬": {
+    "basicRecord": 224,
+    "skills": [
+      {
+        "record": 225,
+        "name": "Dancing Sword"
+      }
+    ]
+  },
+  "다크티라노몬": {
+    "basicRecord": 226,
+    "skills": [
+      {
+        "record": 227,
+        "name": "Fire Blast"
+      }
+    ]
+  },
+  "티라노몬": {
+    "basicRecord": 228,
+    "skills": [
+      {
+        "record": 229,
+        "name": "Blaze Blast"
+      }
+    ]
+  },
+  "가트몬": {
+    "basicRecord": 230,
+    "skills": [
+      {
+        "record": 231,
+        "name": "Lightning Paw"
+      },
+      {
+        "record": 232,
+        "name": "Feline's Eye"
+      }
+    ]
+  },
+  "데블드라몬": {
+    "basicRecord": 233,
+    "skills": [
+      {
+        "record": 234,
+        "name": "Crimson Claw"
+      }
+    ]
+  },
+  "데블몬": {
+    "basicRecord": 235,
+    "skills": [
+      {
+        "record": 236,
+        "name": "The Touch of Evil"
+      }
+    ]
+  },
+  "니드몬": {
+    "basicRecord": 237,
+    "skills": [
+      {
+        "record": 238,
+        "name": "Needle Spray"
+      }
+    ]
+  },
+  "토타몬": {
+    "basicRecord": 239,
+    "skills": [
+      {
+        "record": 240,
+        "name": "Strong Carapace"
+      }
+    ]
+  },
+  "워매몬": {
+    "basicRecord": 241,
+    "skills": [
+      {
+        "record": 242,
+        "name": "Compost Bomber"
+      }
+    ]
+  },
+  "고스몬": {
+    "basicRecord": 243,
+    "skills": [
+      {
+        "record": 244,
+        "name": "Night Claw"
+      },
+      {
+        "record": 245,
+        "name": "Death Charm"
+      }
+    ]
+  },
+  "버드라몬": {
+    "basicRecord": 246,
+    "skills": [
+      {
+        "record": 247,
+        "name": "Meteor Wing"
+      }
+    ]
+  },
+  "베지몬": {
+    "basicRecord": 248,
+    "skills": [
+      {
+        "record": 249,
+        "name": "Compost Bomber"
+      }
+    ]
+  },
+  "페크몬": {
+    "basicRecord": 250,
+    "skills": [
+      {
+        "record": 251,
+        "name": "Spiral Claw"
+      },
+      {
+        "record": 252,
+        "name": "Kunai Wing"
+      },
+      {
+        "record": 253,
+        "name": "Thousand Beaks"
+      }
+    ]
+  },
+  "메라몬": {
+    "basicRecord": 254,
+    "skills": [
+      {
+        "record": 255,
+        "name": "Fireball"
+      }
+    ]
+  },
+  "모털몬": {
+    "basicRecord": 256,
+    "skills": [
+      {
+        "record": 257,
+        "name": "Ice Cloud"
+      },
+      {
+        "record": 258,
+        "name": "Bone Boomerang"
+      }
+    ]
+  },
+  "모노크로몬": {
+    "basicRecord": 259,
+    "skills": [
+      {
+        "record": 260,
+        "name": "Tomahawk Slash"
+      },
+      {
+        "record": 261,
+        "name": "Volcanic Strike"
+      }
+    ]
+  },
+  "프리지몬": {
+    "basicRecord": 262,
+    "skills": [
+      {
+        "record": 263,
+        "name": "Absolute Zero Ice Punch"
+      }
+    ]
+  },
+  "유니몬": {
+    "basicRecord": 264,
+    "skills": [
+      {
+        "record": 265,
+        "name": "Aerial Attack"
+      }
+    ]
+  },
+  "블랙구미호몬": {
+    "basicRecord": 266,
+    "skills": [
+      {
+        "record": 267,
+        "name": "Tail Flame"
+      },
+      {
+        "record": 268,
+        "name": "Jaenryu"
+      }
+    ]
+  },
+  "링스몬": {
+    "basicRecord": 269,
+    "skills": [
+      {
+        "record": 270,
+        "name": "Howling Buster"
+      }
+    ]
+  },
+  "레어몬": {
+    "basicRecord": 271,
+    "skills": [
+      {
+        "record": 272,
+        "name": "Slime Pelter"
+      }
+    ]
+  },
+  "레오몬": {
+    "basicRecord": 273,
+    "skills": [
+      {
+        "record": 274,
+        "name": "Fist of the Beast King"
+      }
+    ]
+  },
+  "레드베지몬": {
+    "basicRecord": 275,
+    "skills": [
+      {
+        "record": 276,
+        "name": "Rotten Rainballs"
+      }
+    ]
+  },
+  "코어드라몬(청)": {
+    "basicRecord": 277,
+    "skills": [
+      {
+        "record": 278,
+        "name": "Blue Flare Breath"
+      },
+      {
+        "record": 279,
+        "name": "Strike Bomber"
+      },
+      {
+        "record": 280,
+        "name": "G Shurunen-II"
+      }
+    ]
+  },
+  "코어드라몬(녹)": {
+    "basicRecord": 281,
+    "skills": [
+      {
+        "record": 282,
+        "name": "Green Flare Breath"
+      },
+      {
+        "record": 283,
+        "name": "Strike Bomber"
+      },
+      {
+        "record": 284,
+        "name": "G Shurunen-II"
+      }
+    ]
+  },
+  "파이라몬": {
+    "basicRecord": 285,
+    "skills": [
+      {
+        "record": 286,
+        "name": "Flame Dive"
+      },
+      {
+        "record": 287,
+        "name": "Fira Claw"
+      },
+      {
+        "record": 288,
+        "name": "Fira Bomb"
+      }
+    ]
+  },
+  "레키스몬": {
+    "basicRecord": 289,
+    "skills": [
+      {
+        "record": 290,
+        "name": "Moon Night Bomb"
+      },
+      {
+        "record": 291,
+        "name": "Tear Arrow"
+      },
+      {
+        "record": 292,
+        "name": "Moon Night Kick"
+      }
+    ]
+  },
+  "아이스데블몬": {
+    "basicRecord": 293,
+    "skills": [
+      {
+        "record": 294,
+        "name": "Frost Claw"
+      },
+      {
+        "record": 295,
+        "name": "Zero Freeze"
+      }
+    ]
+  },
+  "구루몬": {
+    "basicRecord": 296,
+    "skills": [
+      {
+        "record": 297,
+        "name": "Chaos Blaster"
+      },
+      {
+        "record": 298,
+        "name": "Killer Bite"
+      }
+    ]
+  },
+  "옐로우워매몬": {
+    "basicRecord": 299,
+    "skills": [
+      {
+        "record": 300,
+        "name": "Compost Bomber"
+      }
+    ]
+  },
+  "화이트위자몬": {
+    "basicRecord": 301,
+    "skills": [
+      {
+        "record": 302,
+        "name": "Crystal Cloud"
+      },
+      {
+        "record": 303,
+        "name": "Ice Illusion"
+      }
+    ]
+  },
+  "레드꼬끼몬": {
+    "basicRecord": 304,
+    "skills": [
+      {
+        "record": 305,
+        "name": "Chicken Red Eyes"
+      }
+    ]
+  },
+  "블랙버드라몬": {
+    "basicRecord": 306,
+    "skills": [
+      {
+        "record": 307,
+        "name": "Black Saber"
+      },
+      {
+        "record": 308,
+        "name": "Night Roar"
+      }
+    ]
+  },
+  "아이스몬": {
+    "basicRecord": 309,
+    "skills": [
+      {
+        "record": 310,
+        "name": "Iceball Bomb"
+      }
+    ]
+  },
+  "브이드라몬": {
+    "basicRecord": 311,
+    "skills": [
+      {
+        "record": 312,
+        "name": "V-Nova Blast"
+      },
+      {
+        "record": 313,
+        "name": "Magnum Punch"
+      }
+    ]
+  },
+  "그라우몬": {
+    "basicRecord": 314,
+    "skills": [
+      {
+        "record": 315,
+        "name": "Plasma Blade"
+      },
+      {
+        "record": 316,
+        "name": "Pyro Blaster"
+      },
+      {
+        "record": 317,
+        "name": "Raiden Blade"
+      }
+    ]
+  },
+  "아트라캅테리몬": {
+    "basicRecord": 318,
+    "skills": [
+      {
+        "record": 319,
+        "name": "Horn Buster"
+      },
+      {
+        "record": 320,
+        "name": "Electro Shocker"
+      }
+    ]
+  },
+  "스콜피온몬": {
+    "basicRecord": 321,
+    "skills": [
+      {
+        "record": 322,
+        "name": "Stinger Surprise"
+      },
+      {
+        "record": 323,
+        "name": "Tail Blade"
+      }
+    ]
+  },
+  "안드로몬": {
+    "basicRecord": 324,
+    "skills": [
+      {
+        "record": 325,
+        "name": "Gatling Missile"
+      },
+      {
+        "record": 326,
+        "name": "Lightning Blade"
+      }
+    ]
+  },
+  "에테몬": {
+    "basicRecord": 327,
+    "skills": [
+      {
+        "record": 328,
+        "name": "DarkNetwork&C.Crush"
+      },
+      {
+        "record": 329,
+        "name": "Dark Spirits"
+      }
+    ]
+  },
+  "엔젤우몬": {
+    "basicRecord": 330,
+    "skills": [
+      {
+        "record": 331,
+        "name": "Celestial Arrow"
+      },
+      {
+        "record": 332,
+        "name": "Heaven's Charm"
+      }
+    ]
+  },
+  "오쿠와몬": {
+    "basicRecord": 333,
+    "skills": [
+      {
+        "record": 334,
+        "name": "Double Scissor Claw"
+      },
+      {
+        "record": 335,
+        "name": "Destructive Impulse"
+      }
+    ]
+  },
+  "가루다몬": {
+    "basicRecord": 336,
+    "skills": [
+      {
+        "record": 337,
+        "name": "Wing Blade"
+      },
+      {
+        "record": 338,
+        "name": "Fire Hurricane"
+      }
+    ]
+  },
+  "가비지몬": {
+    "basicRecord": 339,
+    "skills": [
+      {
+        "record": 340,
+        "name": "Junk Chunker"
+      },
+      {
+        "record": 341,
+        "name": "Dirty Saucer"
+      }
+    ]
+  },
+  "사이버드라몬": {
+    "basicRecord": 342,
+    "skills": [
+      {
+        "record": 343,
+        "name": "Erase Claw"
+      },
+      {
+        "record": 344,
+        "name": "Cyber Nail"
+      }
+    ]
+  },
+  "쥬레이몬": {
+    "basicRecord": 345,
+    "skills": [
+      {
+        "record": 346,
+        "name": "Pit Pelter"
+      },
+      {
+        "record": 347,
+        "name": "Vine Attack"
+      }
+    ]
+  },
+  "스컬그레이몬": {
+    "basicRecord": 348,
+    "skills": [
+      {
+        "record": 349,
+        "name": "Dark Shot"
+      },
+      {
+        "record": 350,
+        "name": "Cursed Breath"
+      }
+    ]
+  },
+  "쥬드몬": {
+    "basicRecord": 351,
+    "skills": [
+      {
+        "record": 352,
+        "name": "Vulcan's Hammer"
+      },
+      {
+        "record": 353,
+        "name": "Glacial Spear"
+      }
+    ]
+  },
+  "드라고몬": {
+    "basicRecord": 354,
+    "skills": [
+      {
+        "record": 355,
+        "name": "Tentacle Claw"
+      },
+      {
+        "record": 356,
+        "name": "Thousand Whips"
+      }
+    ]
+  },
+  "데드메라몬": {
+    "basicRecord": 357,
+    "skills": [
+      {
+        "record": 358,
+        "name": "Metal Fireball"
+      },
+      {
+        "record": 359,
+        "name": "Heat Chain"
+      }
+    ]
+  },
+  "뿌띠몬": {
+    "basicRecord": 360,
+    "skills": [
+      {
+        "record": 361,
+        "name": "Royal Smasher"
+      },
+      {
+        "record": 362,
+        "name": "Gorgeous Beak"
+      }
+    ]
+  },
+  "왕개굴몬": {
+    "basicRecord": 363,
+    "skills": [
+      {
+        "record": 364,
+        "name": "Musical Fist"
+      },
+      {
+        "record": 365,
+        "name": "Symphony Crusher"
+      }
+    ]
+  },
+  "트리세라몬": {
+    "basicRecord": 366,
+    "skills": [
+      {
+        "record": 367,
+        "name": "Tri-horn Attack"
+      },
+      {
+        "record": 368,
+        "name": "Golden Tri-horn Attack"
+      }
+    ]
+  },
+  "나이트몬": {
+    "basicRecord": 369,
+    "skills": [
+      {
+        "record": 370,
+        "name": "Berserk Sword"
+      },
+      {
+        "record": 371,
+        "name": "Grand Smash"
+      }
+    ]
+  },
+  "패롯몬": {
+    "basicRecord": 372,
+    "skills": [
+      {
+        "record": 373,
+        "name": "Sonic Destroyer"
+      },
+      {
+        "record": 374,
+        "name": "Mjollnir Lightning"
+      }
+    ]
+  },
+  "다이버몬": {
+    "basicRecord": 375,
+    "skills": [
+      {
+        "record": 376,
+        "name": "Striking Fish"
+      },
+      {
+        "record": 377,
+        "name": "Abyss Dive"
+      }
+    ]
+  },
+  "팬더몬": {
+    "basicRecord": 378,
+    "skills": [
+      {
+        "record": 379,
+        "name": "Animal Nail"
+      },
+      {
+        "record": 380,
+        "name": "Bamboo Punch"
+      }
+    ]
+  },
+  "왕콩알몬": {
+    "basicRecord": 381,
+    "skills": [
+      {
+        "record": 382,
+        "name": "Big Smiley Bomb"
+      },
+      {
+        "record": 383,
+        "name": "Buster Dive"
+      }
+    ]
+  },
+  "피콜몬": {
+    "basicRecord": 384,
+    "skills": [
+      {
+        "record": 385,
+        "name": "Pit Bomb"
+      },
+      {
+        "record": 386,
+        "name": "Fairy Tale"
+      }
+    ]
+  },
+  "팬텀몬": {
+    "basicRecord": 387,
+    "skills": [
+      {
+        "record": 388,
+        "name": "Shadow Scythe"
+      },
+      {
+        "record": 389,
+        "name": "Words of Death"
+      }
+    ]
+  },
+  "베이더몬": {
+    "basicRecord": 390,
+    "skills": [
+      {
+        "record": 391,
+        "name": "Unidentified Flying Kiss"
+      },
+      {
+        "record": 392,
+        "name": "Abduction Beam"
+      }
+    ]
+  },
+  "고래몬": {
+    "basicRecord": 393,
+    "skills": [
+      {
+        "record": 394,
+        "name": "Tidal Wave"
+      },
+      {
+        "record": 395,
+        "name": "Blasting Spout"
+      }
+    ]
+  },
+  "홀리엔젤몬": {
+    "basicRecord": 396,
+    "skills": [
+      {
+        "record": 397,
+        "name": "Excalibur"
+      },
+      {
+        "record": 398,
+        "name": "The Gate of Destiny"
+      }
+    ]
+  },
+  "마하가오가몬": {
+    "basicRecord": 399,
+    "skills": [
+      {
+        "record": 400,
+        "name": "Gaoga Tornade"
+      },
+      {
+        "record": 401,
+        "name": "Winning Knuckle"
+      },
+      {
+        "record": 402,
+        "name": "Howling Cannon"
+      }
+    ]
+  },
+  "콩알몬": {
+    "basicRecord": 403,
+    "skills": [
+      {
+        "record": 404,
+        "name": "Smiley Bomb"
+      },
+      {
+        "record": 405,
+        "name": "Buster Dive"
+      }
+    ]
+  },
+  "맘모스몬": {
+    "basicRecord": 406,
+    "skills": [
+      {
+        "record": 407,
+        "name": "Tusk Crusher"
+      },
+      {
+        "record": 408,
+        "name": "Tundra Breath"
+      }
+    ]
+  },
+  "메가시드라몬": {
+    "basicRecord": 409,
+    "skills": [
+      {
+        "record": 410,
+        "name": "Lightning Javelin"
+      },
+      {
+        "record": 411,
+        "name": "Maelstrom"
+      }
+    ]
+  },
+  "메가드라몬": {
+    "basicRecord": 412,
+    "skills": [
+      {
+        "record": 413,
+        "name": "Darkside Attack"
+      },
+      {
+        "record": 414,
+        "name": "Ultimate Slicer"
+      }
+    ]
+  },
+  "메탈그레이몬(청)": {
+    "basicRecord": 415,
+    "skills": [
+      {
+        "record": 416,
+        "name": "Giga Blaster"
+      },
+      {
+        "record": 417,
+        "name": "Trident Arm"
+      }
+    ]
+  },
+  "메탈그레이몬": {
+    "basicRecord": 418,
+    "skills": [
+      {
+        "record": 419,
+        "name": "Giga Blaster"
+      },
+      {
+        "record": 420,
+        "name": "Trident Arm"
+      }
+    ]
+  },
+  "메탈티라노몬": {
+    "basicRecord": 421,
+    "skills": [
+      {
+        "record": 422,
+        "name": "Giga Blaster II"
+      },
+      {
+        "record": 423,
+        "name": "Nuclear Laser"
+      }
+    ]
+  },
+  "퍼펫몬": {
+    "basicRecord": 424,
+    "skills": [
+      {
+        "record": 425,
+        "name": "Hearts Attack"
+      },
+      {
+        "record": 426,
+        "name": "Gyral Punch"
+      }
+    ]
+  },
+  "야타가라몬": {
+    "basicRecord": 427,
+    "skills": [
+      {
+        "record": 428,
+        "name": "Savage Emperor"
+      },
+      {
+        "record": 429,
+        "name": "Blackout"
+      }
+    ]
+  },
+  "라이즈그레이몬": {
+    "basicRecord": 430,
+    "skills": [
+      {
+        "record": 431,
+        "name": "Trident Revolver"
+      },
+      {
+        "record": 432,
+        "name": "Rising Destroyer"
+      },
+      {
+        "record": 433,
+        "name": "Solid Strike"
+      }
+    ]
+  },
+  "래비드몬": {
+    "basicRecord": 434,
+    "skills": [
+      {
+        "record": 435,
+        "name": "Rapid Fire"
+      },
+      {
+        "record": 436,
+        "name": "Golden Triangle"
+      }
+    ]
+  },
+  "릴리몬": {
+    "basicRecord": 437,
+    "skills": [
+      {
+        "record": 438,
+        "name": "Flower Cannon"
+      },
+      {
+        "record": 439,
+        "name": "Fairy Vine"
+      }
+    ]
+  },
+  "레이디데블몬": {
+    "basicRecord": 440,
+    "skills": [
+      {
+        "record": 441,
+        "name": "Darkness Wave"
+      },
+      {
+        "record": 442,
+        "name": "Poison Spray"
+      }
+    ]
+  },
+  "나쁜퍼펫몬": {
+    "basicRecord": 443,
+    "skills": [
+      {
+        "record": 444,
+        "name": "Hearts Break Attack"
+      },
+      {
+        "record": 445,
+        "name": "Bear Claw"
+      }
+    ]
+  },
+  "워가루몬": {
+    "basicRecord": 446,
+    "skills": [
+      {
+        "record": 447,
+        "name": "Wolf Claw"
+      },
+      {
+        "record": 448,
+        "name": "Howling Blaster"
+      }
+    ]
+  },
+  "워가루몬(흑)": {
+    "basicRecord": 449,
+    "skills": [
+      {
+        "record": 450,
+        "name": "Wolf Claw"
+      },
+      {
+        "record": 451,
+        "name": "Garuru Kick"
+      }
+    ]
+  },
+  "윙드라몬": {
+    "basicRecord": 452,
+    "skills": [
+      {
+        "record": 453,
+        "name": "Blaze Sonic Breath"
+      },
+      {
+        "record": 454,
+        "name": "Exploding Sonic Breath"
+      },
+      {
+        "record": 455,
+        "name": "Wing Blast"
+      }
+    ]
+  },
+  "그라운드라몬": {
+    "basicRecord": 456,
+    "skills": [
+      {
+        "record": 457,
+        "name": "Scrap Claw"
+      },
+      {
+        "record": 458,
+        "name": "Megaton Hammer Crush"
+      },
+      {
+        "record": 459,
+        "name": "Giga Crack"
+      }
+    ]
+  },
+  "플레어몬": {
+    "basicRecord": 460,
+    "skills": [
+      {
+        "record": 461,
+        "name": "Guren Juuouha"
+      },
+      {
+        "record": 462,
+        "name": "Kurenai Shishinomai"
+      },
+      {
+        "record": 463,
+        "name": "Purifying Howl"
+      }
+    ]
+  },
+  "크레세몬": {
+    "basicRecord": 464,
+    "skills": [
+      {
+        "record": 465,
+        "name": "Lunatic Dance"
+      },
+      {
+        "record": 466,
+        "name": "Ice Archery"
+      },
+      {
+        "record": 467,
+        "name": "Dark Archery"
+      }
+    ]
+  },
+  "슈퍼스타몬": {
+    "basicRecord": 468,
+    "skills": [
+      {
+        "record": 469,
+        "name": "Halley's Squall"
+      },
+      {
+        "record": 470,
+        "name": "Superstar Upper"
+      }
+    ]
+  },
+  "블랙래비드몬": {
+    "basicRecord": 471,
+    "skills": [
+      {
+        "record": 472,
+        "name": "Rapid Fire"
+      },
+      {
+        "record": 473,
+        "name": "Golden Triangle"
+      }
+    ]
+  },
+  "블루메라몬": {
+    "basicRecord": 474,
+    "skills": [
+      {
+        "record": 475,
+        "name": "Ice Phantom"
+      },
+      {
+        "record": 476,
+        "name": "Cold Flame"
+      }
+    ]
+  },
+  "바이킹몬": {
+    "basicRecord": 477,
+    "skills": [
+      {
+        "record": 478,
+        "name": "Arctic Blizzard"
+      },
+      {
+        "record": 479,
+        "name": "Mjollnir"
+      }
+    ]
+  },
+  "발키리몬": {
+    "basicRecord": 480,
+    "skills": [
+      {
+        "record": 481,
+        "name": "Feral Sword"
+      },
+      {
+        "record": 482,
+        "name": "Aurvandil's Arrow"
+      }
+    ]
+  },
+  "워그레이몬": {
+    "basicRecord": 483,
+    "skills": [
+      {
+        "record": 484,
+        "name": "Terra Force"
+      },
+      {
+        "record": 485,
+        "name": "Iron Claws"
+      }
+    ]
+  },
+  "기가시드라몬": {
+    "basicRecord": 486,
+    "skills": [
+      {
+        "record": 487,
+        "name": "Giga Sea Destroyer"
+      },
+      {
+        "record": 488,
+        "name": "Sky Wave"
+      }
+    ]
+  },
+  "그랜쿠가몬": {
+    "basicRecord": 489,
+    "skills": [
+      {
+        "record": 490,
+        "name": "Dimension Scissors"
+      },
+      {
+        "record": 491,
+        "name": "Grand Death Screw"
+      }
+    ]
+  },
+  "그리폰몬": {
+    "basicRecord": 492,
+    "skills": [
+      {
+        "record": 493,
+        "name": "Legendary Blade"
+      },
+      {
+        "record": 494,
+        "name": "Mobius Bite"
+      }
+    ]
+  },
+  "이글몬": {
+    "basicRecord": 495,
+    "skills": [
+      {
+        "record": 496,
+        "name": "Phoenix Claw"
+      },
+      {
+        "record": 497,
+        "name": "Mystic Break"
+      }
+    ]
+  },
+  "샤벨레오몬": {
+    "basicRecord": 498,
+    "skills": [
+      {
+        "record": 499,
+        "name": "Howling Crusher"
+      },
+      {
+        "record": 500,
+        "name": "Infinity Arrow"
+      }
+    ]
+  },
+  "샤잉레이몬": {
+    "basicRecord": 501,
+    "skills": [
+      {
+        "record": 502,
+        "name": "Glorious Burst"
+      },
+      {
+        "record": 503,
+        "name": "Shining Blast"
+      },
+      {
+        "record": 504,
+        "name": "Geogrey Sword"
+      }
+    ]
+  },
+  "스컬맘모스몬": {
+    "basicRecord": 505,
+    "skills": [
+      {
+        "record": 506,
+        "name": "Spiral Bone Crusher"
+      },
+      {
+        "record": 507,
+        "name": "Grand Charge"
+      }
+    ]
+  },
+  "세인트가르고몬": {
+    "basicRecord": 508,
+    "skills": [
+      {
+        "record": 509,
+        "name": "Burst Shot"
+      },
+      {
+        "record": 510,
+        "name": "Magna Blaster"
+      }
+    ]
+  },
+  "하이안드로몬": {
+    "basicRecord": 511,
+    "skills": [
+      {
+        "record": 512,
+        "name": "Atomic Ray"
+      },
+      {
+        "record": 513,
+        "name": "Lightning Blade"
+      }
+    ]
+  },
+  "반쵸레오몬": {
+    "basicRecord": 514,
+    "skills": [
+      {
+        "record": 515,
+        "name": "Lion King Slash"
+      },
+      {
+        "record": 516,
+        "name": "Flash Bancho Punch"
+      }
+    ]
+  },
+  "피에몬": {
+    "basicRecord": 517,
+    "skills": [
+      {
+        "record": 518,
+        "name": "Trump Sword"
+      },
+      {
+        "record": 519,
+        "name": "Ending Snipe"
+      }
+    ]
+  },
+  "피노키몬": {
+    "basicRecord": 520,
+    "skills": [
+      {
+        "record": 521,
+        "name": "Puppet Pummel"
+      },
+      {
+        "record": 522,
+        "name": "Wood Cross"
+      }
+    ]
+  },
+  "파라오몬": {
+    "basicRecord": 523,
+    "skills": [
+      {
+        "record": 524,
+        "name": "Necro Mist"
+      },
+      {
+        "record": 525,
+        "name": "Necro Mist"
+      }
+    ]
+  },
+  "푸쿠몬": {
+    "basicRecord": 526,
+    "skills": [
+      {
+        "record": 527,
+        "name": "Needle Squall"
+      },
+      {
+        "record": 528,
+        "name": "Britain Punch"
+      }
+    ]
+  },
+  "블랙워그레이몬": {
+    "basicRecord": 529,
+    "skills": [
+      {
+        "record": 530,
+        "name": "Dark Gaia Force"
+      },
+      {
+        "record": 531,
+        "name": "Iron Claws"
+      }
+    ]
+  },
+  "프린스콩알몬": {
+    "basicRecord": 532,
+    "skills": [
+      {
+        "record": 533,
+        "name": "Smiley Warhead"
+      },
+      {
+        "record": 534,
+        "name": "Purple Rain"
+      }
+    ]
+  },
+  "프레시오몬": {
+    "basicRecord": 535,
+    "skills": [
+      {
+        "record": 536,
+        "name": "Water Tail Blaster"
+      },
+      {
+        "record": 537,
+        "name": "Pulse Blast"
+      }
+    ]
+  },
+  "헤라크레스캅테리몬": {
+    "basicRecord": 538,
+    "skills": [
+      {
+        "record": 539,
+        "name": "Giga Scissor Claw"
+      },
+      {
+        "record": 540,
+        "name": "Electro Blaster"
+      }
+    ]
+  },
+  "페닉스몬": {
+    "basicRecord": 541,
+    "skills": [
+      {
+        "record": 542,
+        "name": "Starlight Explosion"
+      },
+      {
+        "record": 543,
+        "name": "Crimson Flame"
+      }
+    ]
+  },
+  "미러지가오몬": {
+    "basicRecord": 544,
+    "skills": [
+      {
+        "record": 545,
+        "name": "Double Crescent Mirage"
+      },
+      {
+        "record": 546,
+        "name": "Full Moon Blaster"
+      },
+      {
+        "record": 547,
+        "name": "Gale Claw"
+      }
+    ]
+  },
+  "파워드라몬": {
+    "basicRecord": 548,
+    "skills": [
+      {
+        "record": 549,
+        "name": "Giga Cannon"
+      },
+      {
+        "record": 550,
+        "name": "Infinite Hand"
+      }
+    ]
+  },
+  "메탈에테몬": {
+    "basicRecord": 551,
+    "skills": [
+      {
+        "record": 552,
+        "name": "Banana Slip"
+      },
+      {
+        "record": 553,
+        "name": "DarkNetwork&C.Crush"
+      }
+    ]
+  },
+  "메탈가루몬": {
+    "basicRecord": 554,
+    "skills": [
+      {
+        "record": 555,
+        "name": "Freezing Breath"
+      },
+      {
+        "record": 556,
+        "name": "Grace Cross Freezer"
+      }
+    ]
+  },
+  "메탈가루몬(흑)": {
+    "basicRecord": 557,
+    "skills": [
+      {
+        "record": 558,
+        "name": "Freezing Breath"
+      },
+      {
+        "record": 559,
+        "name": "Blizzard Wolf Claw"
+      }
+    ]
+  },
+  "메탈시드라몬": {
+    "basicRecord": 560,
+    "skills": [
+      {
+        "record": 561,
+        "name": "River of Power"
+      },
+      {
+        "record": 562,
+        "name": "Poseidon Divide"
+      }
+    ]
+  },
+  "로제몬": {
+    "basicRecord": 563,
+    "skills": [
+      {
+        "record": 564,
+        "name": "Thorn Whipping"
+      },
+      {
+        "record": 565,
+        "name": "Forbidden Temptation"
+      }
+    ]
+  },
+  "지드가루몬": {
+    "basicRecord": 566,
+    "skills": [
+      {
+        "record": 567,
+        "name": "Zeed Cannon"
+      },
+      {
+        "record": 568,
+        "name": "Full Metal Breath"
+      },
+      {
+        "record": 569,
+        "name": "Blowback Breath"
+      }
+    ]
+  },
+  "빅토리그레이몬": {
+    "basicRecord": 570,
+    "skills": [
+      {
+        "record": 571,
+        "name": "Dramon Breaker"
+      },
+      {
+        "record": 572,
+        "name": "Trident Gaia"
+      },
+      {
+        "record": 573,
+        "name": "Victory Charge"
+      }
+    ]
+  },
+  "슬레이어드라몬": {
+    "basicRecord": 574,
+    "skills": [
+      {
+        "record": 575,
+        "name": "Tenryu Slash"
+      },
+      {
+        "record": 576,
+        "name": "Shoryu Slash"
+      },
+      {
+        "record": 577,
+        "name": "Koryu Slash"
+      }
+    ]
+  },
+  "브레이크드라몬": {
+    "basicRecord": 578,
+    "skills": [
+      {
+        "record": 579,
+        "name": "Destroyed Rush"
+      },
+      {
+        "record": 580,
+        "name": "Infinity Bowling"
+      },
+      {
+        "record": 581,
+        "name": "Gravity Press"
+      }
+    ]
+  },
+  "아폴로몬": {
+    "basicRecord": 582,
+    "skills": [
+      {
+        "record": 583,
+        "name": "Solblaster"
+      },
+      {
+        "record": 584,
+        "name": "Foibos Blow"
+      },
+      {
+        "record": 585,
+        "name": "Arrow of Apollo"
+      }
+    ]
+  },
+  "다이아나몬": {
+    "basicRecord": 586,
+    "skills": [
+      {
+        "record": 587,
+        "name": "Crescent Harken"
+      },
+      {
+        "record": 588,
+        "name": "Arrow of Artemis"
+      },
+      {
+        "record": 589,
+        "name": "Goodnight Moon"
+      }
+    ]
+  },
+  "황제드라몬": {
+    "basicRecord": 590,
+    "skills": [
+      {
+        "record": 591,
+        "name": "Positron Laser"
+      },
+      {
+        "record": 592,
+        "name": "Giga Fire"
+      }
+    ]
+  },
+  "듀크몬": {
+    "basicRecord": 593,
+    "skills": [
+      {
+        "record": 594,
+        "name": "Royal Saber"
+      },
+      {
+        "record": 595,
+        "name": "Final Elision"
+      }
+    ]
+  }
+}

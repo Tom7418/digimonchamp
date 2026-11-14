@@ -98,3 +98,23 @@ test('실제 적중 이벤트는 공격과 피격을 분리하며 결과 화면�
   assert.equal(sandbox.current.actions.size,0);
  }
 });
+
+test('기술 이벤트의 슬롯 동작과 이름을 재생하고 공격자 로그를 남긴다',()=>{
+ const source=fs.readFileSync('web/game.js','utf8');
+ const start=source.indexOf('  function battleTick(dt)'),end=source.indexOf('  function battleLog(',start);
+ for(const [slot,animation] of ['attack1','attack2','attack3'].entries()){
+  const logs=[];
+  const sandbox=vm.createContext({window:{},performance:{now:()=>0},drawArena(){},finishBattle(){},battleLog:t=>logs.push(t)});
+  for(const file of ['core.js','assets/sprites.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync('web/'+file,'utf8'),sandbox);
+  vm.runInContext(`const animations=window.createAnimationPlayer(window.DIGIMON_ANIMATIONS);
+   const SPRITE_BY_NAME=Object.fromEntries(window.SPRITES.map(s=>[s.name,s.id]));
+   const C={getSpecies:ChampCore.getSpecies,stepBattle:()=>[{type:'hit',from:0,to:1,damage:12,special:true,skill:{slot:${slot},animation:'${animation}',name:'Test Skill'}}]};
+   let battle={done:false,acc:0.1,state:{over:false,units:[{id:0,name:'아구몬',speciesId:'아구몬',x:0,y:0},{id:1,name:'토이아구몬',speciesId:'토이아구몬',x:50,y:0}]},actions:new Map(),motion:new Map(),flashes:[],effects:{tick(){},add(){}}};
+   globalThis.current=battle;
+  `+source.slice(start,end),sandbox);
+  sandbox.battleTick(0.01);
+  assert.equal(sandbox.current.actions.get(0).state,animation);
+  assert.ok(sandbox.current.flashes.some(f=>f.id===0&&f.text==='Test Skill'&&f.skill));
+  assert.deepEqual(logs,['아구몬 · Test Skill → 토이아구몬 (12)']);
+ }
+});

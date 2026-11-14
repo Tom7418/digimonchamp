@@ -1,5 +1,7 @@
 import { HUNT_MAP, huntTerrain, huntTerrainAt, canStandOnHuntTerrain, huntTerrainLineClear, moveOnHuntTerrain, huntSpawnPoints, pickHuntSpawn, type HuntTerrain } from '../src/core/hunt-terrain';
 import terrainAudit from '../docs/hunt-terrain-audit.json';
+import skillTable from '../src/data/battle-skills.json';
+import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta } from '../src/core/training';
@@ -12,6 +14,66 @@ import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
 import { discardFloorFood, ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
+
+describe('원본 종별 배틀 기술', () => {
+  it('216종 중 유년기I를 제외한204종의361기술만 연결한다', () => {
+    expect(Object.keys(skillTable)).toHaveLength(216);
+    let total = 0, fighters = 0;
+    const records = new Set<number>();
+    for (const [name, entry] of Object.entries(skillTable)) {
+      const skills = battleSkills(name);
+      expect(skills).toHaveLength(entry.skills.length);
+      if (getSpecies(name).stage === 1) expect(skills).toEqual([]);
+      else { expect(skills.length).toBeGreaterThan(0); fighters++; }
+      for (const skill of skills) {
+        expect(records.has(skill.record)).toBe(false); records.add(skill.record);
+        expect(skill.record).not.toBe(entry.basicRecord);
+      }
+      total += skills.length;
+    }
+    expect(fighters).toBe(204); expect(total).toBe(361);
+  });
+  it('아구몬·토이아구몬·가루다몬 기술을 섞지 않고 각 슬롯을 선택한다', () => {
+    expect(battleSkills('아구몬').map(s => s.name)).toEqual(['Pepper Breath', 'Spitfire Blast']);
+    expect(battleSkills('토이아구몬').map(s => s.name)).toEqual(['Toy Flame']);
+    expect(battleSkills('가루다몬').map(s => s.name)).toEqual(['Wing Blade', 'Fire Hurricane']);
+    for (const sp of Object.keys(skillTable)) {
+      const skills = battleSkills(sp);
+      if (!skills.length) { expect(pickBattleSkill(sp, () => 0)).toBeNull(); continue; }
+      skills.forEach((skill, i) => expect(pickBattleSkill(sp, () => (i + 0.5) / skills.length)).toEqual(skill));
+    }
+  });
+  it('실제 적중 이벤트에 선택한 기술을 보존하고 TP가 없으면 기본 공격한다', () => {
+    const entrant = { speciesId: '아구몬', stats: {hp:10000,tp:100,atk:10,def:10,int:10,spd:10}, personality:'솔직' as const, mode:'특수' as const };
+    for (const roll of [0, 0.4, 0.8]) {
+      const state = createBattle([entrant], [entrant]);
+      state.units.forEach(u => { u.x = 200; u.cd = 0; });
+      const events = stepBattle(state, () => roll);
+      for (const e of events) if (e.type === 'hit' && e.special) {
+        expect(battleSkills('아구몬')).toContainEqual(e.skill);
+        expect(state.units[e.from].tp).toBe(80);
+      }
+      expect(events.some(e => e.type === 'hit')).toBe(true);
+    }
+    for (const speciesId of ['아구몬', '즈루몬']) {
+      const state = createBattle([{...entrant,speciesId,stats:{...entrant.stats,tp:0}}], [entrant]);
+      state.units[0].x = state.units[1].x; state.units[0].cd = 0;
+      const event = stepBattle(state, () => 0).find(e => e.type === 'hit' && e.from === 0);
+      expect(event).toMatchObject({special:false}); expect(event).not.toHaveProperty('skill');
+      expect(state.units[0].tp).toBe(0);
+    }
+    // 첫 RNG는 필살기 발동, 다음 RNG는 두 번째 기술 선택이다.
+    const state = createBattle([entrant], [entrant]);
+    state.units[0].x = state.units[1].x; state.units[0].cd = 0;
+    const rolls = [0, 0.99, 0.5];
+    const hit = stepBattle(state, () => rolls.shift() ?? 0.5).find(e => e.type === 'hit' && e.from === 0);
+    expect(hit).toMatchObject({special:true,skill:{name:'Spitfire Blast',slot:1,animation:'attack2'}});
+    const baby = createBattle([{...entrant,speciesId:'즈루몬'}], [entrant]);
+    baby.units[0].x = baby.units[1].x; baby.units[0].cd = 0;
+    expect(stepBattle(baby, () => 0).find(e => e.type === 'hit' && e.from === 0)).toMatchObject({special:false});
+    expect(baby.units[0].tp).toBe(100);
+  });
+});
 
 describe('floor food reservations', () => {
   it('restores food in the expanded farm without clipping to the old viewport', () => {

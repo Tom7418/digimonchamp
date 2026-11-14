@@ -1132,8 +1132,8 @@
         if(e.type==='hit'){
           const attacker=b.state.units.find(u=>u.id===e.from),target=b.state.units.find(u=>u.id===e.to);
           // 사용자 가루다몬 확인: 기본 공격10, 스킬7~9. 다른 종은 같은 분류를 우선 적용.
-          // 엔진은 아직 스킬을1종만 구분하므로7 사용. 기술별8/9 선택은 후속.
-          const attackState=e.special?'attack1':'attack4';
+          // 기술 슬롯의7/8/9 순서 대응은 임시. 엔진 이벤트의 기술을 그대로 표시한다.
+          const attackState=e.special?(e.skill?.animation??'attack1'):'attack4';
           const attackId=SPRITE_BY_NAME[C.getSpecies(attacker.speciesId).name];
           const attackDuration=animations.duration(attackId,attackState);
           if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:attackDuration,duration:attackDuration,state:attackState});
@@ -1141,6 +1141,10 @@
           const state=Math.random()<0.5?'hurt':'hurtAlt';
           const duration=animations.duration(id,state);
           b.actions.set(e.to,{kind:'hit',left:duration,duration,state});
+          if(e.special&&e.skill){
+            b.flashes.push({id:e.from,text:e.skill.name,until:performance.now()+700,color:'#a9e7ff',skill:true});
+            battleLog(`${attacker.name} · ${e.skill.name} → ${target.name} (${e.damage})`);
+          }
         }
         if (e.type === 'hit')
           b.flashes.push({ id: e.to, text: `-${e.damage}${e.special ? '!' : ''}`, until: performance.now() + 700, color: e.special ? '#ffd36a' : '#fff' });
@@ -1243,14 +1247,16 @@
     battle.flashes = battle.flashes.filter((f) => f.until > now);
     for (const f of battle.flashes) {
       const u = s.units[f.id];
-      ctx.font = 'bold 13px sans-serif';
+      ctx.font = f.skill ? 'bold 10px sans-serif' : 'bold 13px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillStyle = f.color;
       ctx.strokeStyle = '#203040';
       ctx.lineWidth = 3;
       const y = u.y - 40 - (700 - (f.until - now)) / 25;
-      ctx.strokeText(f.text, u.x, y);
-      ctx.fillText(f.text, u.x, y);
+      const half=f.skill?Math.min(110,ctx.measureText(f.text).width/2):0;
+      const x=f.skill?Math.max(half+5,Math.min(475-half,u.x)):u.x;
+      ctx.strokeText(f.text, x, y, f.skill?220:480);
+      ctx.fillText(f.text, x, y, f.skill?220:480);
     }
     ctx.fillStyle = '#203040';
     ctx.font = 'bold 12px monospace';

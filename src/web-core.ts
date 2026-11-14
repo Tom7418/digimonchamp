@@ -4,6 +4,7 @@ export * from './core/data';
 export * from './core/care';
 export * from './core/evolution';
 export * from './core/battle';
+export * from './core/battle-skills';
 export * from './core/titles';
 export * from './core/hunt';
 export * from './core/rng';

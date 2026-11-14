@@ -1,0 +1,19 @@
+{
+  "arm9Sha256": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
+  "overlay19Sha256": "02ef4c126fd11bd5e2bea21202442bd48575b2afcd29c045f70036940ebde671",
+  "attackTable": "0x20d02cc",
+  "stride": 104,
+  "range": [
+    31,
+    596
+  ],
+  "species": 216,
+  "battleSpecies": 204,
+  "skills": 361,
+  "evidence": "overlay19 0x0211fa88..0x0211fb0c: owner grouping and skill-name lookup; species internal ID = row + 8",
+  "unverified": [
+    "Korean localized name correspondence",
+    "skill slot to animation correspondence",
+    "power, TP cost, range, effects, AI and opponent rosters"
+  ]
+}
