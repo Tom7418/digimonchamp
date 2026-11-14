@@ -279,3 +279,10 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .cage-toolbar.editing .cage-palette .footprint{display:none}
 .cage-toolbar.editing .cage-palette small{font-size:10px}
 .cage-toolbar.editing #cage-instruction{margin-top:2px}
+
+/* 원본 도트 진화 연출: 기존 안내/배틀 창과 분리하고 좁은 화면에서도 원본 비율 유지 */
+#evolution-dialog{width:min(560px,92vw);padding:18px;border:1px solid #3e8192;background:#0b2532;color:#dcf9ff;text-align:center;border-radius:12px}
+#evolution-dialog::backdrop{background:#00121dde}
+#evolution-dialog h2{font-size:16px;margin:0 0 12px}
+#evolution-canvas{width:100%;height:auto;display:block;image-rendering:pixelated;border-radius:6px}
+#evolution-skip{margin-top:12px;color:#c4e5ed;border-color:#527984}

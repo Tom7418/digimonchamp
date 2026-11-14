@@ -54,6 +54,24 @@
     clock = 0,
     toastTimer,
     effect = null;
+  // 진화 결과는 엔진이 먼저 확정한다. 연출은 원본 그림을 재생하는 화면 전용 큐다.
+  const evolutionScene=window.createEvolutionPlayer({
+    data:window.EVOLUTION_DATA,dialog:$('#evolution-dialog'),canvas:$('#evolution-canvas'),skipButton:$('#evolution-skip'),
+    loadSpecies:id=>spriteOf(id,false),
+    valid:uid=>!!digi(uid)&&!digi(uid).isEgg,
+    canStart:uid=>!hatching.has(uid), // 오프라인 중 부화→진화했어도 부화부터 보여 준다.
+    drawSpecies:(context,id,x,y,scale,white,elapsed)=>{
+      const spriteId=SPRITE_BY_NAME[C.getSpecies(id).name];
+      sprite(context,spriteId,x,y,scale,animations.sample(spriteId,white?'evolving':'idle',elapsed),false);
+    },
+    onComplete:event=>toast(`${C.getSpecies(event.from).name} → ${C.getSpecies(event.to).name} 진화!`),
+    onDrain:event=>{
+      if(!event)return;
+      tipMail('evolve', '디지몬이 진화했습니다.\n스테이터스를 올려 조건을 만족시키거나 시간이 지나면 디지몬은 진화합니다.\n오른쪽 진화 조건표를 확인하세요.');
+      persist();
+    },
+  });
+  window.evolutionScene=evolutionScene;
   const trainingFloats = new Map();
 
   // ---------- 저장 ----------
@@ -153,8 +171,7 @@
     }
     else if (e.type === 'evolved') {
       log(`✦ ${n(e.from)}이(가) ${n(e.to)}(으)로 진화했습니다!`);
-      toast(`${n(e.from)} → ${n(e.to)} 진화!`);
-      tipMail('evolve', '디지몬이 진화했습니다.\n스테이터스를 올려 조건을 만족시키거나 시간이 지나면 디지몬은 진화합니다.\n오른쪽 진화 조건표를 확인하세요.');
+      evolutionScene.enqueue(e);
     } else if (e.type === 'egg' && e.reason === 'sick') {
       log(`${n(e.from)}이(가) 병·부상을 방치해 쓰러졌습니다… 디지에그로 돌아갔습니다.`);
       toast(`${n(e.from)} → 디지에그`);
@@ -724,7 +741,7 @@
   let canceledPress = null;
   let swallowUp = false;
   function farmInputBlocked() {
-    return titleOpen || !!battle || !!hunt || board.editing || mailOpen || dayEnding || $('#modal').open || document.hidden;
+    return titleOpen || !!battle || !!hunt || board.editing || mailOpen || dayEnding || $('#modal').open || document.hidden || !!window.evolutionScene?.busy;
   }
   function clearItemTool() {
     canceledPress = itemPress?.id ?? canceledPress;
@@ -1350,7 +1367,7 @@
   portrait.imageSmoothingEnabled = false;
 
   function drawFarm(t, dt) {
-    const animDt = !titleOpen && !battle && !hunt && !paused && !mailOpen && !dayEnding && !board.editing ? dt : 0;
+    const animDt = !titleOpen && !battle && !hunt && !paused && !mailOpen && !dayEnding && !board.editing && !window.evolutionScene?.busy ? dt : 0;
     // 로스트·놓아주기·새 게임으로 사라진 개체의 먹이 예약을 해제한다.
     for (const uid of feeding.keys()) if (!digi(uid)) feeding.delete(uid);
     ctx.fillStyle = '#163a40';
@@ -1400,10 +1417,13 @@
       const state=board.isBouncing(d.uid) ? 'hurtAlt' : C.isSleeping(d) ? 'seq_13' : p.cageId&&p.motion!=='eat'&&trainingSequence!==undefined&&!d.isEgg&&!d.trainDone
         ? 'seq_'+trainingSequence : p.motion||'idle';
       if (d.isEgg) asset(SPRITE_BY_NAME[C.getSpecies(d.originBaby || d.speciesId).name]); // 부화 전에 미리 불러 둔다
+      // 안내 편지/다른 창 때문에 연출이 대기 중이어도 진화 후 모습을 먼저 보여 주지 않는다.
+      const evolutionFrom=window.evolutionScene?.appearance(d.uid);
       if (hatching.has(d.uid)) {
-        const elapsed = hatching.get(d.uid) + animDt;
+        const hatchDt=!titleOpen&&!battle&&!hunt&&!paused&&!mailOpen&&!dayEnding&&!board.editing&&!window.evolutionScene?.snapshot()?dt:0;
+        const elapsed = hatching.get(d.uid) + hatchDt;
         hatching.set(d.uid, elapsed);
-        const born = asset(SPRITE_BY_NAME[C.getSpecies(d.speciesId).name]);
+        const born = asset(SPRITE_BY_NAME[C.getSpecies(evolutionFrom||d.speciesId).name]);
         if (elapsed < animations.duration(HATCH.id, HATCH.state) || (born && !born.image.complete)) {
           const hatchFrame = animations.sample(HATCH.id, HATCH.state, elapsed);
           spriteFrames.set(p, { frame: hatchFrame, speciesId: d.speciesId, isEgg: true });
@@ -1411,6 +1431,12 @@
           continue;
         }
         hatching.delete(d.uid);
+      }
+      if(evolutionFrom){
+        const spriteId=SPRITE_BY_NAME[C.getSpecies(evolutionFrom).name],frame=animations.sample(spriteId,'idle',0);
+        spriteFrames.set(p,{frame,speciesId:evolutionFrom,isEgg:false});
+        body(ctx,evolutionFrom,false,p.x,p.y,scale,frame,p.direction>0);
+        continue;
       }
       const frame = animations.pose(p, animationId(d), state, animDt);
       spriteFrames.set(p,{frame,speciesId:d.speciesId,isEgg:!!d.isEgg});
@@ -1506,6 +1532,11 @@
   function drawPortrait(dt) {
     const d = current();
     portrait.clearRect(0, 0, 240, 150);
+    const evolutionFrom=window.evolutionScene?.appearance(d.uid);
+    if(evolutionFrom){
+      const a=spriteOf(evolutionFrom,false),scale=a?Math.min(2.4,100/a.baseline,200/a.body):2.4;
+      body(portrait,evolutionFrom,false,120,120,scale,0,false);return;
+    }
     // 큰 디지몬도 액자(240x150) 안에 들어오도록 배율을 줄인다
     const a = spriteOf(d.speciesId, d.isEgg);
     const scale = a ? Math.min(2.4, 100 / a.baseline, 200 / a.body) : 2.4;
@@ -2302,7 +2333,7 @@
       persist();
     },
     toast,
-    () => !!battle || !!hunt || mailOpen || dayEnding,
+    () => !!battle || !!hunt || mailOpen || dayEnding || !!window.evolutionScene?.busy,
   );
   // 손으로 디지몬을 움직이지 않고 누르면 쓰다듬는다 (원작 도움말 help #143)
   board.hitTest = pt=>petAt(pt)?.p; // 끌기·쓰다듬기·치료 도구가 같은 실제 몸 판정을 사용한다.
@@ -2400,6 +2431,7 @@
   }
   function startNewGame() {
     endHunt();
+    evolutionScene.clear();
     save = C.freshSave(Date.now());
     view = freshView();
     log('새 테이머 생활을 시작했습니다.');
@@ -2542,11 +2574,11 @@
     lastTime = now;
     if (!document.hidden) {
       if (battle) battleTick(dt);
-      else if (!titleOpen && !paused && !board.editing && !mailOpen && !dayEnding) {
+      else if (!titleOpen && !paused && !board.editing && !mailOpen && !dayEnding && (!window.evolutionScene?.busy || !!hunt)) {
         if (hunt) huntTick(dt);
         clock += elapsed * speed * MINUTES_PER_SECOND;
         let changed = false;
-        while (clock+1e-8 >= C.CLOCK_STEP_MINUTES && !dayEnding) {
+        while (clock+1e-8 >= C.CLOCK_STEP_MINUTES && !dayEnding && (!window.evolutionScene?.busy || !!hunt)) {
           clock = Math.max(0,clock-C.CLOCK_STEP_MINUTES);
           for(let minute=0;minute<C.CLOCK_STEP_MINUTES&&!dayEnding;minute++){
           syncTeam();
@@ -2564,9 +2596,11 @@
           persist();
         }
       }
+      if(window.evolutionScene?.busy&&!titleOpen&&!battle&&!hunt&&!mailOpen&&!dayEnding&&!board.editing&&!$('#modal').open)
+        window.evolutionScene.update(paused?0:dt);
       if (hunt) drawHunt(now / 1000, !titleOpen && !paused && !board.editing && !mailOpen && !dayEnding ? dt : 0);
       else drawFarm(now / 1000, dt);
-      drawPortrait(!titleOpen && !paused && !mailOpen && !dayEnding && !board.editing ? dt : 0);
+      drawPortrait(!titleOpen && !paused && !mailOpen && !dayEnding && !board.editing && !window.evolutionScene?.busy ? dt : 0);
     }
     requestAnimationFrame(frame);
   }

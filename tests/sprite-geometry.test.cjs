@@ -10,6 +10,22 @@ function png(file){
  for(let y=0;y<height;y++){assert.equal(raw[y*(width*4+1)],0);raw.copy(rgba,y*width*4,y*(width*4+1)+1,(y+1)*(width*4+1));}
  return {complete:true,naturalWidth:width,naturalHeight:height,rgba};
 }
+
+test('216종의 진화39 셀은 실제 원본의 밝은 실루엣이고 투명 여백을 보존한다',()=>{
+ const sprites=JSON.parse(fs.readFileSync('web/assets/sprites.json','utf8'));
+ const dataContext=vm.createContext({window:{}});vm.runInContext(fs.readFileSync('web/assets/animations.js','utf8'),dataContext);
+ const data=dataContext.window.DIGIMON_ANIMATIONS;let count=0;
+ for(const sp of sprites){
+  if(sp.id==='e000_digitama')continue;
+  const cell=data.banks[data.sprites[sp.id]][39].frames[0][0],image=png('web/assets/'+sp.id+'.png');let visible=0,empty=0;
+  for(let y=0;y<sp.height;y++)for(let x=0;x<sp.width;x++){
+   const offset=(y*image.naturalWidth+cell*sp.width+x)*4,pixel=image.rgba.subarray(offset,offset+4);
+   if(pixel[3]){visible++;assert.ok(pixel[0]>=238&&pixel[1]>=238&&pixel[2]>=238,sp.id);}else empty++;
+  }
+  assert.ok(visible>0&&empty>0,sp.id);count++;
+ }
+ assert.equal(count,216);
+});
 function setup(){
  const window={},cache=new Map(),monsters=new Map(),calls=[];let reads=0;
  const noop=()=>{},nodes={},toolbar={classList:{toggle:noop},querySelector:k=>nodes[k]??={},querySelectorAll:()=>[]};

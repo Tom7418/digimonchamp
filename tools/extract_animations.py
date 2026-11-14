@@ -59,6 +59,8 @@ def main():
     # 사용자 제공 GIF 분류. 명칭과 원작이 어떤 상황에서 선택하는지는 구분한다.
     names=['idle','eyesClosed','walk','run','surprised','hurt','hurtAlt','attack1','attack2','attack3','attack4','runScared','walkEyesClosed','sleep','eat','sleep2','boundIdle','boundEyesClosed','boundWalk','boundRun','boundSurprised','boundRunScared','boundWalkEyesClosed','boundSleep','boundEat','boundSleep2','zapped',None,'happy','angry','cheering','guard','train','shout','guard2','shoutFrame2',None,'ko','jumpHit',None]
     states.update({name:i for i,name in enumerate(names) if name})
+    # overlay18 진화 상태기계 0x0211e090/0x0211e198:39는 진화 중 흰 실루엣.
+    states['evolving']=39
     data = {'tickRate':60,'states':states,'sourceSequences':states,'banks':banks,'sprites':ids,'training':training}
     (PROJECT / 'web/assets/animations.js').write_text('window.DIGIMON_ANIMATIONS = ' + json.dumps(data, separators=(',', ':')) + ';\n', encoding='utf-8')
     print(f'{len(ids)} sprites / {len(banks)} unique animation banks')

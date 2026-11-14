@@ -73,9 +73,10 @@ test('아구몬 셀 번호를 다른 종에 복사하지 않는다',()=>{
  }
 });
 
-test('제공된 GIF 역할은40개 슬롯을 유지하고 모르는27/36/39는 단정하지 않는다',()=>{
+test('제공된 GIF 역할은40개 슬롯을 유지하고 미확인27/36과 코드로 확인한 진화39를 구분한다',()=>{
  for(const [name,n] of Object.entries({run:3,surprised:4,attack1:7,attack2:8,attack3:9,attack4:10,sleep:13,sleep2:15,boundEat:24,happy:28,angry:29,cheering:30,guard:31,train:32,shout:33,guard2:34,jumpHit:38}))assert.equal(data.states[name],n);
- for(const n of [27,36,39])assert.equal(data.states['seq_'+n],n);
+ for(const n of [27,36])assert.equal(data.states['seq_'+n],n);
+ assert.equal(data.states.evolving,39);
  assert.notDeepEqual(data.banks[data.sprites.m201_agumon][data.states.ko].frames,data.banks[data.sprites.m201_agumon][data.states.sleep2].frames);
 });
 

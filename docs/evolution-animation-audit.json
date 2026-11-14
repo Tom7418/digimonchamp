@@ -1,0 +1,13 @@
+{
+  "source": "common/e001_evolution_all",
+  "sha256": {
+    "ncbr": "2cf44f9d82cd4bc62cc7d81e7f1bb30898e28ff4966243a6d6e9684f2f2ae17d",
+    "ncer": "75f0aafdcc2511d313f853f616cdefd2de6ebd5f699942155bf3a53031a1942c",
+    "nclr": "342db7ac80a067b1d9f47ff7decc420a61f95ec8f2e0a3ff63aa7fff2ced3a07",
+    "nanr": "e4a1591f29bae4d298f9484d2595438bf1edd99bdc77322ede0f73cfeb6bc2c4"
+  },
+  "overlay18Sha256": "44183ea85e90332dca3747699c2ff6033d8c0cd1e5deb3d6e2b0350f112d386e",
+  "instructionChecks": 12,
+  "evidence": "ARM9 0x02065108..0x02065158 loads e001_evolution_all; overlay18 0x0211db90/94 selects sequence1 frame2(label); 0x02120450/54 selects sequence1 frame5(platform); 0x0211e08c..94 and 0x0211e198..19c select Digimon sequence39 during evolution; 0x0211e0c0..0x0211e1a0 alternates species with period20 down by2.",
+  "webPolicy": "Original NANR at60Hz. Counter phases interpreted at60Hz; centering, 12 particle orbits/stagger, background and flash opacity are web presentation, not a frame-perfect original cutscene. Rules/results stay in core; animation does not evolve twice."
+}

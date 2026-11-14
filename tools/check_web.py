@@ -49,4 +49,8 @@ for battle_map in maps['maps']:
     image=web/battle_map['asset']
     assert struct.unpack_from('>II',image.read_bytes(),16)==(416,272), f'Invalid battle map: {image}'
 assert all(value is None or 0<=value<11 for value in maps['titles'].values())
+evolution_js=(web/'assets/evolution/effects.js').read_text(encoding='utf-8')
+evolution=json.loads(evolution_js.removeprefix('window.EVOLUTION_DATA=').removesuffix(';\n'))
+assert evolution['cells']==22 and evolution['silhouetteSequence']==39
+assert struct.unpack_from('>II',(web/'assets/evolution/effects.png').read_bytes(),16)==(evolution['width']*evolution['cells'],evolution['height'])
 print(f'Pages check passed: {len(sprites)} sprite sheets, 11 battle maps, relative paths and all entrypoint files verified.')
