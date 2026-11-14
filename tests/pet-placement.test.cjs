@@ -35,26 +35,24 @@ test('케이지 이동·회전 때 내부 위치를 따라가며 다른 디지�
  const cage=s.state.layout[0];cage.q=2;cage.rotation=1;s.draw();const next=s.board.center(2,1),p=s.state.team[0];
  near(p.x,next.x+40*0.5-20*Math.sqrt(3)/2);near(p.y,next.y+40*Math.sqrt(3)/2+20*0.5);
 });
-test('드래그 취소·사육장 밖 드롭은 원래 좌표와 소속을 복구한다',()=>{
+test('드래그 취소는 원래 좌표를 복구하고 사육장 밖 드롭은 케이지로 튕긴다',()=>{
  const s=setup(),c=s.board.center(1,1);s.drop({x:c.x+50,y:c.y});
  const p=s.state.team[0],old={x:p.x,y:p.y};
- for(const cancel of [true,false]){
-  s.canvas.onpointerdown(s.event({x:p.x,y:p.y-25}));s.canvas.onpointermove(s.event({x:-500,y:-500}));s.draw();
-  if(cancel)s.canvas.onpointercancel();else s.canvas.onpointerup(s.event({x:-500,y:-500}));
-  s.draw();near(p.x,old.x);near(p.y,old.y);assert.equal(p.cageId,'clinic');
- }
+ s.canvas.onpointerdown(s.event({x:p.x,y:p.y-25}));s.canvas.onpointermove(s.event({x:-500,y:-500}));s.draw();
+ s.canvas.onpointercancel();s.draw();near(p.x,old.x);near(p.y,old.y);assert.equal(p.cageId,'clinic');
+ s.drop({x:-500,y:-500});assert.equal(s.board.isBouncing(p.uid),true);assert.ok(p.cageId);
+ s.board.advance(0.4);s.draw();assert.ok(p.x>0);assert.ok(p.y>0);
 });
-test('빈 바닥 드롭도 중앙으로 끌어당기지 않으며 옛 저장의 유효한 위치를 보존한다',()=>{
- const s=setup(),c=s.board.center(1,1);s.drop({x:c.x+40,y:c.y});
- s.state.layout=[];
- const free=s.board.center(0,0),point={x:free.x+55,y:free.y+15};s.drop(point);
- assert.equal(s.state.team[0].cageId,null);near(s.state.team[0].x,point.x);near(s.state.team[0].y,point.y);
- s.canvas.onpointerdown(s.event({x:point.x,y:point.y-25}));s.canvas.onpointermove(s.event({x:point.x+100,y:point.y}));s.draw();s.canvas.onpointercancel();
- near(s.state.team[0].x,point.x);near(s.state.team[0].y,point.y);near(s.state.team[0].target,point.x);
- s.state.layout=[{id:'clinic',kind:'clinic',q:1,r:1,rotation:0}];
- const p=s.state.team[0];p.cageId='clinic';p.cage='clinic';p.x=c.x-55;p.y=c.y+40;delete p.cagePosition;
- s.draw();near(p.x,c.x-55);near(p.y,c.y+40);
+
+test('케이지가 없는 옛 저장은 기본 케이지를 복원하고 내부의 자유로운 위치는 보존한다',()=>{
+ const s=setup({layoutVersion:6,layout:[],team:[{uid:1,x:80,y:80,cageId:null,cage:'free'}],selected:0});
+ assert.equal(s.state.layout.length,1);s.draw();const p=s.state.team[0];assert.equal(p.cageId,'start-basic');
+ s.board.advance(0.4);s.draw();const old={x:p.x,y:p.y};
+ const reload=setup(JSON.parse(JSON.stringify(s.state)));reload.draw();near(reload.state.team[0].x,old.x);near(reload.state.team[0].y,old.y);
+ const c=s.state.layout[0];p.cageId=c.id;p.cagePosition=null;p.x=s.board.center(c.q,c.r).x-55;p.y=s.board.center(c.q,c.r).y+40;
+ s.draw();near(p.x,s.board.center(c.q,c.r).x-55);near(p.y,s.board.center(c.q,c.r).y+40);
 });
+
 test('선택 후 클릭도 클릭한 바닥 위치를 쓰고 마지막 pointerup 좌표로 드롭한다',()=>{
  const s=setup(),c=s.board.center(1,1),p=s.state.team[0],point={x:c.x+60,y:c.y};
  s.canvas.onpointerdown(s.event(point));s.canvas.onpointerup(s.event(point));s.draw();
@@ -107,4 +105,18 @@ test('케이지 이동·회전에 고기·상한 고기·프로틴·똥·추가 
  near(rotten.x,next.x+15*0.5+20*Math.sqrt(3)/2);near(placed.y,next.y-10*Math.sqrt(3)/2-15*0.5);
  const reload=setup(JSON.parse(JSON.stringify(s.state)));reload.draw();near(reload.state.foods[0].x,meat.x);near(reload.state.foods[2].x,rotten.x);
  reload.nodes['#edit-cages'].onclick();reload.canvas.onpointerdown(reload.event(next));const end=reload.board.center(1,1);reload.canvas.onpointermove(reload.event(end));reload.canvas.onpointerup(reload.event(end));near(reload.state.foods[2].x,rotten.x+end.x-next.x);
+});
+
+test('케이지 밖 자유 개체는 가까운 시설로 튕기며 이동 명령으로 빈 곳을 돌아다니지 않는다',()=>{
+ const s=setup(),p=s.state.team[0],nearField=s.board.center(2,2);p.x=nearField.x+600;p.y=nearField.y;
+ assert.equal(s.board.canMove(p,{x:p.x+10,y:p.y}),false);
+ s.draw();assert.equal(p.cageId,'field');assert.equal(s.board.isBouncing(p.uid),true);near(p.x,nearField.x+600);
+ s.board.advance(0.4);s.draw();assert.equal(s.board.canMove(p,{x:p.x,y:p.y}),true);
+});
+test('철거한 케이지의 디지몬은 다른 케이지로 이동하고 마지막 케이지는 철거되지 않는다',()=>{
+ const s=setup();s.drop(s.board.center(1,1));s.nodes['#edit-cages'].onclick();
+ s.canvas.onpointerdown(s.event(s.board.center(1,1)));s.canvas.onpointerup(s.event(s.board.center(1,1)));
+ s.nodes['#remove-cage'].onclick();s.draw();const p=s.state.team[0];assert.equal(s.state.layout.length,1);assert.equal(p.cageId,'field');assert.equal(s.board.isBouncing(p.uid),true);
+ s.canvas.onpointerdown(s.event(s.board.center(2,2)));s.canvas.onpointerup(s.event(s.board.center(2,2)));
+ s.nodes['#remove-cage'].onclick();assert.equal(s.state.layout.length,1);
 });
