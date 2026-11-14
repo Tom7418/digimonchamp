@@ -643,7 +643,8 @@
     const it = ITEMS.find((x) => x.kind === kind);
     if (!it || it.count() <= 0) return toast('사용 가능한 아이템이 없어요. 상점에서 사세요.');
     const r = board.roam;
-    view.foods.push({ kind, x: Math.min(r.x1, Math.max(r.x0, pt.x)), y: Math.min(r.y1, Math.max(r.y0, pt.y)) });
+    const item={ kind, x: Math.min(r.x1, Math.max(r.x0, pt.x)), y: Math.min(r.y1, Math.max(r.y0, pt.y)) };
+    board.attachFloorItem(item);view.foods.push(item);
     renderTray();
     persist();
   }
@@ -740,6 +741,19 @@
   // 먹는 동안의 예약은 화면에서만 유지한다. 저장 후 재접속하면 바닥 먹이는 남고 다시 접근한다.
   const feeding = new Map();
   const animationId = (d) => SPRITE_BY_NAME[d.isEgg ? '디지에그' : C.getSpecies(d.speciesId).name];
+  // 먹이 중앙을 밟지 않고 몸 크기에 맞춘 좌/우 식사 자리 중 도달 가능한 쪽을 고른다.
+  function foodSide(p,d,f,preferred){
+    const body=window.SPRITES.find(x=>x.id===animationId(d))?.body??24,gap=Math.max(26,body+12);
+    if(!board.canMove(p,f))return null;
+    return [-1,1].map(side=>({x:f.x+side*gap,y:f.y,side}))
+      .filter(spot=>board.canMove(p,spot)).sort((a,b)=>(a.side===preferred?-100000:0)+Math.hypot(a.x-p.x,a.y-p.y)-(b.side===preferred?-100000:0)-Math.hypot(b.x-p.x,b.y-p.y))[0]||null;
+  }
+  function approachFood(p,f,spot,dt){
+    const dist=Math.hypot(spot.x-p.x,spot.y-p.y),step=Math.min(dist,34*Math.max(0,dt));
+    if(dist>0.01)board.movePet(p,{x:p.x+(spot.x-p.x)*step/dist,y:p.y+(spot.y-p.y)*step/dist});
+    p.target=p.x;p.direction=(Math.hypot(spot.x-p.x,spot.y-p.y)<1?f.x-p.x:spot.x-p.x)>=0?1:-1;
+    return Math.hypot(spot.x-p.x,spot.y-p.y)<1;
+  }
   // 배고픈 디지몬은 접근 → 정지 → 씹기 → 소비 순서로 행동한다.
   function seekFood(p, d, dt) {
     // 잠들면 씹기 예약만 풀고, 바닥의 먹이와 재고는 그대로 둔다.
@@ -750,6 +764,12 @@
         feeding.delete(d.uid);
         return false;
       }
+      const spot=foodSide(p,d,eating.food,eating.side);
+      if(!spot){feeding.delete(d.uid);return false;}
+      eating.side=spot.side;
+      // 케이지 회전으로 식사 자리가 옮겨지면 다시 도착한 다음 주기부터 씹는다.
+      if(Math.hypot(spot.x-p.x,spot.y-p.y)>=1){approachFood(p,eating.food,spot,dt);eating.elapsed=0;return true;}
+      approachFood(p,eating.food,spot,0);
       eating.elapsed += dt;
       // 입 벌림 → 깨물기 한 주기마다 엔진에서 잔량과 포만감을 함께 갱신한다.
       if (eating.elapsed < animations.duration(animationId(d), 'eat')) return true;
@@ -762,7 +782,7 @@
         // 부분 섭취는 새 먹이 객체를 예약하고, 배가 차면 남은 고기를 놓아둔다.
         const left = r.foods[foodIndex], eater = save.digimon.find(x => x.uid === d.uid);
         if (r.foods.length === oldCount && left && left.x === eating.food.x && left.y === eating.food.y && left.remaining > 0 && (eater.hunger < 100 || left.kind === 'pill'))
-          feeding.set(d.uid, {food: left, elapsed: 0, species: d.speciesId,cageId:p.cageId});
+          feeding.set(d.uid, {food: left, elapsed: 0, species: d.speciesId,cageId:p.cageId,side:eating.side});
         log(`${nameOf(d)}: ${r.message}`);
         effect = eating.food.kind === 'meat' ? null : { text: r.boosted ? '힘이 솟는다!' : eating.food.kind === 'pill' ? '오독오독' : '우웩…', color: r.boosted ? '#9dff8a' : '#ffe4a0', until: performance.now() + 1500, uid: d.uid };
         if (r.boosted && typeof startCareFx === 'function') startCareFx('aura', p, true);
@@ -780,20 +800,13 @@
       if ([...feeding.values()].some((e) => e.food === f)) continue;
       // 병든 디지몬은 썩은 먹이를 거부한다. 먹지 못하는 먹이 앞에서 계속 멈추지 않는다.
       if (f.kind === 'rotten' && d.sick) continue;
-      if (!board.canMove(p, f)) continue; // 울타리 너머의 먹이로 자동 탈출하지 않는다.
-      const dist = Math.hypot(f.x - p.x, f.y - p.y);
-      if (!best || dist < best.dist) best = { f, dist };
+      const spot=foodSide(p,d,f);if(!spot)continue;
+      const dist=Math.hypot(spot.x-p.x,spot.y-p.y);
+      if(!best||dist<best.dist)best={f,spot,dist};
     }
-    if (!best) return false;
-    const { f, dist } = best;
-    if (dist < 10) {
-      feeding.set(d.uid, { food: f, elapsed: 0, species: d.speciesId,cageId:p.cageId });
-      return true;
-    }
-    const v = Math.min(dist, 34 * dt);
-    p.direction = f.x > p.x ? 1 : -1;
-    board.movePet(p, {x:p.x+((f.x-p.x)/dist)*v,y:p.y+((f.y-p.y)/dist)*v});
-    p.target = p.x;
+    if(!best)return false;
+    const {f,spot}=best;
+    if(approachFood(p,f,spot,dt))feeding.set(d.uid,{food:f,elapsed:0,species:d.speciesId,cageId:p.cageId,side:spot.side});
     return true;
   }
   // 머리 위 상태 말풍선
@@ -1278,7 +1291,7 @@
         ctx.stroke();
       }
       // 행동별 원본 셀을 재생한다. 인위적인 상하 흔들림은 사용하지 않는다.
-      if (animDt > 0) p.motion = feeding.has(d.uid) ? 'eat' : Math.hypot(p.x - oldX, p.y - oldY) > 0.01 ? 'walk' : 'idle';
+      if (animDt > 0) p.motion = Math.hypot(p.x - oldX, p.y - oldY) > 0.01 ? 'walk' : feeding.has(d.uid) ? 'eat' : 'idle';
       const facility=L.types[p.cage];
       const facilityNo=({field:'cm30',gym:'cm34',clinic:'cm16'})[p.cage] || facility?.img?.match(/cm[0-9]+/)?.[0];
       const trainingSequence=window.DIGIMON_ANIMATIONS.training[facilityNo];

@@ -5,7 +5,13 @@ import type { SaveData } from './types';
 export type FoodKind = 'meat' | 'rotten' | 'pill';
 /** 바닥 먹이 종류 → 저장의 재고 칸 */
 const STOCK: Record<FoodKind, 'meat' | 'rotten' | 'pills'> = { meat: 'meat', rotten: 'rotten', pill: 'pills' };
-export interface FloorFood { kind: FoodKind; x: number; y: number; remaining?: number; /** 바닥에 놓인 게임 분 */ age?: number }
+export interface FloorFood {
+  /** 케이지 이동·회전과 저장 복원에 사용하는 소속 및 내부 좌표 */
+  cageId?: string | null;
+  cagePosition?: { id: string; x: number; y: number } | null;
+  kind: FoodKind; x: number; y: number; remaining?: number;
+  /** 바닥에 놓인 게임 분 */ age?: number;
+}
 /** 바닥에 둔 고기·프로틴이 상하기까지의 게임 분 (원작 도움말 help #138·#141: 남기면 상한다. 이틀은 형규가 정함) */
 export const SPOIL_MINUTES = 2880;
 export interface FoodBounds { x0: number; x1: number; y0: number; y1: number }
@@ -22,7 +28,7 @@ export function restoreFloorFood(save: SaveData, raw: unknown, bounds: FoodBound
   for (const f of raw) {
     if (!f || !Object.hasOwn(STOCK, f.kind) || !Number.isFinite(f.x) || !Number.isFinite(f.y)) continue;
     if (f.remaining !== undefined && (!Number.isFinite(f.remaining) || f.remaining <= 0)) continue;
-    if (availableFood(save, foods, f.kind) > 0) foods.push({ ...(f.remaining === undefined ? {} : {remaining: Math.min(100, f.remaining)}), ...(Number.isFinite(f.age) && f.age > 0 ? {age: f.age} : {}), kind: f.kind, x: Math.min(bounds.x1, Math.max(bounds.x0, f.x)), y: Math.min(bounds.y1, Math.max(bounds.y0, f.y)) });
+    if (availableFood(save, foods, f.kind) > 0) foods.push({ ...(typeof f.cageId==='string'?{cageId:f.cageId}:{}), ...(f.cagePosition&&typeof f.cagePosition.id==='string'&&Number.isFinite(f.cagePosition.x)&&Number.isFinite(f.cagePosition.y)?{cagePosition:{id:f.cagePosition.id,x:f.cagePosition.x,y:f.cagePosition.y}}:{}), ...(f.remaining === undefined ? {} : {remaining: Math.min(100, f.remaining)}), ...(Number.isFinite(f.age) && f.age > 0 ? {age: f.age} : {}), kind: f.kind, x: Math.min(bounds.x1, Math.max(bounds.x0, f.x)), y: Math.min(bounds.y1, Math.max(bounds.y0, f.y)) });
   }
   return foods;
 }
@@ -78,7 +84,9 @@ export function ageFloorFood(save: SaveData, foods: readonly FloorFood[], minute
     if (age < SPOIL_MINUTES || next[STOCK[f.kind]] <= 0) return { ...f, age };
     spoiled += 1;
     next = { ...next, [STOCK[f.kind]]: next[STOCK[f.kind]] - 1, rotten: next.rotten + 1 };
-    return { kind: 'rotten' as const, x: f.x, y: f.y };
+    // 종류가 바뀌어도 바닥 위치와 케이지 소속은 보존한다.
+    const { remaining, age: oldAge, ...placed } = f;
+    return { ...placed, kind: 'rotten' as const };
   });
   return { save: next, foods: out, spoiled };
 }

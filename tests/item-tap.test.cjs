@@ -8,7 +8,7 @@ function setup() {
   const target = () => ({ handlers: {}, addEventListener(t,f) { (this.handlers[t]??=[]).push(f); }, fire(t,e={}) { for(const f of this.handlers[t]??[]) f(e); } });
   const tray=target(), window=target(), document=Object.assign(target(),{hidden:false});
   const canvas=Object.assign(target(),{setPointerCapture(){},getBoundingClientRect:()=>({left:0,right:960,top:0,bottom:560,width:960,height:560})});
-  const modal={open:false},board={canMove:()=>true,movePet(p,to){Object.assign(p,to);return true;},editing:false,cam:{x:0,y:0},roam:{x0:60,x1:1900,y0:120,y1:1150},toWorld(e){return {x:e.clientX+this.cam.x,y:e.clientY+this.cam.y};}},mail={};
+  const modal={open:false},board={attachFloorItem:x=>x,canMove:()=>true,movePet(p,to){Object.assign(p,to);return true;},editing:false,cam:{x:0,y:0},roam:{x0:60,x1:1900,y0:120,y1:1150},toWorld(e){return {x:e.clientX+this.cam.x,y:e.clientY+this.cam.y};}},mail={};
   const ctx=vm.createContext({window,document,canvas,board,titleOpen:false,battle:null,hunt:null,mailOpen:false,dayEnding:false,
     $:id=>({'#tray':tray,'#modal':modal,'#mail':mail})[id],renderTray(){},persist(){},nextMail(){},toast(){},render(){},log(){},syncTeam(){},nameOf:()=> '깜몬',performance:{now:()=>0},effect:null});
   vm.runInContext(fs.readFileSync(path.join(__dirname,'../web/core.js'),'utf8'),ctx);
@@ -37,7 +37,7 @@ test('디지몬 위 터치도 직접 급여하지 않고 바닥에 놓으며 재
 test('케이지 안에서 걸어와 한 입씩 먹고 배가 차면 남은 고기를 보존한다',()=>{
   const s=setup();s.choose('meat');s.tap();const p=s.ctx.view.team[0],d=s.ctx.save.digimon[0];p.x=100;
   s.seekFood(p,d,1);assert.equal(p.cageId,'cage');assert.ok(p.x>100);
-  p.x=200;p.y=300;s.seekFood(p,d,0);
+  s.seekFood(p,d,10);assert.ok(p.x<200);assert.equal(p.direction,1);
   assert.equal(s.ctx.view.foods.length,1);assert.equal(s.ctx.save.meat,2);
   s.seekFood(p,d,0); // 일시정지에서는 씹기 시간도 흐르지 않는다.
   assert.equal(s.ctx.save.meat,2);
@@ -50,11 +50,11 @@ test('케이지 안에서 걸어와 한 입씩 먹고 배가 차면 남은 고�
 test('먹다가 잠들면 예약을 풀고 깰 때까지 음식과 위치를 보존한다',()=>{
   const s=setup();s.choose('meat');s.tap();
   const p=s.ctx.view.team[0],d=s.ctx.save.digimon[0];p.cageId=null;
-  s.seekFood(p,d,0); // 씹기 시작
+  s.seekFood(p,d,10);const startX=p.x; // 옆에 도착하여 씹기 시작
   d.restCycle={species:d.speciesId,awakeLeft:0,sleepLeft:30};
   s.seekFood(p,d,10);
   assert.equal(s.ctx.view.foods[0].remaining,undefined);
-  assert.equal(s.ctx.save.meat,2);assert.equal(d.hunger,0);assert.equal(p.x,200);
+  assert.equal(s.ctx.save.meat,2);assert.equal(d.hunger,0);assert.equal(p.x,startX);
   d.restCycle.sleepLeft=0;
   s.seekFood(p,d,10); // 새 씹기 예약만 생긴다
   assert.equal(d.hunger,0);
@@ -64,7 +64,7 @@ test('먹다가 잠들면 예약을 풀고 깰 때까지 음식과 위치를 보
 
 test('먹는 중 다른 디지몬의 중복 소비와 케이지 이동 후 뒤늦은 소비를 막는다',()=>{
   const s=setup();s.choose('meat');s.tap();const p=s.ctx.view.team[0],d=s.ctx.save.digimon[0];p.cageId=null;
-  s.seekFood(p,d,0);
+  s.seekFood(p,d,10);
   const other={...d,uid:2};assert.equal(s.seekFood({...p,uid:2},other,0),false);
   p.cageId='new-cage';s.seekFood(p,d,10);
   assert.equal(s.ctx.save.meat,2);assert.equal(s.ctx.view.foods.length,1);
@@ -77,7 +77,7 @@ test('알약(프로틴)은 고기처럼 바닥에 놓이고 배가 불러도 먹
   const s=setup();s.ctx.save.digimon[0].hunger=100;s.choose('pill');s.tap();
   assert.equal(s.ctx.view.foods.length,1);assert.equal(s.ctx.view.foods[0].kind,'pill');assert.equal(s.ctx.save.pills,2);
   const p=s.ctx.view.team[0];p.x=200;p.y=300;
-  s.seekFood(p,s.ctx.save.digimon[0],0);
+  s.seekFood(p,s.ctx.save.digimon[0],10);
   for(let i=0;i<4;i++) s.seekFood(p,s.ctx.save.digimon[0],10);
   assert.equal(s.ctx.view.foods.length,0);assert.equal(s.ctx.save.pills,1);assert.equal(s.ctx.save.digimon[0].protein,1);
 });
@@ -118,4 +118,24 @@ test('빗자루 클릭·빠른 드래그로 경로의 똥을 한 번씩 모두 �
  assert.equal(s.ctx.view.poops.filter(p=>p.sweeping).length,4);
  s.ctx.updateSweeps(1200);assert.equal(s.ctx.view.poops.length,0);assert.equal(s.ctx.save.digimon[0].poop,0);
  s.ctx.updateSweeps(1300);assert.equal(s.ctx.save.digimon[0].poop,0);
+});
+
+// 중앙을 거쳐 식사하지 않고 접근 방향에 가까운 옆자리를 사용한다.
+for(const right of [false,true]) test((right?'오른쪽':'왼쪽')+' 옆에서 먹이를 바라보며 먹고 중앙에는 서지 않는다',()=>{
+ const s=setup();s.choose('meat');s.tap();const p=s.ctx.view.team[0];p.x=right?300:100;
+ s.seekFood(p,s.ctx.save.digimon[0],10);
+ assert.equal(p.y,300);assert.ok(right?p.x>200:p.x<200);assert.equal(p.direction,right?-1:1);
+ s.seekFood(p,s.ctx.save.digimon[0],10);assert.equal(s.ctx.save.digimon[0].hunger,10);
+});
+test('한쪽이 울타리에 막히면 다른 옆자리를 고르고 두 쪽 모두 막히면 먹지 않는다',()=>{
+ const s=setup();s.choose('meat');s.tap();const p=s.ctx.view.team[0];
+ s.board.canMove=(_,to)=>to.x>=200;s.seekFood(p,s.ctx.save.digimon[0],10);assert.ok(p.x>200);assert.equal(p.direction,-1);
+ s.board.canMove=(_,to)=>to.x===200;s.seekFood(p,s.ctx.save.digimon[0],10);
+ assert.equal(s.ctx.save.digimon[0].hunger,0);assert.equal(s.ctx.view.foods[0].remaining,undefined);
+});
+test('식사 중 먹이가 이동하면 새 옆자리로 걸어간 뒤에만 다음 입을 먹는다',()=>{
+ const s=setup();s.choose('meat');s.tap();const p=s.ctx.view.team[0];s.seekFood(p,s.ctx.save.digimon[0],10);
+ s.ctx.view.foods[0].x+=150;s.seekFood(p,s.ctx.save.digimon[0],10);
+ assert.equal(s.ctx.save.digimon[0].hunger,0);assert.ok(p.x<350);
+ s.seekFood(p,s.ctx.save.digimon[0],10);assert.equal(s.ctx.save.digimon[0].hunger,10);
 });

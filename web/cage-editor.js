@@ -34,8 +34,10 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
    const candidates=inside?[p]:v.map((a,i)=>onSegment(p,a,v[(i+1)%6]));
    for(const point of candidates){const distance=Math.hypot(point.x-p.x,point.y-p.y);if(!best||distance<best.distance)best={cage:c,point,distance};}
  }return best;}
+ // 종류와 무관하게 배치 물건의 소속과 내부 위치를 기록한다(고기/상한 고기/약 등).
+ function attachFloorItem(item){const s=getState(),id=item.cageId||item.cagePosition?.id;const c=s.layout.find(c=>c.id===id)||s.layout.find(c=>inCage(item,c));item.cageId=c?.id||null;item.cagePosition=c?localPoint(item,c):null;return item;}
  // 바닥 아이템은 같은 객체를 옮겨 먹기/청소 예약 참조도 유지한다.
- function moveContents(c,next){const s=getState();for(const item of [...(s.foods||[]),...(s.poops||[])]){
+ function moveContents(c,next){const s=getState();for(const item of [...(s.foods||[]),...(s.poops||[]),...(s.floorItems||[])]){
    const owner=item.cageId||item.cagePosition?.id;
    if(owner===c.id||(!owner&&inCage(item,c))){const local=localPoint(item,c),point=worldPoint(local,next);item.x=point.x;item.y=point.y;item.cageId=c.id;item.cagePosition=local;}
  }}
@@ -67,7 +69,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  });
  function rotate(){if(isBlocked()||!editing)return;rotation=(rotation+1)%6;if(selected){const s=getState(),c=s.layout.find(c=>c.id===selected),next={...c,rotation:(c.rotation+1)%6};if(L.valid(s.layout,next)){moveContents(c,next);Object.assign(c,next);changed('케이지 방향을 바꿨습니다.');}else notify('회전할 공간이 부족합니다.');}status();}
  toolbar.querySelector('#rotate-cage').onclick=rotate;
- toolbar.querySelector('#remove-cage').onclick=()=>{if(isBlocked()||!selected)return;const s=getState();for(const item of [...(s.foods||[]),...(s.poops||[])])if((item.cageId||item.cagePosition?.id)===selected){item.cageId=null;item.cagePosition=null;}s.layout=s.layout.filter(c=>c.id!==selected);for(const p of s.team)if(p.cageId===selected){p.cageId=null;p.cage='free';p.cageSeconds=0;}selected=null;changed('케이지를 철거하고 디지몬을 자유 활동으로 돌렸습니다.');status();};
+ toolbar.querySelector('#remove-cage').onclick=()=>{if(isBlocked()||!selected)return;const s=getState();for(const item of [...(s.foods||[]),...(s.poops||[]),...(s.floorItems||[])])if((item.cageId||item.cagePosition?.id)===selected){item.cageId=null;item.cagePosition=null;}s.layout=s.layout.filter(c=>c.id!==selected);for(const p of s.team)if(p.cageId===selected){p.cageId=null;p.cage='free';p.cageSeconds=0;}selected=null;changed('케이지를 철거하고 디지몬을 자유 활동으로 돌렸습니다.');status();};
  function candidate(t){if(!t)return null;const s=getState();if(drag?.cage){const c=s.layout.find(c=>c.id===drag.cage);return {...c,q:t.q-drag.offsetQ,r:t.r-drag.offsetR};}if(tool)return {id:'new',kind:tool,q:t.q,r:t.r,rotation};return null;}
  canvas.style.touchAction='none';canvas.onclick=null;
  canvas.onpointerdown=e=>{if(isBlocked())return;const s=getState(),p=coordinate(e),t=tile(p);hover=t;canvas.setPointerCapture(e.pointerId);
@@ -97,7 +99,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  return {
    set onPet(f){onPet=f;},
    set onGrab(f){onGrab=f;},
-   canMove,movePet,
+   canMove,movePet,attachFloorItem,
    isBouncing(uid){return bounces.has(uid);},
    advance(dt){for(const [uid,b] of bounces){b.elapsed+=Math.max(0,dt);if(!getState().team.some(p=>p.uid===uid)||b.elapsed>=b.duration)bounces.delete(uid);}},
    isDragging(uid){return drag?.pet!==undefined&&getState().team[drag.pet]?.uid===uid;},

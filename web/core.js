@@ -3746,6 +3746,12 @@ var ChampCore = (function(exports) {
 			if (!f || !Object.hasOwn(STOCK, f.kind) || !Number.isFinite(f.x) || !Number.isFinite(f.y)) continue;
 			if (f.remaining !== void 0 && (!Number.isFinite(f.remaining) || f.remaining <= 0)) continue;
 			if (availableFood(save, foods, f.kind) > 0) foods.push({
+				...typeof f.cageId === "string" ? { cageId: f.cageId } : {},
+				...f.cagePosition && typeof f.cagePosition.id === "string" && Number.isFinite(f.cagePosition.x) && Number.isFinite(f.cagePosition.y) ? { cagePosition: {
+					id: f.cagePosition.id,
+					x: f.cagePosition.x,
+					y: f.cagePosition.y
+				} } : {},
 				...f.remaining === void 0 ? {} : { remaining: Math.min(100, f.remaining) },
 				...Number.isFinite(f.age) && f.age > 0 ? { age: f.age } : {},
 				kind: f.kind,
@@ -3861,10 +3867,10 @@ var ChampCore = (function(exports) {
 				[STOCK[f.kind]]: next[STOCK[f.kind]] - 1,
 				rotten: next.rotten + 1
 			};
+			const { remaining, age: oldAge, ...placed } = f;
 			return {
-				kind: "rotten",
-				x: f.x,
-				y: f.y
+				...placed,
+				kind: "rotten"
 			};
 		});
 		return {

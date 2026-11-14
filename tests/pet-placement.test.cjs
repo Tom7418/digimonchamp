@@ -93,14 +93,18 @@ test('시설 안에 생성되거나 옛 저장의 소속이 비어 있는 개체
  assert.equal(s.board.canMove(p,s.board.center(0,0)),false);
 });
 
-test('케이지 이동·회전에 먹이·프로틴·똥이 함께 따라가고 다른 시설 물건은 유지한다',()=>{
+test('케이지 이동·회전에 고기·상한 고기·프로틴·똥·추가 물건이 따라가고 재접속 뒤에도 유지한다',()=>{
  const s=setup(),c=s.board.center(1,1),other=s.board.center(2,2);
  const meat={kind:'meat',x:c.x+25,y:c.y+20,remaining:70},pill={kind:'pill',x:c.x-20,y:c.y},poop={uid:1,x:c.x,y:c.y+30};
- const unmoved={kind:'meat',x:other.x,y:other.y};s.state.foods=[meat,pill,unmoved];s.state.poops=[poop];
+ const rotten={kind:'rotten',x:c.x+15,y:c.y-20},placed={kind:'future-item',x:c.x-10,y:c.y-15};
+ const unmoved={kind:'meat',x:other.x,y:other.y};s.state.foods=[meat,pill,rotten,unmoved];s.state.poops=[poop];s.state.floorItems=[placed];
+ s.board.attachFloorItem(rotten);assert.equal(rotten.cageId,'clinic');
  s.nodes['#edit-cages'].onclick();
  s.canvas.onpointerdown(s.event(c));const next=s.board.center(2,1);s.canvas.onpointermove(s.event(next));s.canvas.onpointerup(s.event(next));
  near(meat.x,next.x+25);near(meat.y,next.y+20);assert.equal(meat.remaining,70);near(pill.x,next.x-20);near(poop.y,next.y+30);
- near(unmoved.x,other.x);near(unmoved.y,other.y);
+ near(unmoved.x,other.x);near(unmoved.y,other.y);near(rotten.x,next.x+15);near(rotten.y,next.y-20);near(placed.x,next.x-10);near(placed.y,next.y-15);
  s.nodes['#rotate-cage'].onclick();near(meat.x,next.x+25*0.5-20*Math.sqrt(3)/2);near(meat.y,next.y+25*Math.sqrt(3)/2+20*0.5);
- const reload=setup(JSON.parse(JSON.stringify(s.state)));reload.draw();near(reload.state.foods[0].x,meat.x);
+ near(rotten.x,next.x+15*0.5+20*Math.sqrt(3)/2);near(placed.y,next.y-10*Math.sqrt(3)/2-15*0.5);
+ const reload=setup(JSON.parse(JSON.stringify(s.state)));reload.draw();near(reload.state.foods[0].x,meat.x);near(reload.state.foods[2].x,rotten.x);
+ reload.nodes['#edit-cages'].onclick();reload.canvas.onpointerdown(reload.event(next));const end=reload.board.center(1,1);reload.canvas.onpointermove(reload.event(end));reload.canvas.onpointerup(reload.event(end));near(reload.state.foods[2].x,rotten.x+end.x-next.x);
 });

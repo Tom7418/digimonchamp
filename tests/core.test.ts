@@ -180,6 +180,16 @@ describe('evolution', () => {
     expect(late.save).toMatchObject({ meat: 1, pills: 0, rotten: 2 });
     expect(restoreFloorFood(early.save, JSON.parse(JSON.stringify(early.foods)))[0].age).toBe(SPOIL_MINUTES - 1);
   });
+  it('먹이가 상하거나 저장을 복원해도 케이지 소속과 내부 좌표를 보존한다', () => {
+    const s = { ...freshSave(0), meat: 1, rotten: 0 };
+    const food: FloorFood = {kind:'meat', x:200, y:300, remaining:40, cageId:'clinic', cagePosition:{id:'clinic',x:25,y:-10}};
+    const spoiled = ageFloorFood(s, [food], SPOIL_MINUTES);
+    expect(spoiled.foods[0]).toEqual({...food, kind:'rotten', remaining:undefined});
+    const restored = restoreFloorFood(spoiled.save, JSON.parse(JSON.stringify(spoiled.foods)));
+    expect(restored).toEqual(spoiled.foods);
+    const invalid = restoreFloorFood(spoiled.save,[{...spoiled.foods[0],cagePosition:{id:'clinic',x:NaN,y:0}}]);
+    expect(invalid[0].cagePosition).toBeUndefined();
+  });
   it('예전 임시 케이지 이름은 원작 이름으로 옮겨진다', () => {
     const old = withMon(freshSave(0), { cage: '미니 수영장' });
     const s = upgradeSave({ ...old, cages: [...old.cages, '미니 수영장', '백신 연구실', '미니 묘지'] });
