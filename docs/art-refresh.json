@@ -1,0 +1,111 @@
+{
+  "policy": "AI-edited capsule footprints only; all pixels outside boxes preserved. Originals retained.",
+  "boxes": [
+    [
+      12,
+      50,
+      36,
+      81
+    ],
+    [
+      196,
+      23,
+      221,
+      55
+    ],
+    [
+      380,
+      50,
+      405,
+      81
+    ],
+    [
+      12,
+      241,
+      36,
+      272
+    ],
+    [
+      380,
+      241,
+      405,
+      272
+    ]
+  ],
+  "maps": {
+    "0": {
+      "edited": true,
+      "pngSha256": "f764c838c9e71628e49b62d3353f9f742d66fae5b614d964bcf019c9139fa6db",
+      "webpSha256": "a74023f5a4b25fa6e00a5424c9900c4a915843a9042d7e1a67dcb76ec7bcf5a2",
+      "rgbSha256": "4512d557afc7724b99d18c51e8744d57b1aa55a77b8d6960bcffa3efd02dbfdc"
+    },
+    "1": {
+      "edited": true,
+      "pngSha256": "61692de0334a7fc9ed77f9d8f04cc4d042248de5b71a48774c17023886b388e5",
+      "webpSha256": "3334cb72ce07d31477dee806ac88c383c1e26a67ada0149677e62b83d575f217",
+      "rgbSha256": "8ff4f09b68271746d701d4e1085313d923dcb26dc8dd8a6a3f17c6d7ce7fa8b7"
+    },
+    "2": {
+      "edited": true,
+      "pngSha256": "0eb3367f64931e641eb1f695d1bb672842325ec2406cfec023a35354a15c9f80",
+      "webpSha256": "8650abc1fab43679f6cdc59648b6356d940d896b0297f14ad704bca9c984d267",
+      "rgbSha256": "d5233b5fb44cc1ef95557f178e19c13315af364ea7fc29e6849d08af553dea4e"
+    },
+    "3": {
+      "edited": false,
+      "pngSha256": "4b3b4f4dab6f19c0df21ced7242c5df0455e741666015faeab5bdd9b3dfd7de6",
+      "webpSha256": "572d71a2dc11f7e2453601418b2309a1ca6d8a2ac95e267c6cfb7dd2ce533d8e",
+      "rgbSha256": "84627a60c1c0472d68a7501daf47da17c43db4f534cf9400f52732712a4db3d4"
+    },
+    "4": {
+      "edited": true,
+      "pngSha256": "ab8f39feecd7a9c9e96892f60ee850c4793bc790e8363f740e6f41b892fd3330",
+      "webpSha256": "3a73f55953b138437c3d9189e3a205d1348ef89f297e42fe703802a131e31d23",
+      "rgbSha256": "5cd579000b0b4413d1c01427cad8e398867116517115ec309bbca598d1debfe3"
+    },
+    "5": {
+      "edited": true,
+      "pngSha256": "ba5a0feeedf0052b0ca120b35791e5909a820534a7c8dca3b4c7e73ebfaca16e",
+      "webpSha256": "4aa5677bb31fd7f38c9961890690272af78a4d8b401fafd23d9f6b6ae6e600c9",
+      "rgbSha256": "032ac5b84f83b38bcbdb0b61610872b215ba2d66f938b56d3e050d112c578364"
+    },
+    "6": {
+      "edited": false,
+      "pngSha256": "c70f7988aa22201e142a383076a192c342d9587799cec8ccc0cfc835593e7b88",
+      "webpSha256": "c1ef5cd841157c148e34b1e7ef1719771bca8934485b19eaa50f706ad224a703",
+      "rgbSha256": "732513bd5f331e07a557f31b34f1bf55608e8b6a3dc572e07b308faa8d6660f6"
+    },
+    "7": {
+      "edited": true,
+      "pngSha256": "eb7495e9a1fdbb259e352a4c023a0620e5d5cfc5d87badad69c4e1758950745d",
+      "webpSha256": "c4d2a43eed7ef886e3612d05eee6584fbaac7ac9f33a7f0b2bd7e995aa49da70",
+      "rgbSha256": "bfa02282cd6f4dae6f3da863beeeb9410fe1f5feec8c3a22c6d9f3fc9229c4ca"
+    },
+    "8": {
+      "edited": true,
+      "pngSha256": "3570ccde389ee070f96262c22d0b4c78c66d781e1f3a87bf4eb7910206375743",
+      "webpSha256": "1081767703da88119035fbc87f1176adb9e62ba33cd2cd17c61caf12c58b9438",
+      "rgbSha256": "6cd6121b333d11ef4f9e0d732971c747ae22dd70b01c3ed5772ba7612a064aa6"
+    },
+    "9": {
+      "edited": true,
+      "pngSha256": "49b627faf3b1c5d0da1d9bfd7572f095e99356e37b60c709b5eee9298b27a12a",
+      "webpSha256": "ed8c1916015a1c63490d8ac9cc7bb1f238451396e236ae40aa334c98e3a6ae21",
+      "rgbSha256": "3c2eb709b5914a14615f3ccffee45d213e68a5945545a31dc518766b6f8d7e8f"
+    },
+    "10": {
+      "edited": true,
+      "pngSha256": "4261b5ef32101f75c8c977eeed96b2e28af423d4967d8f67a9a922df7516105f",
+      "webpSha256": "f7b9495fc9b0d6f5c625184145575ae980d61c62241060fdc8d73197a724853f",
+      "rgbSha256": "96591d1e76f4377cb71027e0bda780d366b254ed0a052bad836e0c4a69b3cb8a"
+    }
+  },
+  "clinic": {
+    "pngSha256": "133bdfb1834316b76632034d4750e3ef1c8aedc33f5d43db7326851046be8782",
+    "size": [
+      416,
+      480
+    ],
+    "policy": "AI-polished original-inspired fan-game artwork; not an original ROM sprite."
+  }
+}

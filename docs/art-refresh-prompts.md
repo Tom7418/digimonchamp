@@ -1,0 +1,11 @@
+# 이미지 편집 생성 지시 (2026-11-14)
+
+내장 image_gen 사용. C16은 원본 cm16과 기존 clinic-hex를 함께 참조한 팬게임용 개선 그림이다. 배틀은 각 장소의 원본 PNG를 개별 참조했다. 생성 파일 전체가 아닌 캡슐 주변만 반영하며 원본 바깥 픽셀을 보존한다. 제작/검사는 tools/prepare_reviewed_art.py와 docs/art-refresh.json을 참고한다.
+
+## C16 미니 양호실
+
+Use case: precise-object-edit. Edit target: image1 is the current miniature infirmary cage; image2 is its original NDS art reference. Create ONE polished replacement game sprite with the SAME point-up regular hexagon footprint and camera angle as image1, transparent outside. Preserve the beige tiled floor, white hospital bed at rear right, blue privacy curtain on rails, blue examination bench at left, white cabinet/door and small wall clock. Crisp consistent hand-placed pixel art, clean contiguous outlines, coherent pixel scale, restrained original beige/cyan/white palette, no blurry or broken jagged border fragments, no smooth painted or 3D-rendered style. Cyan and dark blue perimeter rail with evenly spaced light posts, clean corners, keep entire furniture INSIDE hexagon. Keep generous clear floor foreground. No text, no people or Digimon. Match original design and existing custom sprite, improve clarity only. Isolated centered sprite fully visible, exact point-up symmetrical hexagon silhouette, transparent alpha.
+
+## 배틀 배경 9종 공통 지시
+
+Use case: precise-object-edit. Edit this original 416x272 pixel-art battle background. Remove ONLY the small upright silver/gray capsule-like cylindrical posts (five visible: approx x24 y63, x208 y38, x392 y63, x24 y255, x392 y255), including their little dark ground shadows/pedestal remnants. Fill each tiny removed footprint with matching continuous terrain immediately around it (grass, soil, snow, sand, stone bricks, or stadium wall appropriate to that location). Preserve original pixel art, colors, pixel scale, scene composition and EVERY other part exactly: no new objects, no new texture elsewhere, no changing field lines, floodlight fixtures/beams, fence, large wall posts, scenery, rocks, water or lava. Keep the exact 26:17 aspect ratio, complete image edge to edge, same framing and no added border or text. Do not remove the diagonal floodlights at the top; only remove the short upright silver canisters.

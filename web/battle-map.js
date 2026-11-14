@@ -10,13 +10,15 @@
     });
     function preload(map){
       if(!images.has(map.asset)){
+        // 원본 변환 파일은 보존하고 사용자 요청으로 캡슐을 지운 표시용 그림을 읽는다.
+        const asset=map.asset.replace('/maps/','/maps/clean/');
         const img=new Image(),entry={img,failed:false,fallback:false};
         img.decoding='async';img.fetchPriority='high';
         img.onerror=()=>{
-          if(!entry.fallback&&map.asset.endsWith('.png')){entry.fallback=true;img.src=map.asset;}
+          if(!entry.fallback&&asset.endsWith('.png')){entry.fallback=true;img.src=asset;}
           else entry.failed=true;
         };
-        img.src=map.asset.replace(/\.png$/,'.webp');images.set(map.asset,entry);
+        img.src=asset.replace(/\.png$/,'.webp');images.set(map.asset,entry);
       }
       return images.get(map.asset).img;
     }

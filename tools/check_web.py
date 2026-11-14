@@ -57,6 +57,19 @@ for battle_map in maps['maps']:
     assert ((size&0x3fff)+1,((size>>14)&0x3fff)+1)==(416,272),path
     record=optimization['maps'][str(battle_map['id'])]
     assert hashlib.sha256(raw).hexdigest()==record['webpSha256'] and len(raw)==record['webpBytes']<=record['pngBytes'],path
+# 사용자 요청 수정본은 원본 복원 그림과 분리해 검사한다.
+art=json.loads((web.parent/'docs/art-refresh.json').read_text(encoding='utf-8'))
+for i in range(11):
+    folder=web/'assets/battle/maps/clean'
+    png=(folder/f'{i}.png').read_bytes();packed=(folder/f'{i}.webp').read_bytes()
+    assert struct.unpack_from('>II',png,16)==(416,272)
+    assert hashlib.sha256(png).hexdigest()==art['maps'][str(i)]['pngSha256']
+    assert hashlib.sha256(packed).hexdigest()==art['maps'][str(i)]['webpSha256']
+clinic=(web/'assets/facilities/clinic-polished.png').read_bytes()
+assert struct.unpack_from('>II',clinic,16)==(416,480)
+assert hashlib.sha256(clinic).hexdigest()==art['clinic']['pngSha256']
+assert 'bg_top.png' not in (web/'championship.css').read_text(encoding='utf-8')
+
 assert all(value is None or 0<=value<11 for value in maps['titles'].values())
 evolution_js=(web/'assets/evolution/effects.js').read_text(encoding='utf-8')
 evolution=json.loads(evolution_js.removeprefix('window.EVOLUTION_DATA=').removesuffix(';\n'))

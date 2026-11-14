@@ -7,7 +7,7 @@ test('배경을 자르거나 찌그러뜨리지 않고 표시하고 이미지를
  const renderer=c.window.createBattleMapRenderer(),map={id:3,asset:'assets/battle/maps/3.png',width:416,height:272};
  const ctx={fillRect(){},drawImage:(...args)=>draws.push(args)};
  renderer.preload(map);renderer.draw(ctx,map,480,314);renderer.draw(ctx,map,480,314);
- assert.equal(images.length,1);assert.equal(images[0].src,'assets/battle/maps/3.webp');
+ assert.equal(images.length,1);assert.equal(images[0].src,'assets/battle/maps/clean/3.webp');
  const [,x,y,w,h]=draws[0];assert.equal(w/h,416/272);assert.ok(x>=0&&y>=0&&x+w<=480&&y+h<=314);
  images[0].complete=false;renderer.draw(ctx,map,480,314);assert.equal(draws.length,2);
  images[0].complete=true;images[0].naturalWidth=0;renderer.draw(ctx,map,480,314);assert.equal(draws.length,2);
@@ -50,7 +50,7 @@ test('무손실 WebP 실패 시 PNG로 한 번만 대체하고 최근3개 배경
  vm.runInContext(fs.readFileSync('web/battle-map.js','utf8'),c);
  const renderer=c.window.createBattleMapRenderer({makeCanvas:()=>({getContext:()=>({drawImage:(...a)=>buffers.push(a)})})});
  const map=id=>({id,asset:`assets/battle/maps/${id}.png`,width:416,height:272}),ctx={fillRect(){},drawImage:(...a)=>draws.push(a)};
- const img=renderer.preload(map(0));img.onerror();assert.equal(img.src,'assets/battle/maps/0.png');
+ const img=renderer.preload(map(0));img.onerror();assert.equal(img.src,'assets/battle/maps/clean/0.png');
  renderer.draw(ctx,map(0),416,272);renderer.draw(ctx,map(0),416,272);assert.equal(buffers.length,1);
  for(const id of [1,2,3])renderer.draw(ctx,map(id),416,272);
  renderer.draw(ctx,map(0),416,272);assert.equal(buffers.length,5);
