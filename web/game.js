@@ -982,8 +982,11 @@
     const titleHtml = titles.length
       ? titles
           .map((m, i) => {
+            // 원작 타이틀의 참가 조건: 디지에그화 횟수, 세대 한정 (속성·종족 한정은 표시만 하고 아직 검사하지 않는다)
             const eggsOk = !m.needEggs || members(m.format).every((x) => x.eggs >= m.needEggs);
-            return `<button data-title="${i}"${eggsOk ? '' : ' disabled'}><b>★ ${esc(m.name)}</b><small>${m.format}:${m.format} · 상대 ${C.STAGE_LABEL[m.stage]} · 상금 ${m.prize.toLocaleString('ko-KR')} ฿${eggsOk ? '' : ` · 디지에그화 ${m.needEggs}회 필요`}</small></button>`;
+            const stageOk = !m.limitStage || members(m.format).every((x) => C.getSpecies(x.speciesId).stage === m.limitStage);
+            const limits = [m.limitStage ? `${C.STAGE_LABEL[m.limitStage]} 한정` : '', m.limitNote || '', m.needEggs ? `디지에그화 ${m.needEggs}회 이상` : ''].filter(Boolean).join(' · ');
+            return `<button data-title="${i}"${eggsOk && stageOk ? '' : ' disabled'}><b>★ ${esc(m.name)}</b><small>${m.format} VS ${m.foes ?? m.format} · 상대 ${C.STAGE_LABEL[m.stage]} · 상금 ${m.prize.toLocaleString('ko-KR')} ฿${limits ? ` · ${esc(limits)}` : ''}${eggsOk && stageOk ? '' : ' (조건 미충족)'}</small></button>`;
           })
           .join('')
       : `<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은 07:00~15:00, 일정: ${esc(C.upcoming(save)[0] || '-')}</p>`;
@@ -1014,7 +1017,7 @@
       (b) =>
         (b.onclick = () => {
           const m = titles[+b.dataset.title];
-          startBattle({ title: m.name, match: m, format: m.format, stage: m.stage, scale: m.scale, prize: m.prize }, mode);
+          startBattle({ title: m.name, match: m, format: m.format, foes: m.foes, stage: m.stage, scale: m.scale, prize: m.prize }, mode);
         }),
     );
     body.querySelectorAll('[data-free]').forEach(
@@ -1029,7 +1032,7 @@
     const team = members(setup.format);
     if (!team.length || !canFight(team[0])) return toast('출전할 수 있는 디지몬이 없어요. (알·병·부상은 출전 불가)');
     if (team.length < setup.format) return toast(`${setup.format}:${setup.format}에는 건강한 디지몬 ${setup.format}마리가 필요해요.`);
-    const foes = C.makeEnemies(setup.stage, setup.format, setup.scale, Math.random);
+    const foes = C.makeEnemies(setup.stage, setup.foes ?? setup.format, setup.scale, Math.random);
     const state = C.createBattle(
       team.map((d) => C.entrantOf(d, mode)),
       foes,

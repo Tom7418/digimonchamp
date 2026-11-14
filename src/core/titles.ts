@@ -1,4 +1,5 @@
 import { dateOf } from './data';
+import titlesRaw from '../data/titles.txt?raw';
 import type { SaveData, Stage } from './types';
 
 export interface Match {
@@ -12,24 +13,57 @@ export interface Match {
   scale: number;
   prize: number;
   needEggs?: number;
+  /** 상대 인원 (없으면 format과 같다). 원작에는 3 VS 1, 1 VS 3 같은 경기가 있다 */
+  foes?: number;
+  /** 등급 0~4 (4는 빅7) */
+  grade?: number;
+  /** 참가 디지몬 세대 제한 */
+  limitStage?: Stage;
+  /** 아직 검사하지 않는 참가 제한 (표시용) */
+  limitNote?: string;
 }
 
 /**
- * 타이틀 매치. 한 번에 하나씩 순서대로 열린다 (minRank = 순번).
- * 원작 확인: 첫 타이틀 '에이스 오브 링'(봄 3일, 에이스 1:1), 세 번째 타이틀 승리 시 '레드 테이머'(성숙기 허용),
- * '인피니티 소울'의 디지에그화 10회 조건. 나머지 이름·날짜·상금은 임시 값이다.
+ * 타이틀 매치 61개. 이름·계절·날짜·필요 랭크·등급·상금·인원·참가 제한은 원본 실행 코드의 표와 설명 글에서 읽었다
+ * (src/data/titles.txt, tools/extract_titles.py. 계절·날짜는 원작 편지와 대조해 확인, 랭크·등급·상금의 뜻은 추정).
+ * 임시 값: 상대 세대(설명에 홀더 세대가 없으면 필요 랭크로 정함), 상대 강도(등급별 배율),
+ *   상금 배율(상점 가격이 아직 임시라 원본 상금의 1/5), 랭크가 오르는 규칙.
+ * 표시만 하고 아직 검사하지 않는 참가 제한: 속성·종족·타입·성격 한정(limitNote).
  */
-export const TITLES: Match[] = [
-  { id: 't1', name: '에이스 오브 링', minRank: 1, season: 0, day: 3, format: 1, stage: 3, scale: 0.8, prize: 1000 },
-  { id: 't2', name: '서머 컵', minRank: 2, season: 0, day: 6, format: 3, stage: 3, scale: 0.9, prize: 1500 },
-  { id: 't3', name: '오텀 컵', minRank: 3, season: 0, day: 8, format: 3, stage: 3, scale: 1.0, prize: 2000 },
-  { id: 't4', name: '윈터 컵', minRank: 4, season: 1, day: 3, format: 1, stage: 4, scale: 0.9, prize: 3000 },
-  { id: 't5', name: '챔피언 로드', minRank: 5, season: 1, day: 8, format: 3, stage: 4, scale: 1.1, prize: 4000 },
-  { id: 't6', name: '얼티밋 컵', minRank: 6, season: 2, day: 3, format: 3, stage: 5, scale: 1.0, prize: 5000 },
-  { id: 't7', name: '마스터 컵', minRank: 7, season: 3, day: 3, format: 3, stage: 5, scale: 1.2, prize: 6000 },
-  { id: 't8', name: '레전드 컵', minRank: 8, season: 3, day: 8, format: 3, stage: 6, scale: 1.0, prize: 8000 },
-  { id: 't9', name: '인피니티 소울', minRank: 9, season: 1, day: 5, format: 3, stage: 6, scale: 1.5, prize: 20000, needEggs: 10 },
-];
+export const PRIZE_SCALE = 0.2;
+const STAGE_NAME: Record<number, string> = { 2: '유년기', 3: '성장기', 4: '성숙기', 5: '완전체', 6: '궁극체' };
+const HOLDER_STAGE: Record<string, Stage> = { 유년기: 2, 성장기: 3, 성숙기: 4, 완전체: 5, 궁극체: 6 };
+const STAGE_BY_RANK: Stage[] = [3, 3, 3, 3, 4, 4, 5, 5, 6];
+const SCALE_BY_GRADE = [0.8, 0.9, 1.0, 1.1, 1.3];
+export const TITLES: Match[] = titlesRaw
+  .split(/\r?\n/)
+  .filter((l) => l.trim() && !l.startsWith('#'))
+  .map((l) => {
+    const [no, name, season, day, rank, grade, prize, , mine, foes, limit, eggs, holder, other] = l.split('|');
+    const m: Match = {
+      id: `m${no}`,
+      name,
+      minRank: Number(rank),
+      season: Number(season),
+      day: Number(day),
+      format: Number(mine) === 1 ? 1 : 3,
+      foes: Number(foes),
+      stage: HOLDER_STAGE[holder] ?? STAGE_BY_RANK[Number(rank)],
+      scale: SCALE_BY_GRADE[Number(grade)],
+      prize: Math.round(Number(prize) * PRIZE_SCALE),
+      grade: Number(grade),
+    };
+    if (limit) m.limitStage = HOLDER_STAGE[limit];
+    if (eggs) m.needEggs = Number(eggs);
+    if (other) m.limitNote = `${other} 한정`;
+    return m;
+  })
+  .sort((a, b) => a.minRank - b.minRank || a.season - b.season || a.day - b.day);
+/** 예전 임시 타이틀 9개 → 원작 타이틀 (저장 이전용). 랭크가 유지되도록 쉬운 것부터 8개, 인피니티 소울은 무한의 영혼 */
+export const OLD_TITLE_IDS: Record<string, string> = Object.fromEntries([
+  ...TITLES.slice(0, 8).map((m, i) => [`t${i + 1}`, m.id]),
+  ['t9', 'm52'],
+]);
 
 /** 랭크 이름. 레드 테이머(랭크 4 = 타이틀 3개)만 영상으로 확인, 나머지는 임시 */
 export function rankName(rank: number): string {
@@ -66,9 +100,11 @@ function prelimOf(save: SaveData, year: number) {
 }
 
 export function tamerRank(save: Pick<SaveData, 'titles' | 'champion'>): number {
-  const normal = TITLES.filter((t) => t.id !== 't9' && save.titles.includes(t.id)).length;
-  if (save.champion) return save.titles.length >= TITLES.length ? 10 : 9;
-  return Math.min(8, 1 + normal);
+  // 임시 규칙: 타이틀 하나마다 랭크 +1 (세 번째 타이틀에서 레드 테이머가 되는 것만 영상 확인), 최대 8.
+  // 챔피언은 9, 빅7(등급 4)까지 모두 따면 10.
+  const won = TITLES.filter((t) => save.titles.includes(t.id));
+  if (save.champion) return TITLES.filter((t) => t.grade === 4).every((t) => save.titles.includes(t.id)) ? 10 : 9;
+  return Math.min(8, 1 + won.length);
 }
 
 /** 타이틀 매치 엔트리 시간 (원작 텍스트 txt_list #634: 7:00~15:00) */
@@ -98,9 +134,13 @@ export function todaysMatches(save: SaveData): Match[] {
 
 export function upcoming(save: SaveData): string[] {
   const rank = tamerRank(save);
-  const lines = TITLES.filter((t) => rank >= t.minRank && !save.titles.includes(t.id)).map(
-    (t) => `${t.name}: ${['봄', '여름', '가을', '겨울'][t.season]} ${t.day}일 (${t.format}:${t.format})`,
-  );
+  // 61개를 다 늘어놓지 않고, 오늘부터 가까운 순서로 6개만
+  const today = dateOf(save.clock);
+  const ahead = (t: Match) => ((t.season - today.season + 4) % 4) * 8 + (t.day - today.day) + (t.season === today.season && t.day < today.day ? 32 : 0);
+  const lines = TITLES.filter((t) => rank >= t.minRank && !save.titles.includes(t.id))
+    .sort((a, b) => ahead(a) - ahead(b))
+    .slice(0, 6)
+    .map((t) => `${t.name}: ${['봄', '여름', '가을', '겨울'][t.season]} ${t.day}일 (${t.format} VS ${t.foes ?? t.format}${t.limitStage ? ` · ${STAGE_NAME[t.limitStage]} 한정` : ''}${t.limitNote ? ` · ${t.limitNote}` : ''})`);
   if (!save.champion) {
     if (save.qualifiedYear !== null) lines.push(`챔피언십 본선: ${save.qualifiedYear + 1}년차 가을 ${CHAMP_DAY}일 (8강·4강·결승)`);
     else if (rank < PRELIM_MIN_RANK) lines.push(`챔피언십 예선: 가을 1~5일 (${rankName(PRELIM_MIN_RANK)}부터 참가)`);

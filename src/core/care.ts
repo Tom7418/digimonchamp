@@ -3,7 +3,7 @@ import { evolvedStats, upgradeStats } from './stats';
 import { CAGE_RENAMES, CAGES, dateOf, DAY_END_MINUTE, DAY_START_HOUR, EGG_MINUTES, initialStats, getCage, getSpecies, originalSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK } from './data';
 import { endOfLife, findEvolution } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
-import { capacityOf, tamerRank } from './titles';
+import { capacityOf, OLD_TITLE_IDS, tamerRank } from './titles';
 import { bestRope, MEMORY_CARDS, ROPES, START_ROPE, WIRE_PACK, BAIT_PACK, BAITS, GEARS, gearCount, SHOT_PACK, SHOTS } from './hunt';
 import { ATTRS, FAMILIES, PERSONALITIES, STAT_KEYS, type ApKey, type Digimon, type SaveData, type Stats } from './types';
 
@@ -91,6 +91,8 @@ export function upgradeSave(save: SaveData): SaveData {
   if (s.salve == null) s.salve = 0;
   if (!s.gear) s.gear = {};
   delete s.ropeLevel;
+  // 예전 임시 타이틀 9개를 원작 타이틀로 옮긴다 (랭크 유지)
+  if (s.titles.some((id) => OLD_TITLE_IDS[id])) s.titles = [...new Set(s.titles.map((id) => OLD_TITLE_IDS[id] ?? id))];
   // 예전 임시 케이지 이름을 원작 이름으로 옮긴다
   const renamed = (id: string) => CAGE_RENAMES[id] ?? id;
   if (s.cages.some((c) => CAGE_RENAMES[c])) s.cages = [...new Set(s.cages.map(renamed))];

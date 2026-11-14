@@ -264,16 +264,34 @@ describe('battle', () => {
   });
 });
 
+/** 쉬운 순서로 n개의 타이틀을 딴 상태 */
+const won = (n: number) => TITLES.slice(0, n).map((t) => t.id);
+
 describe('titles and hunting', () => {
   it('winning titles raises tamer rank', () => {
     let s = freshSave(0);
     expect(tamerRank(s)).toBe(1);
     s = applyWin(s, TITLES[0]);
     expect(tamerRank(s)).toBe(2);
-    expect(s.bits).toBe(1500);
+    expect(s.bits).toBe(500 + 1060); // 봄의 시작: 원본 상금 5300의 1/5
     s = applyWin(applyWin(s, TITLES[1]), TITLES[2]);
     expect(rankName(tamerRank(s))).toBe('레드 테이머');
     expect(capacityOf(s)).toBe(96);
+  });
+  it('타이틀 매치 61개는 원본 표를 따른다', () => {
+    expect(TITLES).toHaveLength(61);
+    // 원작 편지: 첫 타이틀 매치는 봄의 3일째
+    expect(TITLES[0]).toMatchObject({ name: '봄의 시작', season: 0, day: 3, minRank: 1, format: 1 });
+    const by = (name: string) => TITLES.find((t) => t.name === name)!;
+    expect(by('무한의 영혼')).toMatchObject({ needEggs: 10, grade: 4, minRank: 8 });
+    expect(by('장군의 힘')).toMatchObject({ format: 3, foes: 2, limitStage: 4 });
+    expect(by('은빛의 결정체')).toMatchObject({ format: 1, foes: 3 });
+    expect(by('용의 군주').limitNote).toBe('용 한정');
+    expect(TITLES.filter((t) => t.grade === 4)).toHaveLength(8);
+    // 예전 임시 타이틀을 가진 저장은 랭크를 유지한 채 원작 타이틀로 옮겨진다
+    const old = upgradeSave({ ...freshSave(0), titles: ['t1', 't2', 't3', 't9'] });
+    expect(old.titles).toEqual([...won(3), 'm52']);
+    expect(rankName(tamerRank({ ...old, titles: won(3) }))).toBe('레드 테이머');
   });
   it('a new game starts from a digi-egg that hatches into 깜몬', () => {
     const s = freshEggSave(0);
@@ -282,7 +300,7 @@ describe('titles and hunting', () => {
   });
   it('title matches appear on their day before 15:00', () => {
     const s = { ...freshSave(0), clock: 1440 * 2 + 9 * 60 };
-    expect(todaysMatches(s).map((m) => m.name)).toEqual(['에이스 오브 링']);
+    expect(todaysMatches(s).map((m) => m.name)).toEqual(['봄의 시작']);
     expect(todaysMatches({ ...s, clock: s.clock + 7 * 60 })).toEqual([]);
   });
   it('capture respects capacity', () => {
@@ -326,11 +344,11 @@ describe('hunting', () => {
     const base = { ...freshSave(0), bits: 99999 };
     const ropes = (s: typeof base) => shopItems(s).filter((i) => i.id.startsWith('rope:')).map((i) => i.id.slice(5));
     expect(ropes(base)).toEqual(['digi2', 'digi3']);
-    expect(ropes({ ...base, titles: ['t1'] })).toEqual(['digi2', 'digi3', 'hard1', 'hard2', 'hard3']);
-    expect(ropes({ ...base, titles: ['t1', 't2', 't3', 't4', 't5'] })).toHaveLength(11);
+    expect(ropes({ ...base, titles: won(1) })).toEqual(['digi2', 'digi3', 'hard1', 'hard2', 'hard3']);
+    expect(ropes({ ...base, titles: won(5) })).toHaveLength(11);
     expect(ROPES.map((r) => r.durability)).toEqual([10, 15, 20, 32, 44, 56, 60, 80, 100, 150, 150, 250]);
     // 사면 가장 좋은 로프를 든다
-    const item = shopItems({ ...base, titles: ['t1'] }).find((i) => i.id === 'rope:hard2')!;
+    const item = shopItems({ ...base, titles: won(1) }).find((i) => i.id === 'rope:hard2')!;
     expect(item.apply(base).rope).toBe('hard2');
   });
   it('stronger rope breaks less often', () => {
@@ -437,7 +455,7 @@ describe('사냥 장비', () => {
     expect(gearDamage(70, 5)).toBe(3);
     expect(gearDamage(70, 2)).toBe(1);
     expect(gearDamage(10, 5)).toBe(0);
-    expect(shopItems({ ...freshSave(0), bits: 99999, titles: ['t1', 't2'] }).some((i) => i.id === 'gear:bomb1')).toBe(true);
+    expect(shopItems({ ...freshSave(0), bits: 99999, titles: won(2) }).some((i) => i.id === 'gear:bomb1')).toBe(true);
   });
   it('장비는 쓸 때마다 줄고, 상점에서 묶음으로 산다. 예전 저장에는 빈 장비 칸이 생긴다', () => {
     const s = freshSave(0);
@@ -474,10 +492,10 @@ describe('illness', () => {
 describe('championship', () => {
   // y년차 가을 d일 09:00
   const at = (y: number, d: number) => (((y - 1) * 32 + 16 + (d - 1)) * 1440) + 9 * 60;
-  const red = (clock: number): SaveData => ({ ...freshSave(0), clock, titles: ['t1', 't2', 't3'] });
+  const red = (clock: number): SaveData => ({ ...freshSave(0), clock, titles: won(3) });
 
   it('prelims need 레드 테이머 and run one match a day on autumn days 1-5', () => {
-    expect(todaysMatches({ ...red(at(1, 1)), titles: ['t1'] }).map((m) => m.id)).not.toContain('prelim');
+    expect(todaysMatches({ ...red(at(1, 1)), titles: won(1) }).map((m) => m.id)).not.toContain('prelim');
     let s = red(at(1, 1));
     const m = todaysMatches(s).find((x) => x.id === 'prelim')!;
     expect(m.name).toBe('챔피언십 예선 1전');
@@ -522,11 +540,11 @@ describe('day flow', () => {
     const at = (minutes: number) => ({ ...freshSave(0), clock: 2 * 1440 + minutes });
     expect(matchEntryNotice(at(6 * 60 + 59))).toBeNull();
     for (const minutes of [7 * 60, 10 * 60 + 23, 14 * 60 + 59]) {
-      expect(matchEntryNotice(at(minutes))).toEqual({ key: '1:0:3', names: ['에이스 오브 링'] });
+      expect(matchEntryNotice(at(minutes))).toEqual({ key: '1:0:3', names: ['봄의 시작'] });
     }
     expect(matchEntryNotice(at(15 * 60))).toBeNull();
     expect(matchEntryNotice(at(21 * 60))).toBeNull();
-    expect(matchEntryNotice({ ...at(10 * 60), titles: ['t1'] })).toBeNull();
+    expect(matchEntryNotice({ ...at(10 * 60), titles: won(1) })).toBeNull();
   });
   it('read notices are suppressed that day, but can recur next year', () => {
     const s = { ...freshSave(0), clock: 2 * 1440 + 9 * 60 };
@@ -536,12 +554,13 @@ describe('day flow', () => {
     expect(matchEntryNotice(freshSave(0))).toBeNull();
   });
   it('championship notices respect rank, played prelims and the final round', () => {
-    const s = { ...freshSave(0), clock: 16 * 1440 + 10 * 60, titles: ['t1', 't2', 't3'] };
+    const s = { ...freshSave(0), clock: 16 * 1440 + 10 * 60, titles: won(3) };
     expect(matchEntryNotice({ ...s, titles: [] })).toBeNull();
-    expect(matchEntryNotice(s)?.names).toEqual(['챔피언십 예선 1전']);
-    expect(matchEntryNotice(applyMatch(s, todaysMatches(s)[0], true))).toBeNull();
+    expect(matchEntryNotice(s)?.names).toContain('챔피언십 예선 1전');
+    // 같은 날 타이틀 매치(원작 61개)도 열리므로 예선만 골라 치른다
+    expect(matchEntryNotice(applyMatch(s, todaysMatches(s).find((m) => m.id === 'prelim')!, true))?.names).not.toContain('챔피언십 예선 1전');
     const finals = { ...s, clock: 52 * 1440 + 10 * 60, qualifiedYear: 1, finalRound: 1 };
-    expect(matchEntryNotice(finals)?.names).toEqual(['챔피언십 본선 4강']);
+    expect(matchEntryNotice(finals)?.names).toContain('챔피언십 본선 4강');
   });
   it('offline progress stops at the calendar instead of silently skipping the night', () => {
     const s = { ...freshSave(0), clock: 23 * 60 + 57 };
@@ -886,6 +905,13 @@ describe('유년기Ⅱ 입문 프리 배틀',()=>{
  it('입문1:1/3:3을 추가하며 기존★1~3은 유지한다',()=>{
   expect(FREE_BATTLES.slice(0,2)).toEqual([{label:'입문',format:1,stage:2,prize:30},{label:'입문',format:3,stage:2,prize:60}]);
   expect(FREE_BATTLES.slice(2).map(x=>[x.stage,x.format,x.prize])).toEqual([[3,1,60],[3,3,120],[4,1,120],[4,3,240],[5,1,180],[5,3,360]]);
+ });
+ it('인원이 다른 타이틀 매치(3 VS 1, 1 VS 3, 3 VS 2)도 배틀이 끝난다',()=>{
+  for(const [a,b] of [[3,1],[1,3],[3,2]]){
+   const foes=makeEnemies(3,b,1,seeded(5));
+   const mine=Array.from({length:a},(_,i)=>entrantOf(newDigimon(i+1,'아구몬',seeded(i)),'일반'));
+   expect(runBattle(mine,foes,seeded(9)).over).toBe(true);
+  }
  });
  it('입문 상대는 유년기Ⅱ만 생성하며 실제 배틀이 종료된다',()=>{
   for(const entry of FREE_BATTLES.filter(x=>x.stage===2)){
