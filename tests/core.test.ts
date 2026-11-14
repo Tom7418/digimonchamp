@@ -52,7 +52,7 @@ describe('원본 종별 배틀 기술', () => {
       const events = stepBattle(state, () => roll);
       for (const e of events) if (e.type === 'hit' && e.special) {
         expect(battleSkills('아구몬')).toContainEqual(e.skill);
-        expect(state.units[e.from].tp).toBe(80);
+        expect(state.units[e.from].tp).toBe(100 - e.skill!.tpCost);
       }
       expect(events.some(e => e.type === 'hit')).toBe(true);
     }
@@ -68,7 +68,7 @@ describe('원본 종별 배틀 기술', () => {
     state.units[0].x = state.units[1].x; state.units[0].cd = 0;
     const rolls = [0, 0.99, 0.5];
     const hit = stepBattle(state, () => rolls.shift() ?? 0.5).find(e => e.type === 'hit' && e.from === 0);
-    expect(hit).toMatchObject({special:true,skill:{name:'헤비 버너',englishName:'Spitfire Blast',dbTextIndex:447,slot:1,animation:'attack2'}});
+    expect(hit).toMatchObject({special:true,skill:{name:'헤비 버너',englishName:'Spitfire Blast',dbTextIndex:447,slot:1,animation:'attack1',sequence:7,tpCost:10}});
     const baby = createBattle([{...entrant,speciesId:'즈루몬'}], [entrant]);
     baby.units[0].x = baby.units[1].x; baby.units[0].cd = 0;
     expect(stepBattle(baby, () => 0).find(e => e.type === 'hit' && e.from === 0)).toMatchObject({special:false});
@@ -81,6 +81,44 @@ describe('원본 종별 배틀 기술', () => {
     expect(skillAudit.localizedNames).toMatchObject({count:361,databaseRange:[432,793],battleRange:[1301,1662],instructionChecks:15});
     expect(battleSkills('파닥몬').map(s => s.name)).toEqual(['날개 따귀','에어 샷']);
     expect(battleSkills('아구몬').map(s => s.englishName)).toEqual(['Pepper Breath','Spitfire Blast']);
+  });
+  it('기술 순서 대신 원본 동작 필드로361개 시퀀스를 고른다', () => {
+    expect(battleSkills('가루다몬').map(s => [s.sequence,s.animation,s.tpCost])).toEqual([[9,'attack3',30],[7,'attack1',20]]);
+    expect(battleSkills('아구몬').map(s => [s.sequence,s.animation,s.tpCost])).toEqual([[7,'attack1',6],[7,'attack1',10]]);
+    expect(battleSkills('드라코몬')[1]).toMatchObject({sequence:10,animation:'attack4',tpCost:10});
+    const counts: Record<number,number> = {};
+    for (const name of Object.keys(skillTable)) for (const skill of battleSkills(name)) {
+      expect(skill.animation).toBe(`attack${skill.sequence - 6}`);
+      expect(skill.tpCost).toBeGreaterThan(0);
+      counts[skill.sequence] = (counts[skill.sequence] ?? 0) + 1;
+    }
+    expect(counts).toEqual({7:183,8:110,9:55,10:13});
+    expect(skillAudit.combat).toMatchObject({sequenceField:16,tpCostField:72,instructionChecks:22});
+  });
+  it('원본 소비TP 경계를 모든 기술에서 검사하고 부족하면 기본 공격/접근을 한다', () => {
+    for (const name of Object.keys(skillTable)) for (const skill of battleSkills(name)) {
+      const below = skill.tpCost - 1;
+      for (const roll of [0,0.5,0.999]) {
+        const chosen = pickBattleSkill(name, () => roll, below);
+        expect(chosen === null || chosen.tpCost <= below).toBe(true);
+      }
+      const affordable = battleSkills(name).filter(s => s.tpCost <= skill.tpCost);
+      const index = affordable.findIndex(s => s.record === skill.record);
+      expect(pickBattleSkill(name, () => (index+0.5)/affordable.length, skill.tpCost)).toEqual(skill);
+    }
+    const entrant = {speciesId:'아구몬',stats:{hp:10000,tp:6,atk:10,def:10,int:10,spd:10},personality:'솔직' as const,mode:'특수' as const};
+    const state = createBattle([entrant],[entrant]);
+    state.units[0].x = state.units[1].x; state.units[0].cd = 0;
+    expect(stepBattle(state,()=>0).find(e => e.type==='hit' && e.from===0)).toMatchObject({special:true,skill:{name:'헤비 플레임',tpCost:6}});
+    expect(state.units[0].tp).toBe(0);
+    state.units[0].cd = 0;
+    expect(stepBattle(state,()=>0).find(e => e.type==='hit' && e.from===0)).toMatchObject({special:false});
+    expect(state.units[0].tp).toBe(0);
+    const distant = createBattle([{...entrant,stats:{...entrant.stats,tp:5}}],[entrant]);
+    distant.units[0].x = 200; distant.units[1].x = 300; distant.units[0].cd = 0;
+    expect(stepBattle(distant,()=>0).some(e => e.type==='hit' && e.from===0)).toBe(false);
+    expect(distant.units[0].x).toBeGreaterThan(200);
+    expect(distant.units[0].tp).toBe(5);
   });
 });
 

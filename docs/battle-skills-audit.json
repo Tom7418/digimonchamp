@@ -10,6 +10,18 @@
   "species": 216,
   "battleSpecies": 204,
   "skills": 361,
+  "combat": {
+    "instructionChecks": 22,
+    "sequenceField": 16,
+    "tpCostField": 72,
+    "sequences": {
+      "7": 183,
+      "8": 110,
+      "9": 55,
+      "10": 13
+    },
+    "evidence": "overlay19 0x0211a558..0x0211a5b4, dispatch table0x0212310c, state8..11 handlers0x02116760..0x0211685c, setter0x02117ad8 -> ARM9 0x02046e18/0x02046d98; TP compare/subtract 0x0211fa04..0x0211fa28"
+  },
   "localizedNames": {
     "count": 361,
     "databaseRange": [
@@ -28,7 +40,7 @@
   },
   "evidence": "overlay19 0x0211fa88..0x0211fb0c: owner grouping and skill-name lookup; species internal ID = row + 8",
   "unverified": [
-    "skill slot to animation correspondence",
-    "power, TP cost, range, effects, AI and opponent rosters"
+    "power, range, effects and hit timing, AI and opponent rosters",
+    "basic attack animation policy (user requested sequence10 retained)"
   ]
 }

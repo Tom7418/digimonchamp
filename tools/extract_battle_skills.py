@@ -1,6 +1,6 @@
-"""원본 공격 표에서 종별 기술 이름/레코드 번호만 변환한다.
+"""원본 공격 표에서 종별 기술 이름/동작/소비TP를 변환한다.
 python tools/extract_battle_skills.py <원본 root> [--check]
-미확인 피해량/TP/효과 필드는 추출하지 않는다. 원본 실행 파일은 배포하지 않는다.
+미확인 피해량/효과 필드는 추출하지 않는다. 원본 실행 파일은 배포하지 않는다.
 """
 import argparse
 import hashlib
@@ -24,6 +24,26 @@ def extract(root):
         assert parts[0] == b'utf-16'
         return [p.decode('utf-16-le').rstrip('\0') for p in parts[2:]]
     database_text, battle_text = texts(database_raw), texts(battle_raw)
+    # 공격 표+16의0~3 → 배우 상태8~11 → NANR7~10. TP는+72 u16을 잔여TP와 비교/차감.
+    combat_checks = {
+        0x211A558: 0xE5950174, 0x211A55C: 0xE5900010,
+        0x211A560: 0xE3500003, 0x211A564: 0x908FF100,
+        0x211A580: 0xE3A01008, 0x211A590: 0xE3A01009,
+        0x211A5A0: 0xE3A0100A, 0x211A5B0: 0xE3A0100B,
+        0x2116774: 0xE3A01007, 0x21167B4: 0xE3A01008,
+        0x21167F4: 0xE3A01009, 0x2116834: 0xE3A0100A,
+        0x2117AD8: 0xE59FC004, 0x2117ADC: 0xE5900004,
+        0x211FA0C: 0xE1D024B8, 0x211FA10: 0xE5910054,
+        0x211FA14: 0xE1500002, 0x211FA24: 0xE0400002, 0x211FA28: 0xE5810054,
+    }
+    for address, expected in combat_checks.items():
+        assert struct.unpack_from('<I', overlay, address - 0x210E8A0)[0] == expected, hex(address)
+    for index, function in enumerate([0x2116760, 0x21167A0, 0x21167E0, 0x2116820]):
+        assert struct.unpack_from('<2I', overlay, 0x212310C - 0x210E8A0 + (8 + index) * 8) == (function, 0)
+    assert struct.unpack_from('<I', overlay, 0x2117AE4 - 0x210E8A0)[0] == 0x2046E18
+    # ARM9는 동작 번호를 그대로 저장하고 NANR 시퀀스 조회에 전달한다.
+    for address, expected in {0x2046DA8: 0xE5C41058, 0x2046DB4: 0xE5D41058, 0x2046DB8: 0xEB00049F}.items():
+        assert struct.unpack_from('<I', arm, address - BASE)[0] == expected
     # 도감은 같은 owner의 첫 행을 건너뛰고 기술 누적 수를 센다.
     # 선택 종의 시작 번호(+53c) + 선택 슬롯(+540) +432가 실제 도감 기술명이다.
     database_checks = {
@@ -65,7 +85,11 @@ def extract(root):
             localized = database_text[432 + skill_index]
             assert localized and any('\uac00' <= c <= '\ud7a3' for c in localized)
             assert battle_text[1301 + skill_index] == localized
-            entry.update(name=localized, englishName=name, dbTextIndex=432 + skill_index)
+            motion = struct.unpack_from('<I', arm, TABLE + index * STRIDE + 16)[0]
+            tp_cost = struct.unpack_from('<H', arm, TABLE + index * STRIDE + 72)[0]
+            assert 0 <= motion <= 3 and 0 < tp_cost <= 60
+            entry.update(name=localized, englishName=name, dbTextIndex=432 + skill_index,
+                         sequence=7 + motion, tpCost=tp_cost)
             skill_index += 1
         else:
             assert owner not in groups, 'Owner groups must be contiguous'
@@ -89,6 +113,9 @@ def extract(root):
     audit = {'arm9Sha256': hashlib.sha256(arm).hexdigest(), 'overlay19Sha256': hashlib.sha256(overlay).hexdigest(),
              'attackTable': hex(BASE + TABLE), 'stride': STRIDE, 'range': [31, 596],
              'species': 216, 'battleSpecies': 204, 'skills': 361,
+             'combat': {'instructionChecks': len(combat_checks) + 3, 'sequenceField': 16, 'tpCostField': 72,
+                        'sequences': {str(n): sum(s['sequence'] == n for v in result.values() for s in v['skills']) for n in range(7, 11)},
+                        'evidence': 'overlay19 0x0211a558..0x0211a5b4, dispatch table0x0212310c, state8..11 handlers0x02116760..0x0211685c, setter0x02117ad8 -> ARM9 0x02046e18/0x02046d98; TP compare/subtract 0x0211fa04..0x0211fa28'},
              'localizedNames': {'count': skill_index, 'databaseRange': [432, 793], 'battleRange': [1301, 1662],
                                 'instructionChecks': len(database_checks),
                                 'databaseOverlaySha256': hashlib.sha256(database_overlay).hexdigest(),
@@ -96,7 +123,7 @@ def extract(root):
                                 'battleTextSha256': hashlib.sha256(battle_raw).hexdigest(),
                                 'evidence': 'overlay16 0x02112bdc..0x02112c40 counts non-first owner rows; 0x02111fe0..0x021120d8 reads database text group1 index432 + species skill start + selected slot'},
              'evidence': 'overlay19 0x0211fa88..0x0211fb0c: owner grouping and skill-name lookup; species internal ID = row + 8',
-             'unverified': ['skill slot to animation correspondence', 'power, TP cost, range, effects, AI and opponent rosters']}
+             'unverified': ['power, range, effects and hit timing, AI and opponent rosters', 'basic attack animation policy (user requested sequence10 retained)']}
     return result, audit
 
 

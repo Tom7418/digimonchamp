@@ -179,10 +179,10 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
       continue;
     }
 
-    // 웹판 임시 공식: 지능 기반 빈도·공통20TP/위력.기술 이름/보유 목록만 원본 표를 사용한다.
+    // 빈도·위력·사거리는 웹판 임시 공식. 기술별 동작/소비TP/이름은 원본 표 값.
     const base = Math.min(0.6, 0.1 + u.stats.int / 600);
     const pSpecial = base * (u.mode === '특수' ? 3 : u.mode === '일반' ? 0.4 : 0.3) * (u.personality === '쿨' ? 1.6 : u.personality === '솔직' ? 1.2 : 1);
-    const wantsSpecial = u.cd <= 0 && u.tp >= 20 && d <= 150 && battleSkills(u.speciesId).length > 0 && rng() < pSpecial;
+    const wantsSpecial = u.cd <= 0 && d <= 150 && battleSkills(u.speciesId).some(skill => skill.tpCost <= u.tp) && rng() < pSpecial;
     if (!wantsSpecial && d > 42) {
       if (u.mode !== '지원') move(u, near.x, near.y, speed);
       continue;
@@ -190,7 +190,7 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     if (u.cd > 0) continue;
 
     const special = wantsSpecial;
-    const skill = special ? pickBattleSkill(u.speciesId, rng) : null;
+    const skill = special ? pickBattleSkill(u.speciesId, rng, u.tp) : null;
     const power = special ? (u.stats.atk + u.stats.int) / 2 : u.stats.atk;
     let dmg = (8 + power * 0.9) * (100 / (100 + near.stats.def)) * range(rng, 0.85, 1.15) * attrMult(u.attr, near.attr);
     if (special) dmg *= 2.2;
@@ -200,7 +200,7 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     const damage = Math.max(1, Math.round(dmg));
     near.hp = Math.max(0, near.hp - damage);
     near.wasHit = true;
-    if (special) u.tp -= 20;
+    if (skill) u.tp -= skill.tpCost;
     u.cd = (1.3 - Math.min(0.6, u.stats.spd / 400)) * (u.personality === '제멋대로' ? 0.9 : 1);
     if (u.personality === '성급한') u.retreat = 0.8;
     events.push({ type: 'hit', from: u.id, to: near.id, damage, special, ...(skill ? { skill } : {}) });

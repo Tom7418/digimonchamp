@@ -1131,8 +1131,7 @@
         // 실제 적중 이벤트로 공격/피격을 연결하고 각 종 NANR 유지 시간을 사용한다.
         if(e.type==='hit'){
           const attacker=b.state.units.find(u=>u.id===e.from),target=b.state.units.find(u=>u.id===e.to);
-          // 사용자 가루다몬 확인: 기본 공격10, 스킬7~9. 다른 종은 같은 분류를 우선 적용.
-          // 기술 슬롯의7/8/9 순서 대응은 임시. 엔진 이벤트의 기술을 그대로 표시한다.
+          // 필살기는원본 표+16에서 확인한7~10.기본 공격10은 사용자 지정 정책을 유지한다.
           const attackState=e.special?(e.skill?.animation??'attack1'):'attack4';
           const attackId=SPRITE_BY_NAME[C.getSpecies(attacker.speciesId).name];
           const attackDuration=animations.duration(attackId,attackState);
@@ -1143,7 +1142,8 @@
           b.actions.set(e.to,{kind:'hit',left:duration,duration,state});
           if(e.special&&e.skill){
             b.flashes.push({id:e.from,text:e.skill.name,until:performance.now()+700,color:'#a9e7ff',skill:true});
-            battleLog(`${attacker.name} · ${e.skill.name} → ${target.name} (${e.damage})`);
+            const cost=Number.isFinite(e.skill.tpCost)?` · TP ${e.skill.tpCost}`:'';
+            battleLog(`${attacker.name} · ${e.skill.name} → ${target.name} (${e.damage}${cost})`);
           }
         }
         if (e.type === 'hit')

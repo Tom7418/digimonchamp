@@ -3661,7 +3661,9 @@ var ChampCore = (function(exports) {
 				"record": 32,
 				"name": "하울링 헬츠",
 				"englishName": "Howling Blow",
-				"dbTextIndex": 432
+				"dbTextIndex": 432,
+				"sequence": 7,
+				"tpCost": 4
 			}]
 		},
 		코로몬: {
@@ -3670,7 +3672,9 @@ var ChampCore = (function(exports) {
 				"record": 34,
 				"name": "물방울",
 				"englishName": "Froth",
-				"dbTextIndex": 433
+				"dbTextIndex": 433,
+				"sequence": 8,
+				"tpCost": 4
 			}]
 		},
 		시드몬: {
@@ -3679,7 +3683,9 @@ var ChampCore = (function(exports) {
 				"record": 36,
 				"name": "태클",
 				"englishName": "Tackle",
-				"dbTextIndex": 434
+				"dbTextIndex": 434,
+				"sequence": 7,
+				"tpCost": 4
 			}]
 		},
 		뿔몬: {
@@ -3688,7 +3694,9 @@ var ChampCore = (function(exports) {
 				"record": 38,
 				"name": "태클",
 				"englishName": "Tackle",
-				"dbTextIndex": 435
+				"dbTextIndex": 435,
+				"sequence": 7,
+				"tpCost": 4
 			}]
 		},
 		토코몬: {
@@ -3697,7 +3705,9 @@ var ChampCore = (function(exports) {
 				"record": 40,
 				"name": "물어뜯기",
 				"englishName": "Bite",
-				"dbTextIndex": 436
+				"dbTextIndex": 436,
+				"sequence": 7,
+				"tpCost": 4
 			}]
 		},
 		야옹몬: {
@@ -3706,7 +3716,9 @@ var ChampCore = (function(exports) {
 				"record": 42,
 				"name": "폭스테일",
 				"englishName": "Tail Whip",
-				"dbTextIndex": 437
+				"dbTextIndex": 437,
+				"sequence": 7,
+				"tpCost": 4
 			}]
 		},
 		퍼그몬: {
@@ -3715,7 +3727,9 @@ var ChampCore = (function(exports) {
 				"record": 44,
 				"name": "태클",
 				"englishName": "Tackle",
-				"dbTextIndex": 438
+				"dbTextIndex": 438,
+				"sequence": 7,
+				"tpCost": 4
 			}]
 		},
 		어니몬: {
@@ -3724,7 +3738,9 @@ var ChampCore = (function(exports) {
 				"record": 46,
 				"name": "방울 플라워",
 				"englishName": "Flower Bubbles",
-				"dbTextIndex": 439
+				"dbTextIndex": 439,
+				"sequence": 7,
+				"tpCost": 4
 			}]
 		},
 		둥실몬: {
@@ -3733,7 +3749,9 @@ var ChampCore = (function(exports) {
 				"record": 48,
 				"name": "비누방울",
 				"englishName": "Froth Bubbles",
-				"dbTextIndex": 440
+				"dbTextIndex": 440,
+				"sequence": 7,
+				"tpCost": 4
 			}]
 		},
 		쁘띠메라몬: {
@@ -3742,7 +3760,9 @@ var ChampCore = (function(exports) {
 				"record": 50,
 				"name": "화염탄",
 				"englishName": "Flame Shot",
-				"dbTextIndex": 441
+				"dbTextIndex": 441,
+				"sequence": 7,
+				"tpCost": 4
 			}]
 		},
 		모티몬: {
@@ -3751,7 +3771,9 @@ var ChampCore = (function(exports) {
 				"record": 52,
 				"name": "신축성 있는 방울",
 				"englishName": "Elastic Froth",
-				"dbTextIndex": 442
+				"dbTextIndex": 442,
+				"sequence": 7,
+				"tpCost": 4
 			}]
 		},
 		베비도몬: {
@@ -3760,7 +3782,9 @@ var ChampCore = (function(exports) {
 				"record": 54,
 				"name": "뜨거운 가스",
 				"englishName": "Hot Steam",
-				"dbTextIndex": 443
+				"dbTextIndex": 443,
+				"sequence": 7,
+				"tpCost": 5
 			}]
 		},
 		산몬: {
@@ -3769,7 +3793,9 @@ var ChampCore = (function(exports) {
 				"record": 56,
 				"name": "스타라이트",
 				"englishName": "Starlight",
-				"dbTextIndex": 444
+				"dbTextIndex": 444,
+				"sequence": 7,
+				"tpCost": 5
 			}]
 		},
 		문몬: {
@@ -3778,7 +3804,9 @@ var ChampCore = (function(exports) {
 				"record": 58,
 				"name": "어둠 버스트",
 				"englishName": "Dark Burst",
-				"dbTextIndex": 445
+				"dbTextIndex": 445,
+				"sequence": 7,
+				"tpCost": 5
 			}]
 		},
 		아구몬: {
@@ -3787,12 +3815,16 @@ var ChampCore = (function(exports) {
 				"record": 60,
 				"name": "헤비 플레임",
 				"englishName": "Pepper Breath",
-				"dbTextIndex": 446
+				"dbTextIndex": 446,
+				"sequence": 7,
+				"tpCost": 6
 			}, {
 				"record": 61,
 				"name": "헤비 버너",
 				"englishName": "Spitfire Blast",
-				"dbTextIndex": 447
+				"dbTextIndex": 447,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		아르마몬: {
@@ -3801,12 +3833,16 @@ var ChampCore = (function(exports) {
 				"record": 63,
 				"name": "스크래치 비트",
 				"englishName": "Scratch",
-				"dbTextIndex": 448
+				"dbTextIndex": 448,
+				"sequence": 7,
+				"tpCost": 6
 			}, {
 				"record": 64,
 				"name": "롤링 스톤",
 				"englishName": "Diamond Shell",
-				"dbTextIndex": 449
+				"dbTextIndex": 449,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		에렉몬: {
@@ -3815,7 +3851,9 @@ var ChampCore = (function(exports) {
 				"record": 66,
 				"name": "스파클링 선더",
 				"englishName": "Super Thunder Strike",
-				"dbTextIndex": 450
+				"dbTextIndex": 450,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		올챙몬: {
@@ -3824,7 +3862,9 @@ var ChampCore = (function(exports) {
 				"record": 68,
 				"name": "라라바이 버블",
 				"englishName": "Stun Bubble",
-				"dbTextIndex": 451
+				"dbTextIndex": 451,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		가오몬: {
@@ -3834,19 +3874,25 @@ var ChampCore = (function(exports) {
 					"record": 70,
 					"name": "롤링 어퍼",
 					"englishName": "Rolling Upper",
-					"dbTextIndex": 452
+					"dbTextIndex": 452,
+					"sequence": 8,
+					"tpCost": 8
 				},
 				{
 					"record": 71,
 					"name": "더블 백 핸드",
 					"englishName": "Double Back Hand",
-					"dbTextIndex": 453
+					"dbTextIndex": 453,
+					"sequence": 7,
+					"tpCost": 6
 				},
 				{
 					"record": 72,
 					"name": "가오 러시",
 					"englishName": "Gao Rush",
-					"dbTextIndex": 454
+					"dbTextIndex": 454,
+					"sequence": 9,
+					"tpCost": 12
 				}
 			]
 		},
@@ -3856,7 +3902,9 @@ var ChampCore = (function(exports) {
 				"record": 74,
 				"name": "패럴라이즈 브레스",
 				"englishName": "Electric Stun Blast",
-				"dbTextIndex": 455
+				"dbTextIndex": 455,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		파피몬: {
@@ -3865,12 +3913,16 @@ var ChampCore = (function(exports) {
 				"record": 76,
 				"name": "뿌띠 파이어",
 				"englishName": "Blue Blaster",
-				"dbTextIndex": 456
+				"dbTextIndex": 456,
+				"sequence": 7,
+				"tpCost": 6
 			}, {
 				"record": 77,
 				"name": "뿌띠 파이어 후크",
 				"englishName": "Petit Fire Hook",
-				"dbTextIndex": 457
+				"dbTextIndex": 457,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		거북몬: {
@@ -3879,12 +3931,16 @@ var ChampCore = (function(exports) {
 				"record": 79,
 				"name": "포인터 애로우",
 				"englishName": "Pointer Arrow",
-				"dbTextIndex": 458
+				"dbTextIndex": 458,
+				"sequence": 7,
+				"tpCost": 6
 			}, {
 				"record": 80,
 				"name": "헬멧 태클",
 				"englishName": "Met Tackle",
-				"dbTextIndex": 459
+				"dbTextIndex": 459,
+				"sequence": 9,
+				"tpCost": 10
 			}]
 		},
 		기자몬: {
@@ -3893,7 +3949,9 @@ var ChampCore = (function(exports) {
 				"record": 82,
 				"name": "스파이럴 에지",
 				"englishName": "Spiral Saw",
-				"dbTextIndex": 460
+				"dbTextIndex": 460,
+				"sequence": 8,
+				"tpCost": 6
 			}]
 		},
 		캔들몬: {
@@ -3902,7 +3960,9 @@ var ChampCore = (function(exports) {
 				"record": 84,
 				"name": "본 파이어",
 				"englishName": "Bonfire",
-				"dbTextIndex": 461
+				"dbTextIndex": 461,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		쿠네몬: {
@@ -3911,7 +3971,9 @@ var ChampCore = (function(exports) {
 				"record": 86,
 				"name": "일렉트릭 스레드",
 				"englishName": "Electric Thread",
-				"dbTextIndex": 462
+				"dbTextIndex": 462,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		울퉁몬: {
@@ -3920,7 +3982,9 @@ var ChampCore = (function(exports) {
 				"record": 88,
 				"name": "앵그리 록",
 				"englishName": "Rock Fist",
-				"dbTextIndex": 463
+				"dbTextIndex": 463,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		고부리몬: {
@@ -3929,7 +3993,9 @@ var ChampCore = (function(exports) {
 				"record": 90,
 				"name": "고브리 스트라이크",
 				"englishName": "Goburi Strike",
-				"dbTextIndex": 464
+				"dbTextIndex": 464,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		쉬라몬: {
@@ -3938,7 +4004,9 @@ var ChampCore = (function(exports) {
 				"record": 92,
 				"name": "머칭 피시즈",
 				"englishName": "Marching Fishes",
-				"dbTextIndex": 465
+				"dbTextIndex": 465,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		테리어몬: {
@@ -3947,12 +4015,16 @@ var ChampCore = (function(exports) {
 				"record": 94,
 				"name": "뿌띠 트위스터",
 				"englishName": "Bunny Blast",
-				"dbTextIndex": 466
+				"dbTextIndex": 466,
+				"sequence": 7,
+				"tpCost": 10
 			}, {
 				"record": 95,
 				"name": "블레이징 파이어",
 				"englishName": "Blazing Fire",
-				"dbTextIndex": 467
+				"dbTextIndex": 467,
+				"sequence": 9,
+				"tpCost": 6
 			}]
 		},
 		텐타몬: {
@@ -3961,7 +4033,9 @@ var ChampCore = (function(exports) {
 				"record": 97,
 				"name": "뿌띠 선더",
 				"englishName": "Super Shocker",
-				"dbTextIndex": 468
+				"dbTextIndex": 468,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		토이아구몬: {
@@ -3970,7 +4044,9 @@ var ChampCore = (function(exports) {
 				"record": 99,
 				"name": "토이 플레임",
 				"englishName": "Toy Flame",
-				"dbTextIndex": 469
+				"dbTextIndex": 469,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		테이파몬: {
@@ -3979,7 +4055,9 @@ var ChampCore = (function(exports) {
 				"record": 105,
 				"name": "나이트메어 신드롬",
 				"englishName": "Walking Dream",
-				"dbTextIndex": 473
+				"dbTextIndex": 473,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		톱니몬: {
@@ -3988,7 +4066,9 @@ var ChampCore = (function(exports) {
 				"record": 107,
 				"name": "다크니스 기어",
 				"englishName": "Darkness Gear",
-				"dbTextIndex": 474
+				"dbTextIndex": 474,
+				"sequence": 8,
+				"tpCost": 6
 			}]
 		},
 		파닥몬: {
@@ -3997,12 +4077,16 @@ var ChampCore = (function(exports) {
 				"record": 109,
 				"name": "날개 따귀",
 				"englishName": "Wing Slap",
-				"dbTextIndex": 475
+				"dbTextIndex": 475,
+				"sequence": 9,
+				"tpCost": 5
 			}, {
 				"record": 110,
 				"name": "에어 샷",
 				"englishName": "Boom Bubble",
-				"dbTextIndex": 476
+				"dbTextIndex": 476,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		팔몬: {
@@ -4011,7 +4095,9 @@ var ChampCore = (function(exports) {
 				"record": 112,
 				"name": "포이즌 아이비",
 				"englishName": "Poison Ivy",
-				"dbTextIndex": 477
+				"dbTextIndex": 477,
+				"sequence": 8,
+				"tpCost": 6
 			}]
 		},
 		피코데블몬: {
@@ -4020,7 +4106,9 @@ var ChampCore = (function(exports) {
 				"record": 114,
 				"name": "피코 다트",
 				"englishName": "Demi Dart",
-				"dbTextIndex": 478
+				"dbTextIndex": 478,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		피요몬: {
@@ -4029,7 +4117,9 @@ var ChampCore = (function(exports) {
 				"record": 116,
 				"name": "매지컬 파이어",
 				"englishName": "Spiral Twister",
-				"dbTextIndex": 479
+				"dbTextIndex": 479,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		팔코몬: {
@@ -4039,19 +4129,25 @@ var ChampCore = (function(exports) {
 					"record": 118,
 					"name": "스크래치 스매시",
 					"englishName": "Scratch Smash",
-					"dbTextIndex": 480
+					"dbTextIndex": 480,
+					"sequence": 8,
+					"tpCost": 6
 				},
 				{
 					"record": 119,
 					"name": "팔코 러시",
 					"englishName": "Falco Rush",
-					"dbTextIndex": 481
+					"dbTextIndex": 481,
+					"sequence": 7,
+					"tpCost": 10
 				},
 				{
 					"record": 120,
 					"name": "수리검",
 					"englishName": "Ninja Blade",
-					"dbTextIndex": 482
+					"dbTextIndex": 482,
+					"sequence": 9,
+					"tpCost": 5
 				}
 			]
 		},
@@ -4061,7 +4157,9 @@ var ChampCore = (function(exports) {
 				"record": 122,
 				"name": "퍼피 하울링",
 				"englishName": "Puppy Howling",
-				"dbTextIndex": 483
+				"dbTextIndex": 483,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		플로라몬: {
@@ -4070,7 +4168,9 @@ var ChampCore = (function(exports) {
 				"record": 124,
 				"name": "알러지 샤워",
 				"englishName": "Rain of Pollen",
-				"dbTextIndex": 484
+				"dbTextIndex": 484,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		머슈몬: {
@@ -4079,7 +4179,9 @@ var ChampCore = (function(exports) {
 				"record": 126,
 				"name": "포이즌 스매시",
 				"englishName": "Fungus Cruncher",
-				"dbTextIndex": 485
+				"dbTextIndex": 485,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		스노우아구몬: {
@@ -4088,7 +4190,9 @@ var ChampCore = (function(exports) {
 				"record": 128,
 				"name": "리틀 블리저드",
 				"englishName": "Little Blizzard",
-				"dbTextIndex": 486
+				"dbTextIndex": 486,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		레나몬: {
@@ -4097,7 +4201,9 @@ var ChampCore = (function(exports) {
 				"record": 130,
 				"name": "허용설",
 				"englishName": "Leaf Blade",
-				"dbTextIndex": 487
+				"dbTextIndex": 487,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		드라코몬: {
@@ -4107,19 +4213,25 @@ var ChampCore = (function(exports) {
 					"record": 101,
 					"name": "헤비 브레스",
 					"englishName": "Baby Breath",
-					"dbTextIndex": 470
+					"dbTextIndex": 470,
+					"sequence": 7,
+					"tpCost": 5
 				},
 				{
 					"record": 102,
 					"name": "테일 스매시",
 					"englishName": "Tail Smash",
-					"dbTextIndex": 471
+					"dbTextIndex": 471,
+					"sequence": 10,
+					"tpCost": 10
 				},
 				{
 					"record": 103,
 					"name": "디 슈르넌",
 					"englishName": "G Shurunen",
-					"dbTextIndex": 472
+					"dbTextIndex": 472,
+					"sequence": 9,
+					"tpCost": 12
 				}
 			]
 		},
@@ -4130,19 +4242,25 @@ var ChampCore = (function(exports) {
 					"record": 132,
 					"name": "코로너",
 					"englishName": "Coro-Knuckle",
-					"dbTextIndex": 488
+					"dbTextIndex": 488,
+					"sequence": 10,
+					"tpCost": 6
 				},
 				{
 					"record": 133,
 					"name": "코로너 플레임",
 					"englishName": "Corona Flame",
-					"dbTextIndex": 489
+					"dbTextIndex": 489,
+					"sequence": 7,
+					"tpCost": 5
 				},
 				{
 					"record": 134,
 					"name": "부띠 프로미넌스",
 					"englishName": "Petit Prominence",
-					"dbTextIndex": 490
+					"dbTextIndex": 490,
+					"sequence": 9,
+					"tpCost": 10
 				}
 			]
 		},
@@ -4153,19 +4271,25 @@ var ChampCore = (function(exports) {
 					"record": 136,
 					"name": "루나 크로우",
 					"englishName": "Luna Claw",
-					"dbTextIndex": 491
+					"dbTextIndex": 491,
+					"sequence": 8,
+					"tpCost": 6
 				},
 				{
 					"record": 137,
 					"name": "티어 샷",
 					"englishName": "Tear Shot",
-					"dbTextIndex": 492
+					"dbTextIndex": 492,
+					"sequence": 7,
+					"tpCost": 5
 				},
 				{
 					"record": 138,
 					"name": "롭이어 리플",
 					"englishName": "Lop Ear Ripple",
-					"dbTextIndex": 493
+					"dbTextIndex": 493,
+					"sequence": 9,
+					"tpCost": 10
 				}
 			]
 		},
@@ -4175,12 +4299,16 @@ var ChampCore = (function(exports) {
 				"record": 140,
 				"name": "스핏 파이어",
 				"englishName": "Spit Fire",
-				"dbTextIndex": 494
+				"dbTextIndex": 494,
+				"sequence": 7,
+				"tpCost": 10
 			}, {
 				"record": 141,
 				"name": "헤비 플레임",
 				"englishName": "Pepper Breath",
-				"dbTextIndex": 495
+				"dbTextIndex": 495,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		사이케몬: {
@@ -4189,12 +4317,16 @@ var ChampCore = (function(exports) {
 				"record": 143,
 				"name": "컬러풀 스파크",
 				"englishName": "Colored Sparkle",
-				"dbTextIndex": 496
+				"dbTextIndex": 496,
+				"sequence": 7,
+				"tpCost": 5
 			}, {
 				"record": 144,
 				"name": "사이케 혼",
 				"englishName": "Psyche Horn",
-				"dbTextIndex": 497
+				"dbTextIndex": 497,
+				"sequence": 7,
+				"tpCost": 6
 			}]
 		},
 		오로라몬: {
@@ -4203,7 +4335,9 @@ var ChampCore = (function(exports) {
 				"record": 146,
 				"name": "네메시스 아이비",
 				"englishName": "Nemesis Ivy",
-				"dbTextIndex": 498
+				"dbTextIndex": 498,
+				"sequence": 8,
+				"tpCost": 6
 			}]
 		},
 		츄카이몬: {
@@ -4212,12 +4346,16 @@ var ChampCore = (function(exports) {
 				"record": 148,
 				"name": "배드 메시지",
 				"englishName": "Purple Fog",
-				"dbTextIndex": 499
+				"dbTextIndex": 499,
+				"sequence": 7,
+				"tpCost": 6
 			}, {
 				"record": 149,
 				"name": "둥실둥실 어택",
 				"englishName": "Soft Attack",
-				"dbTextIndex": 500
+				"dbTextIndex": 500,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		브이몬: {
@@ -4226,12 +4364,16 @@ var ChampCore = (function(exports) {
 				"record": 151,
 				"name": "브이몬 헤드",
 				"englishName": "Vee Head Butt",
-				"dbTextIndex": 501
+				"dbTextIndex": 501,
+				"sequence": 7,
+				"tpCost": 10
 			}, {
 				"record": 152,
 				"name": "붕붕 펀치",
 				"englishName": "Gyral Punch",
-				"dbTextIndex": 502
+				"dbTextIndex": 502,
+				"sequence": 9,
+				"tpCost": 5
 			}]
 		},
 		길몬: {
@@ -4241,19 +4383,25 @@ var ChampCore = (function(exports) {
 					"record": 154,
 					"name": "파이어 볼",
 					"englishName": "Pyrosphere",
-					"dbTextIndex": 503
+					"dbTextIndex": 503,
+					"sequence": 7,
+					"tpCost": 4
 				},
 				{
 					"record": 155,
 					"name": "록 브레이커",
 					"englishName": "Rock Breaker",
-					"dbTextIndex": 504
+					"dbTextIndex": 504,
+					"sequence": 8,
+					"tpCost": 6
 				},
 				{
 					"record": 156,
 					"name": "파이어 미트",
 					"englishName": "Fire Mitt",
-					"dbTextIndex": 505
+					"dbTextIndex": 505,
+					"sequence": 9,
+					"tpCost": 10
 				}
 			]
 		},
@@ -4263,12 +4411,16 @@ var ChampCore = (function(exports) {
 				"record": 158,
 				"name": "메가톤 프레스",
 				"englishName": "Megaton Press",
-				"dbTextIndex": 506
+				"dbTextIndex": 506,
+				"sequence": 8,
+				"tpCost": 10
 			}, {
 				"record": 159,
 				"name": "테일 해머",
 				"englishName": "Tail Hammer",
-				"dbTextIndex": 507
+				"dbTextIndex": 507,
+				"sequence": 7,
+				"tpCost": 18
 			}]
 		},
 		원뿔몬: {
@@ -4277,7 +4429,9 @@ var ChampCore = (function(exports) {
 				"record": 161,
 				"name": "하픈 발칸",
 				"englishName": "Harpoon Torpedo",
-				"dbTextIndex": 508
+				"dbTextIndex": 508,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		위자몬: {
@@ -4286,7 +4440,9 @@ var ChampCore = (function(exports) {
 				"record": 163,
 				"name": "선더 클라우드",
 				"englishName": "Thundercloud",
-				"dbTextIndex": 509
+				"dbTextIndex": 509,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		우드몬: {
@@ -4295,7 +4451,9 @@ var ChampCore = (function(exports) {
 				"record": 165,
 				"name": "브런치 드레인",
 				"englishName": "Twig Tap",
-				"dbTextIndex": 510
+				"dbTextIndex": 510,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		에어드라몬: {
@@ -4304,12 +4462,16 @@ var ChampCore = (function(exports) {
 				"record": 167,
 				"name": "회오리",
 				"englishName": "Tornado",
-				"dbTextIndex": 511
+				"dbTextIndex": 511,
+				"sequence": 7,
+				"tpCost": 18
 			}, {
 				"record": 168,
 				"name": "스피닝 니들",
 				"englishName": "Spinning Needle　",
-				"dbTextIndex": 512
+				"dbTextIndex": 512,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		엔젤몬: {
@@ -4318,7 +4480,9 @@ var ChampCore = (function(exports) {
 				"record": 170,
 				"name": "헤븐즈 너클",
 				"englishName": "Hand of Fate",
-				"dbTextIndex": 513
+				"dbTextIndex": 513,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		우가몬: {
@@ -4327,7 +4491,9 @@ var ChampCore = (function(exports) {
 				"record": 172,
 				"name": "봉황권",
 				"englishName": "Pummel Whack",
-				"dbTextIndex": 514
+				"dbTextIndex": 514,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		가오가몬: {
@@ -4337,19 +4503,25 @@ var ChampCore = (function(exports) {
 					"record": 174,
 					"name": "대시 블로 크로우",
 					"englishName": "Dash Double Claw",
-					"dbTextIndex": 515
+					"dbTextIndex": 515,
+					"sequence": 9,
+					"tpCost": 20
 				},
 				{
 					"record": 175,
 					"name": "가오가 하운드",
 					"englishName": "Gaoga Hound",
-					"dbTextIndex": 516
+					"dbTextIndex": 516,
+					"sequence": 7,
+					"tpCost": 10
 				},
 				{
 					"record": 176,
 					"name": "스파이럴 블로",
 					"englishName": "Spiral Blow",
-					"dbTextIndex": 517
+					"dbTextIndex": 517,
+					"sequence": 8,
+					"tpCost": 10
 				}
 			]
 		},
@@ -4359,7 +4531,9 @@ var ChampCore = (function(exports) {
 				"record": 178,
 				"name": "메가 블래스터",
 				"englishName": "Electro Shocker",
-				"dbTextIndex": 518
+				"dbTextIndex": 518,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		가르고몬: {
@@ -4368,12 +4542,16 @@ var ChampCore = (function(exports) {
 				"record": 180,
 				"name": "개틀링 암",
 				"englishName": "Bunny Pummel",
-				"dbTextIndex": 519
+				"dbTextIndex": 519,
+				"sequence": 8,
+				"tpCost": 20
 			}, {
 				"record": 181,
 				"name": "댐댐 어퍼",
 				"englishName": "Bunny Upper",
-				"dbTextIndex": 520
+				"dbTextIndex": 520,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		가루몬: {
@@ -4382,7 +4560,9 @@ var ChampCore = (function(exports) {
 				"record": 183,
 				"name": "폭스 파이어",
 				"englishName": "Howling Blaster",
-				"dbTextIndex": 521
+				"dbTextIndex": 521,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		"가루몬(흑)": {
@@ -4391,7 +4571,9 @@ var ChampCore = (function(exports) {
 				"record": 185,
 				"name": "폭스 파이어",
 				"englishName": "Howling Blaster",
-				"dbTextIndex": 522
+				"dbTextIndex": 522,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		가드로몬: {
@@ -4400,7 +4582,9 @@ var ChampCore = (function(exports) {
 				"record": 187,
 				"name": "디스트럭션 그레네이드",
 				"englishName": "Protect Grenade",
-				"dbTextIndex": 523
+				"dbTextIndex": 523,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		키위몬: {
@@ -4409,7 +4593,9 @@ var ChampCore = (function(exports) {
 				"record": 189,
 				"name": "리틀 페커",
 				"englishName": "Pummel Peck",
-				"dbTextIndex": 524
+				"dbTextIndex": 524,
+				"sequence": 7,
+				"tpCost": 20
 			}]
 		},
 		구미호몬: {
@@ -4418,12 +4604,16 @@ var ChampCore = (function(exports) {
 				"record": 191,
 				"name": "귀신불",
 				"englishName": "Will O' Wisp Ball",
-				"dbTextIndex": 525
+				"dbTextIndex": 525,
+				"sequence": 7,
+				"tpCost": 10
 			}, {
 				"record": 192,
 				"name": "호염룡",
 				"englishName": "Fox Tail Inferno",
-				"dbTextIndex": 526
+				"dbTextIndex": 526,
+				"sequence": 7,
+				"tpCost": 20
 			}]
 		},
 		그레이몬: {
@@ -4432,12 +4622,16 @@ var ChampCore = (function(exports) {
 				"record": 194,
 				"name": "메가 프레임",
 				"englishName": "Mega Flame",
-				"dbTextIndex": 527
+				"dbTextIndex": 527,
+				"sequence": 7,
+				"tpCost": 10
 			}, {
 				"record": 195,
 				"name": "혼 임펄스",
 				"englishName": "Horn Impulse",
-				"dbTextIndex": 528
+				"dbTextIndex": 528,
+				"sequence": 8,
+				"tpCost": 18
 			}]
 		},
 		타임몬: {
@@ -4446,7 +4640,9 @@ var ChampCore = (function(exports) {
 				"record": 197,
 				"name": "크로노 브레이커",
 				"englishName": "Chrono Breaker",
-				"dbTextIndex": 529
+				"dbTextIndex": 529,
+				"sequence": 9,
+				"tpCost": 18
 			}]
 		},
 		쿠가몬: {
@@ -4455,7 +4651,9 @@ var ChampCore = (function(exports) {
 				"record": 199,
 				"name": "시저 암즈",
 				"englishName": "Scissow Claw",
-				"dbTextIndex": 530
+				"dbTextIndex": 530,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		개굴몬: {
@@ -4464,7 +4662,9 @@ var ChampCore = (function(exports) {
 				"record": 201,
 				"name": "크래시 심포니",
 				"englishName": "Symphony Crusher",
-				"dbTextIndex": 531
+				"dbTextIndex": 531,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		연체몬: {
@@ -4473,12 +4673,16 @@ var ChampCore = (function(exports) {
 				"record": 203,
 				"name": "데들리 세이드",
 				"englishName": "Coral Crusher",
-				"dbTextIndex": 532
+				"dbTextIndex": 532,
+				"sequence": 8,
+				"tpCost": 10
 			}, {
 				"record": 204,
 				"name": "데빌 배싱",
 				"englishName": "Devil Bashing",
-				"dbTextIndex": 533
+				"dbTextIndex": 533,
+				"sequence": 9,
+				"tpCost": 20
 			}]
 		},
 		켄터스몬: {
@@ -4487,7 +4691,9 @@ var ChampCore = (function(exports) {
 				"record": 206,
 				"name": "헌팅 캐논",
 				"englishName": "Solar Ray",
-				"dbTextIndex": 534
+				"dbTextIndex": 534,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		꼬끼몬: {
@@ -4496,7 +4702,9 @@ var ChampCore = (function(exports) {
 				"record": 208,
 				"name": "페트라 파이어",
 				"englishName": "Frozen Fire Shot",
-				"dbTextIndex": 535
+				"dbTextIndex": 535,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		번개콩알몬: {
@@ -4505,7 +4713,9 @@ var ChampCore = (function(exports) {
 				"record": 210,
 				"name": "선더 볼",
 				"englishName": "Thunder Ball",
-				"dbTextIndex": 536
+				"dbTextIndex": 536,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		쉘몬: {
@@ -4514,7 +4724,9 @@ var ChampCore = (function(exports) {
 				"record": 212,
 				"name": "하이드로 프레셔",
 				"englishName": "Hydro Blaster",
-				"dbTextIndex": 537
+				"dbTextIndex": 537,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		지오그레이몬: {
@@ -4524,19 +4736,25 @@ var ChampCore = (function(exports) {
 					"record": 214,
 					"name": "메가 플레임",
 					"englishName": "Mega Flame",
-					"dbTextIndex": 538
+					"dbTextIndex": 538,
+					"sequence": 7,
+					"tpCost": 10
 				},
 				{
 					"record": 215,
 					"name": "메가 버스트",
 					"englishName": "Mega Burst",
-					"dbTextIndex": 539
+					"dbTextIndex": 539,
+					"sequence": 7,
+					"tpCost": 20
 				},
 				{
 					"record": 216,
 					"name": "혼 임펄스",
 					"englishName": "Horn Impulse",
-					"dbTextIndex": 540
+					"dbTextIndex": 540,
+					"sequence": 8,
+					"tpCost": 16
 				}
 			]
 		},
@@ -4546,12 +4764,16 @@ var ChampCore = (function(exports) {
 				"record": 218,
 				"name": "짓뭉개기",
 				"englishName": "Constriction",
-				"dbTextIndex": 541
+				"dbTextIndex": 541,
+				"sequence": 8,
+				"tpCost": 16
 			}, {
 				"record": 219,
 				"name": "아이스 애로우",
 				"englishName": "Ice Blast",
-				"dbTextIndex": 542
+				"dbTextIndex": 542,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		스카몬: {
@@ -4560,7 +4782,9 @@ var ChampCore = (function(exports) {
 				"record": 221,
 				"name": "배설물 던지기",
 				"englishName": "Compost Bomber",
-				"dbTextIndex": 543
+				"dbTextIndex": 543,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		스타몬: {
@@ -4569,7 +4793,9 @@ var ChampCore = (function(exports) {
 				"record": 223,
 				"name": "메테오 스콜",
 				"englishName": "Halley's Squall",
-				"dbTextIndex": 544
+				"dbTextIndex": 544,
+				"sequence": 8,
+				"tpCost": 20
 			}]
 		},
 		다르크몬: {
@@ -4578,7 +4804,9 @@ var ChampCore = (function(exports) {
 				"record": 225,
 				"name": "버팀 드 아무르",
 				"englishName": "Dancing Sword",
-				"dbTextIndex": 545
+				"dbTextIndex": 545,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		다크티라노몬: {
@@ -4587,7 +4815,9 @@ var ChampCore = (function(exports) {
 				"record": 227,
 				"name": "파이어 블래스트",
 				"englishName": "Fire Blast",
-				"dbTextIndex": 546
+				"dbTextIndex": 546,
+				"sequence": 7,
+				"tpCost": 16
 			}]
 		},
 		티라노몬: {
@@ -4596,7 +4826,9 @@ var ChampCore = (function(exports) {
 				"record": 229,
 				"name": "파이어 브레스",
 				"englishName": "Blaze Blast",
-				"dbTextIndex": 547
+				"dbTextIndex": 547,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		가트몬: {
@@ -4605,12 +4837,16 @@ var ChampCore = (function(exports) {
 				"record": 231,
 				"name": "고양이 펀치",
 				"englishName": "Lightning Paw",
-				"dbTextIndex": 548
+				"dbTextIndex": 548,
+				"sequence": 7,
+				"tpCost": 16
 			}, {
 				"record": 232,
 				"name": "캣츠 아이",
 				"englishName": "Feline's Eye",
-				"dbTextIndex": 549
+				"dbTextIndex": 549,
+				"sequence": 9,
+				"tpCost": 10
 			}]
 		},
 		데블드라몬: {
@@ -4619,7 +4855,9 @@ var ChampCore = (function(exports) {
 				"record": 234,
 				"name": "크림즌 네일",
 				"englishName": "Crimson Claw",
-				"dbTextIndex": 550
+				"dbTextIndex": 550,
+				"sequence": 8,
+				"tpCost": 16
 			}]
 		},
 		데블몬: {
@@ -4628,7 +4866,9 @@ var ChampCore = (function(exports) {
 				"record": 236,
 				"name": "데스 크로우",
 				"englishName": "The Touch of Evil",
-				"dbTextIndex": 551
+				"dbTextIndex": 551,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		니드몬: {
@@ -4637,7 +4877,9 @@ var ChampCore = (function(exports) {
 				"record": 238,
 				"name": "따끔따끔 팡팡",
 				"englishName": "Needle Spray",
-				"dbTextIndex": 552
+				"dbTextIndex": 552,
+				"sequence": 8,
+				"tpCost": 18
 			}]
 		},
 		토타몬: {
@@ -4646,7 +4888,9 @@ var ChampCore = (function(exports) {
 				"record": 240,
 				"name": "쉘 팔랑크스",
 				"englishName": "Strong Carapace",
-				"dbTextIndex": 553
+				"dbTextIndex": 553,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		워매몬: {
@@ -4655,7 +4899,9 @@ var ChampCore = (function(exports) {
 				"record": 242,
 				"name": "배설물 던지기",
 				"englishName": "Compost Bomber",
-				"dbTextIndex": 554
+				"dbTextIndex": 554,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		고스몬: {
@@ -4664,12 +4910,16 @@ var ChampCore = (function(exports) {
 				"record": 244,
 				"name": "헬즈 핸드",
 				"englishName": "Night Claw",
-				"dbTextIndex": 555
+				"dbTextIndex": 555,
+				"sequence": 7,
+				"tpCost": 10
 			}, {
 				"record": 245,
 				"name": "데스 참",
 				"englishName": "Death Charm",
-				"dbTextIndex": 556
+				"dbTextIndex": 556,
+				"sequence": 8,
+				"tpCost": 18
 			}]
 		},
 		버드라몬: {
@@ -4678,7 +4928,9 @@ var ChampCore = (function(exports) {
 				"record": 247,
 				"name": "메테오 윙",
 				"englishName": "Meteor Wing",
-				"dbTextIndex": 557
+				"dbTextIndex": 557,
+				"sequence": 7,
+				"tpCost": 18
 			}]
 		},
 		베지몬: {
@@ -4687,7 +4939,9 @@ var ChampCore = (function(exports) {
 				"record": 249,
 				"name": "배설물 던지기",
 				"englishName": "Compost Bomber",
-				"dbTextIndex": 558
+				"dbTextIndex": 558,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		페크몬: {
@@ -4697,19 +4951,25 @@ var ChampCore = (function(exports) {
 					"record": 251,
 					"name": "스파이럴 크로우",
 					"englishName": "Spiral Claw",
-					"dbTextIndex": 559
+					"dbTextIndex": 559,
+					"sequence": 7,
+					"tpCost": 18
 				},
 				{
 					"record": 252,
 					"name": "고무 던지기",
 					"englishName": "Kunai Wing",
-					"dbTextIndex": 560
+					"dbTextIndex": 560,
+					"sequence": 9,
+					"tpCost": 10
 				},
 				{
 					"record": 253,
 					"name": "사우전드 비크",
 					"englishName": "Thousand Beaks",
-					"dbTextIndex": 561
+					"dbTextIndex": 561,
+					"sequence": 10,
+					"tpCost": 20
 				}
 			]
 		},
@@ -4719,7 +4979,9 @@ var ChampCore = (function(exports) {
 				"record": 255,
 				"name": "버닝 피스트",
 				"englishName": "Fireball",
-				"dbTextIndex": 562
+				"dbTextIndex": 562,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		모털몬: {
@@ -4728,12 +4990,16 @@ var ChampCore = (function(exports) {
 				"record": 257,
 				"name": "아이시클 로드",
 				"englishName": "Ice Cloud",
-				"dbTextIndex": 563
+				"dbTextIndex": 563,
+				"sequence": 7,
+				"tpCost": 10
 			}, {
 				"record": 258,
 				"name": "뼈다귀 부메랑",
 				"englishName": "Bone Boomerang",
-				"dbTextIndex": 564
+				"dbTextIndex": 564,
+				"sequence": 7,
+				"tpCost": 18
 			}]
 		},
 		모노크로몬: {
@@ -4742,12 +5008,16 @@ var ChampCore = (function(exports) {
 				"record": 260,
 				"name": "토마호크 슬래시",
 				"englishName": "Tomahawk Slash",
-				"dbTextIndex": 565
+				"dbTextIndex": 565,
+				"sequence": 8,
+				"tpCost": 18
 			}, {
 				"record": 261,
 				"name": "볼케이노 스트라이크",
 				"englishName": "Volcanic Strike",
-				"dbTextIndex": 566
+				"dbTextIndex": 566,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		프리지몬: {
@@ -4756,7 +5026,9 @@ var ChampCore = (function(exports) {
 				"record": 263,
 				"name": "절대영도 펀치",
 				"englishName": "Absolute Zero Ice Punch",
-				"dbTextIndex": 567
+				"dbTextIndex": 567,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		유니몬: {
@@ -4765,7 +5037,9 @@ var ChampCore = (function(exports) {
 				"record": 265,
 				"name": "홀리 샷",
 				"englishName": "Aerial Attack",
-				"dbTextIndex": 568
+				"dbTextIndex": 568,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		블랙구미호몬: {
@@ -4774,12 +5048,16 @@ var ChampCore = (function(exports) {
 				"record": 267,
 				"name": "불꽃탄",
 				"englishName": "Tail Flame",
-				"dbTextIndex": 569
+				"dbTextIndex": 569,
+				"sequence": 7,
+				"tpCost": 10
 			}, {
 				"record": 268,
 				"name": "자염룡",
 				"englishName": "Jaenryu",
-				"dbTextIndex": 570
+				"dbTextIndex": 570,
+				"sequence": 7,
+				"tpCost": 18
 			}]
 		},
 		링스몬: {
@@ -4788,7 +5066,9 @@ var ChampCore = (function(exports) {
 				"record": 270,
 				"name": "서멀 메인",
 				"englishName": "Howling Buster",
-				"dbTextIndex": 571
+				"dbTextIndex": 571,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		레어몬: {
@@ -4797,7 +5077,9 @@ var ChampCore = (function(exports) {
 				"record": 272,
 				"name": "헤드로",
 				"englishName": "Slime Pelter",
-				"dbTextIndex": 572
+				"dbTextIndex": 572,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		레오몬: {
@@ -4806,7 +5088,9 @@ var ChampCore = (function(exports) {
 				"record": 274,
 				"name": "수왕권",
 				"englishName": "Fist of the Beast King",
-				"dbTextIndex": 573
+				"dbTextIndex": 573,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		레드베지몬: {
@@ -4815,7 +5099,9 @@ var ChampCore = (function(exports) {
 				"record": 276,
 				"name": "해저드 브레스",
 				"englishName": "Rotten Rainballs",
-				"dbTextIndex": 574
+				"dbTextIndex": 574,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		"코어드라몬(청)": {
@@ -4825,19 +5111,25 @@ var ChampCore = (function(exports) {
 					"record": 278,
 					"name": "블루 플레어 브레스",
 					"englishName": "Blue Flare Breath",
-					"dbTextIndex": 575
+					"dbTextIndex": 575,
+					"sequence": 7,
+					"tpCost": 10
 				},
 				{
 					"record": 279,
 					"name": "스트라이크 보머",
 					"englishName": "Strike Bomber",
-					"dbTextIndex": 576
+					"dbTextIndex": 576,
+					"sequence": 9,
+					"tpCost": 18
 				},
 				{
 					"record": 280,
 					"name": "디 슈르넌-Ⅱ",
 					"englishName": "G Shurunen-II",
-					"dbTextIndex": 577
+					"dbTextIndex": 577,
+					"sequence": 7,
+					"tpCost": 20
 				}
 			]
 		},
@@ -4848,19 +5140,25 @@ var ChampCore = (function(exports) {
 					"record": 282,
 					"name": "그린 플레어 브레스",
 					"englishName": "Green Flare Breath",
-					"dbTextIndex": 578
+					"dbTextIndex": 578,
+					"sequence": 7,
+					"tpCost": 10
 				},
 				{
 					"record": 283,
 					"name": "스트라이크 보머",
 					"englishName": "Strike Bomber",
-					"dbTextIndex": 579
+					"dbTextIndex": 579,
+					"sequence": 9,
+					"tpCost": 18
 				},
 				{
 					"record": 284,
 					"name": "디 슈르넌-Ⅱ",
 					"englishName": "G Shurunen-II",
-					"dbTextIndex": 580
+					"dbTextIndex": 580,
+					"sequence": 7,
+					"tpCost": 20
 				}
 			]
 		},
@@ -4871,19 +5169,25 @@ var ChampCore = (function(exports) {
 					"record": 286,
 					"name": "플레임 다이브",
 					"englishName": "Flame Dive",
-					"dbTextIndex": 581
+					"dbTextIndex": 581,
+					"sequence": 8,
+					"tpCost": 18
 				},
 				{
 					"record": 287,
 					"name": "파이라 크로우",
 					"englishName": "Fira Claw",
-					"dbTextIndex": 582
+					"dbTextIndex": 582,
+					"sequence": 7,
+					"tpCost": 10
 				},
 				{
 					"record": 288,
 					"name": "파이라 봄",
 					"englishName": "Fira Bomb",
-					"dbTextIndex": 583
+					"dbTextIndex": 583,
+					"sequence": 9,
+					"tpCost": 10
 				}
 			]
 		},
@@ -4894,19 +5198,25 @@ var ChampCore = (function(exports) {
 					"record": 290,
 					"name": "문 나이트 봄",
 					"englishName": "Moon Night Bomb",
-					"dbTextIndex": 584
+					"dbTextIndex": 584,
+					"sequence": 7,
+					"tpCost": 10
 				},
 				{
 					"record": 291,
 					"name": "티어 애로우",
 					"englishName": "Tear Arrow",
-					"dbTextIndex": 585
+					"dbTextIndex": 585,
+					"sequence": 9,
+					"tpCost": 10
 				},
 				{
 					"record": 292,
 					"name": "문 나이트 킥",
 					"englishName": "Moon Night Kick",
-					"dbTextIndex": 586
+					"dbTextIndex": 586,
+					"sequence": 10,
+					"tpCost": 18
 				}
 			]
 		},
@@ -4916,12 +5226,16 @@ var ChampCore = (function(exports) {
 				"record": 294,
 				"name": "프로스트 크로우",
 				"englishName": "Frost Claw",
-				"dbTextIndex": 587
+				"dbTextIndex": 587,
+				"sequence": 7,
+				"tpCost": 18
 			}, {
 				"record": 295,
 				"name": "제로 프리즈",
 				"englishName": "Zero Freeze",
-				"dbTextIndex": 588
+				"dbTextIndex": 588,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		구루몬: {
@@ -4930,12 +5244,16 @@ var ChampCore = (function(exports) {
 				"record": 297,
 				"name": "카오스 파이어",
 				"englishName": "Chaos Blaster",
-				"dbTextIndex": 589
+				"dbTextIndex": 589,
+				"sequence": 7,
+				"tpCost": 10
 			}, {
 				"record": 298,
 				"name": "킬러 바이트",
 				"englishName": "Killer Bite",
-				"dbTextIndex": 590
+				"dbTextIndex": 590,
+				"sequence": 9,
+				"tpCost": 18
 			}]
 		},
 		옐로우워매몬: {
@@ -4944,7 +5262,9 @@ var ChampCore = (function(exports) {
 				"record": 300,
 				"name": "배설물 던지기",
 				"englishName": "Compost Bomber",
-				"dbTextIndex": 591
+				"dbTextIndex": 591,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		화이트위자몬: {
@@ -4953,12 +5273,16 @@ var ChampCore = (function(exports) {
 				"record": 302,
 				"name": "크리스탈 클라우드",
 				"englishName": "Crystal Cloud",
-				"dbTextIndex": 592
+				"dbTextIndex": 592,
+				"sequence": 7,
+				"tpCost": 18
 			}, {
 				"record": 303,
 				"name": "아이스 일루전",
 				"englishName": "Ice Illusion",
-				"dbTextIndex": 593
+				"dbTextIndex": 593,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		레드꼬끼몬: {
@@ -4967,7 +5291,9 @@ var ChampCore = (function(exports) {
 				"record": 305,
 				"name": "스카레 아이",
 				"englishName": "Chicken Red Eyes",
-				"dbTextIndex": 594
+				"dbTextIndex": 594,
+				"sequence": 8,
+				"tpCost": 10
 			}]
 		},
 		블랙버드라몬: {
@@ -4976,12 +5302,16 @@ var ChampCore = (function(exports) {
 				"record": 307,
 				"name": "블랙 세이버",
 				"englishName": "Black Saber",
-				"dbTextIndex": 595
+				"dbTextIndex": 595,
+				"sequence": 8,
+				"tpCost": 20
 			}, {
 				"record": 308,
 				"name": "나이트 애로우",
 				"englishName": "Night Roar",
-				"dbTextIndex": 596
+				"dbTextIndex": 596,
+				"sequence": 7,
+				"tpCost": 18
 			}]
 		},
 		아이스몬: {
@@ -4990,7 +5320,9 @@ var ChampCore = (function(exports) {
 				"record": 310,
 				"name": "아이스 볼 봄",
 				"englishName": "Iceball Bomb",
-				"dbTextIndex": 597
+				"dbTextIndex": 597,
+				"sequence": 7,
+				"tpCost": 10
 			}]
 		},
 		브이드라몬: {
@@ -4999,12 +5331,16 @@ var ChampCore = (function(exports) {
 				"record": 312,
 				"name": "브이 브레스 애로우",
 				"englishName": "V-Nova Blast",
-				"dbTextIndex": 598
+				"dbTextIndex": 598,
+				"sequence": 7,
+				"tpCost": 10
 			}, {
 				"record": 313,
 				"name": "매그넘 펀치",
 				"englishName": "Magnum Punch",
-				"dbTextIndex": 599
+				"dbTextIndex": 599,
+				"sequence": 9,
+				"tpCost": 20
 			}]
 		},
 		그라우몬: {
@@ -5014,19 +5350,25 @@ var ChampCore = (function(exports) {
 					"record": 315,
 					"name": "플라즈마 블레이드",
 					"englishName": "Plasma Blade",
-					"dbTextIndex": 600
+					"dbTextIndex": 600,
+					"sequence": 8,
+					"tpCost": 10
 				},
 				{
 					"record": 316,
 					"name": "엑소시스트 플레임",
 					"englishName": "Pyro Blaster",
-					"dbTextIndex": 601
+					"dbTextIndex": 601,
+					"sequence": 7,
+					"tpCost": 18
 				},
 				{
 					"record": 317,
 					"name": "라이덴 블레이드",
 					"englishName": "Raiden Blade",
-					"dbTextIndex": 602
+					"dbTextIndex": 602,
+					"sequence": 8,
+					"tpCost": 20
 				}
 			]
 		},
@@ -5036,12 +5378,16 @@ var ChampCore = (function(exports) {
 				"record": 319,
 				"name": "혼 버스터",
 				"englishName": "Horn Buster",
-				"dbTextIndex": 603
+				"dbTextIndex": 603,
+				"sequence": 8,
+				"tpCost": 30
 			}, {
 				"record": 320,
 				"name": "메가 블래스터",
 				"englishName": "Electro Shocker",
-				"dbTextIndex": 604
+				"dbTextIndex": 604,
+				"sequence": 7,
+				"tpCost": 20
 			}]
 		},
 		스콜피온몬: {
@@ -5050,12 +5396,16 @@ var ChampCore = (function(exports) {
 				"record": 322,
 				"name": "스팅거 서프라이즈",
 				"englishName": "Stinger Surprise",
-				"dbTextIndex": 605
+				"dbTextIndex": 605,
+				"sequence": 8,
+				"tpCost": 20
 			}, {
 				"record": 323,
 				"name": "테일 블레이드",
 				"englishName": "Tail Blade",
-				"dbTextIndex": 606
+				"dbTextIndex": 606,
+				"sequence": 7,
+				"tpCost": 30
 			}]
 		},
 		안드로몬: {
@@ -5064,12 +5414,16 @@ var ChampCore = (function(exports) {
 				"record": 325,
 				"name": "개틀링 미사일",
 				"englishName": "Gatling Missile",
-				"dbTextIndex": 607
+				"dbTextIndex": 607,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 326,
 				"name": "스파이럴 소드",
 				"englishName": "Lightning Blade",
-				"dbTextIndex": 608
+				"dbTextIndex": 608,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		에테몬: {
@@ -5078,12 +5432,16 @@ var ChampCore = (function(exports) {
 				"record": 328,
 				"name": "러브 세레나데",
 				"englishName": "DarkNetwork&C.Crush",
-				"dbTextIndex": 609
+				"dbTextIndex": 609,
+				"sequence": 8,
+				"tpCost": 20
 			}, {
 				"record": 329,
 				"name": "다크 스피릿츠",
 				"englishName": "Dark Spirits",
-				"dbTextIndex": 610
+				"dbTextIndex": 610,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		엔젤우몬: {
@@ -5092,12 +5450,16 @@ var ChampCore = (function(exports) {
 				"record": 331,
 				"name": "홀리 애로우",
 				"englishName": "Celestial Arrow",
-				"dbTextIndex": 611
+				"dbTextIndex": 611,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 332,
 				"name": "헤븐즈 참",
 				"englishName": "Heaven's Charm",
-				"dbTextIndex": 612
+				"dbTextIndex": 612,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		오쿠와몬: {
@@ -5106,12 +5468,16 @@ var ChampCore = (function(exports) {
 				"record": 334,
 				"name": "시저 암즈 오메가",
 				"englishName": "Double Scissor Claw",
-				"dbTextIndex": 613
+				"dbTextIndex": 613,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 335,
 				"name": "파괴충동",
 				"englishName": "Destructive Impulse",
-				"dbTextIndex": 614
+				"dbTextIndex": 614,
+				"sequence": 8,
+				"tpCost": 42
 			}]
 		},
 		가루다몬: {
@@ -5120,12 +5486,16 @@ var ChampCore = (function(exports) {
 				"record": 337,
 				"name": "쉐도우 윙",
 				"englishName": "Wing Blade",
-				"dbTextIndex": 615
+				"dbTextIndex": 615,
+				"sequence": 9,
+				"tpCost": 30
 			}, {
 				"record": 338,
 				"name": "파이어 허리케인",
 				"englishName": "Fire Hurricane",
-				"dbTextIndex": 616
+				"dbTextIndex": 616,
+				"sequence": 7,
+				"tpCost": 20
 			}]
 		},
 		가비지몬: {
@@ -5134,12 +5504,16 @@ var ChampCore = (function(exports) {
 				"record": 340,
 				"name": "배설물 바주카",
 				"englishName": "Junk Chunker",
-				"dbTextIndex": 617
+				"dbTextIndex": 617,
+				"sequence": 8,
+				"tpCost": 20
 			}, {
 				"record": 341,
 				"name": "더티 소서",
 				"englishName": "Dirty Saucer",
-				"dbTextIndex": 618
+				"dbTextIndex": 618,
+				"sequence": 9,
+				"tpCost": 30
 			}]
 		},
 		사이버드라몬: {
@@ -5148,12 +5522,16 @@ var ChampCore = (function(exports) {
 				"record": 343,
 				"name": "이레이즈 크로우",
 				"englishName": "Erase Claw",
-				"dbTextIndex": 619
+				"dbTextIndex": 619,
+				"sequence": 7,
+				"tpCost": 30
 			}, {
 				"record": 344,
 				"name": "사이버 네일",
 				"englishName": "Cyber Nail",
-				"dbTextIndex": 620
+				"dbTextIndex": 620,
+				"sequence": 8,
+				"tpCost": 20
 			}]
 		},
 		쥬레이몬: {
@@ -5162,12 +5540,16 @@ var ChampCore = (function(exports) {
 				"record": 346,
 				"name": "체리 봄",
 				"englishName": "Pit Pelter",
-				"dbTextIndex": 621
+				"dbTextIndex": 621,
+				"sequence": 7,
+				"tpCost": 30
 			}, {
 				"record": 347,
 				"name": "나뭇가지 공격",
 				"englishName": "Vine Attack",
-				"dbTextIndex": 622
+				"dbTextIndex": 622,
+				"sequence": 8,
+				"tpCost": 20
 			}]
 		},
 		스컬그레이몬: {
@@ -5176,12 +5558,16 @@ var ChampCore = (function(exports) {
 				"record": 349,
 				"name": "그라운드 제로",
 				"englishName": "Dark Shot",
-				"dbTextIndex": 623
+				"dbTextIndex": 623,
+				"sequence": 7,
+				"tpCost": 30
 			}, {
 				"record": 350,
 				"name": "커스 브레스",
 				"englishName": "Cursed Breath",
-				"dbTextIndex": 624
+				"dbTextIndex": 624,
+				"sequence": 7,
+				"tpCost": 20
 			}]
 		},
 		쥬드몬: {
@@ -5190,12 +5576,16 @@ var ChampCore = (function(exports) {
 				"record": 352,
 				"name": "해머 스파크",
 				"englishName": "Vulcan's Hammer",
-				"dbTextIndex": 625
+				"dbTextIndex": 625,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 353,
 				"name": "그레이셔 스피어",
 				"englishName": "Glacial Spear",
-				"dbTextIndex": 626
+				"dbTextIndex": 626,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		드라고몬: {
@@ -5204,12 +5594,16 @@ var ChampCore = (function(exports) {
 				"record": 355,
 				"name": "포비든 트라이던트",
 				"englishName": "Tentacle Claw",
-				"dbTextIndex": 627
+				"dbTextIndex": 627,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 356,
 				"name": "사우전드 윕",
 				"englishName": "Thousand Whips",
-				"dbTextIndex": 628
+				"dbTextIndex": 628,
+				"sequence": 10,
+				"tpCost": 40
 			}]
 		},
 		데드메라몬: {
@@ -5218,12 +5612,16 @@ var ChampCore = (function(exports) {
 				"record": 358,
 				"name": "헤비메탈 파이어",
 				"englishName": "Metal Fireball",
-				"dbTextIndex": 629
+				"dbTextIndex": 629,
+				"sequence": 8,
+				"tpCost": 20
 			}, {
 				"record": 359,
 				"name": "히트 체인",
 				"englishName": "Heat Chain",
-				"dbTextIndex": 630
+				"dbTextIndex": 630,
+				"sequence": 7,
+				"tpCost": 30
 			}]
 		},
 		뿌띠몬: {
@@ -5232,12 +5630,16 @@ var ChampCore = (function(exports) {
 				"record": 361,
 				"name": "로얄 너츠",
 				"englishName": "Royal Smasher",
-				"dbTextIndex": 631
+				"dbTextIndex": 631,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 362,
 				"name": "고저스 비크",
 				"englishName": "Gorgeous Beak",
-				"dbTextIndex": 632
+				"dbTextIndex": 632,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		왕개굴몬: {
@@ -5246,12 +5648,16 @@ var ChampCore = (function(exports) {
 				"record": 364,
 				"name": "고브시톤",
 				"englishName": "Musical Fist",
-				"dbTextIndex": 633
+				"dbTextIndex": 633,
+				"sequence": 8,
+				"tpCost": 20
 			}, {
 				"record": 365,
 				"name": "크래시 심포니",
 				"englishName": "Symphony Crusher",
-				"dbTextIndex": 634
+				"dbTextIndex": 634,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		트리세라몬: {
@@ -5260,12 +5666,16 @@ var ChampCore = (function(exports) {
 				"record": 367,
 				"name": "트라이 혼 어택",
 				"englishName": "Tri-horn Attack",
-				"dbTextIndex": 635
+				"dbTextIndex": 635,
+				"sequence": 8,
+				"tpCost": 20
 			}, {
 				"record": 368,
 				"name": "골든 트라이 혼 어택",
 				"englishName": "Golden Tri-horn Attack",
-				"dbTextIndex": 636
+				"dbTextIndex": 636,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		나이트몬: {
@@ -5274,12 +5684,16 @@ var ChampCore = (function(exports) {
 				"record": 370,
 				"name": "베르세르크 소드",
 				"englishName": "Berserk Sword",
-				"dbTextIndex": 637
+				"dbTextIndex": 637,
+				"sequence": 8,
+				"tpCost": 30
 			}, {
 				"record": 371,
 				"name": "그랜드 스매시",
 				"englishName": "Grand Smash",
-				"dbTextIndex": 638
+				"dbTextIndex": 638,
+				"sequence": 8,
+				"tpCost": 20
 			}]
 		},
 		패롯몬: {
@@ -5288,12 +5702,16 @@ var ChampCore = (function(exports) {
 				"record": 373,
 				"name": "소닉 디스트로이어",
 				"englishName": "Sonic Destroyer",
-				"dbTextIndex": 639
+				"dbTextIndex": 639,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 374,
 				"name": "묘르닐 선더",
 				"englishName": "Mjollnir Lightning",
-				"dbTextIndex": 640
+				"dbTextIndex": 640,
+				"sequence": 9,
+				"tpCost": 30
 			}]
 		},
 		다이버몬: {
@@ -5302,12 +5720,16 @@ var ChampCore = (function(exports) {
 				"record": 376,
 				"name": "스트라이크 피싱",
 				"englishName": "Striking Fish",
-				"dbTextIndex": 641
+				"dbTextIndex": 641,
+				"sequence": 9,
+				"tpCost": 20
 			}, {
 				"record": 377,
 				"name": "헬 다이브",
 				"englishName": "Abyss Dive",
-				"dbTextIndex": 642
+				"dbTextIndex": 642,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		팬더몬: {
@@ -5316,12 +5738,16 @@ var ChampCore = (function(exports) {
 				"record": 379,
 				"name": "애니멀 네일",
 				"englishName": "Animal Nail",
-				"dbTextIndex": 643
+				"dbTextIndex": 643,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 380,
 				"name": "대나무 펀치",
 				"englishName": "Bamboo Punch",
-				"dbTextIndex": 644
+				"dbTextIndex": 644,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		왕콩알몬: {
@@ -5330,12 +5756,16 @@ var ChampCore = (function(exports) {
 				"record": 382,
 				"name": "빅 스마일리 봄버",
 				"englishName": "Big Smiley Bomb",
-				"dbTextIndex": 645
+				"dbTextIndex": 645,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 383,
 				"name": "버스터 다이브",
 				"englishName": "Buster Dive",
-				"dbTextIndex": 646
+				"dbTextIndex": 646,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		피콜몬: {
@@ -5344,12 +5774,16 @@ var ChampCore = (function(exports) {
 				"record": 385,
 				"name": "비트 봄",
 				"englishName": "Pit Bomb",
-				"dbTextIndex": 647
+				"dbTextIndex": 647,
+				"sequence": 8,
+				"tpCost": 30
 			}, {
 				"record": 386,
 				"name": "페어리 테일",
 				"englishName": "Fairy Tale",
-				"dbTextIndex": 648
+				"dbTextIndex": 648,
+				"sequence": 7,
+				"tpCost": 20
 			}]
 		},
 		팬텀몬: {
@@ -5358,12 +5792,16 @@ var ChampCore = (function(exports) {
 				"record": 388,
 				"name": "소울 초퍼",
 				"englishName": "Shadow Scythe",
-				"dbTextIndex": 649
+				"dbTextIndex": 649,
+				"sequence": 10,
+				"tpCost": 30
 			}, {
 				"record": 389,
 				"name": "죽음의 선고",
 				"englishName": "Words of Death",
-				"dbTextIndex": 650
+				"dbTextIndex": 650,
+				"sequence": 7,
+				"tpCost": 20
 			}]
 		},
 		베이더몬: {
@@ -5372,12 +5810,16 @@ var ChampCore = (function(exports) {
 				"record": 391,
 				"name": "악마의 키스",
 				"englishName": "Unidentified Flying Kiss",
-				"dbTextIndex": 651
+				"dbTextIndex": 651,
+				"sequence": 9,
+				"tpCost": 20
 			}, {
 				"record": 392,
 				"name": "애브덕션 광선",
 				"englishName": "Abduction Beam",
-				"dbTextIndex": 652
+				"dbTextIndex": 652,
+				"sequence": 7,
+				"tpCost": 30
 			}]
 		},
 		고래몬: {
@@ -5386,12 +5828,16 @@ var ChampCore = (function(exports) {
 				"record": 394,
 				"name": "타이달 웨이브",
 				"englishName": "Tidal Wave",
-				"dbTextIndex": 653
+				"dbTextIndex": 653,
+				"sequence": 8,
+				"tpCost": 20
 			}, {
 				"record": 395,
 				"name": "제트 애로우",
 				"englishName": "Blasting Spout",
-				"dbTextIndex": 654
+				"dbTextIndex": 654,
+				"sequence": 7,
+				"tpCost": 30
 			}]
 		},
 		홀리엔젤몬: {
@@ -5400,12 +5846,16 @@ var ChampCore = (function(exports) {
 				"record": 397,
 				"name": "엑스칼리버",
 				"englishName": "Excalibur",
-				"dbTextIndex": 655
+				"dbTextIndex": 655,
+				"sequence": 8,
+				"tpCost": 20
 			}, {
 				"record": 398,
 				"name": "헤븐즈 게이트",
 				"englishName": "The Gate of Destiny",
-				"dbTextIndex": 656
+				"dbTextIndex": 656,
+				"sequence": 7,
+				"tpCost": 30
 			}]
 		},
 		마하가오가몬: {
@@ -5415,19 +5865,25 @@ var ChampCore = (function(exports) {
 					"record": 400,
 					"name": "가오가 토네이도",
 					"englishName": "Gaoga Tornade",
-					"dbTextIndex": 657
+					"dbTextIndex": 657,
+					"sequence": 9,
+					"tpCost": 42
 				},
 				{
 					"record": 401,
 					"name": "위닝 너클",
 					"englishName": "Winning Knuckle",
-					"dbTextIndex": 658
+					"dbTextIndex": 658,
+					"sequence": 8,
+					"tpCost": 20
 				},
 				{
 					"record": 402,
 					"name": "하울링 캐논",
 					"englishName": "Howling Cannon",
-					"dbTextIndex": 659
+					"dbTextIndex": 659,
+					"sequence": 7,
+					"tpCost": 30
 				}
 			]
 		},
@@ -5437,12 +5893,16 @@ var ChampCore = (function(exports) {
 				"record": 404,
 				"name": "스마일리 봄버",
 				"englishName": "Smiley Bomb",
-				"dbTextIndex": 660
+				"dbTextIndex": 660,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 405,
 				"name": "버스터 다이브",
 				"englishName": "Buster Dive",
-				"dbTextIndex": 661
+				"dbTextIndex": 661,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		맘모스몬: {
@@ -5451,12 +5911,16 @@ var ChampCore = (function(exports) {
 				"record": 407,
 				"name": "터스크 스트라익스",
 				"englishName": "Tusk Crusher",
-				"dbTextIndex": 662
+				"dbTextIndex": 662,
+				"sequence": 8,
+				"tpCost": 30
 			}, {
 				"record": 408,
 				"name": "툰드라 브레스",
 				"englishName": "Tundra Breath",
-				"dbTextIndex": 663
+				"dbTextIndex": 663,
+				"sequence": 7,
+				"tpCost": 20
 			}]
 		},
 		메가시드라몬: {
@@ -5465,12 +5929,16 @@ var ChampCore = (function(exports) {
 				"record": 410,
 				"name": "선더 자벨린",
 				"englishName": "Lightning Javelin",
-				"dbTextIndex": 664
+				"dbTextIndex": 664,
+				"sequence": 8,
+				"tpCost": 30
 			}, {
 				"record": 411,
 				"name": "메일슈트롬",
 				"englishName": "Maelstrom",
-				"dbTextIndex": 665
+				"dbTextIndex": 665,
+				"sequence": 7,
+				"tpCost": 20
 			}]
 		},
 		메가드라몬: {
@@ -5479,12 +5947,16 @@ var ChampCore = (function(exports) {
 				"record": 413,
 				"name": "제노사이드 어택",
 				"englishName": "Darkside Attack",
-				"dbTextIndex": 666
+				"dbTextIndex": 666,
+				"sequence": 7,
+				"tpCost": 30
 			}, {
 				"record": 414,
 				"name": "얼티밋 슬라이서",
 				"englishName": "Ultimate Slicer",
-				"dbTextIndex": 667
+				"dbTextIndex": 667,
+				"sequence": 8,
+				"tpCost": 20
 			}]
 		},
 		"메탈그레이몬(청)": {
@@ -5493,12 +5965,16 @@ var ChampCore = (function(exports) {
 				"record": 416,
 				"name": "기가 디스트로이어",
 				"englishName": "Giga Blaster",
-				"dbTextIndex": 668
+				"dbTextIndex": 668,
+				"sequence": 7,
+				"tpCost": 30
 			}, {
 				"record": 417,
 				"name": "트라이던트 암",
 				"englishName": "Trident Arm",
-				"dbTextIndex": 669
+				"dbTextIndex": 669,
+				"sequence": 9,
+				"tpCost": 20
 			}]
 		},
 		메탈그레이몬: {
@@ -5507,12 +5983,16 @@ var ChampCore = (function(exports) {
 				"record": 419,
 				"name": "기가 디스트로이어",
 				"englishName": "Giga Blaster",
-				"dbTextIndex": 670
+				"dbTextIndex": 670,
+				"sequence": 7,
+				"tpCost": 30
 			}, {
 				"record": 420,
 				"name": "트라이던트 암",
 				"englishName": "Trident Arm",
-				"dbTextIndex": 671
+				"dbTextIndex": 671,
+				"sequence": 9,
+				"tpCost": 20
 			}]
 		},
 		메탈티라노몬: {
@@ -5521,12 +6001,16 @@ var ChampCore = (function(exports) {
 				"record": 422,
 				"name": "기가 디스트로이어Ⅱ",
 				"englishName": "Giga Blaster II",
-				"dbTextIndex": 672
+				"dbTextIndex": 672,
+				"sequence": 8,
+				"tpCost": 30
 			}, {
 				"record": 423,
 				"name": "뉴클리어 레이저",
 				"englishName": "Nuclear Laser",
-				"dbTextIndex": 673
+				"dbTextIndex": 673,
+				"sequence": 9,
+				"tpCost": 20
 			}]
 		},
 		퍼펫몬: {
@@ -5535,12 +6019,16 @@ var ChampCore = (function(exports) {
 				"record": 425,
 				"name": "러블리 어택",
 				"englishName": "Hearts Attack",
-				"dbTextIndex": 674
+				"dbTextIndex": 674,
+				"sequence": 9,
+				"tpCost": 20
 			}, {
 				"record": 426,
 				"name": "붕붕 펀치",
 				"englishName": "Gyral Punch",
-				"dbTextIndex": 675
+				"dbTextIndex": 675,
+				"sequence": 7,
+				"tpCost": 30
 			}]
 		},
 		야타가라몬: {
@@ -5549,12 +6037,16 @@ var ChampCore = (function(exports) {
 				"record": 428,
 				"name": "신비의 종",
 				"englishName": "Savage Emperor",
-				"dbTextIndex": 676
+				"dbTextIndex": 676,
+				"sequence": 8,
+				"tpCost": 30
 			}, {
 				"record": 429,
 				"name": "검은날개",
 				"englishName": "Blackout",
-				"dbTextIndex": 677
+				"dbTextIndex": 677,
+				"sequence": 7,
+				"tpCost": 20
 			}]
 		},
 		라이즈그레이몬: {
@@ -5564,19 +6056,25 @@ var ChampCore = (function(exports) {
 					"record": 431,
 					"name": "트라이던트 리볼버",
 					"englishName": "Trident Revolver",
-					"dbTextIndex": 678
+					"dbTextIndex": 678,
+					"sequence": 8,
+					"tpCost": 20
 				},
 				{
 					"record": 432,
 					"name": "라이징 디스트로이어",
 					"englishName": "Rising Destroyer",
-					"dbTextIndex": 679
+					"dbTextIndex": 679,
+					"sequence": 7,
+					"tpCost": 42
 				},
 				{
 					"record": 433,
 					"name": "솔리드 스트라이크",
 					"englishName": "Solid Strike",
-					"dbTextIndex": 680
+					"dbTextIndex": 680,
+					"sequence": 8,
+					"tpCost": 30
 				}
 			]
 		},
@@ -5586,12 +6084,16 @@ var ChampCore = (function(exports) {
 				"record": 435,
 				"name": "래피드 바이어",
 				"englishName": "Rapid Fire",
-				"dbTextIndex": 681
+				"dbTextIndex": 681,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 436,
 				"name": "골든 트라이앵글",
 				"englishName": "Golden Triangle",
-				"dbTextIndex": 682
+				"dbTextIndex": 682,
+				"sequence": 9,
+				"tpCost": 42
 			}]
 		},
 		릴리몬: {
@@ -5600,12 +6102,16 @@ var ChampCore = (function(exports) {
 				"record": 438,
 				"name": "플라워 캐논",
 				"englishName": "Flower Cannon",
-				"dbTextIndex": 683
+				"dbTextIndex": 683,
+				"sequence": 9,
+				"tpCost": 20
 			}, {
 				"record": 439,
 				"name": "페어리 바인",
 				"englishName": "Fairy Vine",
-				"dbTextIndex": 684
+				"dbTextIndex": 684,
+				"sequence": 7,
+				"tpCost": 30
 			}]
 		},
 		레이디데블몬: {
@@ -5614,12 +6120,16 @@ var ChampCore = (function(exports) {
 				"record": 441,
 				"name": "다크니스 웨이브",
 				"englishName": "Darkness Wave",
-				"dbTextIndex": 685
+				"dbTextIndex": 685,
+				"sequence": 7,
+				"tpCost": 30
 			}, {
 				"record": 442,
 				"name": "푸와존",
 				"englishName": "Poison Spray",
-				"dbTextIndex": 686
+				"dbTextIndex": 686,
+				"sequence": 7,
+				"tpCost": 20
 			}]
 		},
 		나쁜퍼펫몬: {
@@ -5628,12 +6138,16 @@ var ChampCore = (function(exports) {
 				"record": 444,
 				"name": "하트 브레이크 어택",
 				"englishName": "Hearts Break Attack",
-				"dbTextIndex": 687
+				"dbTextIndex": 687,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 445,
 				"name": "베어 크로우",
 				"englishName": "Bear Claw",
-				"dbTextIndex": 688
+				"dbTextIndex": 688,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		워가루몬: {
@@ -5642,12 +6156,16 @@ var ChampCore = (function(exports) {
 				"record": 447,
 				"name": "카이저 네일",
 				"englishName": "Wolf Claw",
-				"dbTextIndex": 689
+				"dbTextIndex": 689,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 448,
 				"name": "폭스 파이어",
 				"englishName": "Howling Blaster",
-				"dbTextIndex": 690
+				"dbTextIndex": 690,
+				"sequence": 9,
+				"tpCost": 20
 			}]
 		},
 		"워가루몬(흑)": {
@@ -5656,12 +6174,16 @@ var ChampCore = (function(exports) {
 				"record": 450,
 				"name": "카이저 네일",
 				"englishName": "Wolf Claw",
-				"dbTextIndex": 691
+				"dbTextIndex": 691,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 451,
 				"name": "가루루 킥",
 				"englishName": "Garuru Kick",
-				"dbTextIndex": 692
+				"dbTextIndex": 692,
+				"sequence": 9,
+				"tpCost": 30
 			}]
 		},
 		윙드라몬: {
@@ -5671,19 +6193,25 @@ var ChampCore = (function(exports) {
 					"record": 453,
 					"name": "블레이즈 소닉 브레스",
 					"englishName": "Blaze Sonic Breath",
-					"dbTextIndex": 693
+					"dbTextIndex": 693,
+					"sequence": 7,
+					"tpCost": 20
 				},
 				{
 					"record": 454,
 					"name": "익스플로드 소닉 랜스",
 					"englishName": "Exploding Sonic Breath",
-					"dbTextIndex": 694
+					"dbTextIndex": 694,
+					"sequence": 9,
+					"tpCost": 30
 				},
 				{
 					"record": 455,
 					"name": "윙 블래스트",
 					"englishName": "Wing Blast",
-					"dbTextIndex": 695
+					"dbTextIndex": 695,
+					"sequence": 10,
+					"tpCost": 42
 				}
 			]
 		},
@@ -5694,19 +6222,25 @@ var ChampCore = (function(exports) {
 					"record": 457,
 					"name": "스크랩레스 크로우",
 					"englishName": "Scrap Claw",
-					"dbTextIndex": 696
+					"dbTextIndex": 696,
+					"sequence": 10,
+					"tpCost": 20
 				},
 				{
 					"record": 458,
 					"name": "메가톤 해머 크래시",
 					"englishName": "Megaton Hammer Crush",
-					"dbTextIndex": 697
+					"dbTextIndex": 697,
+					"sequence": 9,
+					"tpCost": 30
 				},
 				{
 					"record": 459,
 					"name": "기가 크랙",
 					"englishName": "Giga Crack",
-					"dbTextIndex": 698
+					"dbTextIndex": 698,
+					"sequence": 7,
+					"tpCost": 42
 				}
 			]
 		},
@@ -5717,19 +6251,25 @@ var ChampCore = (function(exports) {
 					"record": 461,
 					"name": "홍련수왕파",
 					"englishName": "Guren Juuouha",
-					"dbTextIndex": 699
+					"dbTextIndex": 699,
+					"sequence": 8,
+					"tpCost": 20
 				},
 				{
 					"record": 462,
 					"name": "홍련사자춤",
 					"englishName": "Kurenai Shishinomai",
-					"dbTextIndex": 700
+					"dbTextIndex": 700,
+					"sequence": 9,
+					"tpCost": 42
 				},
 				{
 					"record": 463,
 					"name": "공포의 포효",
 					"englishName": "Purifying Howl",
-					"dbTextIndex": 701
+					"dbTextIndex": 701,
+					"sequence": 7,
+					"tpCost": 30
 				}
 			]
 		},
@@ -5740,19 +6280,25 @@ var ChampCore = (function(exports) {
 					"record": 465,
 					"name": "루나틱 댄스",
 					"englishName": "Lunatic Dance",
-					"dbTextIndex": 702
+					"dbTextIndex": 702,
+					"sequence": 8,
+					"tpCost": 42
 				},
 				{
 					"record": 466,
 					"name": "아이스 아체리",
 					"englishName": "Ice Archery",
-					"dbTextIndex": 703
+					"dbTextIndex": 703,
+					"sequence": 7,
+					"tpCost": 20
 				},
 				{
 					"record": 467,
 					"name": "다크 아체리",
 					"englishName": "Dark Archery",
-					"dbTextIndex": 704
+					"dbTextIndex": 704,
+					"sequence": 9,
+					"tpCost": 30
 				}
 			]
 		},
@@ -5762,12 +6308,16 @@ var ChampCore = (function(exports) {
 				"record": 469,
 				"name": "하레이 스콜",
 				"englishName": "Halley's Squall",
-				"dbTextIndex": 705
+				"dbTextIndex": 705,
+				"sequence": 8,
+				"tpCost": 40
 			}, {
 				"record": 470,
 				"name": "슈퍼스타 어퍼",
 				"englishName": "Superstar Upper",
-				"dbTextIndex": 706
+				"dbTextIndex": 706,
+				"sequence": 9,
+				"tpCost": 20
 			}]
 		},
 		블랙래비드몬: {
@@ -5776,12 +6326,16 @@ var ChampCore = (function(exports) {
 				"record": 472,
 				"name": "래피드 파이어",
 				"englishName": "Rapid Fire",
-				"dbTextIndex": 707
+				"dbTextIndex": 707,
+				"sequence": 7,
+				"tpCost": 20
 			}, {
 				"record": 473,
 				"name": "골든 트라이앵글",
 				"englishName": "Golden Triangle",
-				"dbTextIndex": 708
+				"dbTextIndex": 708,
+				"sequence": 9,
+				"tpCost": 42
 			}]
 		},
 		블루메라몬: {
@@ -5790,12 +6344,16 @@ var ChampCore = (function(exports) {
 				"record": 475,
 				"name": "아이스 팬텀",
 				"englishName": "Ice Phantom",
-				"dbTextIndex": 709
+				"dbTextIndex": 709,
+				"sequence": 8,
+				"tpCost": 30
 			}, {
 				"record": 476,
 				"name": "골든 플레임",
 				"englishName": "Cold Flame",
-				"dbTextIndex": 710
+				"dbTextIndex": 710,
+				"sequence": 8,
+				"tpCost": 20
 			}]
 		},
 		바이킹몬: {
@@ -5804,12 +6362,16 @@ var ChampCore = (function(exports) {
 				"record": 478,
 				"name": "아크틱 블리저드",
 				"englishName": "Arctic Blizzard",
-				"dbTextIndex": 711
+				"dbTextIndex": 711,
+				"sequence": 8,
+				"tpCost": 30
 			}, {
 				"record": 479,
 				"name": "묘르닐 선더",
 				"englishName": "Mjollnir",
-				"dbTextIndex": 712
+				"dbTextIndex": 712,
+				"sequence": 7,
+				"tpCost": 40
 			}]
 		},
 		발키리몬: {
@@ -5818,12 +6380,16 @@ var ChampCore = (function(exports) {
 				"record": 481,
 				"name": "펜릴 소드",
 				"englishName": "Feral Sword",
-				"dbTextIndex": 713
+				"dbTextIndex": 713,
+				"sequence": 8,
+				"tpCost": 40
 			}, {
 				"record": 482,
 				"name": "아울반딜의 화살",
 				"englishName": "Aurvandil's Arrow",
-				"dbTextIndex": 714
+				"dbTextIndex": 714,
+				"sequence": 7,
+				"tpCost": 30
 			}]
 		},
 		워그레이몬: {
@@ -5832,12 +6398,16 @@ var ChampCore = (function(exports) {
 				"record": 484,
 				"name": "가이아 포스",
 				"englishName": "Terra Force",
-				"dbTextIndex": 715
+				"dbTextIndex": 715,
+				"sequence": 9,
+				"tpCost": 60
 			}, {
 				"record": 485,
 				"name": "드라몬 킬러",
 				"englishName": "Iron Claws",
-				"dbTextIndex": 716
+				"dbTextIndex": 716,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		기가시드라몬: {
@@ -5846,12 +6416,16 @@ var ChampCore = (function(exports) {
 				"record": 487,
 				"name": "기가 시 디스트로이어",
 				"englishName": "Giga Sea Destroyer",
-				"dbTextIndex": 717
+				"dbTextIndex": 717,
+				"sequence": 8,
+				"tpCost": 30
 			}, {
 				"record": 488,
 				"name": "스카이 웨이브",
 				"englishName": "Sky Wave",
-				"dbTextIndex": 718
+				"dbTextIndex": 718,
+				"sequence": 9,
+				"tpCost": 60
 			}]
 		},
 		그랜쿠가몬: {
@@ -5860,12 +6434,16 @@ var ChampCore = (function(exports) {
 				"record": 490,
 				"name": "디멘션 시저",
 				"englishName": "Dimension Scissors",
-				"dbTextIndex": 719
+				"dbTextIndex": 719,
+				"sequence": 7,
+				"tpCost": 30
 			}, {
 				"record": 491,
 				"name": "그랜 데스 스크류",
 				"englishName": "Grand Death Screw",
-				"dbTextIndex": 720
+				"dbTextIndex": 720,
+				"sequence": 8,
+				"tpCost": 60
 			}]
 		},
 		그리폰몬: {
@@ -5874,12 +6452,16 @@ var ChampCore = (function(exports) {
 				"record": 493,
 				"name": "슈퍼 소닉 보이스",
 				"englishName": "Legendary Blade",
-				"dbTextIndex": 721
+				"dbTextIndex": 721,
+				"sequence": 7,
+				"tpCost": 30
 			}, {
 				"record": 494,
 				"name": "메비우스 바이트",
 				"englishName": "Mobius Bite",
-				"dbTextIndex": 722
+				"dbTextIndex": 722,
+				"sequence": 9,
+				"tpCost": 50
 			}]
 		},
 		이글몬: {
@@ -5888,12 +6470,16 @@ var ChampCore = (function(exports) {
 				"record": 496,
 				"name": "카이저 피닉스",
 				"englishName": "Phoenix Claw",
-				"dbTextIndex": 723
+				"dbTextIndex": 723,
+				"sequence": 8,
+				"tpCost": 50
 			}, {
 				"record": 497,
 				"name": "미스틱 브레이크",
 				"englishName": "Mystic Break",
-				"dbTextIndex": 724
+				"dbTextIndex": 724,
+				"sequence": 7,
+				"tpCost": 30
 			}]
 		},
 		샤벨레오몬: {
@@ -5902,12 +6488,16 @@ var ChampCore = (function(exports) {
 				"record": 499,
 				"name": "네일 크래셔",
 				"englishName": "Howling Crusher",
-				"dbTextIndex": 725
+				"dbTextIndex": 725,
+				"sequence": 7,
+				"tpCost": 50
 			}, {
 				"record": 500,
 				"name": "인피니티 애로우",
 				"englishName": "Infinity Arrow",
-				"dbTextIndex": 726
+				"dbTextIndex": 726,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		샤잉레이몬: {
@@ -5917,19 +6507,25 @@ var ChampCore = (function(exports) {
 					"record": 502,
 					"name": "글로리어스 버스트",
 					"englishName": "Glorious Burst",
-					"dbTextIndex": 727
+					"dbTextIndex": 727,
+					"sequence": 7,
+					"tpCost": 40
 				},
 				{
 					"record": 503,
 					"name": "샤이닝 블래스트",
 					"englishName": "Shining Blast",
-					"dbTextIndex": 728
+					"dbTextIndex": 728,
+					"sequence": 10,
+					"tpCost": 60
 				},
 				{
 					"record": 504,
 					"name": "지오 그레이 소드",
 					"englishName": "Geogrey Sword",
-					"dbTextIndex": 729
+					"dbTextIndex": 729,
+					"sequence": 9,
+					"tpCost": 40
 				}
 			]
 		},
@@ -5939,12 +6535,16 @@ var ChampCore = (function(exports) {
 				"record": 506,
 				"name": "스파이럴 본",
 				"englishName": "Spiral Bone Crusher",
-				"dbTextIndex": 730
+				"dbTextIndex": 730,
+				"sequence": 7,
+				"tpCost": 30
 			}, {
 				"record": 507,
 				"name": "그랜 차져",
 				"englishName": "Grand Charge",
-				"dbTextIndex": 731
+				"dbTextIndex": 731,
+				"sequence": 8,
+				"tpCost": 40
 			}]
 		},
 		세인트가르고몬: {
@@ -5953,12 +6553,16 @@ var ChampCore = (function(exports) {
 				"record": 509,
 				"name": "버스트 샷",
 				"englishName": "Burst Shot",
-				"dbTextIndex": 732
+				"dbTextIndex": 732,
+				"sequence": 7,
+				"tpCost": 60
 			}, {
 				"record": 510,
 				"name": "자이언트 미사일",
 				"englishName": "Magna Blaster",
-				"dbTextIndex": 733
+				"dbTextIndex": 733,
+				"sequence": 9,
+				"tpCost": 30
 			}]
 		},
 		하이안드로몬: {
@@ -5967,12 +6571,16 @@ var ChampCore = (function(exports) {
 				"record": 512,
 				"name": "아토믹 레이",
 				"englishName": "Atomic Ray",
-				"dbTextIndex": 734
+				"dbTextIndex": 734,
+				"sequence": 8,
+				"tpCost": 40
 			}, {
 				"record": 513,
 				"name": "스파이럴 소드",
 				"englishName": "Lightning Blade",
-				"dbTextIndex": 735
+				"dbTextIndex": 735,
+				"sequence": 7,
+				"tpCost": 30
 			}]
 		},
 		반쵸레오몬: {
@@ -5981,12 +6589,16 @@ var ChampCore = (function(exports) {
 				"record": 515,
 				"name": "사자뇌왕참",
 				"englishName": "Lion King Slash",
-				"dbTextIndex": 736
+				"dbTextIndex": 736,
+				"sequence": 7,
+				"tpCost": 50
 			}, {
 				"record": 516,
 				"name": "플래시 반쵸 펀치",
 				"englishName": "Flash Bancho Punch",
-				"dbTextIndex": 737
+				"dbTextIndex": 737,
+				"sequence": 8,
+				"tpCost": 40
 			}]
 		},
 		피에몬: {
@@ -5995,12 +6607,16 @@ var ChampCore = (function(exports) {
 				"record": 518,
 				"name": "트럼프 소드",
 				"englishName": "Trump Sword",
-				"dbTextIndex": 738
+				"dbTextIndex": 738,
+				"sequence": 7,
+				"tpCost": 40
 			}, {
 				"record": 519,
 				"name": "엔딩 스나이프",
 				"englishName": "Ending Snipe",
-				"dbTextIndex": 739
+				"dbTextIndex": 739,
+				"sequence": 9,
+				"tpCost": 30
 			}]
 		},
 		피노키몬: {
@@ -6009,12 +6625,16 @@ var ChampCore = (function(exports) {
 				"record": 521,
 				"name": "블리트 해머",
 				"englishName": "Puppet Pummel",
-				"dbTextIndex": 740
+				"dbTextIndex": 740,
+				"sequence": 9,
+				"tpCost": 50
 			}, {
 				"record": 522,
 				"name": "우드 크로스",
 				"englishName": "Wood Cross",
-				"dbTextIndex": 741
+				"dbTextIndex": 741,
+				"sequence": 8,
+				"tpCost": 40
 			}]
 		},
 		파라오몬: {
@@ -6023,12 +6643,16 @@ var ChampCore = (function(exports) {
 				"record": 524,
 				"name": "네크로 미스트",
 				"englishName": "Necro Mist",
-				"dbTextIndex": 742
+				"dbTextIndex": 742,
+				"sequence": 8,
+				"tpCost": 60
 			}, {
 				"record": 525,
 				"name": "네크로 미스트",
 				"englishName": "Necro Mist",
-				"dbTextIndex": 743
+				"dbTextIndex": 743,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		푸쿠몬: {
@@ -6037,12 +6661,16 @@ var ChampCore = (function(exports) {
 				"record": 527,
 				"name": "니들 스콜",
 				"englishName": "Needle Squall",
-				"dbTextIndex": 744
+				"dbTextIndex": 744,
+				"sequence": 8,
+				"tpCost": 30
 			}, {
 				"record": 528,
 				"name": "브리튼 펀치",
 				"englishName": "Britain Punch",
-				"dbTextIndex": 745
+				"dbTextIndex": 745,
+				"sequence": 7,
+				"tpCost": 60
 			}]
 		},
 		블랙워그레이몬: {
@@ -6051,12 +6679,16 @@ var ChampCore = (function(exports) {
 				"record": 530,
 				"name": "암흑의 가이아 포스",
 				"englishName": "Dark Gaia Force",
-				"dbTextIndex": 746
+				"dbTextIndex": 746,
+				"sequence": 7,
+				"tpCost": 60
 			}, {
 				"record": 531,
 				"name": "드라몬 킬러",
 				"englishName": "Iron Claws",
-				"dbTextIndex": 747
+				"dbTextIndex": 747,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		프린스콩알몬: {
@@ -6065,12 +6697,16 @@ var ChampCore = (function(exports) {
 				"record": 533,
 				"name": "스마일리 워 헤드",
 				"englishName": "Smiley Warhead",
-				"dbTextIndex": 748
+				"dbTextIndex": 748,
+				"sequence": 8,
+				"tpCost": 40
 			}, {
 				"record": 534,
 				"name": "퍼플 레인",
 				"englishName": "Purple Rain",
-				"dbTextIndex": 749
+				"dbTextIndex": 749,
+				"sequence": 7,
+				"tpCost": 60
 			}]
 		},
 		프레시오몬: {
@@ -6079,12 +6715,16 @@ var ChampCore = (function(exports) {
 				"record": 536,
 				"name": "솔로 블루",
 				"englishName": "Water Tail Blaster",
-				"dbTextIndex": 750
+				"dbTextIndex": 750,
+				"sequence": 7,
+				"tpCost": 30
 			}, {
 				"record": 537,
 				"name": "쉐이킹 펄스",
 				"englishName": "Pulse Blast",
-				"dbTextIndex": 751
+				"dbTextIndex": 751,
+				"sequence": 7,
+				"tpCost": 40
 			}]
 		},
 		헤라크레스캅테리몬: {
@@ -6093,12 +6733,16 @@ var ChampCore = (function(exports) {
 				"record": 539,
 				"name": "기가 블래스터",
 				"englishName": "Giga Scissor Claw",
-				"dbTextIndex": 752
+				"dbTextIndex": 752,
+				"sequence": 7,
+				"tpCost": 60
 			}, {
 				"record": 540,
 				"name": "하이 메가 블래스터",
 				"englishName": "Electro Blaster",
-				"dbTextIndex": 753
+				"dbTextIndex": 753,
+				"sequence": 7,
+				"tpCost": 40
 			}]
 		},
 		페닉스몬: {
@@ -6107,12 +6751,16 @@ var ChampCore = (function(exports) {
 				"record": 542,
 				"name": "스타라이트 익스플로전",
 				"englishName": "Starlight Explosion",
-				"dbTextIndex": 754
+				"dbTextIndex": 754,
+				"sequence": 9,
+				"tpCost": 60
 			}, {
 				"record": 543,
 				"name": "크림즌 플레어",
 				"englishName": "Crimson Flame",
-				"dbTextIndex": 755
+				"dbTextIndex": 755,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		미러지가오몬: {
@@ -6122,19 +6770,25 @@ var ChampCore = (function(exports) {
 					"record": 545,
 					"name": "더블 크레센트 미러지",
 					"englishName": "Double Crescent Mirage",
-					"dbTextIndex": 756
+					"dbTextIndex": 756,
+					"sequence": 7,
+					"tpCost": 30
 				},
 				{
 					"record": 546,
 					"name": "풀문 블래스터",
 					"englishName": "Full Moon Blaster",
-					"dbTextIndex": 757
+					"dbTextIndex": 757,
+					"sequence": 9,
+					"tpCost": 40
 				},
 				{
 					"record": 547,
 					"name": "게일 크로우",
 					"englishName": "Gale Claw",
-					"dbTextIndex": 758
+					"dbTextIndex": 758,
+					"sequence": 8,
+					"tpCost": 60
 				}
 			]
 		},
@@ -6144,12 +6798,16 @@ var ChampCore = (function(exports) {
 				"record": 549,
 				"name": "무한 캐논",
 				"englishName": "Giga Cannon",
-				"dbTextIndex": 759
+				"dbTextIndex": 759,
+				"sequence": 7,
+				"tpCost": 60
 			}, {
 				"record": 550,
 				"name": "무한 핸드",
 				"englishName": "Infinite Hand",
-				"dbTextIndex": 760
+				"dbTextIndex": 760,
+				"sequence": 10,
+				"tpCost": 40
 			}]
 		},
 		메탈에테몬: {
@@ -6158,12 +6816,16 @@ var ChampCore = (function(exports) {
 				"record": 552,
 				"name": "바나나 슬립",
 				"englishName": "Banana Slip",
-				"dbTextIndex": 761
+				"dbTextIndex": 761,
+				"sequence": 7,
+				"tpCost": 25
 			}, {
 				"record": 553,
 				"name": "러브 세레나데",
 				"englishName": "DarkNetwork&C.Crush",
-				"dbTextIndex": 762
+				"dbTextIndex": 762,
+				"sequence": 8,
+				"tpCost": 40
 			}]
 		},
 		메탈가루몬: {
@@ -6172,12 +6834,16 @@ var ChampCore = (function(exports) {
 				"record": 555,
 				"name": "코퀴터스 브레스",
 				"englishName": "Freezing Breath",
-				"dbTextIndex": 763
+				"dbTextIndex": 763,
+				"sequence": 7,
+				"tpCost": 40
 			}, {
 				"record": 556,
 				"name": "그레이 스크로스 프리저",
 				"englishName": "Grace Cross Freezer",
-				"dbTextIndex": 764
+				"dbTextIndex": 764,
+				"sequence": 7,
+				"tpCost": 50
 			}]
 		},
 		"메탈가루몬(흑)": {
@@ -6186,12 +6852,16 @@ var ChampCore = (function(exports) {
 				"record": 558,
 				"name": "코퀴터스 브레스",
 				"englishName": "Freezing Breath",
-				"dbTextIndex": 765
+				"dbTextIndex": 765,
+				"sequence": 7,
+				"tpCost": 30
 			}, {
 				"record": 559,
 				"name": "블리저드 울프 크로우",
 				"englishName": "Blizzard Wolf Claw",
-				"dbTextIndex": 766
+				"dbTextIndex": 766,
+				"sequence": 7,
+				"tpCost": 50
 			}]
 		},
 		메탈시드라몬: {
@@ -6200,12 +6870,16 @@ var ChampCore = (function(exports) {
 				"record": 561,
 				"name": "얼티밋 스트림",
 				"englishName": "River of Power",
-				"dbTextIndex": 767
+				"dbTextIndex": 767,
+				"sequence": 8,
+				"tpCost": 60
 			}, {
 				"record": 562,
 				"name": "포세이돈 디바이드",
 				"englishName": "Poseidon Divide",
-				"dbTextIndex": 768
+				"dbTextIndex": 768,
+				"sequence": 8,
+				"tpCost": 30
 			}]
 		},
 		로제몬: {
@@ -6214,12 +6888,16 @@ var ChampCore = (function(exports) {
 				"record": 564,
 				"name": "손 윕",
 				"englishName": "Thorn Whipping",
-				"dbTextIndex": 769
+				"dbTextIndex": 769,
+				"sequence": 10,
+				"tpCost": 30
 			}, {
 				"record": 565,
 				"name": "포비든 템테이션",
 				"englishName": "Forbidden Temptation",
-				"dbTextIndex": 770
+				"dbTextIndex": 770,
+				"sequence": 7,
+				"tpCost": 60
 			}]
 		},
 		지드가루몬: {
@@ -6229,19 +6907,25 @@ var ChampCore = (function(exports) {
 					"record": 567,
 					"name": "지드 포",
 					"englishName": "Zeed Cannon",
-					"dbTextIndex": 771
+					"dbTextIndex": 771,
+					"sequence": 7,
+					"tpCost": 60
 				},
 				{
 					"record": 568,
 					"name": "풀메탈 블레이즈",
 					"englishName": "Full Metal Breath",
-					"dbTextIndex": 772
+					"dbTextIndex": 772,
+					"sequence": 7,
+					"tpCost": 40
 				},
 				{
 					"record": 569,
 					"name": "블로우 백 브레스",
 					"englishName": "Blowback Breath",
-					"dbTextIndex": 773
+					"dbTextIndex": 773,
+					"sequence": 7,
+					"tpCost": 30
 				}
 			]
 		},
@@ -6252,19 +6936,25 @@ var ChampCore = (function(exports) {
 					"record": 571,
 					"name": "드라몬 브레이커",
 					"englishName": "Dramon Breaker",
-					"dbTextIndex": 774
+					"dbTextIndex": 774,
+					"sequence": 8,
+					"tpCost": 50
 				},
 				{
 					"record": 572,
 					"name": "트라이던트 가이아",
 					"englishName": "Trident Gaia",
-					"dbTextIndex": 775
+					"dbTextIndex": 775,
+					"sequence": 9,
+					"tpCost": 60
 				},
 				{
 					"record": 573,
 					"name": "빅토리 차지",
 					"englishName": "Victory Charge",
-					"dbTextIndex": 776
+					"dbTextIndex": 776,
+					"sequence": 7,
+					"tpCost": 30
 				}
 			]
 		},
@@ -6275,19 +6965,25 @@ var ChampCore = (function(exports) {
 					"record": 575,
 					"name": "천룡참파",
 					"englishName": "Tenryu Slash",
-					"dbTextIndex": 777
+					"dbTextIndex": 777,
+					"sequence": 8,
+					"tpCost": 60
 				},
 				{
 					"record": 576,
 					"name": "승룡참파",
 					"englishName": "Shoryu Slash",
-					"dbTextIndex": 778
+					"dbTextIndex": 778,
+					"sequence": 7,
+					"tpCost": 30
 				},
 				{
 					"record": 577,
 					"name": "황룡참파",
 					"englishName": "Koryu Slash",
-					"dbTextIndex": 779
+					"dbTextIndex": 779,
+					"sequence": 9,
+					"tpCost": 30
 				}
 			]
 		},
@@ -6298,19 +6994,25 @@ var ChampCore = (function(exports) {
 					"record": 579,
 					"name": "디스트로이드 러시",
 					"englishName": "Destroyed Rush",
-					"dbTextIndex": 780
+					"dbTextIndex": 780,
+					"sequence": 8,
+					"tpCost": 60
 				},
 				{
 					"record": 580,
 					"name": "인피니티 볼링",
 					"englishName": "Infinity Bowling",
-					"dbTextIndex": 781
+					"dbTextIndex": 781,
+					"sequence": 10,
+					"tpCost": 40
 				},
 				{
 					"record": 581,
 					"name": "그래비티 프레스",
 					"englishName": "Gravity Press",
-					"dbTextIndex": 782
+					"dbTextIndex": 782,
+					"sequence": 7,
+					"tpCost": 30
 				}
 			]
 		},
@@ -6321,19 +7023,25 @@ var ChampCore = (function(exports) {
 					"record": 583,
 					"name": "솔 블래스터",
 					"englishName": "Solblaster",
-					"dbTextIndex": 783
+					"dbTextIndex": 783,
+					"sequence": 9,
+					"tpCost": 30
 				},
 				{
 					"record": 584,
 					"name": "포보스 블로우",
 					"englishName": "Foibos Blow",
-					"dbTextIndex": 784
+					"dbTextIndex": 784,
+					"sequence": 8,
+					"tpCost": 40
 				},
 				{
 					"record": 585,
 					"name": "애로우 오브 아폴로",
 					"englishName": "Arrow of Apollo",
-					"dbTextIndex": 785
+					"dbTextIndex": 785,
+					"sequence": 7,
+					"tpCost": 60
 				}
 			]
 		},
@@ -6344,19 +7052,25 @@ var ChampCore = (function(exports) {
 					"record": 587,
 					"name": "크레센트 하켄",
 					"englishName": "Crescent Harken",
-					"dbTextIndex": 786
+					"dbTextIndex": 786,
+					"sequence": 10,
+					"tpCost": 60
 				},
 				{
 					"record": 588,
 					"name": "애로우 오브 알테미스",
 					"englishName": "Arrow of Artemis",
-					"dbTextIndex": 787
+					"dbTextIndex": 787,
+					"sequence": 7,
+					"tpCost": 25
 				},
 				{
 					"record": 589,
 					"name": "굿나잇 문",
 					"englishName": "Goodnight Moon",
-					"dbTextIndex": 788
+					"dbTextIndex": 788,
+					"sequence": 9,
+					"tpCost": 40
 				}
 			]
 		},
@@ -6366,12 +7080,16 @@ var ChampCore = (function(exports) {
 				"record": 591,
 				"name": "포지트론 레이저",
 				"englishName": "Positron Laser",
-				"dbTextIndex": 789
+				"dbTextIndex": 789,
+				"sequence": 7,
+				"tpCost": 30
 			}, {
 				"record": 592,
 				"name": "기가데스",
 				"englishName": "Giga Fire",
-				"dbTextIndex": 790
+				"dbTextIndex": 790,
+				"sequence": 9,
+				"tpCost": 60
 			}]
 		},
 		듀크몬: {
@@ -6380,31 +7098,37 @@ var ChampCore = (function(exports) {
 				"record": 594,
 				"name": "로얄 세이버",
 				"englishName": "Royal Saber",
-				"dbTextIndex": 791
+				"dbTextIndex": 791,
+				"sequence": 7,
+				"tpCost": 30
 			}, {
 				"record": 595,
 				"name": "파이널 엘리시온",
 				"englishName": "Final Elision",
-				"dbTextIndex": 792
+				"dbTextIndex": 792,
+				"sequence": 8,
+				"tpCost": 60
 			}]
 		}
 	};
 	var ANIMATIONS = [
 		"attack1",
 		"attack2",
-		"attack3"
+		"attack3",
+		"attack4"
 	];
 	/** 한글 이름은 원본 도감의 조회 규칙으로 연결한다. 영문 직역으로 대체하지 않는다. */
 	function battleSkills(speciesId) {
 		return (TABLE[getSpecies(speciesId).name]?.skills ?? []).map((skill, index) => ({
 			...skill,
 			slot: index,
-			animation: ANIMATIONS[index]
+			sequence: skill.sequence,
+			animation: ANIMATIONS[skill.sequence - 7]
 		}));
 	}
-	/** 웹판 정책: 보유 기술을 동일 확률로 선택. 원본 AI·기술별 TP/위력은 아직 미확인. */
-	function pickBattleSkill(speciesId, rng) {
-		const skills = battleSkills(speciesId);
+	/** 사용 가능한 기술을 동일 확률로 선택하는 빈도/AI는 웹판 정책. TP 소비는 원본 값. */
+	function pickBattleSkill(speciesId, rng, tp = Infinity) {
+		const skills = battleSkills(speciesId).filter((skill) => skill.tpCost <= tp);
 		return skills.length ? pick(rng, skills) : null;
 	}
 	// src/core/battle.ts
@@ -6556,14 +7280,14 @@ var ChampCore = (function(exports) {
 				continue;
 			}
 			const pSpecial = Math.min(.6, .1 + u.stats.int / 600) * (u.mode === "특수" ? 3 : u.mode === "일반" ? .4 : .3) * (u.personality === "쿨" ? 1.6 : u.personality === "솔직" ? 1.2 : 1);
-			const wantsSpecial = u.cd <= 0 && u.tp >= 20 && d <= 150 && battleSkills(u.speciesId).length > 0 && rng() < pSpecial;
+			const wantsSpecial = u.cd <= 0 && d <= 150 && battleSkills(u.speciesId).some((skill) => skill.tpCost <= u.tp) && rng() < pSpecial;
 			if (!wantsSpecial && d > 42) {
 				if (u.mode !== "지원") move(u, near.x, near.y, speed);
 				continue;
 			}
 			if (u.cd > 0) continue;
 			const special = wantsSpecial;
-			const skill = special ? pickBattleSkill(u.speciesId, rng) : null;
+			const skill = special ? pickBattleSkill(u.speciesId, rng, u.tp) : null;
 			let dmg = (8 + (special ? (u.stats.atk + u.stats.int) / 2 : u.stats.atk) * .9) * (100 / (100 + near.stats.def)) * range(rng, .85, 1.15) * attrMult(u.attr, near.attr);
 			if (special) dmg *= 2.2;
 			if (u.personality === "열혈") dmg *= 1.2;
@@ -6572,7 +7296,7 @@ var ChampCore = (function(exports) {
 			const damage = Math.max(1, Math.round(dmg));
 			near.hp = Math.max(0, near.hp - damage);
 			near.wasHit = true;
-			if (special) u.tp -= 20;
+			if (skill) u.tp -= skill.tpCost;
 			u.cd = (1.3 - Math.min(.6, u.stats.spd / 400)) * (u.personality === "제멋대로" ? .9 : 1);
 			if (u.personality === "성급한") u.retreat = .8;
 			events.push({

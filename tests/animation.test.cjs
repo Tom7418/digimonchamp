@@ -99,22 +99,26 @@ test('실제 적중 이벤트는 공격과 피격을 분리하며 결과 화면�
  }
 });
 
-test('기술 이벤트의 슬롯 동작과 이름을 재생하고 공격자 로그를 남긴다',()=>{
+test('실제 기술 레코드의7~10 동작·한글 이름·소비TP를 화면에 전달한다',()=>{
  const source=fs.readFileSync('web/game.js','utf8');
  const start=source.indexOf('  function battleTick(dt)'),end=source.indexOf('  function battleLog(',start);
- for(const [slot,animation] of ['attack1','attack2','attack3'].entries()){
+ for(const [speciesId,slot,animation,name,cost] of [
+  ['가루다몬',0,'attack3','쉐도우 윙',30],['가루다몬',1,'attack1','파이어 허리케인',20],
+  ['코로몬',0,'attack2','물방울',4],['드라코몬',1,'attack4','테일 스매시',10],
+ ]){
   const logs=[];
   const sandbox=vm.createContext({window:{},performance:{now:()=>0},drawArena(){},finishBattle(){},battleLog:t=>logs.push(t)});
   for(const file of ['core.js','assets/sprites.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync('web/'+file,'utf8'),sandbox);
   vm.runInContext(`const animations=window.createAnimationPlayer(window.DIGIMON_ANIMATIONS);
    const SPRITE_BY_NAME=Object.fromEntries(window.SPRITES.map(s=>[s.name,s.id]));
-   const C={getSpecies:ChampCore.getSpecies,stepBattle:()=>[{type:'hit',from:0,to:1,damage:12,special:true,skill:{slot:${slot},animation:'${animation}',name:'헤비 플레임'}}]};
-   let battle={done:false,acc:0.1,state:{over:false,units:[{id:0,name:'아구몬',speciesId:'아구몬',x:0,y:0},{id:1,name:'토이아구몬',speciesId:'토이아구몬',x:50,y:0}]},actions:new Map(),motion:new Map(),flashes:[],effects:{tick(){},add(){}}};
+   const skill=ChampCore.battleSkills('${speciesId}')[${slot}];
+   const C={getSpecies:ChampCore.getSpecies,stepBattle:()=>[{type:'hit',from:0,to:1,damage:12,special:true,skill}]};
+   let battle={done:false,acc:0.1,state:{over:false,units:[{id:0,name:'${speciesId}',speciesId:'${speciesId}',x:0,y:0},{id:1,name:'토이아구몬',speciesId:'토이아구몬',x:50,y:0}]},actions:new Map(),motion:new Map(),flashes:[],effects:{tick(){},add(){}}};
    globalThis.current=battle;
   `+source.slice(start,end),sandbox);
   sandbox.battleTick(0.01);
   assert.equal(sandbox.current.actions.get(0).state,animation);
-  assert.ok(sandbox.current.flashes.some(f=>f.id===0&&f.text==='헤비 플레임'&&f.skill));
-  assert.deepEqual(logs,['아구몬 · 헤비 플레임 → 토이아구몬 (12)']);
+  assert.ok(sandbox.current.flashes.some(f=>f.id===0&&f.text===name&&f.skill));
+  assert.deepEqual(logs,[`${speciesId} · ${name} → 토이아구몬 (12 · TP ${cost})`]);
  }
 });
