@@ -14,7 +14,7 @@ function setup(){
  const window={},cache=new Map(),monsters=new Map(),calls=[];let reads=0;
  const noop=()=>{},nodes={},toolbar={classList:{toggle:noop},querySelector:k=>nodes[k]??={},querySelectorAll:()=>[]};
  const document={createElement(tag){if(tag==='section')return toolbar;let im,sx,sw,sh;return {getContext(){return {drawImage(image,x,y,w,h){im=image;sx=x;sw=w;sh=h;},getImageData(){reads++;const data=new Uint8ClampedArray(sw*sh*4);for(let y=0;y<sh;y++)data.set(im.rgba.subarray((y*im.naturalWidth+sx)*4,(y*im.naturalWidth+sx+sw)*4),y*sw*4);return {data};}};}};}};
- const ctx=vm.createContext({window,document,view:{team:[]},digi:uid=>monsters.get(uid),ctx:{drawImage(...args){calls.push(args);}}});
+ const ctx=vm.createContext({window,document,view:{team:[]},HUNT_SPRITE_SCALE:1,digi:uid=>monsters.get(uid),ctx:{drawImage(...args){calls.push(args);}}});
  vm.runInContext(fs.readFileSync('web/assets/sprites.js','utf8'),ctx);
  const sprites=window.SPRITES,lookup=(id,isEgg=false)=>{const a=sprites.find(s=>isEgg?s.name==='디지에그':s.id===id);if(!a)return null;if(!cache.has(a.id))cache.set(a.id,{...a,image:png('web/assets/'+a.id+'.png')});return cache.get(a.id);};
  Object.assign(ctx,{spriteOf:lookup,C:{getSpecies:id=>({stage:sprites.find(s=>s.id===id)?.name==='깜몬'?1:6})}});
@@ -77,7 +77,7 @@ test('확대·축소·카메라 이동 후 실제 몸을 누를 때만 드래그
 });
 test('사냥의 묶인 개체 클릭과 단발 샷도 같은 프레임·크기의 판정을 쓴다',()=>{
  const s=setup(),a=s.lookup(s.sprites.find(x=>x.name==='아구몬').id),w={id:a.id,x:300,y:250,vx:1};
- const pose={x:w.x,y:w.y,scale:2,frame:0,flip:true},g=s.spriteFrameGeometry(a,0),i=g.alpha.findIndex(x=>x);
+ const pose={x:w.x,y:w.y,scale:1,frame:0,flip:true},g=s.spriteFrameGeometry(a,0),i=g.alpha.findIndex(x=>x);
  s.spriteFrames.set(w,{speciesId:w.id,frame:0,flip:true});
  assert.equal(s.wildSpriteHit(w,world(a,pose,i%a.width+0.5,Math.floor(i/a.width)+0.5)),true);
  const bounds=s.spriteVisualBounds(a,pose);assert.equal(s.wildSpriteHit(w,{x:bounds.cx,y:bounds.top-20}),false);

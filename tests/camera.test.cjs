@@ -30,13 +30,17 @@ test('zoom and camera remain bounded at extreme wheel deltas',()=>{
  assert.ok(board.cam.x<=board.world.w-board.view.w/board.zoom);
 });
 
-test('hunt pointer uses canvas pixels regardless of farm zoom, pan, or CSS size',()=>{
+test('hunt pointer uses the hunt camera, not the farm camera, regardless of CSS size',()=>{
  const source=fs.readFileSync('web/game.js','utf8');
- const part=source.slice(source.indexOf('  function canvasPoint(e)'),source.indexOf('  function huntPointer('));
+ const part=source.slice(source.indexOf('  function canvasPoint(e)'),source.indexOf('  function huntPointer('))
+  +source.slice(source.indexOf('  function huntToWorld('),source.indexOf('\n',source.indexOf('  function huntToWorld(')));
  const canvas={width:960,height:560,getBoundingClientRect:()=>({left:120,top:80,width:480,height:280})};
- const context=vm.createContext({canvas,board:{toWorld(){throw Error('farm coordinates used');}}});
+ const context=vm.createContext({canvas,hunt:null,board:{toWorld(){throw Error('farm coordinates used');}}});
  vm.runInContext(part,context);
  for(const [clientX,clientY,x,y] of [[120,80,0,0],[360,220,480,280],[600,360,960,560]]){
    const p=context.canvasPoint({clientX,clientY});assert.equal(p.x,x);assert.equal(p.y,y);
  }
+ // 사냥 카메라: 지도 좌표 = 화면 / 배율 + 카메라 위치
+ vm.runInContext("hunt={cam:{x:100,y:50},zoom:2}",context);
+ const p=context.canvasPoint({clientX:360,clientY:220});assert.equal(p.x,100+480/2);assert.equal(p.y,50+280/2);
 });

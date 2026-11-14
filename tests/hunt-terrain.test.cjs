@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 function setup(){
  const nodes={'#modal':{close(){}},'#gear-select':{value:'bait1'}},messages=[],noop=()=>{};
- const ctx=vm.createContext({window:{},hunt:null,AREA:{x0:40,y0:70,x1:920,y1:530},performance:{now:()=>0},document:{body:{classList:{add:noop,remove:noop}}},$:k=>nodes[k],
+ const ctx=vm.createContext({window:{},hunt:null,AREA:{x0:40,y0:70,x1:920,y1:530},HUNT_ZOOM:{start:1.5,min:1,max:3},HUNT_SPRITE_SCALE:1,performance:{now:()=>0},document:{body:{classList:{add:noop,remove:noop}}},$:k=>nodes[k],
   huntMapImage:()=>null,setTool:noop,log:noop,render:noop,persist:noop,toast:x=>messages.push(x),huntNote:x=>messages.push(x),refreshGear:noop,
   huntIsNight:()=>false,wireMode:()=>ctx.hunt.tool==='wire',wireGear:()=>null,canvasPoint:e=>({x:e.clientX,y:e.clientY}),canvas:{setPointerCapture:noop},BIND_SECONDS:4,PULL_DISTANCE:70,
   applyEffect:noop,blast:noop,wrapRope:noop,endHunt:noop,pullRope:noop,wildSpriteHit:()=>true});
@@ -15,12 +15,12 @@ function setup(){
  const start=()=>ctx.startHunt({...ctx.C.FIELDS[0],open:true});
  const event=p=>({pointerId:1,clientX:p.x,clientY:p.y,preventDefault(){}});
  function barrier(){start();const cells=new Uint8Array(128*128);for(let y=0;y<128;y++)cells[y*128+30]=1;
-  Object.assign(ctx.hunt,{terrain:{width:128,height:128,tileSize:8,cells},view:{x:40,y:96},spawnPoints:[],wilds:[],respawn:999,baits:[],traps:[],wires:[]});
+  Object.assign(ctx.hunt,{cam:null,terrain:{width:128,height:128,tileSize:8,cells},view:{x:40,y:96},spawnPoints:[],wilds:[],respawn:999,baits:[],traps:[],wires:[]});
  }
  return {ctx,nodes,messages,start,event,barrier};
 }
 test('실제 사냥 시작은 배경 crop 좌표를 더한 안전한 칸에5마리를 생성한다',()=>{
- const s=setup();s.start();assert.equal(s.ctx.hunt.wilds.length,s.ctx.C.WILD_COUNT);
+ const s=setup();s.start();assert.equal(s.ctx.hunt.wilds.length,s.ctx.C.HUNT_WILD_COUNT);
  for(const w of s.ctx.hunt.wilds)assert.equal(s.ctx.C.canStandOnHuntTerrain(s.ctx.hunt.terrain,s.ctx.huntMapPoint(w)),true);
  const bits=s.ctx.save.bits;s.ctx.startHunt({id:'없는 필드',open:true,fee:100});assert.equal(s.ctx.save.bits,bits);
 });
@@ -51,7 +51,7 @@ test('16지도에서 화면 경계 반사까지 거쳐도 개체와 장난감을
   for(let i=0;i<40;i++){
    w.vx=(rng()-0.5)*1000;w.vy=(rng()-0.5)*1000;const b=h.baits[0];b.vx=(rng()-0.5)*1000;b.vy=(rng()-0.5)*1000;
    s.ctx.huntTick(0.1);
-   for(const actor of [w,b]){assert.equal(s.ctx.C.canStandOnHuntTerrain(h.terrain,s.ctx.huntMapPoint(actor)),true,field.id);assert.ok(actor.x>=40-1e-7&&actor.x<=920+1e-7,JSON.stringify({field:field.id,i,x:actor.x,y:actor.y}));assert.ok(actor.y>=70-1e-7&&actor.y<=530+1e-7);}
+   for(const actor of [w,b]){assert.equal(s.ctx.C.canStandOnHuntTerrain(h.terrain,s.ctx.huntMapPoint(actor)),true,field.id);const A=s.ctx.AREA;assert.ok(actor.x>=A.x0-1e-7&&actor.x<=A.x1+1e-7,JSON.stringify({field:field.id,i,x:actor.x,y:actor.y}));assert.ok(actor.y>=A.y0-1e-7&&actor.y<=A.y1+1e-7);}
   }
  }
 });

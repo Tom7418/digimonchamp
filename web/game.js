@@ -574,8 +574,8 @@
   }
   function wildSpriteHit(w,pt){
     const drawn=spriteFrames.get(w),a=spriteOf(w.id,false);
-    return spriteHit(a,{x:w.x,y:w.y,scale:2,frame:drawn?.speciesId===w.id?drawn.frame:0,flip:drawn?.flip??w.vx>0,
-      radius:(6+C.getSpecies(w.id).stage*3)*1.6},pt);
+    return spriteHit(a,{x:w.x,y:w.y,scale:HUNT_SPRITE_SCALE,frame:drawn?.speciesId===w.id?drawn.frame:0,flip:drawn?.flip??w.vx>0,
+      radius:(6+C.getSpecies(w.id).stage*3)*0.8*HUNT_SPRITE_SCALE},pt);
   }
   function drawPetNote(im,p){
     const d=digi(p.uid);if(!d||!im.complete||!im.naturalWidth)return;
@@ -1526,7 +1526,12 @@
   //  2) 감긴 디지몬을 눌러 바깥쪽으로 끌었다 놓으면 '당기기' 1회 → HP 1 감소. HP가 0이 되면 포획.
   //  감은 뒤 BIND_SECONDS 안에 당기지 않으면 로프가 풀리고 디지몬이 도망간다.
   // 와이어 모드: 드래그한 선분에 와이어를 깔아 길을 막는다 (와이어 1개 소모).
+  // 사냥은 원본 지도(1024×1024) 전체를 무대로 쓴다. AREA는 지도 좌표의 활동 범위, 화면은 카메라로 움직인다.
   const AREA = { x0: 40, y0: 70, x1: 920, y1: 530 };
+  /** 사냥 화면 배율. 원작처럼 지도 1배·디지몬 1배 비율을 유지하고 화면 전체를 이만큼 키워 보여 준다 (휠로 조절) */
+  const HUNT_ZOOM = { start: 1.5, min: 1, max: 3 };
+  /** 사냥터 디지몬 그림 배율 (지도 픽셀 기준). 원작처럼 지도와 같은 1배 */
+  const HUNT_SPRITE_SCALE = 1;
   const FIELD_LOOK = {
     '다이나 초원': ['#7fb069', '#6a9a57'], '미끌미끌 늪': ['#6f8f6a', '#4f6d55'], '모쥬라의 숲': ['#4f7f4a', '#3b6438'],
     하수도: ['#6d7378', '#545a5e'], '이글이글 사막': ['#d9b46a', '#c49a52'], 대초원: ['#9cc46e', '#86ad5c'],
@@ -1551,7 +1556,7 @@
   }
   let hunt = null;
   const BIND_SECONDS = 4;
-  const PULL_DISTANCE = 70;
+  const PULL_DISTANCE = 45; // 지도 좌표(디지몬 1배 기준)
 
   function huntMenu() {
     const can = C.canHuntNow(save);
@@ -1578,6 +1583,15 @@
 
   // 화면의 잘라낸 좌표를 ATR의 원본 지도 좌표로 바꾼다. 사육장 카메라/줌은 쓰지 않는다.
   function huntMapPoint(p){return {x:p.x+hunt.view.x,y:p.y+hunt.view.y};}
+  // ---- 사냥 카메라: 지도 좌표 ↔ 화면(960×560) ----
+  function huntClampCam(){
+    if(!hunt?.cam)return;
+    const vw=960/hunt.zoom,vh=560/hunt.zoom;
+    hunt.cam.x=Math.max(0,Math.min(Math.max(0,hunt.size.w-vw),hunt.cam.x));
+    hunt.cam.y=Math.max(0,Math.min(Math.max(0,hunt.size.h-vh),hunt.cam.y));
+  }
+  function huntCenter(x,y){if(!hunt?.cam)return;hunt.cam.x=x-480/hunt.zoom;hunt.cam.y=y-280/hunt.zoom;huntClampCam();}
+  function huntToWorld(s){return hunt?.cam?{x:s.x/hunt.zoom+hunt.cam.x,y:s.y/hunt.zoom+hunt.cam.y}:s;}
   function huntGroundClear(p,radius=4){
     return p.x>=AREA.x0&&p.x<=AREA.x1&&p.y>=AREA.y0&&p.y<=AREA.y1&&C.canStandOnHuntTerrain(hunt.terrain,huntMapPoint(p),radius);
   }
@@ -1602,14 +1616,20 @@
     if (!field.open) return;
     if (save.bits < field.fee) return toast('비트가 부족해요.');
     const terrain=C.huntTerrain(field.id);if(!terrain)return toast('사냥터 지형을 찾을 수 없습니다.');
-    const viewport={x:Math.floor(Math.random()*(terrain.width*terrain.tileSize-960)),y:Math.floor(Math.random()*(terrain.height*terrain.tileSize-560))};
-    const spawnPoints=C.huntSpawnPoints(terrain,{x0:viewport.x+AREA.x0+40,y0:viewport.y+AREA.y0+40,x1:viewport.x+AREA.x1-40,y1:viewport.y+AREA.y1-40});
+    // 지도 전체를 쓴다 (예전에는 화면 크기만큼 잘라 썼다). 지도 좌표 = 사냥 좌표
+    const W=terrain.width*terrain.tileSize,H=terrain.height*terrain.tileSize;
+    const viewport={x:0,y:0};
+    Object.assign(AREA,{x0:24,y0:24,x1:W-24,y1:H-24});
+    const spawnPoints=C.huntSpawnPoints(terrain,{x0:AREA.x0+24,y0:AREA.y0+24,x1:AREA.x1-24,y1:AREA.y1-24});
     if(!spawnPoints.length)return toast('이 구역에 출현 가능한 바닥이 없습니다. 다시 선택해 주세요.');
     save = { ...save, bits: save.bits - field.fee };
-    hunt = { field,terrain,view:viewport,spawnPoints, wilds: [], wires: [], baits: [], traps: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0 };
-    // 1024x1024 원본 지도에서 화면(960x560)만큼 잘라 쓸 위치. 들어갈 때마다 달라진다.
+    hunt = { field,terrain,view:viewport,spawnPoints, wilds: [], wires: [], baits: [], traps: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0,
+      size:{w:W,h:H}, zoom:HUNT_ZOOM.start, cam:{x:0,y:0}, pan:null };
+    // 첫 화면은 출현 가능한 바닥 아무 곳을 가운데에 둔다
+    const first=C.pickHuntSpawn(spawnPoints,Math.random)||{x:W/2,y:H/2};
+    huntCenter(first.x,first.y);
     hunt.map = huntMapImage(field);
-    for (let i = 0; i < C.WILD_COUNT; i++) {
+    for (let i = 0; i < C.HUNT_WILD_COUNT; i++) {
       const w = spawnWild(field);
       if (w) hunt.wilds.push(w);
     }
@@ -1636,6 +1656,7 @@
     if (hunt) hunt.tool = tool;
     $('#tool-rope').classList.toggle('active', tool === 'rope');
     $('#tool-wire').classList.toggle('active', tool === 'wire');
+    $('#tool-move').classList.toggle('active', tool === 'move');
     $('#tool-gear').classList.toggle('active', tool === 'gear');
     if (tool === 'gear') refreshGear();
   }
@@ -1828,7 +1849,9 @@
       if(next.blockedX||next.blockedY)w.turn=Math.min(w.turn,0.3);
       w.x = next.x;
       w.y = next.y;
-      const out = w.x < AREA.x0 || w.x > AREA.x1 || w.y < AREA.y0 + 20 || w.y > AREA.y1;
+      // 지도 끝에 닿거나, 도망치다 화면 밖으로 사라지면 놓친다
+      const vw = hunt.cam ? { x0: hunt.cam.x - 40, y0: hunt.cam.y - 40, x1: hunt.cam.x + 960 / hunt.zoom + 40, y1: hunt.cam.y + 560 / hunt.zoom + 40 } : null;
+      const out = w.x < AREA.x0 || w.x > AREA.x1 || w.y < AREA.y0 + 20 || w.y > AREA.y1 || (vw && (w.x < vw.x0 || w.x > vw.x1 || w.y < vw.y0 || w.y > vw.y1));
       if (out && w.flee > 0) {
         w.gone = true;
         huntNote(`${C.getSpecies(w.id).name}이(가) 도망쳤다!`);
@@ -1852,7 +1875,7 @@
     hunt.fx = hunt.fx.filter((f) => f.left > 0);
     hunt.wilds = hunt.wilds.filter((w) => !w.gone || now < 0);
     hunt.respawn -= dt;
-    if (hunt.wilds.length < C.WILD_COUNT && hunt.respawn <= 0) {
+    if (hunt.wilds.length < C.HUNT_WILD_COUNT && hunt.respawn <= 0) {
       hunt.respawn = 6;
       const w = spawnWild(hunt.field);
       if (w) hunt.wilds.push(w);
@@ -1921,6 +1944,10 @@
 
   function canvasPoint(e) {
     // 사냥은 화면 좌표로 그린다. 사육장 카메라/줌을 적용하면 로프가 포인터에서 벗어난다.
+    // 사냥 카메라가 있으면 지도 좌표로 바꾼다.
+    return huntToWorld(screenPoint(e));
+  }
+  function screenPoint(e) {
     const r = canvas.getBoundingClientRect();
     return { x: (e.clientX - r.left) * canvas.width / r.width,
       y: (e.clientY - r.top) * canvas.height / r.height };
@@ -1928,6 +1955,8 @@
   function huntPointer(type, e) {
     if (!hunt) return;
     e.preventDefault();
+    if (huntPanPointer(type, e)) return;
+    if (canvas.getBoundingClientRect) hunt.lastScreen = type === 'up' ? null : screenPoint(e);
     const p = canvasPoint(e);
     if (type === 'down' && hunt.tool === 'gear' && !wireGear()) return useGearAt(p);
     if (hunt.tool === 'gear' && !wireGear()) return;
@@ -1947,7 +1976,7 @@
       else huntNote('더 멀리 끌어당기세요.');
     } else if (type === 'move' && hunt.drawing) {
       const last = hunt.trail[hunt.trail.length - 1];
-      if (Math.hypot(p.x - last.x, p.y - last.y) > 4) hunt.trail.push(p);
+      if (Math.hypot(p.x - last.x, p.y - last.y) > 3) hunt.trail.push(p);
       if (hunt.trail.length > 400) hunt.trail.shift();
       if (wireMode() && hunt.trail.length > 2) hunt.trail = [hunt.trail[0], p];
     } else if (type === 'up' && hunt.drawing) {
@@ -1978,27 +2007,108 @@
         render();
         return;
       }
-      const closed = t.length > 12 && Math.hypot(t[0].x - t[t.length - 1].x, t[0].y - t[t.length - 1].y) < 70;
+      const closed = t.length > 8 && Math.hypot(t[0].x - t[t.length - 1].x, t[0].y - t[t.length - 1].y) < 45;
       if (closed) wrapRope(t);
       else if (t.length > 12) huntNote('고리가 닫히지 않았습니다. 처음 위치 근처에서 손을 떼세요.');
     }
   }
 
+  // 미니맵: 지도 전체, 지금 보이는 범위, 야생 디지몬 위치
+  function drawHuntMinimap() {
+    const mm = huntMinimapBox();
+    if (!mm) return;
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = '#0b1d2a';
+    ctx.fillRect(mm.x - 3, mm.y - 3, mm.w + 6, mm.h + 6);
+    if (hunt.map?.complete && hunt.map.naturalWidth) ctx.drawImage(hunt.map, 0, 0, hunt.size.w, hunt.size.h, mm.x, mm.y, mm.w, mm.h);
+    ctx.globalAlpha = 1;
+    for (const w of hunt.wilds) {
+      if (w.gone) continue;
+      ctx.fillStyle = w.bound > 0 ? '#ffd36a' : '#ff6a5a';
+      ctx.fillRect(mm.x + w.x * mm.k - 2, mm.y + w.y * mm.k - 2, 4, 4);
+    }
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(mm.x + hunt.cam.x * mm.k, mm.y + hunt.cam.y * mm.k, (960 / hunt.zoom) * mm.k, (560 / hunt.zoom) * mm.k);
+    ctx.restore();
+  }
+  // 사냥 화면 이동: '이동' 도구 왼쪽 끌기, 오른쪽·가운데 버튼 끌기, 미니맵 누르기. 처리했으면 true
+  function huntPanPointer(type, e) {
+    if (!hunt.cam || !canvas.getBoundingClientRect) return false;
+    const s = screenPoint(e), mm = huntMinimapBox();
+    if (type === 'down' && mm && s.x >= mm.x && s.x <= mm.x + mm.w && s.y >= mm.y && s.y <= mm.y + mm.h) {
+      huntCenter((s.x - mm.x) / mm.k, (s.y - mm.y) / mm.k);
+      hunt.pan = { minimap: true };
+      return true;
+    }
+    if (type === 'down' && (hunt.tool === 'move' || e.button === 1 || e.button === 2)) {
+      hunt.pan = { x: s.x, y: s.y, cx: hunt.cam.x, cy: hunt.cam.y };
+      canvas.setPointerCapture?.(e.pointerId);
+      return true;
+    }
+    if (!hunt.pan) return false;
+    if (type === 'move' && hunt.pan.minimap && e.buttons) huntCenter((s.x - mm.x) / mm.k, (s.y - mm.y) / mm.k);
+    else if (type === 'move' && !hunt.pan.minimap) {
+      hunt.cam.x = hunt.pan.cx - (s.x - hunt.pan.x) / hunt.zoom;
+      hunt.cam.y = hunt.pan.cy - (s.y - hunt.pan.y) / hunt.zoom;
+      huntClampCam();
+    }
+    if (type === 'up') hunt.pan = null;
+    return true;
+  }
+  /** 화면 오른쪽 아래 미니맵의 위치와 배율 */
+  function huntMinimapBox() {
+    if (!hunt?.size) return null;
+    const k = 150 / Math.max(hunt.size.w, hunt.size.h);
+    return { x: 960 - hunt.size.w * k - 12, y: 560 - hunt.size.h * k - 12, w: hunt.size.w * k, h: hunt.size.h * k, k };
+  }
+  function huntWheel(e) {
+    if (!hunt?.cam) return;
+    e.preventDefault();
+    const s = screenPoint(e), before = huntToWorld(s);
+    hunt.zoom = Math.max(HUNT_ZOOM.min, Math.min(HUNT_ZOOM.max, hunt.zoom * Math.exp(-e.deltaY * 0.0015)));
+    hunt.cam.x = before.x - s.x / hunt.zoom;
+    hunt.cam.y = before.y - s.y / hunt.zoom;
+    huntClampCam();
+  }
+  // 방향키·WASD로 화면 이동, 로프를 그리다 화면 가장자리에 닿으면 그쪽으로 흘러간다
+  const huntKeys = new Set();
+  function huntScroll(dt) {
+    if (!hunt?.cam) return;
+    const v = 520 / hunt.zoom * dt;
+    let dx = 0, dy = 0;
+    if (huntKeys.has('ArrowLeft') || huntKeys.has('a')) dx -= v;
+    if (huntKeys.has('ArrowRight') || huntKeys.has('d')) dx += v;
+    if (huntKeys.has('ArrowUp') || huntKeys.has('w')) dy -= v;
+    if (huntKeys.has('ArrowDown') || huntKeys.has('s')) dy += v;
+    if ((hunt.drawing || hunt.pull) && hunt.lastScreen) {
+      const m = 36, e = hunt.lastScreen, k = 360 / hunt.zoom * dt;
+      if (e.x < m) dx -= k; else if (e.x > 960 - m) dx += k;
+      if (e.y < m) dy -= k; else if (e.y > 560 - m) dy += k;
+    }
+    hunt.cam.x += dx;
+    hunt.cam.y += dy;
+    huntClampCam();
+  }
+
   function drawHunt(t, dt) {
+    huntScroll(dt);
     const [c1, c2] = FIELD_LOOK[hunt.field.id] || ['#7fb069', '#6a9a57'];
     const map = hunt.map;
+    ctx.fillStyle = '#0b1d2a';
+    ctx.fillRect(0, 0, 960, 560);
+    // 지도 좌표로 그린다 (카메라 이동·확대)
+    ctx.save();
+    ctx.scale(hunt.zoom || 1, hunt.zoom || 1);
+    ctx.translate(-(hunt.cam?.x || 0), -(hunt.cam?.y || 0));
     if (map && map.complete && map.naturalWidth) {
-      // 원본 지도는 도트 그대로 1배로 그리고, 사냥 가능 범위 밖은 어둡게 덮는다.
+      // 원본 지도는 도트 그대로 그린다
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(map, hunt.view.x, hunt.view.y, 960, 560, 0, 0, 960, 560);
-      ctx.fillStyle = '#00000059';
-      ctx.fillRect(0, 0, 960, AREA.y0);
-      ctx.fillRect(0, AREA.y1, 960, 560 - AREA.y1);
-      ctx.fillRect(0, AREA.y0, AREA.x0, AREA.y1 - AREA.y0);
-      ctx.fillRect(AREA.x1, AREA.y0, 960 - AREA.x1, AREA.y1 - AREA.y0);
+      ctx.drawImage(map, hunt.view.x, hunt.view.y, hunt.size?.w ?? 960, hunt.size?.h ?? 560, 0, 0, hunt.size?.w ?? 960, hunt.size?.h ?? 560);
     } else {
       ctx.fillStyle = c2;
-      ctx.fillRect(0, 0, 960, 560);
+      ctx.fillRect(0, 0, hunt.size?.w ?? 960, hunt.size?.h ?? 560);
       ctx.fillStyle = c1;
       ctx.fillRect(AREA.x0, AREA.y0, AREA.x1 - AREA.x0, AREA.y1 - AREA.y0);
     }
@@ -2048,7 +2158,7 @@
     }
     const order = [...hunt.wilds].sort((a, b) => a.y - b.y);
     for (const w of order) {
-      const rx = footprint(w.id, false, 2);
+      const rx = footprint(w.id, false, HUNT_SPRITE_SCALE);
       ctx.fillStyle = '#00000033';
       ctx.beginPath();
       ctx.ellipse(w.x, w.y + 1, rx, Math.max(5, rx * 0.3), 0, 0, 7);
@@ -2058,7 +2168,7 @@
         ctx.strokeStyle = '#f5e6a8';
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.ellipse(w.x, w.y - 14, rx + 8, rx * 0.55 + 10, 0, 0, Math.PI * 2 * (w.bound / BIND_SECONDS));
+        ctx.ellipse(w.x, w.y - 7, rx + 5, rx * 0.55 + 6, 0, 0, Math.PI * 2 * (w.bound / BIND_SECONDS));
         ctx.stroke();
       }
       if (w.flash > 0 && Math.floor(w.flash * 20) % 2) ctx.globalAlpha = 0.4;
@@ -2067,22 +2177,22 @@
         ? {frame:animations.pose(w,spriteId,'boundIdle',dt),flip:w.vx>0}
         : animations.movement(w, spriteId, w.movedX || 0, w.movedY || 0, dt);
       spriteFrames.set(w,{frame:motion.frame,speciesId:w.id,flip:motion.flip});
-      body(ctx, w.id, false, w.x, w.y, 2, motion.frame, motion.flip);
+      body(ctx, w.id, false, w.x, w.y, HUNT_SPRITE_SCALE, motion.frame, motion.flip);
       ctx.globalAlpha = 1;
       const sp = C.getSpecies(w.id);
       const weak = !C.ropeDamage(save, w.id);
-      ctx.font = 'bold 11px "Noto Sans KR",sans-serif';
+      ctx.font = 'bold 8px "Noto Sans KR",sans-serif';
       ctx.textAlign = 'center';
       ctx.fillStyle = weak ? '#ffd0c0' : '#ffffff';
-      ctx.fillText(sp.name + (weak ? ` (${C.ropeFor(w.id)?.name ?? '포획 불가'} 필요)` : ''), w.x, w.y + 18);
+      ctx.fillText(sp.name + (weak ? ` (${C.ropeFor(w.id)?.name ?? '포획 불가'} 필요)` : ''), w.x, w.y + 11);
       for (let k = 0; k < w.max; k++) {
         ctx.fillStyle = k < w.hp ? '#e0574b' : '#00000055';
-        ctx.fillRect(w.x - w.max * 7 + k * 14, w.y + 22, 12, 5);
+        ctx.fillRect(w.x - w.max * 4 + k * 8, w.y + 14, 7, 3);
       }
       if (w.stun > 0) {
-        ctx.font = 'bold 14px "Noto Sans KR",sans-serif';
+        ctx.font = 'bold 10px "Noto Sans KR",sans-serif';
         ctx.fillStyle = w.stunKind === '수면' ? '#bfe3ff' : '#ffe36a';
-        ctx.fillText(w.stunKind === '수면' ? 'Zzz' : w.stunKind || '멈춤', w.x, w.y - 62);
+        ctx.fillText(w.stunKind === '수면' ? 'Zzz' : w.stunKind || '멈춤', w.x, w.y - 34);
       }
     }
     for (const f of hunt.fx) {
@@ -2114,10 +2224,12 @@
       if (hunt.tool === 'rope') {
         ctx.strokeStyle = '#f5e6a888';
         ctx.beginPath();
-        ctx.arc(hunt.trail[0].x, hunt.trail[0].y, 70, 0, 7);
+        ctx.arc(hunt.trail[0].x, hunt.trail[0].y, 45, 0, 7);
         ctx.stroke();
       }
     }
+    ctx.restore();
+    drawHuntMinimap();
     // 상단 정보
     const d = C.dateOf(save.clock);
     ctx.fillStyle = '#0b1d2acc';
@@ -2367,8 +2479,18 @@
   canvas.addEventListener('pointermove', (e) => huntPointer('move', e));
   canvas.addEventListener('pointerup', (e) => huntPointer('up', e));
   canvas.addEventListener('pointercancel', (e) => huntPointer('up', e));
+  canvas.addEventListener('wheel', (e) => { if (hunt) huntWheel(e); }, { passive: false });
+  canvas.addEventListener('contextmenu', (e) => { if (hunt) e.preventDefault(); });
+  window.addEventListener('keydown', (e) => {
+    if (!hunt || e.target?.closest?.('input,textarea,select')) return;
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'w', 'a', 's', 'd'].includes(k)) { huntKeys.add(k); e.preventDefault(); }
+  });
+  window.addEventListener('keyup', (e) => huntKeys.delete(e.key.length === 1 ? e.key.toLowerCase() : e.key));
+  window.addEventListener('blur', () => huntKeys.clear());
   $('#tool-rope').onclick = () => setTool('rope');
   $('#tool-wire').onclick = () => setTool('wire');
+  $('#tool-move').onclick = () => setTool('move');
   $('#tool-gear').onclick = () => setTool('gear');
   $('#gear-select').onchange = () => setTool('gear');
   $('#hunt-leave').onclick = () => endHunt();

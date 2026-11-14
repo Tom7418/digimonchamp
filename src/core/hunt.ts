@@ -25,6 +25,8 @@ export const HUNT_NIGHT_HOUR = 18;
 export const RARE_WEIGHT = 0.2;
 /** 한 사냥터에 동시에 나오는 야생 디지몬 수 */
 export const WILD_COUNT = 5;
+/** 사냥 지도 전체(1024×1024)를 탐험할 때 동시에 있는 야생 디지몬 수. 화면 하나(960×560)에 5마리였던 밀도를 지도 넓이에 맞춘 임시 값 */
+export const HUNT_WILD_COUNT = 10;
 
 export interface HuntField extends Field {
   open: boolean;
