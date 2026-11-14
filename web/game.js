@@ -1502,11 +1502,7 @@
   };
   // 원본 사냥 지도(tools/extract_hunt_maps.py로 변환한 root/field/field_hmNN). 사냥터와 번호의 짝은
   // 형규가 원작 기준으로 확인(2026-11-12, docs/design.md). _01=낮, _02=밤. 실내(크롬 광산·기계 공장·하수도)는 밤 지도가 없다.
-  const HUNT_MAP = {
-    '다이나 초원': '01', 대초원: '02', '모쥬라의 숲': '03', '부츠 정글': '04', '미끌미끌 늪': '05', '파도치는 해변': '06',
-    바위산: '08', '크롬 광산': '09', '기계 공장': '10', 하수도: '11', '눈의 왕국': '13', '암반 계곡': '14',
-    용암지대: '15', '이글이글 사막': '16', 오아시스: '17', '잉카 유적': '18',
-  };
+  const HUNT_MAP = C.HUNT_MAP; // 배경과 충돌 지형의 사냥터 번호를 공유한다.
   const HUNT_NO_NIGHT = ['09', '10', '11'];
   const huntMaps = {};
   function huntMapImage(field) {
@@ -1548,12 +1544,24 @@
     $('#modal-body').querySelectorAll('[data-field]').forEach((b) => (b.onclick = () => startHunt(fields[+b.dataset.field])));
   }
 
+  // 화면의 잘라낸 좌표를 ATR의 원본 지도 좌표로 바꾼다. 사육장 카메라/줌은 쓰지 않는다.
+  function huntMapPoint(p){return {x:p.x+hunt.view.x,y:p.y+hunt.view.y};}
+  function huntGroundClear(p,radius=4){
+    return p.x>=AREA.x0&&p.x<=AREA.x1&&p.y>=AREA.y0&&p.y<=AREA.y1&&C.canStandOnHuntTerrain(hunt.terrain,huntMapPoint(p),radius);
+  }
+  function huntGroundLine(a,b,radius=4){return C.huntTerrainLineClear(hunt.terrain,huntMapPoint(a),huntMapPoint(b),radius);}
+  function huntGroundMove(from,to){
+    const result=C.moveOnHuntTerrain(hunt.terrain,huntMapPoint(from),huntMapPoint(to));
+    return {...result,x:result.x-hunt.view.x,y:result.y-hunt.view.y,
+      path:result.path.map(p=>({x:p.x-hunt.view.x,y:p.y-hunt.view.y}))};
+  }
   function spawnWild(field) {
     const id = C.pickWild(field, save.clock, Math.random);
     if (!id) return null;
+    const spot=C.pickHuntSpawn(hunt.spawnPoints,Math.random);if(!spot)return null;
     const side = Math.random();
     return {
-      id, x: AREA.x0 + 80 + Math.random() * (AREA.x1 - AREA.x0 - 160), y: AREA.y0 + 60 + Math.random() * (AREA.y1 - AREA.y0 - 100),
+      id, x:spot.x-hunt.view.x, y:spot.y-hunt.view.y,
       vx: (side < 0.5 ? -1 : 1) * (15 + Math.random() * 20), vy: (Math.random() - 0.5) * 30,
       hp: C.wildHp(id), max: C.wildHp(id), flee: 0, flash: 0, turn: 1 + Math.random() * 3,
     };
@@ -1561,11 +1569,14 @@
   function startHunt(field) {
     if (!field.open) return;
     if (save.bits < field.fee) return toast('비트가 부족해요.');
+    const terrain=C.huntTerrain(field.id);if(!terrain)return toast('사냥터 지형을 찾을 수 없습니다.');
+    const viewport={x:Math.floor(Math.random()*(terrain.width*terrain.tileSize-960)),y:Math.floor(Math.random()*(terrain.height*terrain.tileSize-560))};
+    const spawnPoints=C.huntSpawnPoints(terrain,{x0:viewport.x+AREA.x0+40,y0:viewport.y+AREA.y0+40,x1:viewport.x+AREA.x1-40,y1:viewport.y+AREA.y1-40});
+    if(!spawnPoints.length)return toast('이 구역에 출현 가능한 바닥이 없습니다. 다시 선택해 주세요.');
     save = { ...save, bits: save.bits - field.fee };
-    hunt = { field, wilds: [], wires: [], baits: [], traps: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0 };
+    hunt = { field,terrain,view:viewport,spawnPoints, wilds: [], wires: [], baits: [], traps: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0 };
     // 1024x1024 원본 지도에서 화면(960x560)만큼 잘라 쓸 위치. 들어갈 때마다 달라진다.
     hunt.map = huntMapImage(field);
-    hunt.view = { x: Math.floor(Math.random() * (1024 - 960)), y: Math.floor(Math.random() * (1024 - 560)) };
     for (let i = 0; i < C.WILD_COUNT; i++) {
       const w = spawnWild(field);
       if (w) hunt.wilds.push(w);
@@ -1635,6 +1646,8 @@
     const id = $('#gear-select').value, shot = C.shotOf(id), bait = C.baitOf(id), gear = C.gearOf(id);
     if (!shot && !bait && !gear) return huntNote('쓸 장비가 없습니다. 상점에서 사세요.');
     if (gear && gear.nightOnly && !huntIsNight()) return huntNote(`${gear.name}는 밤에만 쓸 수 있습니다.`);
+    // 바닥에 놓는 장비는 차단된 칸에 설치하거나 재고를 소비하지 않는다. 샷/투척 폭탄의 범위 판정은 유지한다.
+    if((bait||(gear&&gear.kind!=='bomb'))&&!huntGroundClear(p))return huntNote('이곳에는 장비를 놓을 수 없습니다.');
     const now = performance.now() / 1000;
     if (shot && now < (hunt.shotReady || 0)) return;
     const next = C.useGear(save, id);
@@ -1723,7 +1736,7 @@
         continue;
       }
       // 마인은 밟으면 터지고, 함정은 밟은 디지몬을 붙잡는다
-      const trap = hunt.traps.find((t) => Math.hypot(t.x - w.x, t.y - w.y) < (t.g.kind === 'mine' ? 26 : t.g.range));
+      const trap = hunt.traps.find((t) => Math.hypot(t.x - w.x, t.y - w.y) < (t.g.kind === 'mine' ? 26 : t.g.range)&&huntGroundLine(w,t));
       if (trap && trap.g.kind === 'mine') {
         trap.left = 0;
         blast(trap.x, trap.y, trap.g);
@@ -1746,7 +1759,7 @@
         w.vy = dist > 14 ? ((lure.y - w.y) / dist) * 45 : 0;
         w.turn = 1;
         // 독·마비 고기는 다가와 먹은 디지몬에게 효과를 건다 (한 마리가 먹으면 사라진다)
-        if (dist <= 14 && lure.effect) {
+        if (dist <= 14 && lure.effect && huntGroundLine(w,lure)) {
           applyEffect(w, lure.effect);
           lure.left = 0;
           huntNote(`${C.getSpecies(w.id).name}이(가) ${lure.name}를 먹었다! ${lure.effect}`);
@@ -1762,8 +1775,11 @@
           w.vy = Math.sin(a) * v * 0.6;
         }
       }
-      const next = { x: w.x + w.vx * dt, y: w.y + w.vy * dt };
-      const wire = hunt.wires.find((l) => crosses(w, next, l.a, l.b));
+      const target={x:w.x+w.vx*dt,y:w.y+w.vy*dt},edgeX=!(w.flee>0)&&(target.x<AREA.x0||target.x>AREA.x1),edgeY=!(w.flee>0)&&(target.y<AREA.y0+20||target.y>AREA.y1);
+      // 화면 경계 보정도 지형 검사 전에 수행해, 나중에 좌표를 잘라 벽 안으로 넣지 않는다.
+      if(!(w.flee>0)){target.x=Math.min(AREA.x1,Math.max(AREA.x0,target.x));target.y=Math.min(AREA.y1,Math.max(AREA.y0+20,target.y));}
+      const next = huntGroundMove(w,target);
+      const wire = hunt.wires.find(l=>next.path.some((p,i)=>i>0&&crosses(next.path[i-1],p,l.a,l.b)));
       if (wire) {
         w.vx = -w.vx;
         w.vy = -w.vy;
@@ -1775,17 +1791,15 @@
         }
         continue;
       }
+      if(next.blockedX||edgeX)w.vx=-w.vx;
+      if(next.blockedY||edgeY)w.vy=-w.vy;
+      if(next.blockedX||next.blockedY)w.turn=Math.min(w.turn,0.3);
       w.x = next.x;
       w.y = next.y;
       const out = w.x < AREA.x0 || w.x > AREA.x1 || w.y < AREA.y0 + 20 || w.y > AREA.y1;
       if (out && w.flee > 0) {
         w.gone = true;
         huntNote(`${C.getSpecies(w.id).name}이(가) 도망쳤다!`);
-      } else if (out) {
-        if (w.x < AREA.x0 || w.x > AREA.x1) w.vx = -w.vx;
-        if (w.y < AREA.y0 + 20 || w.y > AREA.y1) w.vy = -w.vy;
-        w.x = Math.min(AREA.x1, Math.max(AREA.x0, w.x));
-        w.y = Math.min(AREA.y1, Math.max(AREA.y0 + 20, w.y));
       }
       w.movedX = w.x - oldX;
       w.movedY = w.y - oldY;
@@ -1794,10 +1808,9 @@
       b.left -= dt;
       if (b.vx || b.vy) {
         // 장난감은 걸어 다니다 가장자리에서 돌아선다
-        b.x += b.vx * dt;
-        b.y += b.vy * dt;
-        if (b.x < AREA.x0 + 20 || b.x > AREA.x1 - 20) b.vx = -b.vx;
-        if (b.y < AREA.y0 + 40 || b.y > AREA.y1 - 10) b.vy = -b.vy;
+        const x=b.x+b.vx*dt,y=b.y+b.vy*dt,target={x:Math.min(AREA.x1-20,Math.max(AREA.x0+20,x)),y:Math.min(AREA.y1-10,Math.max(AREA.y0+40,y))};
+        const move=huntGroundMove(b,target);
+        b.x=move.x;b.y=move.y;if(move.blockedX||target.x!==x)b.vx=-b.vx;if(move.blockedY||target.y!==y)b.vy=-b.vy;
       }
     }
     for (const t of hunt.traps) t.left -= dt;
@@ -1919,6 +1932,7 @@
         // 길이는 원작 수치(노멀α 24) × WIRE_UNIT
         const k = Math.min(1, ((g ? g.length : 24) * C.WIRE_UNIT) / len);
         b = { x: t[0].x + (b.x - t[0].x) * k, y: t[0].y + (b.y - t[0].y) * k };
+        if(!huntGroundClear(t[0])||!huntGroundClear(b)||!huntGroundLine(t[0],b))return huntNote('와이어는 이동 가능한 바닥에만 설치할 수 있습니다.');
         if (g) {
           const next = C.useGear(save, g.id);
           if (!next) return huntNote('남은 수량이 없습니다.');

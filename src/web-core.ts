@@ -10,3 +10,5 @@ export * from './core/rng';
 export * from './core/food';
 export * from './core/training';
 export * from './core/stats';
+
+export * from './core/hunt-terrain';

@@ -1,3 +1,5 @@
+import { HUNT_MAP, huntTerrain, huntTerrainAt, canStandOnHuntTerrain, huntTerrainLineClear, moveOnHuntTerrain, huntSpawnPoints, pickHuntSpawn, type HuntTerrain } from '../src/core/hunt-terrain';
+import terrainAudit from '../docs/hunt-terrain-audit.json';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta } from '../src/core/training';
@@ -1003,5 +1005,53 @@ describe('legacy title migration follows current rank rules',()=>{
     expect(migrateTitleIds(['future-title','constructor'])).toEqual(['future-title','constructor']);
     const now=upgradeSave({...freshSave(0),titles:['m8','m4','m55']});expect(now.titles).toEqual(['m8','m4','m55']);expect(tamerRank(now)).toBe(3);
     const champion=upgradeSave({...freshSave(0),titles:['t1'],champion:true});expect(champion.champion).toBe(true);expect(tamerRank(champion)).toBe(9);
+  });
+});
+
+describe('original hunt terrain',()=>{
+  const grid=(width=8,height=8):HuntTerrain=>({width,height,tileSize:8,cells:new Uint8Array(width*height)});
+  it('16사냥터를 원본 ATR 검증 보고서와 동일하게 복원하고 지도 번호를 공유한다',()=>{
+    expect(Object.keys(HUNT_MAP)).toHaveLength(16);
+    for(const field of FIELDS){const g=huntTerrain(field.id)!;expect(g).not.toBeNull();expect(g.cells.length).toBe(128*128);expect(g.tileSize).toBe(8);
+      const counts:Record<string,number>={};for(const value of g.cells)counts[value]=(counts[value]??0)+1;
+      const audit=(terrainAudit.maps as Record<string,{counts:Record<string,number>;solidCells:number}>)[HUNT_MAP[field.id]];
+      expect(counts).toEqual(audit.counts);expect(g.cells.filter(x=>x&1).length).toBe(audit.solidCells);
+      expect(huntTerrain(field.id)).toBe(g);
+    }
+    expect(huntTerrain('없는 사냥터')).toBeNull();
+  });
+  it('차단 비트와 지형 속성을 구별하고 범위 밖·유효하지 않은 좌표는 막는다',()=>{
+    const g=grid();for(const flag of [0,1,2,3,4,5]){g.cells[0]=flag;expect(canStandOnHuntTerrain(g,{x:4,y:4},0)).toBe(!(flag&1));}
+    for(const p of [{x:-1,y:4},{x:64,y:4},{x:4,y:64},{x:NaN,y:4}])expect(canStandOnHuntTerrain(g,p)).toBe(false);
+    expect(huntTerrainAt(g,{x:Infinity,y:0})).toBe(1);
+    expect(huntTerrainLineClear(g,{x:4,y:4},{x:NaN,y:4})).toBe(false);
+  });
+  it('빠른 이동도8px 벽을 관통하지 않고 옆 축으로 미끄러진 실제 경로를 반환한다',()=>{
+    const g=grid();for(let y=0;y<8;y++)g.cells[y*8+3]=1;
+    const from={x:12,y:12},to={x:52,y:44};expect(huntTerrainLineClear(g,from,to)).toBe(false);
+    const moved=moveOnHuntTerrain(g,from,to);expect(moved.x).toBeLessThanOrEqual(20);expect(moved.y).toBeCloseTo(44);expect(moved.blockedX).toBe(true);
+    expect(moved.path.length).toBeGreaterThan(1);for(const p of moved.path)expect(canStandOnHuntTerrain(g,p)).toBe(true);
+    expect(moveOnHuntTerrain(g,from,{x:10000,y:12}).x).toBeLessThanOrEqual(20);
+  });
+  it('대각선으로 맞닿은 벽 틈을 통과하지 않고 비정상 목적지도 차단한다',()=>{
+    const g=grid();g.cells[1]=1;g.cells[8]=1;
+    const moved=moveOnHuntTerrain(g,{x:4,y:4},{x:12,y:12});expect(moved.x).toBe(4);expect(moved.y).toBe(4);
+    expect(moveOnHuntTerrain(g,{x:4,y:4},{x:Infinity,y:4})).toMatchObject({x:4,y:4,blockedX:true});
+  });
+  it('모든 사냥터의 잘라낸 화면 모서리·중앙에서도 막힌 칸에 생성하지 않는다',()=>{
+    const rng=seeded(39);
+    for(const id of Object.keys(HUNT_MAP))for(const x of [0,32,64])for(const y of [0,232,464]){
+      const g=huntTerrain(id)!,rect={x0:x+80,y0:y+110,x1:x+880,y1:y+490},points=huntSpawnPoints(g,rect);
+      expect(points.length).toBeGreaterThan(0);
+      for(let i=0;i<10;i++){const p=pickHuntSpawn(points,rng)!;expect(canStandOnHuntTerrain(g,p)).toBe(true);expect(p.x).toBeGreaterThanOrEqual(rect.x0);expect(p.y).toBeLessThanOrEqual(rect.y1);}
+    }
+    const closed=grid();closed.cells.fill(1);expect(pickHuntSpawn(huntSpawnPoints(closed,{x0:0,y0:0,x1:64,y1:64}),rng)).toBeNull();
+  });
+  it('실제16지도에서 이동을 반복해도 발 위치와 경로는 통행 가능한 곳에 남는다',()=>{
+    const rng=seeded(628);
+    for(const id of Object.keys(HUNT_MAP)){
+      const g=huntTerrain(id)!,points=huntSpawnPoints(g,{x0:80,y0:110,x1:880,y1:490});let p=pickHuntSpawn(points,rng)!;
+      for(let i=0;i<100;i++){const moved=moveOnHuntTerrain(g,p,{x:p.x+(rng()-0.5)*100,y:p.y+(rng()-0.5)*100});expect(canStandOnHuntTerrain(g,moved)).toBe(true);for(const point of moved.path)expect(canStandOnHuntTerrain(g,point)).toBe(true);p=moved;}
+    }
   });
 });

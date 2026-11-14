@@ -105,7 +105,7 @@ def convert(stem):
     print(stem, w, h, 'anim' if anim.exists() else '')
 
 
-# 사냥터 16곳에 쓰는 지도 번호 (짝은 web/game.js HUNT_MAP, 근거는 docs/design.md).
+# 사냥터 16곳에 쓰는 지도 번호 (짝은 src/data/hunt-terrain.json → core HUNT_MAP, 근거는 docs/design.md).
 # 00은 01과 같은 지도(튜토리얼용으로 보임), 07·12는 원본에 없다.
 USED = ['01', '02', '03', '04', '05', '06', '08', '09', '10', '11', '13', '14', '15', '16', '17', '18']
 

@@ -1,0 +1,169 @@
+{
+  "maps": {
+    "01": {
+      "sha256": "52c71cd1d27f3d647d06558d10b78813476a53f34e3abf4b99724eff426d9f0a",
+      "counts": {
+        "0": 9407,
+        "1": 5151,
+        "2": 1826
+      },
+      "nightIdentical": true,
+      "solidCells": 5151
+    },
+    "02": {
+      "sha256": "ff077cfea81df663ca7292f6a69bf6a4188f0af05c6ecff561f6744b5e7d1034",
+      "counts": {
+        "0": 14368,
+        "1": 2016
+      },
+      "nightIdentical": true,
+      "solidCells": 2016
+    },
+    "03": {
+      "sha256": "7ec8792b26d1e6a7ec7cb3f14355999f8b85c011e65414bbc9579ec227c4cf3a",
+      "counts": {
+        "0": 5964,
+        "1": 10420
+      },
+      "nightIdentical": true,
+      "solidCells": 10420
+    },
+    "04": {
+      "sha256": "8129f90437b96069ae81fdcde239c781ada3e340aaec41f935613acaf350cf02",
+      "counts": {
+        "0": 11100,
+        "1": 5284
+      },
+      "nightIdentical": true,
+      "solidCells": 5284
+    },
+    "05": {
+      "sha256": "3fa320dbcd9a5d618584d81d5037640fbd6dee487973d248f77f45296b55e7de",
+      "counts": {
+        "0": 9998,
+        "1": 2273,
+        "2": 4026,
+        "3": 87
+      },
+      "nightIdentical": true,
+      "solidCells": 2360
+    },
+    "06": {
+      "sha256": "dbad9b60983406197246c8752f880ff35e2a09c4fecd9e041bebcdcae997ac0a",
+      "counts": {
+        "0": 6433,
+        "1": 3172,
+        "2": 6779
+      },
+      "nightIdentical": true,
+      "solidCells": 3172
+    },
+    "08": {
+      "sha256": "7909ddef6098f5e1d4e07be255ab646fec3140da94e8c64a94283084714dc25d",
+      "counts": {
+        "0": 8851,
+        "1": 7533
+      },
+      "nightIdentical": true,
+      "solidCells": 7533
+    },
+    "09": {
+      "sha256": "2f88b9c9c84db02b99aa8a7c578591f8f2c4f9bd90d54f04fe0a164151b8e92d",
+      "counts": {
+        "0": 6583,
+        "1": 9801
+      },
+      "nightIdentical": false,
+      "solidCells": 9801
+    },
+    "10": {
+      "sha256": "64593c9682500b6e4a8902f6f07f588c8d60323c3e322b324468c6bb9fe357cc",
+      "counts": {
+        "0": 8619,
+        "1": 7765
+      },
+      "nightIdentical": false,
+      "solidCells": 7765
+    },
+    "11": {
+      "sha256": "22b79f62b8145a50ccbe99cd50b530c3e5d3aac8e2786c8f1b9c6b7eeeec93ab",
+      "counts": {
+        "0": 2937,
+        "1": 9818,
+        "2": 3582,
+        "3": 47
+      },
+      "nightIdentical": false,
+      "solidCells": 9865
+    },
+    "13": {
+      "sha256": "aef4e7b146e7b038e7b25c8d8f95b2aa8387649df84984b0acfcb30ff25ca738",
+      "counts": {
+        "0": 4315,
+        "1": 97,
+        "2": 146,
+        "4": 9015,
+        "5": 2811
+      },
+      "nightIdentical": true,
+      "solidCells": 2908
+    },
+    "14": {
+      "sha256": "c3692c50881d34b08c4f6746be57a4713747a75ed7f299a9e96d4aa965205b07",
+      "counts": {
+        "0": 12635,
+        "1": 3749
+      },
+      "nightIdentical": true,
+      "solidCells": 3749
+    },
+    "15": {
+      "sha256": "73037e4a40cded9a3a45897e9e98c842e114293e6679d7f351f605445d5c56c3",
+      "counts": {
+        "0": 8056,
+        "1": 8328
+      },
+      "nightIdentical": true,
+      "solidCells": 8328
+    },
+    "16": {
+      "sha256": "8b5f44484e59d223f6f5e23eaf07e4e98a5f6bcd6c9a9994bc4fdc95fb3a31fa",
+      "counts": {
+        "0": 14439,
+        "1": 1945
+      },
+      "nightIdentical": true,
+      "solidCells": 1945
+    },
+    "17": {
+      "sha256": "61be01a61621ccade35a85f907cd99fe501418784d99f181a8c060f89cbcf20e",
+      "counts": {
+        "0": 11037,
+        "1": 3024,
+        "2": 2323
+      },
+      "nightIdentical": true,
+      "solidCells": 3024
+    },
+    "18": {
+      "sha256": "e50de296d673c12216ab6669e25807ec65c2ed0ca204482f302820a3a8e61b01",
+      "counts": {
+        "0": 10630,
+        "1": 5754
+      },
+      "nightIdentical": true,
+      "solidCells": 5754
+    }
+  },
+  "instructionChecks": 10,
+  "verified": {
+    "loader": "0x0207bc88: 16-byte header, width/height, byte cells",
+    "solidQuery": "0x0207bd60..0x0207bdf0: out of bounds=1, cell & 1",
+    "terrainQuery": "0x0207bea4: solid bit0, terrain bit1/bit2",
+    "huntMovement": "overlay0 0x0210f7d4..0x0210f7e8: /8 tile lookup; solid rejects movement"
+  },
+  "limits": [
+    "차단 비트0만 통행을 막는다. 물/눈 속성 비트 자체는 차단으로 해석하지 않는다",
+    "웹판 이동 경로의 작은 보폭 검사/벽 미끄러짐과 발 반경은 웹 구현 정책. 원작 전체 경로 탐색은 후속"
+  ]
+}
