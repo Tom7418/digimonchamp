@@ -505,18 +505,78 @@
       button.insertAdjacentHTML('afterbegin',`<kbd class="tool-key">${i+1}</kbd>`);
     });
   }
+  // 스프라이트 셀 전체에는 공격/점프용 투명 여백이 있다. 실제 그린 프레임의 알파만 한 번 읽어 캐시한다.
+  const spriteGeometryCache=new WeakMap(),spriteFrames=new WeakMap();
+  function spriteFrameGeometry(a,frame=0){
+    if(!a?.image?.complete||!a.image.naturalWidth)return null;
+    frame=((Math.floor(frame)%(a.frames||1))+(a.frames||1))%(a.frames||1);
+    let cache=spriteGeometryCache.get(a.image);
+    if(!cache){cache=new Map();spriteGeometryCache.set(a.image,cache);}
+    const key=`${a.width}:${a.height}:${frame}`;
+    if(cache.has(key))return cache.get(key);
+    try{
+      const c=document.createElement('canvas');c.width=a.width;c.height=a.height;
+      const g=c.getContext('2d',{willReadFrequently:true});
+      g.drawImage(a.image,frame*a.width,0,a.width,a.height,0,0,a.width,a.height);
+      const rgba=g.getImageData(0,0,a.width,a.height).data,alpha=new Uint8Array(a.width*a.height);
+      let left=a.width,top=a.height,right=0,bottom=0;
+      for(let y=0;y<a.height;y++)for(let x=0;x<a.width;x++)if(rgba[(y*a.width+x)*4+3]>16){
+        alpha[y*a.width+x]=1;left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x+1);bottom=Math.max(bottom,y+1);
+      }
+      const box={left,top,right,bottom,width:right-left,height:bottom-top,alpha,empty:right<=left};cache.set(key,box);return box;
+    }catch{return null;} // 이미지가 아직 없거나 읽을 수 없으면 표시 중인 대체 그림 크기로 판정한다.
+  }
+  function spriteVisualBounds(a,pose){
+    const box=spriteFrameGeometry(a,pose.frame),x=Math.round(pose.x),y=Math.round(pose.y),scale=pose.scale;
+    if(!box){const r=pose.radius??16;return {left:x-r,right:x+r,top:y-2*r,bottom:y,cx:x,cy:y-r,width:2*r,height:2*r};}
+    if(box.empty)return {left:x,right:x,top:y,bottom:y,cx:x,cy:y,width:0,height:0};
+    const cx=a.cx??a.width/2,base=a.baseline??a.height;
+    const left=x+(pose.flip?cx-box.right:box.left-cx)*scale,right=x+(pose.flip?cx-box.left:box.right-cx)*scale;
+    const top=y+(box.top-base)*scale,bottom=y+(box.bottom-base)*scale;
+    return {left,right,top,bottom,cx:(left+right)/2,cy:(top+bottom)/2,width:right-left,height:bottom-top};
+  }
+  // 투명 여백·날개 사이를 제외하고, 실제 그리기와 같은 프레임·좌우 반전·좌표 반올림을 사용한다.
+  function spriteHit(a,pose,pt,padding=3){
+    const box=spriteFrameGeometry(a,pose.frame);
+    if(!box){const b=spriteVisualBounds(a,pose),r=b.width/2+padding;return Math.hypot(pt.x-b.cx,pt.y-b.cy)<=r;}
+    if(box.empty)return false;
+    const x=(pt.x-Math.round(pose.x))/pose.scale*(pose.flip?-1:1)+(a.cx??a.width/2);
+    const y=(pt.y-Math.round(pose.y))/pose.scale+(a.baseline??a.height),r=padding/pose.scale;
+    if(x<box.left-r||x>=box.right+r||y<box.top-r||y>=box.bottom+r)return false;
+    if(box.alpha[Math.floor(y)*a.width+Math.floor(x)]&&x>=0&&x<a.width&&y>=0&&y<a.height)return true;
+    for(let yy=Math.max(0,Math.floor(y-r));yy<Math.min(a.height,Math.ceil(y+r));yy++)
+      for(let xx=Math.max(0,Math.floor(x-r));xx<Math.min(a.width,Math.ceil(x+r));xx++)
+        if(box.alpha[yy*a.width+xx]&&Math.hypot(xx+0.5-x,yy+0.5-y)<=r)return true;
+    return false;
+  }
+  function petSpritePose(p,d){
+    const scale=d.isEgg?1.6:2,drawn=spriteFrames.get(p);
+    return {x:p.x,y:p.y,scale,flip:p.direction>0,frame:drawn?.speciesId===d.speciesId&&drawn.isEgg===!!d.isEgg?drawn.frame:0,
+      radius:(6+C.getSpecies(d.speciesId).stage*3)*scale*0.8};
+  }
+  const petVisualBounds=(p,d)=>spriteVisualBounds(spriteOf(d.speciesId,d.isEgg),petSpritePose(p,d));
   function petAt(pt) {
-    let best = null;
-    for (const p of view.team) {
-      const d = digi(p.uid);
-      if (!d) continue;
-      const a = spriteOf(d.speciesId, d.isEgg);
-      const h = (a?.baseline ?? 30) * (d.isEgg ? 1.6 : 2);
-      const r = Math.max(28, footprint(d.speciesId, d.isEgg, 2) + 6);
-      const dist = Math.hypot(pt.x - p.x, pt.y - (p.y - h / 2));
-      if (Math.abs(pt.x - p.x) < r && pt.y < p.y + 12 && pt.y > p.y - h - 6 && (!best || dist < best.dist)) best = { p, d, dist };
+    // 앞쪽(나중에 그린) 개체를 먼저 검사하고 투명한 픽셀 사이로 보이는 뒤쪽 개체도 고를 수 있다.
+    const order=view.team.map((p,i)=>({p,i})).sort((a,b)=>b.p.y-a.p.y||b.i-a.i);
+    for (const {p} of order) {
+      const d=digi(p.uid);if(!d)continue;
+      const a=spriteOf(d.speciesId,d.isEgg),pose=petSpritePose(p,d);
+      if(spriteHit(a,pose,pt)){const bounds=spriteVisualBounds(a,pose);return {p,d,dist:Math.hypot(pt.x-bounds.cx,pt.y-bounds.cy)};}
     }
-    return best;
+    return null;
+  }
+  function wildSpriteHit(w,pt){
+    const drawn=spriteFrames.get(w),a=spriteOf(w.id,false);
+    return spriteHit(a,{x:w.x,y:w.y,scale:2,frame:drawn?.speciesId===w.id?drawn.frame:0,flip:drawn?.flip??w.vx>0,
+      radius:(6+C.getSpecies(w.id).stage*3)*1.6},pt);
+  }
+  function drawPetNote(im,p){
+    const d=digi(p.uid);if(!d||!im.complete||!im.naturalWidth)return;
+    const b=petVisualBounds(p,d),box=spriteFrameGeometry({image:im,width:im.naturalWidth,height:im.naturalHeight,frames:1},0);
+    if(box?.empty||b.height<=0)return;
+    const src=box||{left:0,top:0,width:im.naturalWidth,height:im.naturalHeight};
+    const height=Math.max(14,Math.min(28,b.height*0.45)),width=src.width*height/src.height;
+    ctx.drawImage(im,src.left,src.top,src.width,src.height,b.cx+Math.min(12,b.width*0.2),b.top-4-height,width,height);
   }
   // ---------- 빗자루: 원작 쓸기 2프레임(18틱씩) → 반짝임 7프레임(9틱씩), common/e001_ikusei ----------
   const SWEEP_FRAME = 18 / 60, SWEEP_LOOPS = 2, SPARKLE_FRAME = 9 / 60;
@@ -612,7 +672,7 @@
         if (t > 0.9) careFx.splice(i, 1);
         else {
           const im = fxImage(`note_${Math.min(4, Math.floor(t / 0.225) + 1)}`);
-          if (im.complete && im.naturalWidth) ctx.drawImage(im, x + 14, y - 74 - im.naturalHeight * 2, im.naturalWidth * 2, im.naturalHeight * 2);
+          drawPetNote(im,fx.pet);
         }
         continue;
       }
@@ -1321,16 +1381,17 @@
       const state=board.isBouncing(d.uid) ? 'hurtAlt' : C.isSleeping(d) ? 'seq_13' : p.cageId&&p.motion!=='eat'&&trainingSequence!==undefined&&!d.isEgg&&!d.trainDone
         ? 'seq_'+trainingSequence : p.motion||'idle';
       const frame = animations.pose(p, animationId(d), state, animDt);
+      spriteFrames.set(p,{frame,speciesId:d.speciesId,isEgg:!!d.isEgg});
       body(ctx, d.speciesId, d.isEgg, p.x, p.y, scale, frame, p.direction > 0); // 원본 도트는 왼쪽을 향하므로 오른쪽 이동에서만 반전
       // 머리 위 상태 말풍선 (배고픔·병·부상·똥·피로)
       const bub = bubbleOf(d);
       // 병·부상·스트레스·배고픔은 원작 말풍선 그림(common/e001_ikusei 30·31·34·36)
       const bubImage = bub && fxImage({ '🤢': 'bubble_sick', '🩹': 'bubble_injured', stress: 'bubble_stress', '🍖': 'bubble_hungry' }[bub] || 'bubble_stress');
       if (bub && (bub === 'stress' || '🤢🩹🍖'.includes(bub)) && bubImage.complete && bubImage.naturalWidth) {
-        const top = p.y - (spriteOf(d.speciesId, d.isEgg)?.baseline ?? 30) * scale - 6;
+        const top = petVisualBounds(p,d).top - 6;
         ctx.drawImage(bubImage, p.x + 2, top - 26, 40, 40);
       } else if (bub && bub !== 'stress') {
-        const top = p.y - (spriteOf(d.speciesId, d.isEgg)?.baseline ?? 30) * scale - 6;
+        const top = petVisualBounds(p,d).top - 6;
         ctx.fillStyle = '#ffffffe8';
         ctx.strokeStyle = '#203040';
         ctx.lineWidth = 1.5;
@@ -1349,9 +1410,10 @@
       if (selected) {
         ctx.fillStyle = '#fff3c2';
         ctx.beginPath();
-        ctx.moveTo(p.x, p.y - 82);
-        ctx.lineTo(p.x - 5, p.y - 90);
-        ctx.lineTo(p.x + 5, p.y - 90);
+        const top=petVisualBounds(p,d).top;
+        ctx.moveTo(p.x, top - 8);
+        ctx.lineTo(p.x - 5, top - 16);
+        ctx.lineTo(p.x + 5, top - 16);
         ctx.fill();
       }
       const training = trainingFloats.get(p.uid);
@@ -1362,7 +1424,7 @@
           ctx.save();ctx.textAlign='center';ctx.font='bold 15px sans-serif';
           ctx.globalAlpha=Math.min(1,(3-training.elapsed)*2);
           training.lines.forEach((line,i)=>{
-            const y=p.y-105-(training.lines.length-1-i)*19-training.elapsed*12;
+            const y=petVisualBounds(p,d).top-22-(training.lines.length-1-i)*19-training.elapsed*12;
             ctx.lineWidth=3;ctx.strokeStyle='#153b35';ctx.strokeText(line,p.x,y);
             ctx.fillStyle=line.includes('-')?'#ffbe9d':'#a5ffae';ctx.fillText(line,p.x,y);
           });ctx.restore();
@@ -1371,7 +1433,7 @@
       if (effect && effect.uid === p.uid && performance.now() < effect.until) {
         ctx.font = 'bold 17px sans-serif';
         ctx.fillStyle = effect.color;
-        ctx.fillText(effect.text, p.x, p.y - 95 - (1500 - (effect.until - performance.now())) / 80);
+        ctx.fillText(effect.text, p.x, petVisualBounds(p,d).top - 18 - (1500 - (effect.until - performance.now())) / 80);
       }
     }
     drawCareFx(performance.now());
@@ -1598,7 +1660,7 @@
     hunt.shotReady = now + C.shotCooldown(shot);
     hunt.fx.push({ x: p.x, y: p.y, r: shot.spread ? C.SHOT_SPREAD_RADIUS : 14, left: 0.25 });
     const reach = shot.spread ? C.SHOT_SPREAD_RADIUS : 45;
-    let hits = hunt.wilds.filter((w) => !w.gone && Math.hypot(p.x - w.x, p.y - (w.y - 15)) < reach);
+    let hits = hunt.wilds.filter((w) => !w.gone && (shot.spread?Math.hypot(p.x-w.x,p.y-(w.y-15))<reach:wildSpriteHit(w,p)));
     if (!shot.spread) hits = hits.sort((a, b) => Math.hypot(p.x - a.x, p.y - a.y) - Math.hypot(p.x - b.x, p.y - b.y)).slice(0, 1);
     if (!hits.length) return huntNote('빗나갔다!');
     for (const w of hits) {
@@ -1825,7 +1887,7 @@
     if (type === 'down' && hunt.tool === 'gear' && !wireGear()) return useGearAt(p);
     if (hunt.tool === 'gear' && !wireGear()) return;
     if (type === 'down') {
-      const target = hunt.tool === 'rope' && hunt.wilds.find((w) => !w.gone && w.bound > 0 && Math.hypot(p.x - w.x, p.y - (w.y - 15)) < 50);
+      const target = hunt.tool === 'rope' && [...hunt.wilds].sort((a,b)=>b.y-a.y).find((w) => !w.gone && w.bound > 0 && wildSpriteHit(w,p));
       hunt.pull = target ? { w: target, to: p } : null;
       hunt.drawing = !target;
       hunt.trail = target ? [] : [p];
@@ -1958,6 +2020,7 @@
       const motion = w.bound>0
         ? {frame:animations.pose(w,spriteId,'boundIdle',dt),flip:w.vx>0}
         : animations.movement(w, spriteId, w.movedX || 0, w.movedY || 0, dt);
+      spriteFrames.set(w,{frame:motion.frame,speciesId:w.id,flip:motion.flip});
       body(ctx, w.id, false, w.x, w.y, 2, motion.frame, motion.flip);
       ctx.globalAlpha = 1;
       const sp = C.getSpecies(w.id);
@@ -2046,6 +2109,7 @@
     () => !!battle || !!hunt || mailOpen || dayEnding,
   );
   // 손으로 디지몬을 움직이지 않고 누르면 쓰다듬는다 (원작 도움말 help #143)
+  board.hitTest = pt=>petAt(pt)?.p; // 끌기·쓰다듬기·치료 도구가 같은 실제 몸 판정을 사용한다.
   board.onGrab = (uid) => feeding.delete(uid); // 프레임 사이에 빠르게 드롭해도 먼 먹이를 소비하지 않는다.
   board.onPet = (index) => {
     const p = view.team[index];

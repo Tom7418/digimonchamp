@@ -74,7 +74,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  canvas.style.touchAction='none';canvas.onclick=null;
  canvas.onpointerdown=e=>{if(isBlocked())return;const s=getState(),p=coordinate(e),t=tile(p);hover=t;canvas.setPointerCapture(e.pointerId);
    if(editing){const cage=t&&L.at(s.layout,t.q,t.r);if(cage&&!tool){selected=cage.id;drag={cage:cage.id,offsetQ:t.q-cage.q,offsetR:t.r-cage.r};}else if(!tool){selected=null;}status();}
-   else{let best=-1,distance=65;s.team.forEach((pet,i)=>{const d=Math.hypot(p.x-pet.x,p.y-(pet.y-25));if(d<distance){best=i;distance=d;}});if(best>=0){s.selected=best;drag={pet:best,start:p,point:p,offset:{x:s.team[best].x-p.x,y:s.team[best].y-p.y},original:{x:s.team[best].x,y:s.team[best].y,target:s.team[best].target}};bounces.delete(s.team[best].uid);onGrab?.(s.team[best].uid);changed();}else drag={click:true};}
+   else{const picked=hitTest?hitTest(p):s.team.find(pet=>Math.abs(p.x-pet.x)<=22&&p.y>=pet.y-50&&p.y<=pet.y+3);const best=s.team.indexOf(picked);if(best>=0){s.selected=best;drag={pet:best,start:p,point:p,offset:{x:s.team[best].x-p.x,y:s.team[best].y-p.y},original:{x:s.team[best].x,y:s.team[best].y,target:s.team[best].target}};bounces.delete(s.team[best].uid);onGrab?.(s.team[best].uid);changed();}else drag={click:true};}
    // 디지몬·케이지를 잡지 않았으면 끌어서 사육장을 둘러본다
    if(drag?.click||(editing&&!tool&&!drag)){drag={...(drag||{}),pan:{x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y,moved:false}};}
  };
@@ -95,8 +95,9 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
    drag=null;status();
  };
  canvas.onpointercancel=()=>{restoreDrag();drag=null;hover=null;};
- let onPet=null,onGrab=null; // 잡기/단순 터치의 게임 쪽 처리를 연결한다.
+ let onPet=null,onGrab=null,hitTest=null; // 잡기/단순 터치의 게임 쪽 처리를 연결한다.
  return {
+   set hitTest(f){hitTest=f;},
    set onPet(f){onPet=f;},
    set onGrab(f){onGrab=f;},
    canMove,movePet,attachFloorItem,
