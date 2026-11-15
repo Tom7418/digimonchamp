@@ -41,6 +41,12 @@ for code,row in cages.items():
     assert hashlib.sha256(raw).hexdigest()==row['sha256'],code
     assert hashlib.sha256((web/row['webpAsset']).read_bytes()).hexdigest()==row['webpSha256'],code
     assert (web.parent/row['originalReference']).is_file(),code
+fences=json.loads((web.parent/'docs/cage-fence-audit.json').read_text(encoding='utf-8'))
+assert fences['style']=='mini-forest-fence-v1' and len(fences['facilities'])==33
+for code,row in cages.items():
+    assert row.get('fenceStyle')==fences['style']
+    source=fences['facilities'][code]
+    assert hashlib.sha256((web/source['baseAsset']).read_bytes()).hexdigest()==source['baseSha256'],code
 objects=json.loads((web.parent/'docs/cage-object-audit.json').read_text(encoding='utf-8'))['facilities']
 assert len(objects)==38
 for stem,row in objects.items():

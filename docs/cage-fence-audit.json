@@ -1,0 +1,271 @@
+{
+  "style": "mini-forest-fence-v1",
+  "reference": "C33",
+  "scope": "Fence band only. All RGBA channels outside band and image sizes preserved. Internal shared edges excluded.",
+  "facilities": {
+    "C00": {
+      "baseAsset": "assets/facilities/polished/C00.png",
+      "baseSha256": "55d5a1c6ca3f3154fefb0f3007e61e5b55d662ff32e35f5b38d09d099bdc5277",
+      "asset": "assets/facilities/polished/C00-fence3.png",
+      "fencePixels": 34373,
+      "bandSha256": "d2ee49ed24b616337700990a5915ce2af48f0675140f1b426777d8a5a3f18bc6",
+      "unchanged": false
+    },
+    "C01": {
+      "baseAsset": "assets/facilities/polished/C01.png",
+      "baseSha256": "05331a6d539a2e521642a41490ea82059ee5bdb446908bc987c113f7e546eaa6",
+      "asset": "assets/facilities/polished/C01-fence3.png",
+      "fencePixels": 10210,
+      "bandSha256": "d033efbce9415dd2d6f585cd15e1d1c8fb63365ce8a032d1e4ca600a0c5bd949",
+      "unchanged": false
+    },
+    "C02": {
+      "baseAsset": "assets/facilities/polished/C02.png",
+      "baseSha256": "3ce8f8621954700c4caa59cfaf32002dcff0a868f8ddf4ae6a111a93aa42c29f",
+      "asset": "assets/facilities/polished/C02-fence3.png",
+      "fencePixels": 24332,
+      "bandSha256": "a79d3d89b7b0b4e77763e403fb35daa98adb24ec1c67a58b1be0b60db52c00fb",
+      "unchanged": false
+    },
+    "C03": {
+      "baseAsset": "assets/facilities/polished/C03.png",
+      "baseSha256": "d816ee2a2416026c5e90c8383cec356680a50c4684c8d0bff47313f623352379",
+      "asset": "assets/facilities/polished/C03-fence3.png",
+      "fencePixels": 39528,
+      "bandSha256": "5bc514b7d01f69045554b9403af54ffdb572609f0968066f681a6d2f80c9f587",
+      "unchanged": false
+    },
+    "C04": {
+      "baseAsset": "assets/facilities/polished/C04.png",
+      "baseSha256": "0e4be912f894999c0b7eb3163e824c2b4291a07ee3462c963ea0fc58107bf156",
+      "asset": "assets/facilities/polished/C04-fence3.png",
+      "fencePixels": 32141,
+      "bandSha256": "4ff82ebed55903743f703b42fd66fd317abd0e10165e005606d4caa5ac88f25e",
+      "unchanged": false
+    },
+    "C05": {
+      "baseAsset": "assets/facilities/polished/C05.png",
+      "baseSha256": "8993e9c78ae9fb600238fab4b03218acdcea43b3f2214e2e1173e55f72c5ec62",
+      "asset": "assets/facilities/polished/C05-fence3.png",
+      "fencePixels": 34898,
+      "bandSha256": "b8a72792d8da73e78d00c7a31abdcffc6764d941f58e51d577e60a7110d584ed",
+      "unchanged": false
+    },
+    "C06": {
+      "baseAsset": "assets/facilities/polished/C06.png",
+      "baseSha256": "08b5bd2a5bbe57d998928f628e0959c7ea5e0f68fbbe57a69e6080daba6691a2",
+      "asset": "assets/facilities/polished/C06-fence3.png",
+      "fencePixels": 34733,
+      "bandSha256": "126ff2d54b94222b3b57e04f78a5653c0ae86d901985540de642f375b608876e",
+      "unchanged": false
+    },
+    "C07": {
+      "baseAsset": "assets/facilities/polished/C07.png",
+      "baseSha256": "4f0a8cf64f49ad7160b1585f10b024014c32ef763bdf743093f2b755f75444cc",
+      "asset": "assets/facilities/polished/C07-fence3.png",
+      "fencePixels": 29570,
+      "bandSha256": "1d7ece50762c8adca884ae211b5b0b5d00e2d8ce80a1c03e4f4e107ab3f49591",
+      "unchanged": false
+    },
+    "C08": {
+      "baseAsset": "assets/facilities/polished/C08.png",
+      "baseSha256": "87c3df0afcc513ade416096a6e6ff263cc4b8cf4396e093495255e9f18e5e125",
+      "asset": "assets/facilities/polished/C08-fence3.png",
+      "fencePixels": 28640,
+      "bandSha256": "ae16fec147b1edfeba45a09e6e32b595ab3a24d36321c5c2244cabb5db7692a1",
+      "unchanged": false
+    },
+    "C09": {
+      "baseAsset": "assets/facilities/polished/C09.png",
+      "baseSha256": "c7cdaa481bf0b132e4621e853b147f40bdf90254bf4aa28751f093090d854ddc",
+      "asset": "assets/facilities/polished/C09-fence3.png",
+      "fencePixels": 37953,
+      "bandSha256": "28aa9340502fc540504123fa2aa4b0a6ce8675cb53816ddd06c07da4e79d9dfc",
+      "unchanged": false
+    },
+    "C10": {
+      "baseAsset": "assets/facilities/polished/C10.png",
+      "baseSha256": "98de17dde62e2d74597bb41b95af7293c220bd718ed57a444196b441c6fa597e",
+      "asset": "assets/facilities/polished/C10-fence3.png",
+      "fencePixels": 42754,
+      "bandSha256": "092403b258922ffe1202fe2caceef5800534686033c927d629149d1505c00c19",
+      "unchanged": false
+    },
+    "C11": {
+      "baseAsset": "assets/facilities/polished/C11.png",
+      "baseSha256": "8336870102829b7306cfd4d01835f1905ec7b160bb8dcf1867543b650359d1fc",
+      "asset": "assets/facilities/polished/C11-fence3.png",
+      "fencePixels": 28497,
+      "bandSha256": "2fc827ead7b9ed20de4125c487b7a165ae5ad3c6bc1d1f922ca4da5d8380076e",
+      "unchanged": false
+    },
+    "C12": {
+      "baseAsset": "assets/facilities/polished/C12.png",
+      "baseSha256": "fbc4a61137fce8935f6cd83f5c9934e7c184b26fb3aa5f2e1698e12fe147c6b6",
+      "asset": "assets/facilities/polished/C12-fence3.png",
+      "fencePixels": 25980,
+      "bandSha256": "247fc30c78aec9c374234998234bf7ff385b0aaab2b5ff435cc414b7fa6fb9d2",
+      "unchanged": false
+    },
+    "C14": {
+      "baseAsset": "assets/facilities/polished/C14.png",
+      "baseSha256": "0e0b6a3b96a2f86a488604d11444d892912eabec9054bf2c1e05852b65ed075a",
+      "asset": "assets/facilities/polished/C14-fence3.png",
+      "fencePixels": 30522,
+      "bandSha256": "ce5f5c4b91251ab23873f4e69fe0be99cf0b79948cc86d814f9aa7b48b10a735",
+      "unchanged": false
+    },
+    "C15": {
+      "baseAsset": "assets/facilities/polished/C15.png",
+      "baseSha256": "11e430c359896e48be0e1e5bf8cd89032f52af2b7ea05f9944a4b72db7e45490",
+      "asset": "assets/facilities/polished/C15-fence3.png",
+      "fencePixels": 30254,
+      "bandSha256": "e96da08b23fb53127ed5ac39c94a46412d93a59d5a2854702c975d09c88d4241",
+      "unchanged": false
+    },
+    "C17": {
+      "baseAsset": "assets/facilities/polished/C17.png",
+      "baseSha256": "02ef24909013f4e964867f38a4708bd8949033bbcf40bb895e1b47db3eabbf23",
+      "asset": "assets/facilities/polished/C17-fence3.png",
+      "fencePixels": 31704,
+      "bandSha256": "8899cd9f0b7826060f5c751d80e2f9c43e736c1b729e309842abfa5f6bb65d38",
+      "unchanged": false
+    },
+    "C18": {
+      "baseAsset": "assets/facilities/polished/C18.png",
+      "baseSha256": "8565611b72b0953b1c991eeb0911349f83141566a0a4602b6c21335f84257e68",
+      "asset": "assets/facilities/polished/C18-fence3.png",
+      "fencePixels": 20299,
+      "bandSha256": "581bf29114785b1d1ec3af21e7a3514a08e0d4ba566adc6e397657b19fb80d8b",
+      "unchanged": false
+    },
+    "C19": {
+      "baseAsset": "assets/facilities/polished/C19.png",
+      "baseSha256": "3319177d16fb9a4e293ee08d92e17e195004fac6cfa25ddb0f8abe1ff1bcb8df",
+      "asset": "assets/facilities/polished/C19-fence3.png",
+      "fencePixels": 39903,
+      "bandSha256": "59d0703e2fc889fc87c43d0eae871ede47441dca5102cc546994da1ad1779b3a",
+      "unchanged": false
+    },
+    "C23": {
+      "baseAsset": "assets/facilities/polished/C23.png",
+      "baseSha256": "38ac680b641c777807d9a4db8c7c1834d58adba35ab841eec688ae1d55a07a5e",
+      "asset": "assets/facilities/polished/C23-fence3.png",
+      "fencePixels": 18914,
+      "bandSha256": "fad3407993eb4ebb2a555693e37124f05bead0696fd7b0fe1471a0aa0bf5dcc7",
+      "unchanged": false
+    },
+    "C24": {
+      "baseAsset": "assets/facilities/polished/C24.png",
+      "baseSha256": "7b0342766d0e4fd0c666f62cb39678312af2a5ba5af489629856160c924a0f23",
+      "asset": "assets/facilities/polished/C24-fence3.png",
+      "fencePixels": 11106,
+      "bandSha256": "ee40d93d6ee1801b697aa03a6ef526b40c716dfbd052532ea9fe3fdaa96bf664",
+      "unchanged": false
+    },
+    "C25": {
+      "baseAsset": "assets/facilities/polished/C25.png",
+      "baseSha256": "ddc387fd6309c30c9c30144ce33d37222023d33f6f553acd1d77dde49bcd0ae2",
+      "asset": "assets/facilities/polished/C25-fence3.png",
+      "fencePixels": 18547,
+      "bandSha256": "9a34a97f5b114d627e6f1467861d3fa3e969991311bac223e004a095b526b9e2",
+      "unchanged": false
+    },
+    "C26": {
+      "baseAsset": "assets/facilities/polished/C26.png",
+      "baseSha256": "57f9fc18bf599c0e484716cb8c362813ecebe471f0135a748bcc59cfc3a578f3",
+      "asset": "assets/facilities/polished/C26-fence3.png",
+      "fencePixels": 30083,
+      "bandSha256": "12c3752ffa340663a2bc0bb288790edd3af7a91511793949b7a4fd1d7dd591dd",
+      "unchanged": false
+    },
+    "C27": {
+      "baseAsset": "assets/facilities/polished/C27.png",
+      "baseSha256": "5c78a9f5f8fe265a303f0b4a8ee1da407e6d85adff6bc22a21db7c590f3c5f22",
+      "asset": "assets/facilities/polished/C27-fence3.png",
+      "fencePixels": 21700,
+      "bandSha256": "1809b2ae831e4f1c7282b2b05248b17a3add14df6a220705f2860c291e5f54ac",
+      "unchanged": false
+    },
+    "C30": {
+      "baseAsset": "assets/facilities/polished/C30.png",
+      "baseSha256": "db5902cd62de2a2f9c81d2b2bccf807257e8dfc39694aef5deea86e1f6e632f1",
+      "asset": "assets/facilities/polished/C30-fence3.png",
+      "fencePixels": 24685,
+      "bandSha256": "40461df83af1ada9f1ff17acc574274f8ef284b7d4d9a2c586726dec5e17fc58",
+      "unchanged": false
+    },
+    "C31": {
+      "baseAsset": "assets/facilities/polished/C31.png",
+      "baseSha256": "1c06fc5f9b15fb30399da5c48843a9cf13a72a37efa91f8af367aa1f0bdc63dc",
+      "asset": "assets/facilities/polished/C31-fence3.png",
+      "fencePixels": 9207,
+      "bandSha256": "dcd8222ba7b5a60d9cc1af7c0b8e4a87f994ffb3d034ddaa3a85fc2dcf9d84f0",
+      "unchanged": false
+    },
+    "C32": {
+      "baseAsset": "assets/facilities/polished/C32.png",
+      "baseSha256": "420413283909f0c0563a3aa5f6d28833ce284bc5acd096080dc97824e6da7a1f",
+      "asset": "assets/facilities/polished/C32-fence3.png",
+      "fencePixels": 9991,
+      "bandSha256": "495ec6bfc73cd7fd40592caeb4f7f9f12c159ede8266792de0b42c7ac3512a56",
+      "unchanged": false
+    },
+    "C33": {
+      "baseAsset": "assets/facilities/polished/C33-hex2.png",
+      "baseSha256": "80c50f51b17c94f9b60254cde874f791e5a7cbccd4425c3be98aa940bb0642d7",
+      "asset": "assets/facilities/polished/C33-hex2.png",
+      "fencePixels": 5464,
+      "bandSha256": "1926008db2f36c8c79204bd026ba99a39f109fcc8d550cb68f0299df40072550",
+      "unchanged": true
+    },
+    "C34": {
+      "baseAsset": "assets/facilities/polished/C34.png",
+      "baseSha256": "d1dce09ee806be04075be596b220dc8ce3bd14bb00d3a48fef8b52c22fc4afa2",
+      "asset": "assets/facilities/polished/C34-fence3.png",
+      "fencePixels": 11324,
+      "bandSha256": "dfcf98a65b3eb544a260fce12f97b66e21937771276d9130ab3acfff9edf5e9c",
+      "unchanged": false
+    },
+    "C35": {
+      "baseAsset": "assets/facilities/polished/C35-hex2.png",
+      "baseSha256": "819bfa1363fdc40588953302bdef0871b56924682206a572440f5e5ac33adb78",
+      "asset": "assets/facilities/polished/C35-hex2.png",
+      "fencePixels": 5464,
+      "bandSha256": "1926008db2f36c8c79204bd026ba99a39f109fcc8d550cb68f0299df40072550",
+      "unchanged": true
+    },
+    "C37": {
+      "baseAsset": "assets/facilities/polished/C37-hex2.png",
+      "baseSha256": "9984f778128dd72a66074da6f125e03f293b6d2c20eab1d8a8539756b5fb1a87",
+      "asset": "assets/facilities/polished/C37-hex2.png",
+      "fencePixels": 5464,
+      "bandSha256": "1926008db2f36c8c79204bd026ba99a39f109fcc8d550cb68f0299df40072550",
+      "unchanged": true
+    },
+    "C38": {
+      "baseAsset": "assets/facilities/polished/C38-hex2.png",
+      "baseSha256": "d4560d61e13ec3b83b01d5f3b59ef4f279d4f28870765d58814245189a203a0d",
+      "asset": "assets/facilities/polished/C38-hex2.png",
+      "fencePixels": 5464,
+      "bandSha256": "1926008db2f36c8c79204bd026ba99a39f109fcc8d550cb68f0299df40072550",
+      "unchanged": true
+    },
+    "C39": {
+      "baseAsset": "assets/facilities/polished/C39-hex2.png",
+      "baseSha256": "167fbcfedeb29cccb9ce347c825b4a526d6f013fc7d409dbf9de0d8e4550aa09",
+      "asset": "assets/facilities/polished/C39-hex2.png",
+      "fencePixels": 5464,
+      "bandSha256": "1926008db2f36c8c79204bd026ba99a39f109fcc8d550cb68f0299df40072550",
+      "unchanged": true
+    },
+    "C16": {
+      "baseAsset": "assets/facilities/clinic-polished.png",
+      "baseSha256": "133bdfb1834316b76632034d4750e3ef1c8aedc33f5d43db7326851046be8782",
+      "asset": "assets/facilities/polished/C16-fence3.png",
+      "fencePixels": 22369,
+      "bandSha256": "c1f6ea38b49e53d01ce0c58cca449c5d5dff6fc4d86c1f8ff676fb4bc2433893",
+      "unchanged": false
+    }
+  }
+}
