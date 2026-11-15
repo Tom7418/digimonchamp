@@ -791,18 +791,19 @@
           0
         ]
       ],
-      "asset": "assets/facilities/polished/C33.png",
+      "asset": "assets/facilities/polished/C33-hex2.png",
       "size": [
         208,
         240
       ],
-      "sha256": "4871b60bdeaeb2c474b712273cd1dbce5d8f8ff22a18e7e5aa91ba8f74b4deed",
-      "webpAsset": "assets/facilities/polished/C33.webp",
-      "webpSha256": "24b126f8b1664f3ed633f5e14983144079753baf5c491d1298183fe7aa9fe88f",
+      "sha256": "80c50f51b17c94f9b60254cde874f791e5a7cbccd4425c3be98aa940bb0642d7",
+      "webpAsset": "assets/facilities/polished/C33-hex2.webp",
+      "webpSha256": "f61475aad7f07f6725759d5c43adc933ac6383a12b2bf165d3f4e30fbf9d15bd",
       "originalReference": "web/assets/facilities/original/cm33-complete.png",
       "restoredContents": "RESTORE the large leafy tree on grassy patch with shrubs and stones. Keep ONE-cell footprint.",
-      "generatedSourceSha256": "7c7e2ce681a66cec54ed48d99dffb21110668d0d6aa9232e16963683c6cfc10b",
-      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C33 (미니 숲). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE the large leafy tree on grassy patch with shrubs and stones. Keep ONE-cell footprint.\nFloor geometry: 1 point-up regular hexagonal cells, axial coordinates [[0, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+      "generatedSourceSha256": "1141aea66d61127d0879f2e765ad20b9c63f726b4739a9753b1ab84bfec40d08",
+      "prompt": "Use case: precise-object-edit. Edit the provided single-cell pixel-art cage C33. Fix ONLY its outer cage boundary and terrain edging. It must read as one exact upright REGULAR HEXAGON: SIX perfectly straight connected sides, SIX sharp regular vertices, left/right vertical sides, symmetric sloping top and bottom sides, a clean top point and clean bottom point. The current front/lower border has uneven jagged terrain bites and mismatched rail positions: REMOVE these defects. Rebuild a single continuous cyan and dark-blue outlined rail evenly following ALL six straight sides, with evenly spaced small pale cyan posts like the existing style. No inward notches, extra corners, protruding cliff teeth, scallops, spikes or bumpy lower silhouette. Pull any cliff rock columns/grass tufts/tree foliage/conveyor parts inward so that NO object or ground shape crosses or replaces the straight perimeter. The ENTIRE interior up to all six sides should be a continuous filled floor, no transparent holes inside. Preserve the same interior theme, layout, structures, colors, trees or machines and clean pixel-art detail; don't add or remove structures. Keep exactly ONE hexagonal cell, same camera view and aspect ratio 208:240. No 3D thickness hanging below the rail, no external glow or shadows. Transparent alpha outside the hexagon only, centered fully visible, no text or collage.",
+      "boundaryRevision": 2
     },
     "C34": {
       "kind": "gym",
@@ -835,18 +836,19 @@
           0
         ]
       ],
-      "asset": "assets/facilities/polished/C35.png",
+      "asset": "assets/facilities/polished/C35-hex2.png",
       "size": [
         208,
         240
       ],
-      "sha256": "b4f14021723895fe07770adf1e30d06b8cce85ed6b41f6b18d1b0ef0b9195bb4",
-      "webpAsset": "assets/facilities/polished/C35.webp",
-      "webpSha256": "2d659cb725c207b06a7a9693244fb09dd3b2d962ea30a9d58abad423ca0c2ef6",
+      "sha256": "819bfa1363fdc40588953302bdef0871b56924682206a572440f5e5ac33adb78",
+      "webpAsset": "assets/facilities/polished/C35-hex2.webp",
+      "webpSha256": "a21e65756556f6ef95f28612891e052dc34b2fdbeb00d8f129d7719078b0b6f4",
       "originalReference": "web/assets/facilities/original/cm35-complete.png",
       "restoredContents": "Preserve mini volcanic cliff, dark rock ground and orange lava stream at right.",
-      "generatedSourceSha256": "0080299c4a3403cff2dd50b9fcc2d899ba328f52347af2f07d2b94d095913d71",
-      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C35 (미니 화산). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Preserve mini volcanic cliff, dark rock ground and orange lava stream at right.\nFloor geometry: 1 point-up regular hexagonal cells, axial coordinates [[0, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+      "generatedSourceSha256": "0c24baf6e5446002ea01afc4735ef53cbd7b8cf099990bcbb771c4c5441f4313",
+      "prompt": "Use case: precise-object-edit. Edit the provided single-cell pixel-art cage C35. Fix ONLY its outer cage boundary and terrain edging. It must read as one exact upright REGULAR HEXAGON: SIX perfectly straight connected sides, SIX sharp regular vertices, left/right vertical sides, symmetric sloping top and bottom sides, a clean top point and clean bottom point. The current front/lower border has uneven jagged terrain bites and mismatched rail positions: REMOVE these defects. Rebuild a single continuous cyan and dark-blue outlined rail evenly following ALL six straight sides, with evenly spaced small pale cyan posts like the existing style. No inward notches, extra corners, protruding cliff teeth, scallops, spikes or bumpy lower silhouette. Pull any cliff rock columns/grass tufts/tree foliage/conveyor parts inward so that NO object or ground shape crosses or replaces the straight perimeter. The ENTIRE interior up to all six sides should be a continuous filled floor, no transparent holes inside. Preserve the same interior theme, layout, structures, colors, trees or machines and clean pixel-art detail; don't add or remove structures. Keep exactly ONE hexagonal cell, same camera view and aspect ratio 208:240. No 3D thickness hanging below the rail, no external glow or shadows. Transparent alpha outside the hexagon only, centered fully visible, no text or collage.",
+      "boundaryRevision": 2
     },
     "C37": {
       "kind": "cm37",
@@ -857,18 +859,19 @@
           0
         ]
       ],
-      "asset": "assets/facilities/polished/C37.png",
+      "asset": "assets/facilities/polished/C37-hex2.png",
       "size": [
         208,
         240
       ],
-      "sha256": "18d4d08f42df01dc43c3438081749d17e20ae113e792073d23214a6a477e72c9",
-      "webpAsset": "assets/facilities/polished/C37.webp",
-      "webpSha256": "3a78feb12d5d1b4e131d7bb89b43dcb489abd0eed29984253576a5469b94b54e",
+      "sha256": "9984f778128dd72a66074da6f125e03f293b6d2c20eab1d8a8539756b5fb1a87",
+      "webpAsset": "assets/facilities/polished/C37-hex2.webp",
+      "webpSha256": "26ce1fb2fcee7313beaf6533424764f4d2dcce1e417971df77b8aaadeb79ce3b",
       "originalReference": "web/assets/facilities/original/cm37-complete.png",
       "restoredContents": "Preserve mini rocky mountain ground, stone cliff wall, pale blue sky edge and small original rock objects.",
-      "generatedSourceSha256": "dd86c14d5d459a4c3fcf1df8c406bd61ec2c2203872f920ddd245bacd4e740cb",
-      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C37 (미니 고산). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Preserve mini rocky mountain ground, stone cliff wall, pale blue sky edge and small original rock objects.\nFloor geometry: 1 point-up regular hexagonal cells, axial coordinates [[0, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+      "generatedSourceSha256": "857dc656232681edcab6afe89d6380909078187c2bc81ee5fb77d544f745172a",
+      "prompt": "Use case: precise-object-edit. Edit the provided single-cell pixel-art cage C37. Fix ONLY its outer cage boundary and terrain edging. It must read as one exact upright REGULAR HEXAGON: SIX perfectly straight connected sides, SIX sharp regular vertices, left/right vertical sides, symmetric sloping top and bottom sides, a clean top point and clean bottom point. The current front/lower border has uneven jagged terrain bites and mismatched rail positions: REMOVE these defects. Rebuild a single continuous cyan and dark-blue outlined rail evenly following ALL six straight sides, with evenly spaced small pale cyan posts like the existing style. No inward notches, extra corners, protruding cliff teeth, scallops, spikes or bumpy lower silhouette. Pull any cliff rock columns/grass tufts/tree foliage/conveyor parts inward so that NO object or ground shape crosses or replaces the straight perimeter. The ENTIRE interior up to all six sides should be a continuous filled floor, no transparent holes inside. Preserve the same interior theme, layout, structures, colors, trees or machines and clean pixel-art detail; don't add or remove structures. Keep exactly ONE hexagonal cell, same camera view and aspect ratio 208:240. No 3D thickness hanging below the rail, no external glow or shadows. Transparent alpha outside the hexagon only, centered fully visible, no text or collage.",
+      "boundaryRevision": 2
     },
     "C38": {
       "kind": "cm38",
@@ -879,18 +882,19 @@
           0
         ]
       ],
-      "asset": "assets/facilities/polished/C38.png",
+      "asset": "assets/facilities/polished/C38-hex2.png",
       "size": [
         208,
         240
       ],
-      "sha256": "23b674f84bb46dd8295da3c5c5b6cc289573ed7f6cef8e86f02bf9a2b97c468a",
-      "webpAsset": "assets/facilities/polished/C38.webp",
-      "webpSha256": "b5255dacda011c1549a0d0be411de9c5b00f0e234c40c984becfb6064515e011",
+      "sha256": "d4560d61e13ec3b83b01d5f3b59ef4f279d4f28870765d58814245189a203a0d",
+      "webpAsset": "assets/facilities/polished/C38-hex2.webp",
+      "webpSha256": "8ebfdc91f6ea3b0dacf07ffc46f17749f59f8f1e7e17b376bcecd7f96f10ec96",
       "originalReference": "web/assets/facilities/original/cm38-complete.png",
       "restoredContents": "RESTORE TWO robotic assembly arms with gray bases/yellow arms over conveyor. Preserve industrial rear wall and yellow safety rail.",
-      "generatedSourceSha256": "ceb54be75840968abe5657b48107ad01e505920fd72ce1ba1602e2caa5aa7ed1",
-      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C38 (미니 공장). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE TWO robotic assembly arms with gray bases/yellow arms over conveyor. Preserve industrial rear wall and yellow safety rail.\nFloor geometry: 1 point-up regular hexagonal cells, axial coordinates [[0, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+      "generatedSourceSha256": "71349f5fc4e6e62d99a0b3a10aa6f260be142adc4475ab93d4b970757126c47f",
+      "prompt": "Use case: precise-object-edit. Edit the provided single-cell pixel-art cage C38. Fix ONLY its outer cage boundary and terrain edging. It must read as one exact upright REGULAR HEXAGON: SIX perfectly straight connected sides, SIX sharp regular vertices, left/right vertical sides, symmetric sloping top and bottom sides, a clean top point and clean bottom point. The current front/lower border has uneven jagged terrain bites and mismatched rail positions: REMOVE these defects. Rebuild a single continuous cyan and dark-blue outlined rail evenly following ALL six straight sides, with evenly spaced small pale cyan posts like the existing style. No inward notches, extra corners, protruding cliff teeth, scallops, spikes or bumpy lower silhouette. Pull any cliff rock columns/grass tufts/tree foliage/conveyor parts inward so that NO object or ground shape crosses or replaces the straight perimeter. The ENTIRE interior up to all six sides should be a continuous filled floor, no transparent holes inside. Preserve the same interior theme, layout, structures, colors, trees or machines and clean pixel-art detail; don't add or remove structures. Keep exactly ONE hexagonal cell, same camera view and aspect ratio 208:240. No 3D thickness hanging below the rail, no external glow or shadows. Transparent alpha outside the hexagon only, centered fully visible, no text or collage.",
+      "boundaryRevision": 2
     },
     "C39": {
       "kind": "cm39",
@@ -901,18 +905,19 @@
           0
         ]
       ],
-      "asset": "assets/facilities/polished/C39.png",
+      "asset": "assets/facilities/polished/C39-hex2.png",
       "size": [
         208,
         240
       ],
-      "sha256": "ee0e00090ecbb869c11d7e10e3330cbdbbcdf2ed86f3d3a65e3e41ada340010a",
-      "webpAsset": "assets/facilities/polished/C39.webp",
-      "webpSha256": "0dc5bbc4b481b3222159162c45f44cc78d9a173babbbb8856f829687e21abe45",
+      "sha256": "167fbcfedeb29cccb9ce347c825b4a526d6f013fc7d409dbf9de0d8e4550aa09",
+      "webpAsset": "assets/facilities/polished/C39-hex2.webp",
+      "webpSha256": "f0d8a74a9f2c5d6fccceeb4363449bed2d19dd9cfa428ca1ad19ca7c2e78a9e2",
       "originalReference": "web/assets/facilities/original/cm39-complete.png",
       "restoredContents": "RESTORE palm tree on sandy shoreline. Preserve blue water occupying most of the original mini beach and thin curved sandy coast.",
-      "generatedSourceSha256": "e8ddb2fe10fccc7ab9941bf4c80bcb3c335d370ed43f3c5c21722451e18824aa",
-      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C39 (미니 해변). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE palm tree on sandy shoreline. Preserve blue water occupying most of the original mini beach and thin curved sandy coast.\nFloor geometry: 1 point-up regular hexagonal cells, axial coordinates [[0, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+      "generatedSourceSha256": "14008483608cb8beb0902b68a9c5d2d2bc44869a7e3f48d576bc301d2b5d653f",
+      "prompt": "Use case: precise-object-edit. Edit the provided single-cell pixel-art cage C39. Fix ONLY its outer cage boundary and terrain edging. It must read as one exact upright REGULAR HEXAGON: SIX perfectly straight connected sides, SIX sharp regular vertices, left/right vertical sides, symmetric sloping top and bottom sides, a clean top point and clean bottom point. The current front/lower border has uneven jagged terrain bites and mismatched rail positions: REMOVE these defects. Rebuild a single continuous cyan and dark-blue outlined rail evenly following ALL six straight sides, with evenly spaced small pale cyan posts like the existing style. No inward notches, extra corners, protruding cliff teeth, scallops, spikes or bumpy lower silhouette. Pull any cliff rock columns/grass tufts/tree foliage/conveyor parts inward so that NO object or ground shape crosses or replaces the straight perimeter. The ENTIRE interior up to all six sides should be a continuous filled floor, no transparent holes inside. Preserve the same interior theme, layout, structures, colors, trees or machines and clean pixel-art detail; don't add or remove structures. Keep exactly ONE hexagonal cell, same camera view and aspect ratio 208:240. No 3D thickness hanging below the rail, no external glow or shadows. Transparent alpha outside the hexagon only, centered fully visible, no text or collage.",
+      "boundaryRevision": 2
     },
     "C16": {
       "kind": "clinic",
