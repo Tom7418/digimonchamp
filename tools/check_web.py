@@ -47,12 +47,20 @@ for code,row in cages.items():
     assert row.get('fenceStyle')==fences['style']
     source=fences['facilities'][code]
     assert hashlib.sha256((web/source['baseAsset']).read_bytes()).hexdigest()==source['baseSha256'],code
+# 이전 베이크 펜스 보고서는 원본 이력이며 최종 펜스는 공통 렌더러에서 그린다.
+assert all(row.get('fenceLayer')=='shared-vector-v4' for row in cages.values())
+scene_audit=json.loads((web.parent/'docs/cage-scene-audit.json').read_text(encoding='utf-8'))
+assert set(scene_audit['facilities'])=={'C00','C05','C16','C31'}
+for code,source in scene_audit['facilities'].items():
+    assert hashlib.sha256((web/source['baseAsset']).read_bytes()).hexdigest()==source['baseSha256'],code
+assert 'cage-fence.js' in html and 'CageFence?.draw' in (web/'cage-editor.js').read_text(encoding='utf-8')
 objects=json.loads((web.parent/'docs/cage-object-audit.json').read_text(encoding='utf-8'))['facilities']
 assert len(objects)==38
 for stem,row in objects.items():
     raw=(web/'assets/facilities/original'/f'{stem}-complete.png').read_bytes()
     assert hashlib.sha256(raw).hexdigest()==row['pngSha256'],stem
 gallery=(web/'cage-gallery.html').read_text(encoding='utf-8')
+assert 'cage-fence.js' in gallery and 'CageFence.preview' in gallery
 assert gallery.count('<article ')==33 and all(f'id="{code}"' in gallery for code in cages)
 
 # 지형은 원본 ATR 대신 변환된 수치만 배포하며 배경 PNG와 같은8px 칸을 사용한다.

@@ -144,7 +144,9 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
          const dw=fitted?width:b.w*k,dh=fitted?height:b.h*k;
          ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
          ctx.drawImage(im,b.x,b.y,b.w,b.h,left+(width-dw)/2,top+(height-dh)/2,dw,dh);
-       }ctx.restore();
+       }
+       // 파일에 구워진 펜스 대신 모든 케이지를 같은 월드 좌표 펜스로 마무리한다.
+       window.CageFence?.draw(ctx,type.cells,R);ctx.restore();
        // 기본 케이지 울타리는 이미지 실루엣 대신 실제 네 칸의 외곽 변에 맞춘다.
        if(c.kind==='free'&&!type.polished){
          ctx.save();ctx.lineJoin='round';ctx.strokeStyle='#173b66';ctx.lineWidth=9;

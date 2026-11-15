@@ -9,12 +9,12 @@ window.CageLayout = {
     // 그림은 육각 점유 모양에 맞춘 전용 그림(<이름>-hex.png, tools/make_hex_facilities.py. clinic·field는 Codex가 만든 것).
     // 시설 크기는 개별 확인한다. 기본 케이지 4칸, 미니 운동장 3칸 (사용자 확인).
     // free·clinic·field·gym은 예전 저장과 맞추려고 남긴 이름이다 (field=미니 운동장, gym=미니 체육관).
-    free: {name:'기본 케이지',core:'기본 케이지',img:'polished/C00-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[0,1],[1,1]],capacity:99},
+    free: {name:'기본 케이지',core:'기본 케이지',img:'polished/C00-scene4',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[0,1],[1,1]],capacity:99},
     cm01: {name:'공터',core:'공터',img:'polished/C01-fence3',fit:true,polished:true,webp:true,cells:[[0,0]],capacity:2},
     cm02: {name:'운동장',core:'운동장',img:'polished/C02-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[0,1]],capacity:6},
     cm03: {name:'경기장',core:'경기장',img:'polished/C03-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[2,0],[0,1],[1,1]],capacity:10},
     cm04: {name:'도장',core:'도장',img:'polished/C04-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[2,0]],capacity:6},
-    cm05: {name:'체육관',core:'체육관',img:'polished/C05-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[-1,1],[0,1]],capacity:8},
+    cm05: {name:'체육관',core:'체육관',img:'polished/C05-scene4',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[-1,1],[0,1]],capacity:8},
     cm06: {name:'연구소',core:'연구소',img:'polished/C06-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[-2,1],[-1,1]],capacity:8},
     cm07: {name:'화산',core:'화산',img:'polished/C07-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[0,1],[1,1]],capacity:8},
     cm08: {name:'초원',core:'초원',img:'polished/C08-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[0,1],[1,1]],capacity:6},
@@ -24,7 +24,7 @@ window.CageLayout = {
     cm12: {name:'정글',core:'정글',img:'polished/C12-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[1,1]],capacity:6},
     cm14: {name:'묘지',core:'묘지',img:'polished/C14-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[1,1]],capacity:6},
     cm15: {name:'공장',core:'공장',img:'polished/C15-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[0,1],[1,1]],capacity:6},
-    clinic: {name:'미니 양호실',core:'미니 양호실',img:'polished/C16-fence3',fit:true,polished:true,webp:true,cells:[[0,0]],capacity:2},
+    clinic: {name:'미니 양호실',core:'미니 양호실',img:'polished/C16-scene4',fit:true,polished:true,webp:true,cells:[[0,0]],capacity:2},
     cm17: {name:'병원',core:'병원',img:'polished/C17-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[-1,1],[0,1]],capacity:6},
     cm18: {name:'화원',core:'화원',img:'polished/C18-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[-1,1]],capacity:4},
     cm19: {name:'온천',core:'온천',img:'polished/C19-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[2,0],[3,0]],capacity:8},
@@ -34,7 +34,7 @@ window.CageLayout = {
     cm26: {name:'목장',core:'목장',img:'polished/C26-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[-1,1],[0,1]],capacity:8},
     cm27: {name:'링',core:'링',img:'polished/C27-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[-1,1],[0,1]],capacity:6},
     field: {name:'미니 운동장',core:'미니 운동장',img:'polished/C30-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[0,1]],capacity:2},
-    cm31: {name:'양호실',core:'양호실',img:'polished/C31-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0]],capacity:6},
+    cm31: {name:'양호실',core:'양호실',img:'polished/C31-scene4',fit:true,polished:true,webp:true,cells:[[0,0],[1,0]],capacity:6},
     cm32: {name:'미니 화원',core:'미니 화원',img:'polished/C32-fence3',fit:true,polished:true,webp:true,cells:[[0,0]],capacity:2},
     cm33: {name:'미니 숲',core:'미니 숲',img:'polished/C33-hex2',fit:true,polished:true,webp:true,cells:[[0,0]],capacity:2},
     gym: {name:'미니 체육관',core:'미니 체육관',img:'polished/C34-fence3',fit:true,polished:true,webp:true,cells:[[0,0]],capacity:2},

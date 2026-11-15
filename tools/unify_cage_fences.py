@@ -159,4 +159,10 @@ def run(check=False):
     print('33 fences verified; all non-fence RGBA pixels and sizes unchanged.')
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--check',action='store_true');args=p.parse_args();run(args.check)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--check',action='store_true');args=p.parse_args()
+    active=json.loads((REPO/'docs/cage-art-refresh.json').read_text(encoding='utf-8'))['facilities']
+    if any(row.get('fenceLayer')=='shared-vector-v4' for row in active.values()):
+        if not args.check:raise SystemExit('Retired baked fence method. Use prepare_cage_scenes.py and web/cage-fence.js.')
+        from prepare_cage_scenes import run as check_scenes
+        check_scenes(True)
+    else:run(args.check)
