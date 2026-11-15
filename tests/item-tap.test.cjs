@@ -23,7 +23,7 @@ function setup() {
   assert.ok(a>0&&b>a);
   const sa=source.indexOf('  function foodUnderPoop('),sb=source.indexOf('  function drawSweeps(',sa);
   vm.runInContext('const sweeps=[],SWEEP_FRAME=0.3,SWEEP_LOOPS=2,SPARKLE_FRAME=0.15;'+source.slice(sa,sb),ctx);
-  vm.runInContext(source.slice(a,b)+'\ninitFarmInput();globalThis.api={seekFood};',ctx);
+  vm.runInContext(source.slice(a,b)+'\ninitFarmInput();globalThis.api={seekFood,feeding};',ctx);
   const event=(patch={})=>({pointerId:1,button:0,isPrimary:true,clientX:200,clientY:300,preventDefault(){},stopImmediatePropagation(){this.stopped=true;},...patch});
   const choose=kind=>tray.fire('click',{target:{closest:()=>({dataset:{item:kind}})}});
   const tap=()=>{canvas.fire('pointerdown',event());const up=event();canvas.fire('pointerup',up);return up;};
@@ -62,10 +62,9 @@ test('먹다가 잠들면 예약을 풀고 깰 때까지 음식과 위치를 보
   assert.equal(s.ctx.save.digimon[0].hunger,10);
 });
 
-test('먹는 중 다른 디지몬의 중복 소비와 케이지 이동 후 뒤늦은 소비를 막는다',()=>{
+test('케이지 이동 후 원래 먹이의 뒤늦은 소비를 막는다',()=>{
   const s=setup();s.choose('meat');s.tap();const p=s.ctx.view.team[0],d=s.ctx.save.digimon[0];p.cageId=null;
   s.seekFood(p,d,10);
-  const other={...d,uid:2};assert.equal(s.seekFood({...p,uid:2},other,0),false);
   p.cageId='new-cage';s.seekFood(p,d,10);
   assert.equal(s.ctx.save.meat,2);assert.equal(s.ctx.view.foods.length,1);
 });
@@ -168,4 +167,32 @@ test('긴 빗자루 드래그 중 똥이 먼저 사라져도 겹친 먹이는 �
  s.canvas.fire('pointermove',s.event({clientX:400}));s.canvas.fire('pointermove',s.event());s.canvas.fire('pointerup',s.event());
  s.ctx.updateSweeps(1300);assert.equal(s.ctx.view.poops.length,0);assert.equal(s.ctx.view.foods.length,1);assert.equal(s.ctx.save.meat,2);
  s.tap();s.ctx.updateSweeps(1400);assert.equal(s.ctx.view.foods.length,0);assert.equal(s.ctx.save.meat,1);
+});
+
+function sharedTable(s,remaining=100){
+ s.ctx.save.digimon=[1,2,3].map(uid=>({...s.ctx.C.newDigimon(uid,'깜몬'),hunger:0}));
+ s.ctx.view.team=[100,300,350].map((x,i)=>({uid:i+1,x,y:300,cageId:'cage',cage:'field'}));
+ s.ctx.view.foods=[{kind:'meat',x:200,y:300,remaining}];
+ return uid=>s.seekFood(s.ctx.view.team[uid-1],s.ctx.save.digimon.find(d=>d.uid===uid),10);
+}
+test('먹이 양옆을 두 마리까지 예약하고 서로 마주 보며 실제로 한 입씩 나누어 먹는다',()=>{
+ const s=setup(),eat=sharedTable(s);eat(1);eat(2);
+ assert.equal(eat(3),false);assert.equal(s.feeding.size,2);
+ assert.equal(s.feeding.get(1).side,-1);assert.equal(s.feeding.get(2).side,1);
+ assert.ok(s.ctx.view.team[0].x<200);assert.ok(s.ctx.view.team[1].x>200);
+ assert.equal(s.ctx.view.team[0].direction,1);assert.equal(s.ctx.view.team[1].direction,-1);
+ eat(1);const partner=s.feeding.get(2);assert.equal(partner.food,s.ctx.view.foods[0]);
+ eat(2);assert.equal(s.ctx.view.foods[0].remaining,90);
+ assert.equal(s.ctx.save.digimon[0].hunger,10);assert.equal(s.ctx.save.digimon[1].hunger,10);assert.equal(s.ctx.save.meat,2);
+});
+test('마지막 한 조각은 한 번만 소비하고 양쪽 예약을 정리해 중복 재고 차감을 막는다',()=>{
+ const s=setup(),eat=sharedTable(s,5);eat(1);eat(2);eat(1);
+ assert.equal(s.ctx.view.foods.length,0);assert.equal(s.feeding.size,0);assert.equal(s.ctx.save.meat,1);
+ assert.equal(eat(2),false);assert.equal(s.ctx.save.digimon[1].hunger,0);assert.equal(s.ctx.save.meat,1);
+});
+test('접근 중에도 두 자리만 예약하고 한 마리가 이동/수면으로 떠나면 빈 쪽을 다시 사용한다',()=>{
+ const s=setup(),eat=sharedTable(s);const p=s.ctx.view.team;
+ s.seekFood(p[0],s.ctx.save.digimon[0],.01);s.seekFood(p[1],s.ctx.save.digimon[1],.01);assert.equal(eat(3),false);
+ s.ctx.save.digimon[0].restCycle={species:'깜몬',sleepLeft:10};eat(1);assert.equal(s.feeding.has(1),false);
+ eat(3);assert.equal(s.feeding.get(3).side,-1);assert.equal(s.feeding.size,2);
 });

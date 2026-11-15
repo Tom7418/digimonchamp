@@ -852,7 +852,8 @@
   function foodSide(p,d,f,preferred){
     const body=window.SPRITES.find(x=>x.id===animationId(d))?.body??24,gap=Math.max(26,body+12);
     if(!board.canMove(p,f))return null;
-    return [-1,1].map(side=>({x:f.x+side*gap,y:f.y,side}))
+    const occupied=new Set([...feeding].filter(([uid,e])=>uid!==d.uid&&e.food===f).map(([,e])=>e.side));
+    return [-1,1].filter(side=>!occupied.has(side)).map(side=>({x:f.x+side*gap,y:f.y,side}))
       .filter(spot=>board.canMove(p,spot)).sort((a,b)=>(a.side===preferred?-100000:0)+Math.hypot(a.x-p.x,a.y-p.y)-(b.side===preferred?-100000:0)-Math.hypot(b.x-p.x,b.y-p.y))[0]||null;
   }
   function approachFood(p,f,spot,dt){
@@ -880,15 +881,17 @@
       eating.elapsed += dt;
       // 입 벌림 → 깨물기 한 주기마다 엔진에서 잔량과 포만감을 함께 갱신한다.
       if (eating.elapsed < animations.duration(animationId(d), 'eat')) return true;
-      const foodIndex = view.foods.indexOf(eating.food), oldCount = view.foods.length;
+      const food=eating.food,foodIndex = view.foods.indexOf(food), oldCount = view.foods.length;
       const r = C.biteFloorFood(save, view.foods, d.uid, foodIndex);
       feeding.delete(d.uid);
       if (r.ok) {
         view.foods = r.foods;
         save = r.save;
-        // 부분 섭취는 새 먹이 객체를 예약하고, 배가 차면 남은 고기를 놓아둔다.
+        // 한 입마다 엔진이 새 객체를 돌려주므로 반대편 디지몬의 자리/씹기 시간도 함께 이어준다.
         const left = r.foods[foodIndex], eater = save.digimon.find(x => x.uid === d.uid);
-        if (r.foods.length === oldCount && left && left.x === eating.food.x && left.y === eating.food.y && left.remaining > 0 && (eater.hunger < 100 || left.kind === 'pill'))
+        const remains=r.foods.length===oldCount&&left&&left.x===food.x&&left.y===food.y&&left.remaining>0;
+        for(const [uid,other] of feeding)if(other.food===food){if(remains)other.food=left;else feeding.delete(uid);}
+        if (remains && (eater.hunger < 100 || left.kind === 'pill'))
           feeding.set(d.uid, {food: left, elapsed: 0, species: d.speciesId,cageId:p.cageId,side:eating.side});
         log(`${nameOf(d)}: ${r.message}`);
         effect = eating.food.kind === 'meat' ? null : { text: r.boosted ? '힘이 솟는다!' : eating.food.kind === 'pill' ? '오독오독' : '우웩…', color: r.boosted ? '#9dff8a' : '#ffe4a0', until: performance.now() + 1500, uid: d.uid };
@@ -904,8 +907,6 @@
       if(f.sweeping)continue; // 청소 중인 먹이는 새 식사 대상으로 고르지 않는다.
       // 고기는 배고플 때만, 알약(프로틴)은 배와 상관없이 먹는다 (하루 5개까지)
       if (f.kind === 'pill' ? (d.protein ?? 0) >= 5 : d.hunger >= 60) continue;
-      // 다른 디지몬이 씹는 먹이를 동시에 소비하지 않는다.
-      if ([...feeding.values()].some((e) => e.food === f)) continue;
       // 병든 디지몬은 썩은 먹이를 거부한다. 먹지 못하는 먹이 앞에서 계속 멈추지 않는다.
       if (f.kind === 'rotten' && d.sick) continue;
       const spot=foodSide(p,d,f);if(!spot)continue;
@@ -914,7 +915,9 @@
     }
     if(!best)return false;
     const {f,spot}=best;
-    if(approachFood(p,f,spot,dt))feeding.set(d.uid,{food:f,elapsed:0,species:d.speciesId,cageId:p.cageId,side:spot.side});
+    // 접근할 때부터 자리를 예약해 세 번째 개체가 같은 쪽에 겹쳐 들어오지 않게 한다.
+    feeding.set(d.uid,{food:f,elapsed:0,species:d.speciesId,cageId:p.cageId,side:spot.side});
+    approachFood(p,f,spot,dt);
     return true;
   }
   // 머리 위 상태 말풍선
@@ -1069,69 +1072,72 @@
 
   // ---------- 배틀 ----------
   const canFight = (d) => !d.isEgg && !d.sick && !d.injured;
-  function members(format) {
+  function members(format,selection) {
+    if(Array.isArray(selection))return selection.slice(0,format).map(uid=>save.digimon.find(d=>d.uid===uid)).filter(Boolean);
     const first = current();
     const rest = save.digimon.filter((d) => d.uid !== first.uid && canFight(d));
     return [first, ...rest].slice(0, format);
   }
   function battleMenu() {
-    const date = C.dateOf(save.clock);
-    const titles = C.todaysMatches(save);
-    const d = current();
-    const freeOpen = date.hour >= 8 && date.hour < 21;
-    let mode = '일반';
-    const titleHtml = titles.length
-      ? titles
-          .map((m, i) => {
-            // 원작 타이틀의 참가 조건(세대·종족·속성·성격·타입·디지에그화)은 엔진이 원본 조건 표로 검사한다
-            const problems = C.entryProblems(m, members(m.format));
-            const limits = C.entryLimits(m);
-            return `<button data-title="${i}"${problems.length ? ' disabled' : ''}><b>★ ${esc(m.name)}</b><small>${m.format} VS ${m.foes ?? m.format} · 상대 ${C.STAGE_LABEL[m.stage]} · 상금 ${m.prize.toLocaleString('ko-KR')} ฿${limits ? ` · ${esc(limits)}` : ''}${problems.length ? ` (조건 미충족: ${esc(problems.join(', '))})` : ''}</small></button>`;
-          })
-          .join('')
-      : `<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은 07:00~15:00, 일정: ${esc(C.upcoming(save)[0] || '-')}</p>`;
-    const free = C.FREE_BATTLES;
-    showModal(
-      '배틀',
-      `<p>출전: <b>${esc(nameOf(d))}</b> (3:3은 함께 지내는 디지몬 중 건강한 순서로 둘이 더 나갑니다)</p>
-       <div class="mode-pick">출전 전 공격 방식 ${['일반', '지원', '특수'].map((m) => `<button data-mode="${m}" class="${m === mode ? 'active' : ''}">${m}</button>`).join('')}</div>
-       <h3>타이틀 매치</h3><div class="menu-list">${titleHtml}</div>
-       <h3>프리 배틀 ${freeOpen ? '' : '(08:00~21:00)'}</h3><div class="menu-list two">${free
-         .map(
-           (f, i) =>
-             `<button data-free="${i}"${freeOpen ? '' : ' disabled'}><b>${f.label} ${f.format}:${f.format}</b><small>상대 ${C.STAGE_LABEL[f.stage]} · ${f.prize} ฿</small></button>`,
-         )
-         .join('')}</div>`,
-      'BATTLE ENTRY',
-      '취소',
-    );
-    const body = $('#modal-body');
-    body.querySelectorAll('[data-mode]').forEach(
-      (b) =>
-        (b.onclick = () => {
-          mode = b.dataset.mode;
-          body.querySelectorAll('[data-mode]').forEach((x) => x.classList.toggle('active', x === b));
-        }),
-    );
-    body.querySelectorAll('[data-title]').forEach(
-      (b) =>
-        (b.onclick = () => {
-          const m = titles[+b.dataset.title];
-          startBattle({ title: m.name, match: m, format: m.format, foes: m.foes, stage: m.stage, scale: m.scale, prize: m.prize }, mode);
-        }),
-    );
-    body.querySelectorAll('[data-free]').forEach(
-      (b) =>
-        (b.onclick = () => {
-          const f = free[+b.dataset.free];
-          startBattle({ title: `프리 배틀 ${f.label}`, format: f.format, stage: f.stage, scale: 1, prize: f.prize }, mode);
-        }),
-    );
+    const date=C.dateOf(save.clock),titles=C.todaysMatches(save),free=C.FREE_BATTLES;
+    const freeOpen=date.hour>=8&&date.hour<21;
+    let mode='일반';
+    const first=canFight(current())?current():save.digimon.find(canFight);
+    // 선택 순서가 출전 순서다. 1:1은 첫 개체,3:3은 직접 고른 세 개체를 사용한다.
+    const roster=first?[first.uid]:[];
+    const teamFor=format=>members(format,roster);
+    const titleText=m=>{
+      const team=teamFor(m.format),problems=C.entryProblems(m,team),limits=C.entryLimits(m);
+      if(team.length<m.format)problems.unshift(m.format+'마리를 선택해 주세요');
+      return `${m.format} VS ${m.foes??m.format} · 상대 ${C.STAGE_LABEL[m.stage]} · 상금 ${m.prize.toLocaleString('ko-KR')} ฿${limits?' · '+limits:''}${problems.length?' (조건 미충족: '+problems.join(', ')+')':''}`;
+    };
+    showModal('배틀',
+      `<p>출전할 디지몬을 선택하세요. <b>1:1은 첫 번째,3:3은 선택한 세 마리</b>가 나갑니다. 다시 누르면 제외됩니다.</p>
+       <div id="battle-roster" class="battle-roster">${save.digimon.map(d=>`<button data-entrant="${d.uid}" aria-pressed="false"${canFight(d)?'':' disabled'}><b><span class="roster-order"></span>${esc(nameOf(d))}</b><small>${d.isEgg?'부화 전':d.sick?'병으로 출전 불가':d.injured?'부상으로 출전 불가':esc(C.STAGE_LABEL[C.getSpecies(d.speciesId).stage])+' · 배틀 '+d.battles+'회'}</small></button>`).join('')}</div>
+       <p id="battle-roster-count" class="hint" role="status"></p>
+       <div class="mode-pick">출전 전 공격 방식 ${['일반','지원','특수'].map(m=>`<button data-mode="${m}" class="${m===mode?'active':''}">${m}</button>`).join('')}</div>
+       <h3>타이틀 매치</h3><div class="menu-list">${titles.length?titles.map((m,i)=>`<button data-title="${i}"><b>★ ${esc(m.name)}</b><small>${esc(titleText(m))}</small></button>`).join(''):`<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은07:00~15:00, 일정: ${esc(C.upcoming(save)[0]||'-')}</p>`}</div>
+       <h3>프리 배틀 ${freeOpen?'':'(08:00~21:00)'}</h3><div class="menu-list two">${free.map((f,i)=>`<button data-free="${i}"><b>${f.label} ${f.format}:${f.format}</b><small>상대 ${C.STAGE_LABEL[f.stage]} · ${f.prize} ฿</small></button>`).join('')}</div>`,
+      'BATTLE ENTRY','취소');
+    const body=$('#modal-body');
+    function updateRoster(){
+      // 메뉴를 열어 둔 사이 사육 상태가 바뀌어도 사라지거나 아픈 개체를 출전시키지 않는다.
+      for(let i=roster.length-1;i>=0;i--){const d=save.digimon.find(d=>d.uid===roster[i]);if(!d||!canFight(d))roster.splice(i,1);}
+      body.querySelectorAll('[data-entrant]').forEach(b=>{
+        const d=save.digimon.find(d=>d.uid===+b.dataset.entrant);b.disabled=!d||!canFight(d);
+        const order=roster.indexOf(+b.dataset.entrant),selected=order>=0;
+        b.classList.toggle('active',selected);b.setAttribute('aria-pressed',String(selected));
+        b.querySelector('.roster-order').textContent=selected?(order+1)+'. ':'';
+      });
+      body.querySelector('#battle-roster-count').textContent=`선택 ${roster.length}/3 · ${roster.map(uid=>nameOf(save.digimon.find(d=>d.uid===uid))).join(' → ')||'출전할 디지몬을 골라 주세요'}`;
+      body.querySelectorAll('[data-title]').forEach(b=>{
+        const m=titles[+b.dataset.title];b.disabled=teamFor(m.format).length<m.format||C.entryProblems(m,teamFor(m.format)).length>0;b.querySelector('small').textContent=titleText(m);
+      });
+      body.querySelectorAll('[data-free]').forEach(b=>{const f=free[+b.dataset.free];b.disabled=!freeOpen||teamFor(f.format).length<f.format;});
+    }
+    body.querySelectorAll('[data-entrant]').forEach(b=>b.onclick=()=>{
+      const uid=+b.dataset.entrant,d=save.digimon.find(d=>d.uid===uid);if(!d||!canFight(d))return;
+      const index=roster.indexOf(uid);if(index>=0)roster.splice(index,1);
+      else if(roster.length<3)roster.push(uid);else return toast('최대3마리까지 선택할 수 있어요.');
+      updateRoster();
+    });
+    body.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
+      mode=b.dataset.mode;body.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('active',x===b));
+    });
+    body.querySelectorAll('[data-title]').forEach(b=>b.onclick=()=>{
+      const m=titles[+b.dataset.title];startBattle({title:m.name,match:m,format:m.format,foes:m.foes,stage:m.stage,scale:m.scale,prize:m.prize},mode,[...roster]);
+    });
+    body.querySelectorAll('[data-free]').forEach(b=>b.onclick=()=>{
+      const f=free[+b.dataset.free];startBattle({title:`프리 배틀 ${f.label}`,format:f.format,stage:f.stage,scale:1,prize:f.prize},mode,[...roster]);
+    });
+    updateRoster();
   }
-  function startBattle(setup, mode) {
-    const team = members(setup.format);
-    if (!team.length || !canFight(team[0])) return toast('출전할 수 있는 디지몬이 없어요. (알·병·부상은 출전 불가)');
+  function startBattle(setup, mode, selection) {
+    const team = members(setup.format,selection);
+    if (!team.length || team.some(d=>!canFight(d))) return toast('출전할 수 있는 디지몬이 없어요. (알·병·부상은 출전 불가)');
     if (team.length < setup.format) return toast(`${setup.format}:${setup.format}에는 건강한 디지몬 ${setup.format}마리가 필요해요.`);
+    if(new Set(team.map(d=>d.uid)).size!==team.length)return toast('같은 디지몬을 중복 출전시킬 수 없어요.');
+    if(setup.match){const problems=C.entryProblems(setup.match,team);if(problems.length)return toast(problems.join(', '));}
     const foes = C.makeEnemies(setup.stage, setup.foes ?? setup.format, setup.scale, Math.random);
     const state = C.createBattle(
       team.map((d) => C.entrantOf(d, mode)),
