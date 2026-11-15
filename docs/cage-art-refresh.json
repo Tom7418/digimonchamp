@@ -1,0 +1,939 @@
+{
+  "date": "2026-11-15",
+  "method": "image_gen original+restored OBJ / footprint / approved C16 style references; static redesigned artwork, not ROM pixel copy.",
+  "facilities": {
+    "C00": {
+      "kind": "free",
+      "name": "기본 케이지",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C00.png",
+      "size": [
+        520,
+        420
+      ],
+      "sha256": "55d5a1c6ca3f3154fefb0f3007e61e5b55d662ff32e35f5b38d09d099bdc5277",
+      "webpAsset": "assets/facilities/polished/C00.webp",
+      "webpSha256": "843669d86426ddaa7d2bffbf70843dea8e5d7a09442977c9b397b8e9a1fb48b3",
+      "originalReference": "web/assets/facilities/free-ground.png",
+      "restoredContents": "Keep the current four-cell wooden floor and perimeter rail. This is the existing fan-game basic enclosure, not the vacant lot. Do not add the vacant-lot pipes or tree here.",
+      "generatedSourceSha256": "dd06308b118b030e7984bd7f48ec0e7c11047be51d34bb9e462e028d30a249a9",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C00 (기본 케이지). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Keep the current four-cell wooden floor and perimeter rail. This is the existing fan-game basic enclosure, not the vacant lot. Do not add the vacant-lot pipes or tree here.\nFloor geometry: 4 point-up regular hexagonal cells, axial coordinates [[0, 0], [1, 0], [0, 1], [1, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C01": {
+      "kind": "cm01",
+      "name": "공터",
+      "cells": [
+        [
+          0,
+          0
+        ]
+      ],
+      "asset": "assets/facilities/polished/C01.png",
+      "size": [
+        208,
+        240
+      ],
+      "sha256": "05331a6d539a2e521642a41490ea82059ee5bdb446908bc987c113f7e546eaa6",
+      "webpAsset": "assets/facilities/polished/C01.webp",
+      "webpSha256": "65c9b40a59ca66ba3587d66faa6e1dca22d1280d3be355cbade05bf2ce01ffbf",
+      "originalReference": "web/assets/facilities/original/cm01-complete.png",
+      "restoredContents": "RESTORE the large leafy tree at back left, upright wooden fence panels along back right, and the stack of THREE open concrete drain pipes on the soil. Keep patches of grass and scattered stones. These are verified original objects, not optional.",
+      "generatedSourceSha256": "7131c42ec4cf0942473f02c6cd38bf90f13b7572752ece5fe203f5b52a521942",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C01 (공터). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE the large leafy tree at back left, upright wooden fence panels along back right, and the stack of THREE open concrete drain pipes on the soil. Keep patches of grass and scattered stones. These are verified original objects, not optional.\nFloor geometry: 1 point-up regular hexagonal cells, axial coordinates [[0, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C02": {
+      "kind": "cm02",
+      "name": "운동장",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C02.png",
+      "size": [
+        416,
+        420
+      ],
+      "sha256": "3ce8f8621954700c4caa59cfaf32002dcff0a868f8ddf4ae6a111a93aa42c29f",
+      "webpAsset": "assets/facilities/polished/C02.webp",
+      "webpSha256": "c6fcf86535237e2154a0f1a62937321e8cdb30900a8500c0ca4f1ae61433f4f7",
+      "originalReference": "web/assets/facilities/original/cm02-complete.png",
+      "restoredContents": "Preserve the oval running track, basketball court with TWO hoops, chain-link baseball backstop at lower tip, original track equipment and grassy/tree rear edge.",
+      "generatedSourceSha256": "43c1120d00d96a9dd2eb99dadcc6ccf9d125622a3da71c297b643c33b45315b6",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C02 (운동장). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Preserve the oval running track, basketball court with TWO hoops, chain-link baseball backstop at lower tip, original track equipment and grassy/tree rear edge.\nFloor geometry: 3 point-up regular hexagonal cells, axial coordinates [[0, 0], [1, 0], [0, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C03": {
+      "kind": "cm03",
+      "name": "경기장",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C03.png",
+      "size": [
+        624,
+        420
+      ],
+      "sha256": "d816ee2a2416026c5e90c8383cec356680a50c4684c8d0bff47313f623352379",
+      "webpAsset": "assets/facilities/polished/C03.webp",
+      "webpSha256": "4c6ce1e2fc637d27d9e78037e941176ae7e68b2ae04c859e2229b896512a95fd",
+      "originalReference": "web/assets/facilities/original/cm03-complete.png",
+      "restoredContents": "Preserve long track above green sports infield, red training cones, white/yellow landing mat, blue jump mat and gray sports apparatus.",
+      "generatedSourceSha256": "49042128307d06218b21a585a4253d5de7fbe10f0b82c6c199546614b18404ab",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C03 (경기장). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Preserve long track above green sports infield, red training cones, white/yellow landing mat, blue jump mat and gray sports apparatus.\nFloor geometry: 5 point-up regular hexagonal cells, axial coordinates [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C04": {
+      "kind": "cm04",
+      "name": "도장",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "asset": "assets/facilities/polished/C04.png",
+      "size": [
+        624,
+        240
+      ],
+      "sha256": "0e4be912f894999c0b7eb3163e824c2b4291a07ee3462c963ea0fc58107bf156",
+      "webpAsset": "assets/facilities/polished/C04.webp",
+      "webpSha256": "61143e68a0ff37141002c77bf8812550c2c1e6a787f56a005efff6a2eae46635",
+      "originalReference": "web/assets/facilities/original/cm04-complete.png",
+      "restoredContents": "Preserve green tatami mats, wooden floors, back wooden fence/wall and dojo entrance board. No invented weights or medical furniture.",
+      "generatedSourceSha256": "ba532b9126cc1fd47887bc47257a0488b7a35dd0e3d17973ee0c4ad2eb2fb144",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C04 (도장). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Preserve green tatami mats, wooden floors, back wooden fence/wall and dojo entrance board. No invented weights or medical furniture.\nFloor geometry: 3 point-up regular hexagonal cells, axial coordinates [[0, 0], [1, 0], [2, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C05": {
+      "kind": "cm05",
+      "name": "체육관",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          -1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C05.png",
+      "size": [
+        520,
+        420
+      ],
+      "sha256": "8993e9c78ae9fb600238fab4b03218acdcea43b3f2214e2e1173e55f72c5ec62",
+      "webpAsset": "assets/facilities/polished/C05.webp",
+      "webpSha256": "4cc0606b3e5b23a0af50022a16db21949a96942a57f8651f6b3a98e20db0226e",
+      "originalReference": "web/assets/facilities/original/cm05-complete.png",
+      "restoredContents": "RESTORE multiple stationary exercise bikes, black weight bench/barbell at front, red punching bag and black bin. Preserve blue exercise mat and red gloves, treadmills and lockers at back.",
+      "generatedSourceSha256": "f3feea5c7fd456115a67a3bc0f93a05abb31daedd54b0c6b5efe2d7d0c56c345",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C05 (체육관). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE multiple stationary exercise bikes, black weight bench/barbell at front, red punching bag and black bin. Preserve blue exercise mat and red gloves, treadmills and lockers at back.\nFloor geometry: 4 point-up regular hexagonal cells, axial coordinates [[0, 0], [1, 0], [-1, 1], [0, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C06": {
+      "kind": "cm06",
+      "name": "연구소",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          -2,
+          1
+        ],
+        [
+          -1,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C06.png",
+      "size": [
+        728,
+        420
+      ],
+      "sha256": "08b5bd2a5bbe57d998928f628e0959c7ea5e0f68fbbe57a69e6080daba6691a2",
+      "webpAsset": "assets/facilities/polished/C06.webp",
+      "webpSha256": "e4f079cd1f0753678640bac657d5c5017188cab71f3597da8b91572f9a1610a8",
+      "originalReference": "web/assets/facilities/original/cm06-complete.png",
+      "restoredContents": "RESTORE all visible original laboratory objects: green specimen tanks with metal lids, hanging orange canisters, control panels, lab consoles, gray equipment, rail/stair connection between sections. Keep original room layout.",
+      "generatedSourceSha256": "6325cf3638ecebaaad65574593892da7c73a8b6748b63017c1418fe2c07cf108",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C06 (연구소). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE all visible original laboratory objects: green specimen tanks with metal lids, hanging orange canisters, control panels, lab consoles, gray equipment, rail/stair connection between sections. Keep original room layout.\nFloor geometry: 4 point-up regular hexagonal cells, axial coordinates [[0, 0], [1, 0], [-2, 1], [-1, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C07": {
+      "kind": "cm07",
+      "name": "화산",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C07.png",
+      "size": [
+        520,
+        420
+      ],
+      "sha256": "4f0a8cf64f49ad7160b1585f10b024014c32ef763bdf743093f2b755f75444cc",
+      "webpAsset": "assets/facilities/polished/C07.webp",
+      "webpSha256": "f00f8f84b7fbad4413a0d53fb7bdb6f90f435627523d59eec2be849484e00cda",
+      "originalReference": "web/assets/facilities/original/cm07-complete.png",
+      "restoredContents": "Preserve dark volcanic rocks, lava stream flowing between ledges, large orange lava area at bottom and rock cliff walls.",
+      "generatedSourceSha256": "de98b92b7396d2ffb7aee11789301306a9b1fa28b3f9b9a1d8aef02708db3112",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C07 (화산). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Preserve dark volcanic rocks, lava stream flowing between ledges, large orange lava area at bottom and rock cliff walls.\nFloor geometry: 4 point-up regular hexagonal cells, axial coordinates [[0, 0], [1, 0], [0, 1], [1, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C08": {
+      "kind": "cm08",
+      "name": "초원",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C08.png",
+      "size": [
+        520,
+        420
+      ],
+      "sha256": "87c3df0afcc513ade416096a6e6ff263cc4b8cf4396e093495255e9f18e5e125",
+      "webpAsset": "assets/facilities/polished/C08.webp",
+      "webpSha256": "0398c40aa387c83c2abd648d443ede229dcdf5726c99b93f8a0124335b37d7bc",
+      "originalReference": "web/assets/facilities/original/cm08-complete.png",
+      "restoredContents": "Preserve lush grassy meadow, bright green hedges, scattered small rocks and tiny yellow flowers from original. Do not invent buildings.",
+      "generatedSourceSha256": "7a8750db531b807347abed101924ffb5f7ac3ce30aa9388355b31d70e2e311ef",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C08 (초원). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Preserve lush grassy meadow, bright green hedges, scattered small rocks and tiny yellow flowers from original. Do not invent buildings.\nFloor geometry: 3 point-up regular hexagonal cells, axial coordinates [[0, 0], [0, 1], [1, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C09": {
+      "kind": "cm09",
+      "name": "해변",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C09.png",
+      "size": [
+        624,
+        420
+      ],
+      "sha256": "c7cdaa481bf0b132e4621e853b147f40bdf90254bf4aa28751f093090d854ddc",
+      "webpAsset": "assets/facilities/polished/C09.webp",
+      "webpSha256": "71cbd4bae7fd81b402598dd96da85870c18c6c3f3d7e10218309617ef9add354",
+      "originalReference": "web/assets/facilities/original/cm09-complete.png",
+      "restoredContents": "RESTORE the TWO palm trees on the sandy section. Preserve sand, water, shoreline, original rocks.",
+      "generatedSourceSha256": "a370113b6c3bf67658810b7229adeaad3673714b99c14f2caade0db96efd5fe7",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C09 (해변). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE the TWO palm trees on the sandy section. Preserve sand, water, shoreline, original rocks.\nFloor geometry: 4 point-up regular hexagonal cells, axial coordinates [[0, 0], [2, 0], [0, 1], [1, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C10": {
+      "kind": "cm10",
+      "name": "고산",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C10.png",
+      "size": [
+        624,
+        420
+      ],
+      "sha256": "98de17dde62e2d74597bb41b95af7293c220bd718ed57a444196b441c6fa597e",
+      "webpAsset": "assets/facilities/polished/C10.webp",
+      "webpSha256": "17967f94a75f268da44d40ea3b8d06dc1f9cbb5796631cbcbff4f339f0cab487",
+      "originalReference": "web/assets/facilities/original/cm10-complete.png",
+      "restoredContents": "Preserve TWO rocky mountain platforms, hanging wooden suspension bridge with ropes/planks, pale blue sky edge and rock walls.",
+      "generatedSourceSha256": "178f3effed548d83a8aca2187a83584af0dcfd2f261dc42ce15b8621f704e1a2",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C10 (고산). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Preserve TWO rocky mountain platforms, hanging wooden suspension bridge with ropes/planks, pale blue sky edge and rock walls.\nFloor geometry: 4 point-up regular hexagonal cells, axial coordinates [[0, 0], [2, 0], [0, 1], [1, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C11": {
+      "kind": "cm11",
+      "name": "숲",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          -2,
+          1
+        ],
+        [
+          -1,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C11.png",
+      "size": [
+        520,
+        420
+      ],
+      "sha256": "8336870102829b7306cfd4d01835f1905ec7b160bb8dcf1867543b650359d1fc",
+      "webpAsset": "assets/facilities/polished/C11.webp",
+      "webpSha256": "2ff9361f78ae404b2de78e1bf9e359d6f03241dc8d3959beb3706609e0cadb74",
+      "originalReference": "web/assets/facilities/original/cm11-complete.png",
+      "restoredContents": "RESTORE multiple large leafy trees on all original forest sections. Preserve bushes, grass, stones and passage between groups.",
+      "generatedSourceSha256": "3089de27df38d682f88e0b1be3ae517cd80d6a3ceb52329fdddbf990c4898039",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C11 (숲). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE multiple large leafy trees on all original forest sections. Preserve bushes, grass, stones and passage between groups.\nFloor geometry: 3 point-up regular hexagonal cells, axial coordinates [[0, 0], [-2, 1], [-1, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C12": {
+      "kind": "cm12",
+      "name": "정글",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C12.png",
+      "size": [
+        520,
+        420
+      ],
+      "sha256": "fbc4a61137fce8935f6cd83f5c9934e7c184b26fb3aa5f2e1698e12fe147c6b6",
+      "webpAsset": "assets/facilities/polished/C12.webp",
+      "webpSha256": "7875aa4c04d082486a66e5090b5376d5b3d08c5e910f0fdedd97317aa5d6a976",
+      "originalReference": "web/assets/facilities/original/cm12-complete.png",
+      "restoredContents": "RESTORE tall palm/jungle trees and dense layered foliage. Preserve the big tropical red flower, grass and wooden rear fence.",
+      "generatedSourceSha256": "ea93fd5c3683d7d55c41b9df3488f1e0a3b3a09ebd9b52a0e999d5290f7388b6",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C12 (정글). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE tall palm/jungle trees and dense layered foliage. Preserve the big tropical red flower, grass and wooden rear fence.\nFloor geometry: 3 point-up regular hexagonal cells, axial coordinates [[0, 0], [1, 0], [1, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C14": {
+      "kind": "cm14",
+      "name": "묘지",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C14.png",
+      "size": [
+        520,
+        420
+      ],
+      "sha256": "0e0b6a3b96a2f86a488604d11444d892912eabec9054bf2c1e05852b65ed075a",
+      "webpAsset": "assets/facilities/polished/C14.webp",
+      "webpSha256": "8cf19e65b2ef33a6425a4ccde08e77c6a967b1fd98864c3f8a55e4448f929a55",
+      "originalReference": "web/assets/facilities/original/cm14-complete.png",
+      "restoredContents": "RESTORE gravestones of varied shapes, small cross gravestones, skeleton figure and iron gate at lower right. Keep dark blue cobblestone graveyard ground.",
+      "generatedSourceSha256": "8b0f760124db66d7923e6626cc678611674bceb96c34fdfc96a3a64928f5ba85",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C14 (묘지). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE gravestones of varied shapes, small cross gravestones, skeleton figure and iron gate at lower right. Keep dark blue cobblestone graveyard ground.\nFloor geometry: 3 point-up regular hexagonal cells, axial coordinates [[0, 0], [1, 0], [1, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C15": {
+      "kind": "cm15",
+      "name": "공장",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C15.png",
+      "size": [
+        520,
+        420
+      ],
+      "sha256": "11e430c359896e48be0e1e5bf8cd89032f52af2b7ea05f9944a4b72db7e45490",
+      "webpAsset": "assets/facilities/polished/C15.webp",
+      "webpSha256": "4d7e5bff3b2c9b8965ab78bfddf3e09e0ceeb1e57d5a0a6f894b953ae145a934",
+      "originalReference": "web/assets/facilities/original/cm15-complete.png",
+      "restoredContents": "RESTORE the robotic assembly arms and supporting machinery along the conveyor. Preserve gray conveyor, yellow safety rails and industrial walls.",
+      "generatedSourceSha256": "64355644c19ee469b5c8dcef05d196703a8d8b59017031ea85b45e3bf22e9e18",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C15 (공장). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE the robotic assembly arms and supporting machinery along the conveyor. Preserve gray conveyor, yellow safety rails and industrial walls.\nFloor geometry: 3 point-up regular hexagonal cells, axial coordinates [[0, 0], [0, 1], [1, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C17": {
+      "kind": "cm17",
+      "name": "병원",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          -1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C17.png",
+      "size": [
+        416,
+        420
+      ],
+      "sha256": "02ef24909013f4e964867f38a4708bd8949033bbcf40bb895e1b47db3eabbf23",
+      "webpAsset": "assets/facilities/polished/C17.webp",
+      "webpSha256": "0e99e2b87ce36a7ae94e1fc48482459daee72752f304b8b4c7b7beb9353e0c3d",
+      "originalReference": "web/assets/facilities/original/cm17-complete.png",
+      "restoredContents": "RESTORE operating table, round overhead surgical lamp and tools, medical cabinets/monitors, white sink/equipment, TWO rows of lockers along front. Preserve blue-white hospital floor.",
+      "generatedSourceSha256": "1971020be5a422c61a29a2d38a335d9f9fa350d113d855e58f75ee852327e695",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C17 (병원). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE operating table, round overhead surgical lamp and tools, medical cabinets/monitors, white sink/equipment, TWO rows of lockers along front. Preserve blue-white hospital floor.\nFloor geometry: 3 point-up regular hexagonal cells, axial coordinates [[0, 0], [-1, 1], [0, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C18": {
+      "kind": "cm18",
+      "name": "화원",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          -1,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C18.png",
+      "size": [
+        312,
+        420
+      ],
+      "sha256": "8565611b72b0953b1c991eeb0911349f83141566a0a4602b6c21335f84257e68",
+      "webpAsset": "assets/facilities/polished/C18.webp",
+      "webpSha256": "2531d9b1ffa3e06802f8c61385050abe1c742f6696a2d26973c41a0e907914a0",
+      "originalReference": "web/assets/facilities/original/cm18-complete.png",
+      "restoredContents": "Preserve TWO round raised flower beds full of red/yellow/white flowers, green grass, wooden little fences, stairs connecting the two sections.",
+      "generatedSourceSha256": "76f27557fa9e97b59941da295716367de577a87ec7bca007a552a35bf3b35d27",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C18 (화원). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Preserve TWO round raised flower beds full of red/yellow/white flowers, green grass, wooden little fences, stairs connecting the two sections.\nFloor geometry: 2 point-up regular hexagonal cells, axial coordinates [[0, 0], [-1, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C19": {
+      "kind": "cm19",
+      "name": "온천",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "asset": "assets/facilities/polished/C19.png",
+      "size": [
+        832,
+        240
+      ],
+      "sha256": "3319177d16fb9a4e293ee08d92e17e195004fac6cfa25ddb0f8abe1ff1bcb8df",
+      "webpAsset": "assets/facilities/polished/C19.webp",
+      "webpSha256": "a9e48ff8bc0de6a063a7113c0a0bb1e4b4c7f95eccd3ed48088099fad5e385c4",
+      "originalReference": "web/assets/facilities/original/cm19-complete.png",
+      "restoredContents": "RESTORE wooden bamboo privacy fences at both ends, stacked rocks/boulders, wooden buckets and original bath-side objects. Keep dark stone hot-spring floor/pools.",
+      "generatedSourceSha256": "e3367d8b10a3037298ec3892b489da4f533aa1789703ce0626cf5f47a5e2d2de",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C19 (온천). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE wooden bamboo privacy fences at both ends, stacked rocks/boulders, wooden buckets and original bath-side objects. Keep dark stone hot-spring floor/pools.\nFloor geometry: 4 point-up regular hexagonal cells, axial coordinates [[0, 0], [1, 0], [2, 0], [3, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C23": {
+      "kind": "cm23",
+      "name": "가스실",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C23.png",
+      "size": [
+        312,
+        420
+      ],
+      "sha256": "38ac680b641c777807d9a4db8c7c1834d58adba35ab841eec688ae1d55a07a5e",
+      "webpAsset": "assets/facilities/polished/C23.webp",
+      "webpSha256": "694a1142ba5d407aef71cb02809c742644e6b24a537512dfd9f7ad7d0ec7bf3e",
+      "originalReference": "web/assets/facilities/original/cm23-complete.png",
+      "restoredContents": "RESTORE large gray gas tanks with attached pipes and valves, gauges, control panels and industrial gas equipment. Keep gray floor, red/gray rail and rear walls.",
+      "generatedSourceSha256": "d86af4ddd54e32da03926d18517df33f339ae5d3095a478c13e4d4d496ba1424",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C23 (가스실). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE large gray gas tanks with attached pipes and valves, gauges, control panels and industrial gas equipment. Keep gray floor, red/gray rail and rear walls.\nFloor geometry: 2 point-up regular hexagonal cells, axial coordinates [[0, 0], [0, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C24": {
+      "kind": "cm24",
+      "name": "절",
+      "cells": [
+        [
+          0,
+          0
+        ]
+      ],
+      "asset": "assets/facilities/polished/C24.png",
+      "size": [
+        208,
+        240
+      ],
+      "sha256": "7b0342766d0e4fd0c666f62cb39678312af2a5ba5af489629856160c924a0f23",
+      "webpAsset": "assets/facilities/polished/C24.webp",
+      "webpSha256": "eaf6617e7948270a48892221ef1d5c40b8c340c60c07109f8b4037bc48725a0a",
+      "originalReference": "web/assets/facilities/original/cm24-complete.png",
+      "restoredContents": "RESTORE large gray seated Buddhist statue on ornate wooden altar, candles/lamps either side, wooden pillars, temple walls and wood floor.",
+      "generatedSourceSha256": "d05df718b9e7ca89fa21ea93b1fe536350b0cec00fa0d346edb091586ca82499",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C24 (절). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE large gray seated Buddhist statue on ornate wooden altar, candles/lamps either side, wooden pillars, temple walls and wood floor.\nFloor geometry: 1 point-up regular hexagonal cells, axial coordinates [[0, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C25": {
+      "kind": "cm25",
+      "name": "동물원",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "asset": "assets/facilities/polished/C25.png",
+      "size": [
+        416,
+        240
+      ],
+      "sha256": "ddc387fd6309c30c9c30144ce33d37222023d33f6f553acd1d77dde49bcd0ae2",
+      "webpAsset": "assets/facilities/polished/C25.webp",
+      "webpSha256": "ce87d63e75f3e93a3b6b837f26ff8d175c5968ff2e5532743ad202119819a2e6",
+      "originalReference": "web/assets/facilities/original/cm25-complete.png",
+      "restoredContents": "RESTORE original gray-white stacked round animal climbing platforms, upright log stepping stumps, scattered straw, round dark pond/hole, fences. Do not invent animals.",
+      "generatedSourceSha256": "c5c88b04d20aa7a67133194be00ae326c89f692cf9f2c7bd41b03a00d2a623a2",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C25 (동물원). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE original gray-white stacked round animal climbing platforms, upright log stepping stumps, scattered straw, round dark pond/hole, fences. Do not invent animals.\nFloor geometry: 2 point-up regular hexagonal cells, axial coordinates [[0, 0], [1, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C26": {
+      "kind": "cm26",
+      "name": "목장",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          -1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C26.png",
+      "size": [
+        520,
+        420
+      ],
+      "sha256": "57f9fc18bf599c0e484716cb8c362813ecebe471f0135a748bcc59cfc3a578f3",
+      "webpAsset": "assets/facilities/polished/C26.webp",
+      "webpSha256": "5aa0416c4c2a11a781fe535fc40333384510549a4211746f5f8a5cfbb19bb211",
+      "originalReference": "web/assets/facilities/original/cm26-complete.png",
+      "restoredContents": "RESTORE farmhouse and barn/shed with red/orange roofs at back, blue water trough, hay piles, brown paths, small wooden fence. Preserve green ranch grass.",
+      "generatedSourceSha256": "1ee2b0d3a0b88ba4c0acbd714f568aa2cd9818dd4a38bacbe7ac8b10d8d1f2fb",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C26 (목장). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE farmhouse and barn/shed with red/orange roofs at back, blue water trough, hay piles, brown paths, small wooden fence. Preserve green ranch grass.\nFloor geometry: 4 point-up regular hexagonal cells, axial coordinates [[0, 0], [1, 0], [-1, 1], [0, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C27": {
+      "kind": "cm27",
+      "name": "링",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          -1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C27.png",
+      "size": [
+        416,
+        420
+      ],
+      "sha256": "5c78a9f5f8fe265a303f0b4a8ee1da407e6d85adff6bc22a21db7c590f3c5f22",
+      "webpAsset": "assets/facilities/polished/C27.webp",
+      "webpSha256": "d8c24b0d6bfe2a3b288efd912ea9a42165b7efa35ff43d1a85044d4319c7ff68",
+      "originalReference": "web/assets/facilities/original/cm27-complete.png",
+      "restoredContents": "RESTORE overhead black lighting truss and floodlights, blue raised boxing/wrestling ring with corner posts and ropes, stairs, surrounding folding chairs and red boxing gloves on floor. Keep original ring logo as simple emblem with no new legible text.",
+      "generatedSourceSha256": "e44159f7735c49ecfd5a2e297d2f8617051632607b01ce840cb1fd16689c9b94",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C27 (링). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE overhead black lighting truss and floodlights, blue raised boxing/wrestling ring with corner posts and ropes, stairs, surrounding folding chairs and red boxing gloves on floor. Keep original ring logo as simple emblem with no new legible text.\nFloor geometry: 3 point-up regular hexagonal cells, axial coordinates [[0, 0], [-1, 1], [0, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C30": {
+      "kind": "field",
+      "name": "미니 운동장",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "asset": "assets/facilities/polished/C30.png",
+      "size": [
+        416,
+        420
+      ],
+      "sha256": "db5902cd62de2a2f9c81d2b2bccf807257e8dfc39694aef5deea86e1f6e632f1",
+      "webpAsset": "assets/facilities/polished/C30.webp",
+      "webpSha256": "5e97107b1f7aaba0383e85427ec2d06dadeabdaab08aeac2a35c6234ea34c581",
+      "originalReference": "web/assets/facilities/original/cm30-complete.png",
+      "restoredContents": "Preserve mini running track with white lane lines and original metal sports/backstop apparatus. Adapt original mini art into existing THREE-CELL footprint; do not shrink to one cell.",
+      "generatedSourceSha256": "ae5c9158870f4b8e90e7d2af4a6c1c923f33a320272a6737032e2dfa917c1d1f",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C30 (미니 운동장). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Preserve mini running track with white lane lines and original metal sports/backstop apparatus. Adapt original mini art into existing THREE-CELL footprint; do not shrink to one cell.\nFloor geometry: 3 point-up regular hexagonal cells, axial coordinates [[0, 0], [1, 0], [0, 1]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C31": {
+      "kind": "cm31",
+      "name": "양호실",
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "asset": "assets/facilities/polished/C31.png",
+      "size": [
+        416,
+        240
+      ],
+      "sha256": "1c06fc5f9b15fb30399da5c48843a9cf13a72a37efa91f8af367aa1f0bdc63dc",
+      "webpAsset": "assets/facilities/polished/C31.webp",
+      "webpSha256": "66d369d9ea1c1cfc8cc7cfb05f1f0ea36d408d1c264860ef0105cc2488071d0c",
+      "originalReference": "web/assets/facilities/original/cm31-complete.png",
+      "restoredContents": "Preserve TWO blue-curtained medical cubicles with hospital beds, stools, wall cabinets, sink with green basin and blue examination bench, beige tiles. Match the approved mini infirmary style closely.",
+      "generatedSourceSha256": "e9bb96056b4a31a56a353cdb7d37fe2f873f11c4617f4868361c77271b404583",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C31 (양호실). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Preserve TWO blue-curtained medical cubicles with hospital beds, stools, wall cabinets, sink with green basin and blue examination bench, beige tiles. Match the approved mini infirmary style closely.\nFloor geometry: 2 point-up regular hexagonal cells, axial coordinates [[0, 0], [1, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C32": {
+      "kind": "cm32",
+      "name": "미니 화원",
+      "cells": [
+        [
+          0,
+          0
+        ]
+      ],
+      "asset": "assets/facilities/polished/C32.png",
+      "size": [
+        208,
+        240
+      ],
+      "sha256": "420413283909f0c0563a3aa5f6d28833ce284bc5acd096080dc97824e6da7a1f",
+      "webpAsset": "assets/facilities/polished/C32.webp",
+      "webpSha256": "d31fbee6ef134fa2b3ddf8287a3e2da0005a5f8a5c44af2994c7f198500a3ed7",
+      "originalReference": "web/assets/facilities/original/cm32-complete.png",
+      "restoredContents": "Preserve ONE round flower bed with yellow/red/white flowers on grassy soil, back hedge and tiny stones.",
+      "generatedSourceSha256": "b95aec60cefa16c023b3a7052749b1e92b729214d0285651e79c65e59255ec85",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C32 (미니 화원). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Preserve ONE round flower bed with yellow/red/white flowers on grassy soil, back hedge and tiny stones.\nFloor geometry: 1 point-up regular hexagonal cells, axial coordinates [[0, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C33": {
+      "kind": "cm33",
+      "name": "미니 숲",
+      "cells": [
+        [
+          0,
+          0
+        ]
+      ],
+      "asset": "assets/facilities/polished/C33.png",
+      "size": [
+        208,
+        240
+      ],
+      "sha256": "4871b60bdeaeb2c474b712273cd1dbce5d8f8ff22a18e7e5aa91ba8f74b4deed",
+      "webpAsset": "assets/facilities/polished/C33.webp",
+      "webpSha256": "24b126f8b1664f3ed633f5e14983144079753baf5c491d1298183fe7aa9fe88f",
+      "originalReference": "web/assets/facilities/original/cm33-complete.png",
+      "restoredContents": "RESTORE the large leafy tree on grassy patch with shrubs and stones. Keep ONE-cell footprint.",
+      "generatedSourceSha256": "7c7e2ce681a66cec54ed48d99dffb21110668d0d6aa9232e16963683c6cfc10b",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C33 (미니 숲). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE the large leafy tree on grassy patch with shrubs and stones. Keep ONE-cell footprint.\nFloor geometry: 1 point-up regular hexagonal cells, axial coordinates [[0, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C34": {
+      "kind": "gym",
+      "name": "미니 체육관",
+      "cells": [
+        [
+          0,
+          0
+        ]
+      ],
+      "asset": "assets/facilities/polished/C34.png",
+      "size": [
+        208,
+        240
+      ],
+      "sha256": "d1dce09ee806be04075be596b220dc8ce3bd14bb00d3a48fef8b52c22fc4afa2",
+      "webpAsset": "assets/facilities/polished/C34.webp",
+      "webpSha256": "5b4e5a731e8a15159efe8287b1e14df15bcf73bd1a14ce35428db6cc3be9af5c",
+      "originalReference": "web/assets/facilities/original/cm34-complete.png",
+      "restoredContents": "RESTORE stationary exercise bike(s), red punching bag, black bin and weight equipment from original. Keep wooden floor and rear lockers.",
+      "generatedSourceSha256": "3ff22b2b4f9baaa31f881d3587e1d0c0c206a306e037eedb4eb4a4aa902f229a",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C34 (미니 체육관). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE stationary exercise bike(s), red punching bag, black bin and weight equipment from original. Keep wooden floor and rear lockers.\nFloor geometry: 1 point-up regular hexagonal cells, axial coordinates [[0, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C35": {
+      "kind": "cm35",
+      "name": "미니 화산",
+      "cells": [
+        [
+          0,
+          0
+        ]
+      ],
+      "asset": "assets/facilities/polished/C35.png",
+      "size": [
+        208,
+        240
+      ],
+      "sha256": "b4f14021723895fe07770adf1e30d06b8cce85ed6b41f6b18d1b0ef0b9195bb4",
+      "webpAsset": "assets/facilities/polished/C35.webp",
+      "webpSha256": "2d659cb725c207b06a7a9693244fb09dd3b2d962ea30a9d58abad423ca0c2ef6",
+      "originalReference": "web/assets/facilities/original/cm35-complete.png",
+      "restoredContents": "Preserve mini volcanic cliff, dark rock ground and orange lava stream at right.",
+      "generatedSourceSha256": "0080299c4a3403cff2dd50b9fcc2d899ba328f52347af2f07d2b94d095913d71",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C35 (미니 화산). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Preserve mini volcanic cliff, dark rock ground and orange lava stream at right.\nFloor geometry: 1 point-up regular hexagonal cells, axial coordinates [[0, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C37": {
+      "kind": "cm37",
+      "name": "미니 고산",
+      "cells": [
+        [
+          0,
+          0
+        ]
+      ],
+      "asset": "assets/facilities/polished/C37.png",
+      "size": [
+        208,
+        240
+      ],
+      "sha256": "18d4d08f42df01dc43c3438081749d17e20ae113e792073d23214a6a477e72c9",
+      "webpAsset": "assets/facilities/polished/C37.webp",
+      "webpSha256": "3a78feb12d5d1b4e131d7bb89b43dcb489abd0eed29984253576a5469b94b54e",
+      "originalReference": "web/assets/facilities/original/cm37-complete.png",
+      "restoredContents": "Preserve mini rocky mountain ground, stone cliff wall, pale blue sky edge and small original rock objects.",
+      "generatedSourceSha256": "dd86c14d5d459a4c3fcf1df8c406bd61ec2c2203872f920ddd245bacd4e740cb",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C37 (미니 고산). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: Preserve mini rocky mountain ground, stone cliff wall, pale blue sky edge and small original rock objects.\nFloor geometry: 1 point-up regular hexagonal cells, axial coordinates [[0, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C38": {
+      "kind": "cm38",
+      "name": "미니 공장",
+      "cells": [
+        [
+          0,
+          0
+        ]
+      ],
+      "asset": "assets/facilities/polished/C38.png",
+      "size": [
+        208,
+        240
+      ],
+      "sha256": "23b674f84bb46dd8295da3c5c5b6cc289573ed7f6cef8e86f02bf9a2b97c468a",
+      "webpAsset": "assets/facilities/polished/C38.webp",
+      "webpSha256": "b5255dacda011c1549a0d0be411de9c5b00f0e234c40c984becfb6064515e011",
+      "originalReference": "web/assets/facilities/original/cm38-complete.png",
+      "restoredContents": "RESTORE TWO robotic assembly arms with gray bases/yellow arms over conveyor. Preserve industrial rear wall and yellow safety rail.",
+      "generatedSourceSha256": "ceb54be75840968abe5657b48107ad01e505920fd72ce1ba1602e2caa5aa7ed1",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C38 (미니 공장). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE TWO robotic assembly arms with gray bases/yellow arms over conveyor. Preserve industrial rear wall and yellow safety rail.\nFloor geometry: 1 point-up regular hexagonal cells, axial coordinates [[0, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C39": {
+      "kind": "cm39",
+      "name": "미니 해변",
+      "cells": [
+        [
+          0,
+          0
+        ]
+      ],
+      "asset": "assets/facilities/polished/C39.png",
+      "size": [
+        208,
+        240
+      ],
+      "sha256": "ee0e00090ecbb869c11d7e10e3330cbdbbcdf2ed86f3d3a65e3e41ada340010a",
+      "webpAsset": "assets/facilities/polished/C39.webp",
+      "webpSha256": "0dc5bbc4b481b3222159162c45f44cc78d9a173babbbb8856f829687e21abe45",
+      "originalReference": "web/assets/facilities/original/cm39-complete.png",
+      "restoredContents": "RESTORE palm tree on sandy shoreline. Preserve blue water occupying most of the original mini beach and thin curved sandy coast.",
+      "generatedSourceSha256": "e8ddb2fe10fccc7ab9941bf4c80bcb3c335d370ed43f3c5c21722451e18824aa",
+      "prompt": "Use case: precise-object-edit / style-transfer. Produce ONE final game cage asset C39 (미니 해변). The provided reference board has THREE labeled PANELS: panel1 at LEFT is the original facility with its separately extracted OPM/NANR structures restored (design/content reference); panel2 in CENTER is the EXACT current floor footprint (geometry requirement); panel3 at RIGHT is the approved mini infirmary (STYLE reference only). Output ONLY the facility from panel1, redesigned to fit the EXACT multi-hex perimeter shape in panel2, in the SAME clean crisp polished pixel-art style, consistent outlined cyan/blue perimeter rail and evenly spaced luminous pale cyan posts as panel3. DO NOT output the reference board or the infirmary unless this facility is medical. No collage, no panel labels, no annotations.\nSpecific original contents that MUST remain visible: RESTORE palm tree on sandy shoreline. Preserve blue water occupying most of the original mini beach and thin curved sandy coast.\nFloor geometry: 1 point-up regular hexagonal cells, axial coordinates [[0, 0]]. The union footprint can be elongated, L/U-shaped or concave: KEEP EVERY indent, notch, lobe and occupied cell, do NOT replace it by a single hexagon, rectangle or convex hull. Use one continuous OUTER rail, no rails between joined cells. Keep scenery/equipment entirely inside the footprint so none will be cropped by the game. Slightly reposition or proportionally scale equipment inward to avoid clipping; never discard structures. Preserve clear playable floor. Keep the original theme/materials/colors and floor patterns, not the infirmary beige palette in unrelated rooms.\nHandcrafted coherent pixel-art cluster shading, clear uniform edge definition like the approved infirmary, tasteful restrained detail, clean complete corners. No photographic/3D/painted textures, no blur, no broken outlines, no random fragments, no added new structures, no Digimon/people. Same overhead/isometric view as reference. Frame the entire footprint with a small transparent safety margin, no cast shadow outside it. Transparent alpha outside the entire cage, no backdrop, no ground plane, no text. One isolated complete production game asset."
+    },
+    "C16": {
+      "kind": "clinic",
+      "name": "미니 양호실",
+      "cells": [
+        [
+          0,
+          0
+        ]
+      ],
+      "asset": "assets/facilities/clinic-polished.png",
+      "size": [
+        416,
+        480
+      ],
+      "sha256": "133bdfb1834316b76632034d4750e3ef1c8aedc33f5d43db7326851046be8782",
+      "webpAsset": "assets/facilities/clinic-polished.webp",
+      "webpSha256": "1f668eee07e6af4b2ab9907b2164cd46378353d4aeed0ba5ea0c740bbdaf99c7",
+      "originalReference": "web/assets/facilities/original/cm16-complete.png",
+      "restoredContents": "Previously approved artwork retained.",
+      "prompt": "See docs/art-refresh-prompts.md; retained unchanged."
+    }
+  }
+}

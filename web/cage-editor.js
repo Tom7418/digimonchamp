@@ -13,7 +13,8 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  // 원본 시설 그림 중 위쪽이 투명하게 비어 있는 것(미니 운동장 등)은 그대로 늘리면 육각 윗부분이 빈 채로 잘려 보인다.
  // 불러올 때 투명 여백을 제외한 그림 범위를 구한다. 새 육각 전용 그림은 점유 경계에 맞춘다.
  const contentBox=im=>{try{const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext('2d');x.drawImage(im,0,0);const d=x.getImageData(0,0,c.width,c.height).data;let top=c.height,bottom=0,left=c.width,right=0;for(let y=0;y<c.height;y++)for(let i=0;i<c.width;i++)if(d[(y*c.width+i)*4+3]>8){if(y<top)top=y;if(y>bottom)bottom=y;if(i<left)left=i;if(i>right)right=i;}return bottom>=top?{x:left,y:top,w:right-left+1,h:bottom-top+1}:null;}catch{return null;}};
- for(const [kind,t] of Object.entries(L.types)){const im=new Image();im.onload=()=>{im.content=contentBox(im);};im.src=`assets/facilities/${kind==='free'?'free-ground':(t.img||kind)}.png`;facilities[kind]=im;}
+ for(const [kind,t] of Object.entries(L.types)){const im=new Image();im.onload=()=>{im.content=contentBox(im);};// 무손실 WebP를 우선 읽고 지원/로딩 실패 시 원본 PNG로 한 번 대체한다.
+ const asset=`assets/facilities/${t.img||kind}`;im.onerror=()=>{if(t.webp&&!im.triedPng){im.triedPng=true;im.src=asset+'.png';}};im.src=asset+(t.webp?'.webp':'.png');facilities[kind]=im;}
  let editing=false,tool=null,rotation=0,selected=null,drag=null,hover=null;
  const center=(q,r)=>({x:OX+Math.sqrt(3)*R*(q+r/2),y:OY+R*1.5*r});
  const polygon=(ctx,q,r,append=false)=>{const c=center(q,r);if(!append)ctx.beginPath();for(let i=0;i<6;i++){const a=(i*60-30)*Math.PI/180;const x=c.x+R*Math.cos(a),y=c.y+R*Math.sin(a);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();};
@@ -145,7 +146,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
          ctx.drawImage(im,b.x,b.y,b.w,b.h,left+(width-dw)/2,top+(height-dh)/2,dw,dh);
        }ctx.restore();
        // 기본 케이지 울타리는 이미지 실루엣 대신 실제 네 칸의 외곽 변에 맞춘다.
-       if(c.kind==='free'){
+       if(c.kind==='free'&&!type.polished){
          ctx.save();ctx.lineJoin='round';ctx.strokeStyle='#173b66';ctx.lineWidth=9;
          const edges=outerBorder(ctx,c);ctx.strokeStyle='#39b9df';ctx.lineWidth=5;outerBorder(ctx,c);
          for(const [a,b] of edges)for(let i=0,n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/65);i<=n;i++){
@@ -155,7 +156,8 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
            ctx.fillStyle='#ddfaff';ctx.fillRect(x-3,y-5,6,3);
          }ctx.restore();
        }
-       ctx.strokeStyle=selected===c.id?'#ffe374':'#8ed3e6';ctx.lineWidth=selected===c.id?4:2;outerBorder(ctx,c);
+       // 개선본에는 난간이 이미 들어 있으므로 평상시 중복 테두리를 덧그리지 않는다.
+       if(editing||!type.polished){ctx.strokeStyle=selected===c.id?'#ffe374':'#8ed3e6';ctx.lineWidth=selected===c.id?4:2;outerBorder(ctx,c);}
        // 시설 이름·칸 수는 케이지 편집 중에만 보인다 (플레이 화면에는 숨김)
      }
      const next=editing&&candidate(hover);if(next){const valid=L.valid(s.layout,next);for(const [q,r] of L.cells(next)){polygon(ctx,q,r);ctx.fillStyle=valid?'#79efa588':'#ff5a6e99';ctx.fill();}}

@@ -31,6 +31,24 @@ for kind, size in {'free': (96,112), 'clinic': (96,112), 'gym': (288,112), 'fiel
 import re
 for img in set(re.findall(r"img:'([^']+)'", (web/'cage-layout.js').read_text(encoding='utf-8'))):
     assert (web/'assets/facilities'/f'{img}.png').exists(), f'Missing facility art: {img}'
+# 개선 케이지와 구조물 포함 참고 그림은 해시/크기를 확인한다. 원본 바이너리는 배포하지 않는다.
+import hashlib
+cages=json.loads((web.parent/'docs/cage-art-refresh.json').read_text(encoding='utf-8'))['facilities']
+assert len(cages)==33
+for code,row in cages.items():
+    raw=(web/row['asset']).read_bytes()
+    assert struct.unpack_from('>II',raw,16)==tuple(row['size']),code
+    assert hashlib.sha256(raw).hexdigest()==row['sha256'],code
+    assert hashlib.sha256((web/row['webpAsset']).read_bytes()).hexdigest()==row['webpSha256'],code
+    assert (web.parent/row['originalReference']).is_file(),code
+objects=json.loads((web.parent/'docs/cage-object-audit.json').read_text(encoding='utf-8'))['facilities']
+assert len(objects)==38
+for stem,row in objects.items():
+    raw=(web/'assets/facilities/original'/f'{stem}-complete.png').read_bytes()
+    assert hashlib.sha256(raw).hexdigest()==row['pngSha256'],stem
+gallery=(web/'cage-gallery.html').read_text(encoding='utf-8')
+assert gallery.count('<article ')==33 and all(f'id="{code}"' in gallery for code in cages)
+
 # 지형은 원본 ATR 대신 변환된 수치만 배포하며 배경 PNG와 같은8px 칸을 사용한다.
 terrain=json.loads((web.parent/'src/data/hunt-terrain.json').read_text(encoding='utf-8'))
 assert terrain['tileSize']==8 and len(terrain['maps'])==16

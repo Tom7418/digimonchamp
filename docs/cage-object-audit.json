@@ -1,0 +1,2632 @@
+{
+  "method": "OPMD positions; NANR first cell; y-depth sorted; flip flags inferred; static design reference, not original runtime animation.",
+  "facilities": {
+    "cm01": {
+      "objects": [
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 68,
+          "y": 88,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 62,
+          "y": 17,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 50,
+          "y": 19,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 84,
+          "y": 22,
+          "z": 0,
+          "flags": 3
+        }
+      ],
+      "bounds": [
+        0,
+        -49,
+        109,
+        112
+      ],
+      "sourceHashes": {
+        "field_cm01_01_obj.ncbr": "97708bc40f637cf087db0efdf9729fefe847a919675d02b57d30c6a1e26ee537",
+        "field_cm01_01_obj.ncer": "831440b689cf13846ebf7e3a63dda85810e2f0c8a2d08ae1cc11d0858255d75a",
+        "field_cm01_01_obj.nclr": "b417821926ee1d1af18a0134f0e20ce491b9d583ce42c07459ddcec10c9383ee",
+        "field_cm01_01_obj.nanr": "e249ea53970594ab88021c4d4d63294cc8aa164cc14caf02c21b684a58614c37",
+        "field_cm01_01.opm": "59a25bbe2be77c156d8fe4e56704409718655fa2b8d99f226c6c5549948dc5a3"
+      },
+      "rgbaSha256": "dd46fd635db4cfc259c7a0bb93051dd4edd3e12b228167dde1c336e7ad873964",
+      "pngSha256": "a6b165d1e0505eeae7f99c80ac45d5d74f17fd72397bb629b7fc7412f28a08cd"
+    },
+    "cm02": {
+      "objects": [
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 68,
+          "y": 179,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 96,
+          "y": 184,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 122,
+          "y": 179,
+          "z": 0,
+          "flags": 4
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 58,
+          "y": 53,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 139,
+          "y": 93,
+          "z": 0,
+          "flags": 1
+        }
+      ],
+      "bounds": [
+        0,
+        0,
+        192,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm02_01_obj.ncbr": "def66b2070634bda0f5da8ce481c4860e29f2a4ad84121618d726edbd2b240b4",
+        "field_cm02_01_obj.ncer": "657c51651a20f3338f8c28b1db36ae0b5b022f64f21d991605c6091ec6eabe1d",
+        "field_cm02_01_obj.nclr": "3afdb5ea31cfc947df2b325cf7c0423ec934504985b465d9328ea0a172ea188f",
+        "field_cm02_01_obj.nanr": "a2895869c068803887a62e5228b9151b49f24ead19625d6c774a4d71b9db819d",
+        "field_cm02_01.opm": "f8308481fc38d35db652b6954f418ecaf3e39f6ded17b77b478673001b745e35"
+      },
+      "rgbaSha256": "60f63722ede23b274d68be9d564e8b936e5c134e938f152873ad55760b2030a4",
+      "pngSha256": "d8f855a37cbe271112a00581da97f94cfe41d8c199a0e22d8e40d4c9834f9068"
+    },
+    "cm03": {
+      "objects": [
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 195,
+          "y": 152,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 76,
+          "y": 122,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 125,
+          "y": 77,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 70,
+          "y": 77,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 109,
+          "y": 163,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 147,
+          "y": 163,
+          "z": 0,
+          "flags": 2
+        }
+      ],
+      "bounds": [
+        0,
+        0,
+        288,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm03_01_obj.ncbr": "33de519a6f1b8bc90742a82f5c5ce8a7e7adfeeaa6cc3c80f37a50ba2e13c397",
+        "field_cm03_01_obj.ncer": "33d7ff772aeb1d44119765232a1eb8c1bacc7dcd58ae2927b75ae602c964c7aa",
+        "field_cm03_01_obj.nclr": "f66a57f0b3bb3864de6ea40bd180e806166c4a5095056d1a17222a9c64720985",
+        "field_cm03_01_obj.nanr": "7eff79fb7ebb691f5fde1b062a59d946eef8f65923bb7d65e2ac79284f0c4a8a",
+        "field_cm03_01.opm": "ad44d2ed2b5b5136622bdaffcbad57cecab794235cb017cfa28819ac4a64b97f"
+      },
+      "rgbaSha256": "55606a8be9ddeebde1b18d8350a91d04a94e5bb9a058d700d2364c9bfb29afd7",
+      "pngSha256": "016532e87fc50a8a53c6b49890af3e795f9f831ad9a3d06f0f49f4d88d661cf5"
+    },
+    "cm04": {
+      "objects": [
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 17,
+          "y": 65,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 32,
+          "y": 57,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 233,
+          "y": 23,
+          "z": 0,
+          "flags": 2
+        }
+      ],
+      "bounds": [
+        0,
+        -33,
+        296,
+        112
+      ],
+      "sourceHashes": {
+        "field_cm04_01_obj.ncbr": "e5bb78bccb39a649957f47b6348477a5819eaf23443d2978399944dc1551ad0e",
+        "field_cm04_01_obj.ncer": "58ba0000133c280279080527fc01e2acf6b5f2ff3b17a90ec7ec0eebde7d503b",
+        "field_cm04_01_obj.nclr": "77c74cc85a5cf5de7da19121954348f2274ca599d9df25138ae96533fc8f8197",
+        "field_cm04_01_obj.nanr": "7eff79fb7ebb691f5fde1b062a59d946eef8f65923bb7d65e2ac79284f0c4a8a",
+        "field_cm04_01.opm": "712ef6878317c73e9ceaa4ea8a8f5ead91aea724e60223bd9298d2047ed0d8f2"
+      },
+      "rgbaSha256": "6a21c37b7a527cb2a41233a0b38c0c59b2baa1608e79db148848e87db20e9484",
+      "pngSha256": "9c733242c1e1bd6636147e181ae8ea57af202018a29ffa2999d3894596099cca"
+    },
+    "cm05": {
+      "objects": [
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 153,
+          "y": 174,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 170,
+          "y": 94,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 122,
+          "y": 94,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 146,
+          "y": 118,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 98,
+          "y": 118,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 222,
+          "y": 87,
+          "z": 0,
+          "flags": 0
+        }
+      ],
+      "bounds": [
+        0,
+        0,
+        251,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm05_01_obj.ncbr": "d0201fb48cb08d9793cd8e3bdd51985abe9153835416751ba206caeb3031f96f",
+        "field_cm05_01_obj.ncer": "6b06bab58718d1aae97a28ae7f8eed6e581fbfdd054d372cea267f536260b15c",
+        "field_cm05_01_obj.nclr": "1af5629a8ffde52841b3e5377151f677c4f9ae89000ed720f503217cb5c441b5",
+        "field_cm05_01_obj.nanr": "7eff79fb7ebb691f5fde1b062a59d946eef8f65923bb7d65e2ac79284f0c4a8a",
+        "field_cm05_01.opm": "749c18461d9b553b5236d8bd463c2e7d638f93e1a4d3f1410df30e8931112a28"
+      },
+      "rgbaSha256": "777e0a203b093f51af7034e42b527b830975723d4fd3a9123bb425ca2bd6cfd7",
+      "pngSha256": "41d29ea6136321644120da3822f8d44443284be73221ad9de45e616ff35cc2af"
+    },
+    "cm06": {
+      "objects": [
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 264,
+          "y": 55,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 296,
+          "y": 55,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 5,
+          "firstCell": 7,
+          "x": 43,
+          "y": 108,
+          "z": 0,
+          "flags": 5
+        },
+        {
+          "sequence": 5,
+          "firstCell": 7,
+          "x": 74,
+          "y": 108,
+          "z": 0,
+          "flags": 5
+        },
+        {
+          "sequence": 3,
+          "firstCell": 4,
+          "x": 129,
+          "y": 119,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 3,
+          "firstCell": 4,
+          "x": 322,
+          "y": 84,
+          "z": 0,
+          "flags": 16387
+        },
+        {
+          "sequence": 4,
+          "firstCell": 6,
+          "x": 112,
+          "y": 122,
+          "z": 0,
+          "flags": 4
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 192,
+          "y": 170,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 49,
+          "y": 180,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 289,
+          "y": 91,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 6,
+          "firstCell": 8,
+          "x": 27,
+          "y": 134,
+          "z": 0,
+          "flags": 6
+        },
+        {
+          "sequence": 6,
+          "firstCell": 8,
+          "x": 168,
+          "y": 55,
+          "z": 0,
+          "flags": 6
+        },
+        {
+          "sequence": 6,
+          "firstCell": 8,
+          "x": 258,
+          "y": 55,
+          "z": 0,
+          "flags": 16390
+        },
+        {
+          "sequence": 7,
+          "firstCell": 12,
+          "x": 90,
+          "y": 134,
+          "z": 0,
+          "flags": 16391
+        },
+        {
+          "sequence": 7,
+          "firstCell": 12,
+          "x": 197,
+          "y": 55,
+          "z": 0,
+          "flags": 7
+        }
+      ],
+      "bounds": [
+        -35,
+        0,
+        361,
+        227
+      ],
+      "sourceHashes": {
+        "field_cm06_01_obj.ncbr": "953ee68b48187b06f173ef3c72e902373bc37c518d1a65a904b476bc29207b12",
+        "field_cm06_01_obj.ncer": "03a8b99bcfc77a1b37dc57678aa7027e46baa6bee994cb45d7510b1f6091dc87",
+        "field_cm06_01_obj.nclr": "a6f7d1cfdb5209dedb5048fb4123107a935813631c35ed5ea563c28d929bbbc7",
+        "field_cm06_01_obj.nanr": "8cfbc7d977418d319412c6372654325e9f4fdf13359ed0110ac991cf19d843d2",
+        "field_cm06_01.opm": "b52213494d3a5d353c4590ef88cedd1157d8b6abda8d1ae8bbc8c053ca24c722"
+      },
+      "rgbaSha256": "8609f68115b40200fcc0cdaaf9d19565bb320fb020d1e5349fc13354ada35774",
+      "pngSha256": "43d5cb4d1eeda3eee52606e909e86cd5d27b1de15c0f5e43387381141645ad1e"
+    },
+    "cm07": {
+      "objects": [],
+      "bounds": [
+        0,
+        0,
+        240,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm07_01_obj.ncbr": "7db94f95c5135bcac9d2d1dce5b83046e4d38d8d11da56db6699fa02922e2c72",
+        "field_cm07_01_obj.ncer": "0f6450501a5d6592ee8bbce2bcb3e0684373e220c5b5972d1132c99bf98af9eb",
+        "field_cm07_01_obj.nclr": "7c8d4bd68a6b36f0e5976b099cdf6aafeb122e96b16423221d3e79b6e1abfe48",
+        "field_cm07_01_obj.nanr": "f91527f9f1cedc8a681c64ffb13b72cf302202fbb8e9baa7340e754321e9cec5",
+        "field_cm07_01.opm": "1bece61b87fe49684f7a570b6bb9ffc7322ebbb883a6d1738be78ab872173841"
+      },
+      "rgbaSha256": "a9ef34074c5247d099d116228cfcbe95e68f5cc53116971bf77f5119bc2a8952",
+      "pngSha256": "6e2ac7f0b26ac32203135b4221d6057e84039c67404e2159cee8f45a75c69235"
+    },
+    "cm08": {
+      "objects": [
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 73,
+          "y": 127,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 0,
+          "x": 200,
+          "y": 165,
+          "z": 0,
+          "flags": 1
+        }
+      ],
+      "bounds": [
+        0,
+        0,
+        240,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm08_01_obj.ncbr": "7db94f95c5135bcac9d2d1dce5b83046e4d38d8d11da56db6699fa02922e2c72",
+        "field_cm08_01_obj.ncer": "0f6450501a5d6592ee8bbce2bcb3e0684373e220c5b5972d1132c99bf98af9eb",
+        "field_cm08_01_obj.nclr": "7c8d4bd68a6b36f0e5976b099cdf6aafeb122e96b16423221d3e79b6e1abfe48",
+        "field_cm08_01_obj.nanr": "f91527f9f1cedc8a681c64ffb13b72cf302202fbb8e9baa7340e754321e9cec5",
+        "field_cm08_01.opm": "c98b72b99814f978dda74e299760718c31b8893fcb1f34d9ed5ae96f556f05a6"
+      },
+      "rgbaSha256": "68f1a7c457bf32b7393fbdba64df4834c4fb5ac96a4d44010a447a1e0d91e4f0",
+      "pngSha256": "3745e30e21c195ed360095be0a7ef1f10f42be58c6b1c4e3b3d5d41260218f98"
+    },
+    "cm09": {
+      "objects": [
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 33,
+          "y": 47,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 65,
+          "y": 119,
+          "z": 0,
+          "flags": 0
+        }
+      ],
+      "bounds": [
+        0,
+        -8,
+        288,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm09_01_obj.ncbr": "1373526ee44ecb486033dab54c948f81df45f5bb83e75c47d787a3a478e0710c",
+        "field_cm09_01_obj.ncer": "fd0505198af52c8701c9fbd1e80411cdb60fa8291593b02f8e20686d94b2383b",
+        "field_cm09_01_obj.nclr": "7e3bd760030334176bd2a5fe33ec6fb17f245034ada71de0686aa0af342d83f6",
+        "field_cm09_01_obj.nanr": "642e0382b5e83ce086aa9c8a00e1495d303ea45b0c46544b547de01c3ff29306",
+        "field_cm09_01.opm": "9947f36f0cca246c361472853f048399dd7580688730247df390e0efd5ebedd1"
+      },
+      "rgbaSha256": "fb5b31f78abb977376c7c8e001e5381bb5022ed444cd60b95423e1b684b8db36",
+      "pngSha256": "d353723026289fc1dc9bb879db92a218b82aa7436a4fa54981834d1da585ebc9"
+    },
+    "cm10": {
+      "objects": [
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 73,
+          "y": 121,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 215,
+          "y": 121,
+          "z": 0,
+          "flags": 16386
+        },
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 75,
+          "y": 168,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 213,
+          "y": 168,
+          "z": 0,
+          "flags": 16387
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 79,
+          "y": 125,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 208,
+          "y": 125,
+          "z": 0,
+          "flags": 16384
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 143,
+          "y": 166,
+          "z": 0,
+          "flags": 1
+        }
+      ],
+      "bounds": [
+        -14,
+        0,
+        304,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm10_01_obj.ncbr": "3786dbfaee704a8413b7524e06fd9386ce778495e596897e34b2d758823f440e",
+        "field_cm10_01_obj.ncer": "f8c482a13232bcd852ac582c6a0912bacee93bcdca545a72f8c000e5f8fb19de",
+        "field_cm10_01_obj.nclr": "c75c3cd724ac3023a1d40887e961c128bad57a661d1ad29f26a66017a1496a02",
+        "field_cm10_01_obj.nanr": "c4c77f66e213819041ac8af70411b2caf10c1309c7bb5416c6c06c69654ab226",
+        "field_cm10_01.opm": "b58fcc528d468f4a08ba1fb60d5a8b6afd2a57a3bce54cac724d0b378a670a6c"
+      },
+      "rgbaSha256": "750b94232a4c541ca0a91c0b881d9153fcafc8b458d49ae8bc4f80e324b9ab53",
+      "pngSha256": "5369a46195c3aeab8592132c04bc875f7ec7daebfbdd3bb307bae0d676236f91"
+    },
+    "cm11": {
+      "objects": [
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 25,
+          "y": 140,
+          "z": 1,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 49,
+          "y": 104,
+          "z": 1,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 73,
+          "y": 140,
+          "z": 1,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 145,
+          "y": 104,
+          "z": 1,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 169,
+          "y": 68,
+          "z": 1,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 217,
+          "y": 68,
+          "z": 1,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 24,
+          "y": 165,
+          "z": 1,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 96,
+          "y": 155,
+          "z": 1,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 144,
+          "y": 147,
+          "z": 1,
+          "flags": 1
+        }
+      ],
+      "bounds": [
+        -1,
+        0,
+        265,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm11_01_obj.ncbr": "42d8e4ff505033069596de7c0504d55db0f6e98b19c1b37d8645ea726d2bf8a2",
+        "field_cm11_01_obj.ncer": "599f29192f9995f3f63af49bbfa9a1b3460c7ad01f697c6d846def269439f706",
+        "field_cm11_01_obj.nclr": "4d4d1ad0ac18e41630c4e7eb6eff7e17e0106243ba38adb00003348aa8259c7b",
+        "field_cm11_01_obj.nanr": "bbd6064292883e36b3dc7eb3ce747adf5e95bfaba531fea45fea6e67a6ae1cb0",
+        "field_cm11_01.opm": "b903fcbac1344af09c044cc90f9d78fe2d17da51b46323d2f9d6b5c815035860"
+      },
+      "rgbaSha256": "df0529aef59ff6224675556da11b4a5f32898755af178de3e86702f888e00276",
+      "pngSha256": "d07852996f27e4d0c22c6cd9aef54589f12aac1a81d1098add6efbf263c24ec5"
+    },
+    "cm12": {
+      "objects": [
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 81,
+          "y": 96,
+          "z": 1,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 119,
+          "y": 76,
+          "z": 1,
+          "flags": 1
+        },
+        {
+          "sequence": 2,
+          "firstCell": 0,
+          "x": 167,
+          "y": 40,
+          "z": 1,
+          "flags": 2
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 191,
+          "y": 112,
+          "z": 1,
+          "flags": 0
+        },
+        {
+          "sequence": 2,
+          "firstCell": 0,
+          "x": 167,
+          "y": 148,
+          "z": 1,
+          "flags": 2
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 179,
+          "y": 198,
+          "z": 1,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 215,
+          "y": 180,
+          "z": 1,
+          "flags": 1
+        }
+      ],
+      "bounds": [
+        0,
+        0,
+        248,
+        206
+      ],
+      "sourceHashes": {
+        "field_cm12_01_obj.ncbr": "366f113388e46f32190fadf35bfe8698ac178638168a272009848cee30c8a9cd",
+        "field_cm12_01_obj.ncer": "c5c2e02a95b83ad6d259b5d164f642fbbf39cb0aaa38d796f51528ed3b3f822d",
+        "field_cm12_01_obj.nclr": "e74b42db103814b52bbd0f810684529ce97c521eb16018d8f91931cd19876f1d",
+        "field_cm12_01_obj.nanr": "0a34a7bd2c3b0a7815d66b30fa08da246db695b37bc194a2e38fa4b408e7286e",
+        "field_cm12_01.opm": "360109d7e835ec5a8abe6c5b07cb0b2773ba4a6caac5c650fbbee8757033f759"
+      },
+      "rgbaSha256": "829f941c32295b431e2a17d7f484fe74d3e802d4b69e1da7934ee0f2becf9081",
+      "pngSha256": "94ba70e4795bfc65cb4cd5526a5f3c9e8271c2d16c0392b6f07877761b2e0444"
+    },
+    "cm13": {
+      "objects": [
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 68,
+          "y": 42,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 3,
+          "firstCell": 6,
+          "x": 123,
+          "y": 42,
+          "z": -1,
+          "flags": 3
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 8,
+          "y": 74,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 53,
+          "y": 86,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 172,
+          "y": 74,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 127,
+          "y": 86,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 72,
+          "y": 115,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 120,
+          "y": 115,
+          "z": 0,
+          "flags": 16385
+        }
+      ],
+      "bounds": [
+        -11,
+        -20,
+        192,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm13_01_obj.ncbr": "954cc5a4fa59c0a2a4553a7be9e28df72bd175058cf854a5fb17e20a9a0b0318",
+        "field_cm13_01_obj.ncer": "32c81d46877f3719938421447927f42c98b2c0e65f22bfef9b5fa4b7de2b97c1",
+        "field_cm13_01_obj.nclr": "d3bd626ab408a2806a94be3b20227dd696ad3dacf67991ac93bdf5b3a27b889f",
+        "field_cm13_01_obj.nanr": "7b6654c9d3dd0b0f7f9eb711390bbf625f722724bb57d58fc2f134b8809757fe",
+        "field_cm13_01.opm": "4605a8243aa7ba635d22c8265e3c739675bbbfe8cddb04f7dab74e5b0abb380b"
+      },
+      "rgbaSha256": "2d79fd10418be1c52cd3f2c398bac1fd05a16c5b894843cf77d330899fb6998c",
+      "pngSha256": "e7353d37488fdf536065b97a94104e10d1f1b1fcf700e1087c5ee65bc9eaf52e"
+    },
+    "cm14": {
+      "objects": [
+        {
+          "sequence": 8,
+          "firstCell": 10,
+          "x": 16,
+          "y": 43,
+          "z": 0,
+          "flags": 8
+        },
+        {
+          "sequence": 9,
+          "firstCell": 11,
+          "x": 6,
+          "y": 80,
+          "z": 0,
+          "flags": 9
+        },
+        {
+          "sequence": 9,
+          "firstCell": 11,
+          "x": 24,
+          "y": 90,
+          "z": 0,
+          "flags": 9
+        },
+        {
+          "sequence": 10,
+          "firstCell": 12,
+          "x": 79,
+          "y": 86,
+          "z": 0,
+          "flags": 10
+        },
+        {
+          "sequence": 11,
+          "firstCell": 13,
+          "x": 219,
+          "y": 135,
+          "z": 0,
+          "flags": 11
+        },
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 55,
+          "y": 64,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 173,
+          "y": 164,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 230,
+          "y": 164,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 203,
+          "y": 164,
+          "z": 0,
+          "flags": 4
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 176,
+          "y": 164,
+          "z": 0,
+          "flags": 16388
+        },
+        {
+          "sequence": 5,
+          "firstCell": 7,
+          "x": 145,
+          "y": 115,
+          "z": 0,
+          "flags": 5
+        },
+        {
+          "sequence": 6,
+          "firstCell": 8,
+          "x": 168,
+          "y": 115,
+          "z": 0,
+          "flags": 6
+        },
+        {
+          "sequence": 7,
+          "firstCell": 9,
+          "x": 143,
+          "y": 121,
+          "z": 0,
+          "flags": 7
+        }
+      ],
+      "bounds": [
+        -23,
+        0,
+        253,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm14_01_obj.ncbr": "5c1f6023590d6a5be41a094eadbc61f9b2fb7dac24ad8f948c8113c6fc45fc49",
+        "field_cm14_01_obj.ncer": "e07d53778e868d85a3c1c9d8485595638e3950f380ee12f8504123ef6b27e90d",
+        "field_cm14_01_obj.nclr": "eae5abe3ec862c118f2cbfc65fa6a3b9f963aea88d1add8e86514affcb30b739",
+        "field_cm14_01_obj.nanr": "6ab0b9e065916ac54b6cb4757a00f970d98a8e70b45dee9c665e4e60f7c9b1f8",
+        "field_cm14_01.opm": "30a14e7c9527dd042be08ca959b07466a7f1a439196befd6472fbf157fb1ea3a"
+      },
+      "rgbaSha256": "e181963ff431874a542f243dffde4ad9f1ebb979f429c7f986474be541638fbb",
+      "pngSha256": "b54ad782e4726402ac7da2be34bf73b64f318a7533d145e3335f340b8d30d330"
+    },
+    "cm15": {
+      "objects": [
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 0,
+          "y": 52,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 16,
+          "y": 60,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 32,
+          "y": 68,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 48,
+          "y": 76,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 64,
+          "y": 84,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 80,
+          "y": 92,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 96,
+          "y": 100,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 112,
+          "y": 108,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 128,
+          "y": 116,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 144,
+          "y": 124,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 160,
+          "y": 132,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 176,
+          "y": 140,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 192,
+          "y": 148,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 208,
+          "y": 156,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 208,
+          "y": 156,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 5,
+          "firstCell": 12,
+          "x": 224,
+          "y": 164,
+          "z": -1,
+          "flags": 5
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 67,
+          "y": 73,
+          "z": 0,
+          "flags": 16384
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 211,
+          "y": 145,
+          "z": 0,
+          "flags": 16384
+        },
+        {
+          "sequence": 1,
+          "firstCell": 3,
+          "x": 35,
+          "y": 57,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 3,
+          "x": 179,
+          "y": 129,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 3,
+          "firstCell": 10,
+          "x": 92,
+          "y": 172,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 4,
+          "firstCell": 11,
+          "x": 108,
+          "y": 180,
+          "z": 0,
+          "flags": 4
+        },
+        {
+          "sequence": 4,
+          "firstCell": 11,
+          "x": 59,
+          "y": 156,
+          "z": 0,
+          "flags": 4
+        }
+      ],
+      "bounds": [
+        -31,
+        0,
+        257,
+        212
+      ],
+      "sourceHashes": {
+        "field_cm15_01_obj.ncbr": "4a0e5cab5312321d9c71b64e247880d9f5ad1417c55f62b7d8e936dff1c3b6e8",
+        "field_cm15_01_obj.ncer": "5fe4edaa484697fd3b675824d26abc347f4523b1175288e84a364e5bacdf3308",
+        "field_cm15_01_obj.nclr": "9a12e0ff7d7d20f15ff4a15d0af99e6a9d5b66863911319039945c17d9f8e8ff",
+        "field_cm15_01_obj.nanr": "dcd0b839c5ea3c8bb0a011dc39958d99a766b6a9f2b4b0724febe3462c90c280",
+        "field_cm15_01.opm": "62fb10756ff3d9b0d4153f782e7b1143d25e799dce99ea3740f21e50609d42db"
+      },
+      "rgbaSha256": "f8b7860fe3a36bb0e8d5c780bb93ae29bc880a56c608f14f08852e8ffbf5d61f",
+      "pngSha256": "db6d299e6a7f179caf2236b5b84b2dfe6f21f1f7eed70428b978a769b64b6bf7"
+    },
+    "cm16": {
+      "objects": [
+        {
+          "sequence": 7,
+          "firstCell": 7,
+          "x": 58,
+          "y": 51,
+          "z": 0,
+          "flags": 7
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 68,
+          "y": 95,
+          "z": 0,
+          "flags": 1
+        }
+      ],
+      "bounds": [
+        0,
+        0,
+        96,
+        124
+      ],
+      "sourceHashes": {
+        "field_cm16_01_obj.ncbr": "c794138eebb16e6214c2672f84f1c8b9055c518e7f2537cee77834c22b05c7a8",
+        "field_cm16_01_obj.ncer": "95de35c052ac37593edfdeb1b8a13660f147fb8849c13699659d265f927217e2",
+        "field_cm16_01_obj.nclr": "692cf8a56e95dba4281cfe26500fcef4e39ff152e0df016004d3af492ab007e2",
+        "field_cm16_01_obj.nanr": "afeda9a93c5cb625cf6d45a0d24eed04b09de62a1b70fd5ef440f6c90ff0f182",
+        "field_cm16_01.opm": "74676d04442f4381b04677a62daa3b2c7a6ac30d2689f3e52eb808201457bc14"
+      },
+      "rgbaSha256": "9d27e045d440209654f3007d1d9122af9915f931239a247fe85a084574a57de8",
+      "pngSha256": "76a1448733a56f7b7c9e01dfc16782053394ab6193a9ee28eafa3eac13a13c2d"
+    },
+    "cm17": {
+      "objects": [
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 145,
+          "y": 107,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 2,
+          "x": 145,
+          "y": 100,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 2,
+          "firstCell": 3,
+          "x": 144,
+          "y": 181,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 3,
+          "firstCell": 5,
+          "x": 144,
+          "y": 186,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 2,
+          "firstCell": 3,
+          "x": 48,
+          "y": 181,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 3,
+          "firstCell": 5,
+          "x": 48,
+          "y": 186,
+          "z": 0,
+          "flags": 3
+        }
+      ],
+      "bounds": [
+        0,
+        0,
+        193,
+        202
+      ],
+      "sourceHashes": {
+        "field_cm17_01_obj.ncbr": "2b875915ef7e250c7a63ceecaac68accae2232f10e6a5e14805a886251d36da3",
+        "field_cm17_01_obj.ncer": "b86091c5bea4d24e897e19d3716ddbcb34da20ff4423cc03c60a64b5ec7569bd",
+        "field_cm17_01_obj.nclr": "92225193430dd60f6574a1f740acd43265edaf675766259106a68f74c24284d4",
+        "field_cm17_01_obj.nanr": "852f611e52a6b9d7386d06e96dcacd82faa68dd615a30c69460dc38278e5dacc",
+        "field_cm17_01.opm": "e3c4b18dae994545fc1c3cb826ca3394cf2e55cf377a9c85b6b97ee73469a6ac"
+      },
+      "rgbaSha256": "579c40b675901106c87c8b5f1522b116f64841759f796535789fe9f33c15cd98",
+      "pngSha256": "b774d61e84107e51900b6ea7b92799ea231a5d0357294092003bdbbef8cd7619"
+    },
+    "cm18": {
+      "objects": [
+        {
+          "sequence": 1,
+          "firstCell": 2,
+          "x": 103,
+          "y": 34,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 9,
+          "firstCell": 2,
+          "x": 84,
+          "y": 40,
+          "z": 0,
+          "flags": 9
+        },
+        {
+          "sequence": 8,
+          "firstCell": 2,
+          "x": 122,
+          "y": 40,
+          "z": 0,
+          "flags": 8
+        },
+        {
+          "sequence": 9,
+          "firstCell": 2,
+          "x": 83,
+          "y": 58,
+          "z": 0,
+          "flags": 9
+        },
+        {
+          "sequence": 9,
+          "firstCell": 2,
+          "x": 123,
+          "y": 58,
+          "z": 0,
+          "flags": 9
+        },
+        {
+          "sequence": 8,
+          "firstCell": 2,
+          "x": 103,
+          "y": 63,
+          "z": 0,
+          "flags": 8
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 56,
+          "y": 123,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 37,
+          "y": 128,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 75,
+          "y": 128,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 7,
+          "firstCell": 0,
+          "x": 36,
+          "y": 144,
+          "z": 0,
+          "flags": 7
+        },
+        {
+          "sequence": 7,
+          "firstCell": 0,
+          "x": 76,
+          "y": 144,
+          "z": 0,
+          "flags": 7
+        },
+        {
+          "sequence": 6,
+          "firstCell": 0,
+          "x": 56,
+          "y": 151,
+          "z": 0,
+          "flags": 6
+        },
+        {
+          "sequence": 2,
+          "firstCell": 4,
+          "x": 57,
+          "y": 69,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 3,
+          "firstCell": 5,
+          "x": 68,
+          "y": 73,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 4,
+          "firstCell": 6,
+          "x": 111,
+          "y": 94,
+          "z": 0,
+          "flags": 4
+        },
+        {
+          "sequence": 5,
+          "firstCell": 7,
+          "x": 127,
+          "y": 98,
+          "z": 0,
+          "flags": 5
+        }
+      ],
+      "bounds": [
+        0,
+        0,
+        144,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm18_01_obj.ncbr": "7746ce94f10b25d9cd086022cc6a1633a2a0a22c88d0bf5dd1f49c18d2820007",
+        "field_cm18_01_obj.ncer": "01bef2272781d0e44d3eac6b9aad3c1321e630908fe88c7e01fe8a4ace4db81a",
+        "field_cm18_01_obj.nclr": "5fd0776df141593deb75214210e4459ee72dbff175af39b13fca76179f548dc1",
+        "field_cm18_01_obj.nanr": "5555d630db4b56effb0b875ca564bc494a9e84d765728ad1dfc32979a6898a97",
+        "field_cm18_01.opm": "dabf999f7ae3f10907e86907427c0cd4867ae477ddb0782c4d16430f200e5fc3"
+      },
+      "rgbaSha256": "206002419652804b97ca323c456443c7d4445d14d9fe67a5c3147bda440c8844",
+      "pngSha256": "7da6de0f19648f8a1a387c9ed4600f605de00cbd7b13d369067acdb4bbf774a7"
+    },
+    "cm19": {
+      "objects": [
+        {
+          "sequence": 11,
+          "firstCell": 12,
+          "x": 192,
+          "y": 94,
+          "z": -1,
+          "flags": 11
+        },
+        {
+          "sequence": 6,
+          "firstCell": 7,
+          "x": 18,
+          "y": 49,
+          "z": 0,
+          "flags": 6
+        },
+        {
+          "sequence": 6,
+          "firstCell": 7,
+          "x": 366,
+          "y": 59,
+          "z": 0,
+          "flags": 16390
+        },
+        {
+          "sequence": 10,
+          "firstCell": 11,
+          "x": 36,
+          "y": 58,
+          "z": 0,
+          "flags": 10
+        },
+        {
+          "sequence": 5,
+          "firstCell": 5,
+          "x": 309,
+          "y": 45,
+          "z": 0,
+          "flags": 5
+        },
+        {
+          "sequence": 7,
+          "firstCell": 8,
+          "x": 69,
+          "y": 34,
+          "z": 0,
+          "flags": 7
+        },
+        {
+          "sequence": 7,
+          "firstCell": 8,
+          "x": 369,
+          "y": 73,
+          "z": 0,
+          "flags": 7
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 52,
+          "y": 24,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 327,
+          "y": 16,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 246,
+          "y": 94,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 217,
+          "y": 56,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 308,
+          "y": 23,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 124,
+          "y": 81,
+          "z": 0,
+          "flags": 16387
+        },
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 224,
+          "y": 94,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 150,
+          "y": 45,
+          "z": 0,
+          "flags": 4
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 85,
+          "y": 27,
+          "z": 0,
+          "flags": 4
+        },
+        {
+          "sequence": 8,
+          "firstCell": 9,
+          "x": 340,
+          "y": 93,
+          "z": 0,
+          "flags": 8
+        },
+        {
+          "sequence": 9,
+          "firstCell": 10,
+          "x": 27,
+          "y": 67,
+          "z": 0,
+          "flags": 9
+        },
+        {
+          "sequence": 9,
+          "firstCell": 10,
+          "x": 143,
+          "y": 94,
+          "z": 0,
+          "flags": 9
+        },
+        {
+          "sequence": 9,
+          "firstCell": 10,
+          "x": 313,
+          "y": 58,
+          "z": 0,
+          "flags": 9
+        }
+      ],
+      "bounds": [
+        -86,
+        -78,
+        489,
+        116
+      ],
+      "sourceHashes": {
+        "field_cm19_01_obj.ncbr": "4d23f65c880b7fdd656d3dd479261df86652e0c04f8ed74b7751ae4415c024a5",
+        "field_cm19_01_obj.ncer": "dc5bfa7b28bbe3375326efb976a3b78eab44304c64812f3495e237cb73e72b42",
+        "field_cm19_01_obj.nclr": "27463a600d1a6e8ece021297e0fe88833aa654d3027db9744e35456e0cb69f57",
+        "field_cm19_01_obj.nanr": "5ef0ccf3eaa1a65eae86b183eefb70e8f2693e55ab59f7a5ac1cdf2ab0ed5a7e",
+        "field_cm19_01.opm": "942d254a951dc069b6eaad5e13266e2272f7710ddbae948c4c758cda2b703e6c"
+      },
+      "rgbaSha256": "0ec03fb22ab8a85e0c115c5edaf37a3a49edc7dd611bd9d084eeae00a6aa9ff1",
+      "pngSha256": "e0e5e6675a2bc011c29fd08e95eabf2a60ffb470bbc8b404551af96d477a7ed9"
+    },
+    "cm20": {
+      "objects": [],
+      "bounds": [
+        0,
+        0,
+        240,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm20_01_obj.ncbr": "7db94f95c5135bcac9d2d1dce5b83046e4d38d8d11da56db6699fa02922e2c72",
+        "field_cm20_01_obj.ncer": "0f6450501a5d6592ee8bbce2bcb3e0684373e220c5b5972d1132c99bf98af9eb",
+        "field_cm20_01_obj.nclr": "7c8d4bd68a6b36f0e5976b099cdf6aafeb122e96b16423221d3e79b6e1abfe48",
+        "field_cm20_01_obj.nanr": "f91527f9f1cedc8a681c64ffb13b72cf302202fbb8e9baa7340e754321e9cec5",
+        "field_cm20_01.opm": "8bef44e1db26c97e5f005525c966186edff26a74d2f69a6161f7b01f3617e5ed"
+      },
+      "rgbaSha256": "798dbeda120ea92463850a7bae4277cc78d672d18037faf329531205187ca336",
+      "pngSha256": "4ce132065df348de924033600cddc3236b11e6fea6f6751298808a2689b9e269"
+    },
+    "cm21": {
+      "objects": [],
+      "bounds": [
+        0,
+        0,
+        240,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm21_01_obj.ncbr": "7db94f95c5135bcac9d2d1dce5b83046e4d38d8d11da56db6699fa02922e2c72",
+        "field_cm21_01_obj.ncer": "0f6450501a5d6592ee8bbce2bcb3e0684373e220c5b5972d1132c99bf98af9eb",
+        "field_cm21_01_obj.nclr": "7c8d4bd68a6b36f0e5976b099cdf6aafeb122e96b16423221d3e79b6e1abfe48",
+        "field_cm21_01_obj.nanr": "f91527f9f1cedc8a681c64ffb13b72cf302202fbb8e9baa7340e754321e9cec5",
+        "field_cm21_01.opm": "11b491dbd5d6fe3e18b63a200e49b7106e20bd9b8fec15507024731fea6c9984"
+      },
+      "rgbaSha256": "7e354cf1f79511c1bc0132720c764f33c139492c582a86e8b424646690b1fff1",
+      "pngSha256": "7aa1c9a269a366693683ccba8436dca6a0ec2e8d4ff28746e244322ccbb193cb"
+    },
+    "cm22": {
+      "objects": [
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 62,
+          "y": 94,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 110,
+          "y": 69,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 102,
+          "y": 114,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 150,
+          "y": 90,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 86,
+          "y": 90,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 134,
+          "y": 65,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 126,
+          "y": 110,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 174,
+          "y": 86,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 5,
+          "firstCell": 5,
+          "x": 127,
+          "y": 115,
+          "z": 0,
+          "flags": 5
+        },
+        {
+          "sequence": 7,
+          "firstCell": 8,
+          "x": 175,
+          "y": 91,
+          "z": 0,
+          "flags": 7
+        },
+        {
+          "sequence": 6,
+          "firstCell": 8,
+          "x": 87,
+          "y": 95,
+          "z": 0,
+          "flags": 6
+        },
+        {
+          "sequence": 8,
+          "firstCell": 8,
+          "x": 135,
+          "y": 70,
+          "z": 0,
+          "flags": 8
+        }
+      ],
+      "bounds": [
+        0,
+        -26,
+        231,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm22_01_obj.ncbr": "e6bc2b1ea231ed5fa1d8fcc5f3aa5af35372f6fd70e36062441ee84cdd7c11f9",
+        "field_cm22_01_obj.ncer": "65c1780804fffd458d73f3f92dad1b54a7796b8a75eb24f35b4f5b1fe96c64c5",
+        "field_cm22_01_obj.nclr": "5274fadfde0b8effa16f5a42093d54e0930d3bad7829245b54c5f2702d491953",
+        "field_cm22_01_obj.nanr": "2077d7f636dadaa2130eb1e70879fac7b80ab2d96bf22b0db4ba17b96134d9b8",
+        "field_cm22_01.opm": "8f9908ba27d13bac35933a8465abfb9272cdd468ff595e0092c326039d55d6fd"
+      },
+      "rgbaSha256": "212ce9ff6cffe36bab2d7607e6bd94eaa24bc1d44a567b1606becabdc68139e2",
+      "pngSha256": "044d11cae78cd71b3f8b8c6501df75cfbe5e2cb2a6baca6ab879fa3075ca936f"
+    },
+    "cm23": {
+      "objects": [
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 120,
+          "y": 109,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 101,
+          "y": 140,
+          "z": 0,
+          "flags": 4
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 50,
+          "y": 75,
+          "z": 0,
+          "flags": 4
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 24,
+          "y": 85,
+          "z": 1,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 59,
+          "y": 149,
+          "z": 1,
+          "flags": 1
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 96,
+          "y": 165,
+          "z": 1,
+          "flags": 2
+        }
+      ],
+      "bounds": [
+        -24,
+        -3,
+        168,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm23_01_obj.ncbr": "b323a74061528a832667e12c2b6479033917291f54886d280fd012bb25cb27c4",
+        "field_cm23_01_obj.ncer": "06f918f9d5755ac2c716a99f76d4aec4ae5c8e4f8a24905a8930e2e870973afe",
+        "field_cm23_01_obj.nclr": "6e2d86597b415378a6fa33deaaf593519fad3eb7352acbea28382affc63b1714",
+        "field_cm23_01_obj.nanr": "c613ba5eea783c1acafb43c1e97be5d057366586b7fb2fab2f43bb5c365cefd8",
+        "field_cm23_01.opm": "c3e291435696f909f6ea8219d830fc7048d51acefc0b5aca800e8b72fff29d98"
+      },
+      "rgbaSha256": "31a988dadcb80445daab8dbcfd1c5a6a8f86259437ebdef75ebf4f319c5b3728",
+      "pngSha256": "581912c4f98eaf88622ce8085832f2706730e54e4b2d117019767eb96bfc1988"
+    },
+    "cm24": {
+      "objects": [
+        {
+          "sequence": 1,
+          "firstCell": 4,
+          "x": 47,
+          "y": 38,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 20,
+          "y": 71,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 73,
+          "y": 71,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 2,
+          "firstCell": 5,
+          "x": 10,
+          "y": 55,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 5,
+          "x": 84,
+          "y": 55,
+          "z": 0,
+          "flags": 2
+        }
+      ],
+      "bounds": [
+        -5,
+        -9,
+        101,
+        112
+      ],
+      "sourceHashes": {
+        "field_cm24_01_obj.ncbr": "20c02e331a8e43665cc493058819b05c450a6136831c2f59efbaac30d0c6d25a",
+        "field_cm24_01_obj.ncer": "8f4ee5bca991f12b90b2de953d7ea74f95dccc747e8aea5d322e01c42f97aa51",
+        "field_cm24_01_obj.nclr": "3a0fa52228d49953a974d932659c63de3291825492c311d75a77e413f351a4dd",
+        "field_cm24_01_obj.nanr": "77f2adb58df9904b6413d087efe4963f1c5b5c61cab3270e7fb7b60a75f781f3",
+        "field_cm24_01.opm": "a6eef9c954bb6204bc254c315942b20ad9bf094eddca2ae6c3057eb42dbb56ae"
+      },
+      "rgbaSha256": "56b022895d363197c92085db24f9b8a644507d56110aa7bac21470ae26c7f057",
+      "pngSha256": "0e1bf95a5d6b53225c0473bfbb926b1fb10ebd993272229d14f445e135cd24ea"
+    },
+    "cm25": {
+      "objects": [
+        {
+          "sequence": 16,
+          "firstCell": 16,
+          "x": 57,
+          "y": 49,
+          "z": -1,
+          "flags": 16
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 4,
+          "y": 19,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 15,
+          "y": 24,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 47,
+          "y": 9,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 80,
+          "y": 24,
+          "z": 0,
+          "flags": 4
+        },
+        {
+          "sequence": 5,
+          "firstCell": 5,
+          "x": 95,
+          "y": 28,
+          "z": 0,
+          "flags": 5
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 111,
+          "y": 24,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 143,
+          "y": 9,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 176,
+          "y": 24,
+          "z": 0,
+          "flags": 4
+        },
+        {
+          "sequence": 11,
+          "firstCell": 11,
+          "x": 187,
+          "y": 19,
+          "z": 0,
+          "flags": 11
+        },
+        {
+          "sequence": 14,
+          "firstCell": 14,
+          "x": 17,
+          "y": 25,
+          "z": 0,
+          "flags": 14
+        },
+        {
+          "sequence": 15,
+          "firstCell": 15,
+          "x": 173,
+          "y": 27,
+          "z": 0,
+          "flags": 15
+        },
+        {
+          "sequence": 13,
+          "firstCell": 13,
+          "x": 137,
+          "y": 30,
+          "z": 0,
+          "flags": 13
+        }
+      ],
+      "bounds": [
+        -28,
+        -38,
+        223,
+        112
+      ],
+      "sourceHashes": {
+        "field_cm25_01_obj.ncbr": "b9c1f045a56e7b006af02d5f05fcdc0119553781812f3a1cb6e65d8ea4a3e21a",
+        "field_cm25_01_obj.ncer": "0036943a033f6013a17e371c1bf16d0c71a7dda31f6524049d8fc0cb2d0eb747",
+        "field_cm25_01_obj.nclr": "8f8af95d017819f05a1973b83aa2e917aea4ddecc8b2be0897ea4c0d266ed638",
+        "field_cm25_01_obj.nanr": "62c27a0fefd2f63c6546028cff32da7611121f769c11f5befe1aace530ee02e8",
+        "field_cm25_01.opm": "cede3c6dc57e9846b327d0a59b91c2cd5ff1bfa053f998afa26041bfce8f30a3"
+      },
+      "rgbaSha256": "680dde3ac1bf0b8bcd1d1106cb19a23eed748e08751bbdc322e163206184be3d",
+      "pngSha256": "d4b5b181124f7620de841d80790651267a6595c8574524bcd87811f925c00269"
+    },
+    "cm26": {
+      "objects": [
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 72,
+          "y": 180,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 21,
+          "y": 180,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 125,
+          "y": 183,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 157,
+          "y": 167,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 189,
+          "y": 151,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 5,
+          "y": 128,
+          "z": 0,
+          "flags": 16388
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 61,
+          "y": 104,
+          "z": 0,
+          "flags": 16388
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 71,
+          "y": 32,
+          "z": 0,
+          "flags": 16388
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 57,
+          "y": 175,
+          "z": 0,
+          "flags": 16388
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 173,
+          "y": 153,
+          "z": 0,
+          "flags": 16388
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 198,
+          "y": 86,
+          "z": 0,
+          "flags": 16388
+        }
+      ],
+      "bounds": [
+        -20,
+        0,
+        240,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm26_01_obj.ncbr": "60ede747d0678480e9f7c4ca2d3c7bab580ec9df658eb400675412d3168bce08",
+        "field_cm26_01_obj.ncer": "28f1712223635d78a5d3e6581c7760f8e0d5b6dc9811900c5cf1f85c7d17ac0e",
+        "field_cm26_01_obj.nclr": "7c8d4bd68a6b36f0e5976b099cdf6aafeb122e96b16423221d3e79b6e1abfe48",
+        "field_cm26_01_obj.nanr": "2fa91bbf4c9e3407665fc82961853e31f6f7e67df1f5665799b50f047b1b853b",
+        "field_cm26_01.opm": "e969c60cc6f088db8fc3dcf7785b2f69ccef4106d70f433984eeeedb4cbf18c4"
+      },
+      "rgbaSha256": "6c6c7f404df0f1a4d854ec38b78322b61c9e68ad7609584cf6912108c2b3ddad",
+      "pngSha256": "ccaae243773abd73390a6a305650be1dec08fc4603ef418b99d5c2167a0bfaf9"
+    },
+    "cm27": {
+      "objects": [
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 17,
+          "y": 116,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 59,
+          "y": 90,
+          "z": 0,
+          "flags": 2
+        },
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 91,
+          "y": 74,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 57,
+          "y": 129,
+          "z": 0,
+          "flags": 4
+        },
+        {
+          "sequence": 5,
+          "firstCell": 5,
+          "x": 89,
+          "y": 145,
+          "z": 0,
+          "flags": 5
+        },
+        {
+          "sequence": 6,
+          "firstCell": 6,
+          "x": 174,
+          "y": 116,
+          "z": 0,
+          "flags": 6
+        },
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 101,
+          "y": 74,
+          "z": 0,
+          "flags": 16387
+        },
+        {
+          "sequence": 2,
+          "firstCell": 2,
+          "x": 133,
+          "y": 90,
+          "z": 0,
+          "flags": 16386
+        },
+        {
+          "sequence": 4,
+          "firstCell": 4,
+          "x": 135,
+          "y": 129,
+          "z": 0,
+          "flags": 16388
+        },
+        {
+          "sequence": 5,
+          "firstCell": 5,
+          "x": 103,
+          "y": 145,
+          "z": 0,
+          "flags": 16389
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 75,
+          "y": 45,
+          "z": 1,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 117,
+          "y": 45,
+          "z": 1,
+          "flags": 16384
+        }
+      ],
+      "bounds": [
+        -10,
+        0,
+        195,
+        200
+      ],
+      "sourceHashes": {
+        "field_cm27_01_obj.ncbr": "5d0fd7010a2d51c1decfe9374175e9acc86dae832e1233c115e092e83883fa23",
+        "field_cm27_01_obj.ncer": "7faee513f6a143ba479197e793dcd6007b453771c0117cfa1748cf71f00f0d82",
+        "field_cm27_01_obj.nclr": "4d1cfa44c6aa7f8605e53ed0001975c433be9e9209eaf497f8b94ded3b55a17d",
+        "field_cm27_01_obj.nanr": "b69aba0dd6ba616194393b5e2b0dcde6153edb43a4703be65631cc9b740f32c3",
+        "field_cm27_01.opm": "08494bf8ee59daa23aa59ab6fc3313ca8dc1a76d1fccd5773ab01a613491bd8d"
+      },
+      "rgbaSha256": "1654ed71d0423541403634f8beab437eed2706d138d0845eb26788c7d0d5d4d6",
+      "pngSha256": "042ba3d1dc032059f2b5e4296a7154bc33e9d64fcdf8df3f21752e890b5479e8"
+    },
+    "cm30": {
+      "objects": [
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 83,
+          "y": 69,
+          "z": 0,
+          "flags": 1
+        }
+      ],
+      "bounds": [
+        0,
+        0,
+        105,
+        112
+      ],
+      "sourceHashes": {
+        "field_cm30_01_obj.ncbr": "bcd49186f02d160d8bd15e00f6e4c81079a2648c2cde85cdfce17ae2bbb6e872",
+        "field_cm30_01_obj.ncer": "657c51651a20f3338f8c28b1db36ae0b5b022f64f21d991605c6091ec6eabe1d",
+        "field_cm30_01_obj.nclr": "3afdb5ea31cfc947df2b325cf7c0423ec934504985b465d9328ea0a172ea188f",
+        "field_cm30_01_obj.nanr": "a2895869c068803887a62e5228b9151b49f24ead19625d6c774a4d71b9db819d",
+        "field_cm30_01.opm": "bf7b68dc22b3917720f3f0ed0d67ffb2c77d7ad421847919d4f736a86a0749f9"
+      },
+      "rgbaSha256": "ccf76004a9eb181d3647c7763bd66f1eaf460b1da66d366b16488fd2931d28f9",
+      "pngSha256": "f268a50487c3c27ed307e3162fecd89c7eef44270a52b06bc0307facbbb9eb5f"
+    },
+    "cm31": {
+      "objects": [
+        {
+          "sequence": 7,
+          "firstCell": 7,
+          "x": 58,
+          "y": 50,
+          "z": 0,
+          "flags": 7
+        },
+        {
+          "sequence": 7,
+          "firstCell": 7,
+          "x": 153,
+          "y": 50,
+          "z": 0,
+          "flags": 7
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 68,
+          "y": 95,
+          "z": 0,
+          "flags": 1
+        }
+      ],
+      "bounds": [
+        0,
+        0,
+        192,
+        124
+      ],
+      "sourceHashes": {
+        "field_cm31_01_obj.ncbr": "c794138eebb16e6214c2672f84f1c8b9055c518e7f2537cee77834c22b05c7a8",
+        "field_cm31_01_obj.ncer": "95de35c052ac37593edfdeb1b8a13660f147fb8849c13699659d265f927217e2",
+        "field_cm31_01_obj.nclr": "692cf8a56e95dba4281cfe26500fcef4e39ff152e0df016004d3af492ab007e2",
+        "field_cm31_01_obj.nanr": "afeda9a93c5cb625cf6d45a0d24eed04b09de62a1b70fd5ef440f6c90ff0f182",
+        "field_cm31_01.opm": "6853d115764a0ff82ac23a43458ad1b9764722dcf0d9aba2c39ac8571b418b18"
+      },
+      "rgbaSha256": "96f8d0aa5f2edfc73afacdfb0f65d79c990229b051d70ceaf8c0aa1a6e8eef8e",
+      "pngSha256": "cac38e4f5c8659c1df645fbf5a0cf3542afe5c048124444c5d64cf6b022e9c9e"
+    },
+    "cm32": {
+      "objects": [
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 55,
+          "y": 35,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 37,
+          "y": 40,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 75,
+          "y": 40,
+          "z": 0,
+          "flags": 0
+        },
+        {
+          "sequence": 1,
+          "firstCell": 2,
+          "x": 32,
+          "y": 49,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 2,
+          "x": 79,
+          "y": 49,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 2,
+          "x": 46,
+          "y": 61,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 2,
+          "x": 66,
+          "y": 61,
+          "z": 0,
+          "flags": 1
+        }
+      ],
+      "bounds": [
+        0,
+        0,
+        96,
+        112
+      ],
+      "sourceHashes": {
+        "field_cm32_01_obj.ncbr": "2252851589cc8d4d662ce199bc425e8ef2f13b1c7e3e0c62f8d0265ed9da13cf",
+        "field_cm32_01_obj.ncer": "653c45acd14ee5a3aedb7f1a3d3162c53d053548baa73ddcf651bd6a6540b3ee",
+        "field_cm32_01_obj.nclr": "5fd0776df141593deb75214210e4459ee72dbff175af39b13fca76179f548dc1",
+        "field_cm32_01_obj.nanr": "4a524a833a3692d8bb7787b8e08e8d6c53618f19412ba988098e07bb3475f256",
+        "field_cm32_01.opm": "e0c2e43f59664651d2b32a08ec008544f2eea752c2773f388dbd73ac7b32a9cd"
+      },
+      "rgbaSha256": "ccaf284a20b31d4962fb87df789a39f69cf79058746be8c18373c0300b78157f",
+      "pngSha256": "69d4fe415fc3d83f5b1c762b895ad0f4d93b7b34a27391f19ec0408ac5752ca8"
+    },
+    "cm33": {
+      "objects": [
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 24,
+          "y": 77,
+          "z": 0,
+          "flags": 1
+        }
+      ],
+      "bounds": [
+        -1,
+        0,
+        96,
+        112
+      ],
+      "sourceHashes": {
+        "field_cm33_01_obj.ncbr": "42d8e4ff505033069596de7c0504d55db0f6e98b19c1b37d8645ea726d2bf8a2",
+        "field_cm33_01_obj.ncer": "599f29192f9995f3f63af49bbfa9a1b3460c7ad01f697c6d846def269439f706",
+        "field_cm33_01_obj.nclr": "4d4d1ad0ac18e41630c4e7eb6eff7e17e0106243ba38adb00003348aa8259c7b",
+        "field_cm33_01_obj.nanr": "bbd6064292883e36b3dc7eb3ce747adf5e95bfaba531fea45fea6e67a6ae1cb0",
+        "field_cm33_01.opm": "cc2ffbab860074006a559995aa51b55ab21066c7bf86293816fe2258a4494472"
+      },
+      "rgbaSha256": "47157f9917c9188956b2613d438557b0701543292074ad1c2e6ffd8bdb674661",
+      "pngSha256": "14f010b2eb5424852836f954f1fd6401d412aa2b510ee93b16457521c6389d4c"
+    },
+    "cm34": {
+      "objects": [
+        {
+          "sequence": 3,
+          "firstCell": 3,
+          "x": 0,
+          "y": 46,
+          "z": 0,
+          "flags": 3
+        },
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 55,
+          "y": 46,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 0,
+          "firstCell": 0,
+          "x": 77,
+          "y": 86,
+          "z": 0,
+          "flags": 0
+        }
+      ],
+      "bounds": [
+        -27,
+        -5,
+        106,
+        112
+      ],
+      "sourceHashes": {
+        "field_cm34_01_obj.ncbr": "865320a23395a14d7f570014c4b9f9e17a27ca5f22bb09633d3d78a9211c5bed",
+        "field_cm34_01_obj.ncer": "cb437b3fa4d3ae05c861e7d5497fa4cef7568a8a82b685c5d11017d4278c7610",
+        "field_cm34_01_obj.nclr": "1af5629a8ffde52841b3e5377151f677c4f9ae89000ed720f503217cb5c441b5",
+        "field_cm34_01_obj.nanr": "e249ea53970594ab88021c4d4d63294cc8aa164cc14caf02c21b684a58614c37",
+        "field_cm34_01.opm": "fa9aa1096e3993e09ce9699bd59dfc1d27519062ab015afe3ff37a6b30251a95"
+      },
+      "rgbaSha256": "de8c66eda34578b94d51bf17931324c6303db55850aa1fddf4716a00307cf909",
+      "pngSha256": "5a8a926fa04ad8220e819ed666dc48bc3b7016fe620cd89615f9c32d463a7917"
+    },
+    "cm35": {
+      "objects": [],
+      "bounds": [
+        0,
+        0,
+        96,
+        112
+      ],
+      "sourceHashes": {
+        "field_cm35_01_obj.ncbr": "7db94f95c5135bcac9d2d1dce5b83046e4d38d8d11da56db6699fa02922e2c72",
+        "field_cm35_01_obj.ncer": "0f6450501a5d6592ee8bbce2bcb3e0684373e220c5b5972d1132c99bf98af9eb",
+        "field_cm35_01_obj.nclr": "7c8d4bd68a6b36f0e5976b099cdf6aafeb122e96b16423221d3e79b6e1abfe48",
+        "field_cm35_01_obj.nanr": "f91527f9f1cedc8a681c64ffb13b72cf302202fbb8e9baa7340e754321e9cec5",
+        "field_cm35_01.opm": "6d7272c34b11e2ee194a7e3f48d406b4321d8b5f89ef38137c7d9a916647aebb"
+      },
+      "rgbaSha256": "4dbbd801d7ad90b3d733a98929ffda7e18d1c6eff80d63a7775758d97eb492a9",
+      "pngSha256": "b3759c766ddc78313420735d0a8e58d3b95a438b9040e26a3fc02342d59b9ce5"
+    },
+    "cm36": {
+      "objects": [],
+      "bounds": [
+        0,
+        0,
+        96,
+        112
+      ],
+      "sourceHashes": {
+        "field_cm36_01_obj.ncbr": "7db94f95c5135bcac9d2d1dce5b83046e4d38d8d11da56db6699fa02922e2c72",
+        "field_cm36_01_obj.ncer": "0f6450501a5d6592ee8bbce2bcb3e0684373e220c5b5972d1132c99bf98af9eb",
+        "field_cm36_01_obj.nclr": "7c8d4bd68a6b36f0e5976b099cdf6aafeb122e96b16423221d3e79b6e1abfe48",
+        "field_cm36_01_obj.nanr": "f91527f9f1cedc8a681c64ffb13b72cf302202fbb8e9baa7340e754321e9cec5",
+        "field_cm36_01.opm": "bef711a3f30ca39da2de0a336c4803d0014a796aad426b5103e658a85cb54c64"
+      },
+      "rgbaSha256": "c5fea594a40ba5da56f28d6ff45e482285566e20ecf5d9ae84a5530cc1a9834e",
+      "pngSha256": "299fafe111e0b77ab79113dc349ccbb73e83d0acafb060faa2ec04846ac59c90"
+    },
+    "cm37": {
+      "objects": [],
+      "bounds": [
+        0,
+        0,
+        96,
+        112
+      ],
+      "sourceHashes": {
+        "field_cm37_01_obj.ncbr": "d8ee6644b3019aed055d8465bbe816851a38cc5a9da3980b1f8ed97dd98623ad",
+        "field_cm37_01_obj.ncer": "2715e2380245dce2535cd55994332892c41073a67c26dc1aa5ab37cf8ea3787e",
+        "field_cm37_01_obj.nclr": "c75c3cd724ac3023a1d40887e961c128bad57a661d1ad29f26a66017a1496a02",
+        "field_cm37_01_obj.nanr": "3b0561139a80a658ae2635da739408402600d2bcfc7ef1e29be24cb6e1ab168e",
+        "field_cm37_01.opm": "05c7f4c0be37fafee38837eec20102162050781f672d6275f2dfb2b0377e21ae"
+      },
+      "rgbaSha256": "dbfa2e033010b1d7ce0fdcda6bb77638ba9bcf2fd8388878ee418c2a039e674e",
+      "pngSha256": "9c815d2070703a1e4662da1222337f6fd51f2400f335c9cc62308320b79a88e3"
+    },
+    "cm38": {
+      "objects": [
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 0,
+          "y": 36,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 16,
+          "y": 44,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 32,
+          "y": 52,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 48,
+          "y": 60,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 2,
+          "firstCell": 6,
+          "x": 64,
+          "y": 68,
+          "z": -1,
+          "flags": 2
+        },
+        {
+          "sequence": 5,
+          "firstCell": 12,
+          "x": 80,
+          "y": 76,
+          "z": -1,
+          "flags": 5
+        },
+        {
+          "sequence": 1,
+          "firstCell": 3,
+          "x": 35,
+          "y": 41,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 1,
+          "firstCell": 3,
+          "x": 67,
+          "y": 57,
+          "z": 0,
+          "flags": 1
+        },
+        {
+          "sequence": 4,
+          "firstCell": 11,
+          "x": 47,
+          "y": 103,
+          "z": 0,
+          "flags": 4
+        },
+        {
+          "sequence": 3,
+          "firstCell": 10,
+          "x": 23,
+          "y": 103,
+          "z": 0,
+          "flags": 3
+        }
+      ],
+      "bounds": [
+        -31,
+        -5,
+        113,
+        135
+      ],
+      "sourceHashes": {
+        "field_cm38_01_obj.ncbr": "70e2377fa32640523e11200d7c18cef224c40a2b8e4498e5eca75cc133f45329",
+        "field_cm38_01_obj.ncer": "af73aea41260a88b0be37645399429753ef19ab9dc501720f69e68d30f18cee3",
+        "field_cm38_01_obj.nclr": "9a12e0ff7d7d20f15ff4a15d0af99e6a9d5b66863911319039945c17d9f8e8ff",
+        "field_cm38_01_obj.nanr": "dcd0b839c5ea3c8bb0a011dc39958d99a766b6a9f2b4b0724febe3462c90c280",
+        "field_cm38_01.opm": "c19655ff47d3f3755360ca9c0fca2456d74f007e560bc3ecb448e6d3f0d7ea36"
+      },
+      "rgbaSha256": "29e00b71a804847dd54f4cff0f8fd713c94889e55d733af14d2392266c06646d",
+      "pngSha256": "a5e2369da77bba695921f335192e4723beecb6adb8765192e045cce38c5157f6"
+    },
+    "cm39": {
+      "objects": [
+        {
+          "sequence": 1,
+          "firstCell": 1,
+          "x": 81,
+          "y": 87,
+          "z": 0,
+          "flags": 1
+        }
+      ],
+      "bounds": [
+        0,
+        0,
+        120,
+        136
+      ],
+      "sourceHashes": {
+        "field_cm39_01_obj.ncbr": "a99fb8748f46f0fbba93001791b7e4d3d46867b69233127a80b1e265d0479a8a",
+        "field_cm39_01_obj.ncer": "e7d1536137e45ff1b21aa6548fd6b62aaca0e6014fad5c2b85f4f1eeade91163",
+        "field_cm39_01_obj.nclr": "7e3bd760030334176bd2a5fe33ec6fb17f245034ada71de0686aa0af342d83f6",
+        "field_cm39_01_obj.nanr": "642e0382b5e83ce086aa9c8a00e1495d303ea45b0c46544b547de01c3ff29306",
+        "field_cm39_01.opm": "928e9c8038ed9c6ef572f43ec906785d1c98d8be9331885ac4b0005797b5d2e2"
+      },
+      "rgbaSha256": "0b9b21eb54dc717a281b961449da43855296af063d25118a93d86addb8c315dc",
+      "pngSha256": "692a9c35b87f4a260e525bf30408597edffef172652680df27c4933625438e69"
+    },
+    "cm40": {
+      "objects": [],
+      "bounds": [
+        0,
+        0,
+        96,
+        112
+      ],
+      "sourceHashes": {
+        "field_cm40_01_obj.ncbr": "7db94f95c5135bcac9d2d1dce5b83046e4d38d8d11da56db6699fa02922e2c72",
+        "field_cm40_01_obj.ncer": "0f6450501a5d6592ee8bbce2bcb3e0684373e220c5b5972d1132c99bf98af9eb",
+        "field_cm40_01_obj.nclr": "7c8d4bd68a6b36f0e5976b099cdf6aafeb122e96b16423221d3e79b6e1abfe48",
+        "field_cm40_01_obj.nanr": "f91527f9f1cedc8a681c64ffb13b72cf302202fbb8e9baa7340e754321e9cec5",
+        "field_cm40_01.opm": "a4ba46b57e9150629185f4b1d1dca62f366537d79d71b9bd30cb58fbd136f11b"
+      },
+      "rgbaSha256": "e0a6f0455259ee17c850ebc5e1a919ad2f6a62700900da1eb13746bba3c30c26",
+      "pngSha256": "5ce17c1a4630401c31c7adb4f01706272df904c1a4ea8a22956693d670580040"
+    }
+  }
+}

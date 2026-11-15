@@ -1,6 +1,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 test('facility art uses hex assets and remains clipped at every rotation',()=>{
- for(const kind of ['clinic','cm02','cm04','free','field','cm03'])for(let rotation=0;rotation<6;rotation++){
+ const cases=Object.values(JSON.parse(fs.readFileSync('docs/cage-art-refresh.json','utf8')).facilities);
+ assert.equal(cases.length,33);
+ for(const art of cases)for(let rotation=0;rotation<6;rotation++){
+  const kind=art.kind;
   const noop=()=>{}, toolbar={classList:{toggle:noop},querySelector:()=>({}),querySelectorAll:()=>[]};
   const window={},images=[];
   function Image(){this.complete=true;this.naturalWidth=kind==='field'?208:104;this.naturalHeight=kind==='field'?210:120;images.push(this);}
@@ -16,7 +19,8 @@ test('facility art uses hex assets and remains clipped at every rotation',()=>{
   board.draw(ctx);
   assert.equal(draws.length,1);assert.equal(draws[0].clipped,true);
   assert.equal(clipped,false);
-  assert.equal(draws[0].src,'assets/facilities/'+{clinic:'clinic-polished',cm02:'cm02-hex',cm04:'cm04-hex',free:'free-ground',field:'field-hex',cm03:'cm03-hex'}[kind]+'.png');
+  assert.equal(draws[0].src,art.webpAsset);
+  const image=images.find(im=>im.src===art.webpAsset);image.onerror();assert.equal(image.src,art.asset);image.onerror();assert.equal(image.src,art.asset);
   assert.ok(draws[0].args[6]>0&&draws[0].args[7]>0);
  }
 });
