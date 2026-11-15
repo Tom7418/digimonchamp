@@ -13,7 +13,7 @@ import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeBreakChance, ropeDamage, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
 import { discardFloorFood, ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -581,9 +581,25 @@ describe('hunting', () => {
     const item = shopItems({ ...base, titles: ['m3'] }).find((i) => i.id === 'rope:hard2')!;
     expect(item.apply(base).rope).toBe('hard2');
   });
-  it('stronger rope breaks less often', () => {
-    expect(ropeBreakChance({ rope: 'digi1' }, '뿔몬')).toBeGreaterThan(ropeBreakChance({ rope: 'digi3' }, '뿔몬'));
-    expect(ropeBreakChance({ rope: 'ultima3' }, '고래몬')).toBeLessThan(ropeBreakChance({ rope: 'ultima1' }, '고래몬'));
+  it('rope follows the original rope table (gauge, drain, distance zones)', () => {
+    // 원본 0xC8DCC: α 6초 · β 12초 · γ 17초
+    expect([ropeHoldSeconds({ rope: 'digi1' }), ropeHoldSeconds({ rope: 'hard2' }), ropeHoldSeconds({ rope: 'ultima3' })]).toEqual([6, 12, 17]);
+    // 즈루몬(유년기I, 크기 1): 80 × 3프레임 = 4초, 아구몬(성장기, 크기 2): 하드 130 × 6, 클론 100 × 6
+    expect(ropeDrainSeconds({ rope: 'digi1' }, '즈루몬')).toBe(4);
+    expect(ropeDrainSeconds({ rope: 'hard1' }, '아구몬')).toBe(13);
+    expect(ropeDrainSeconds({ rope: 'clone1' }, '아구몬')).toBe(10);
+    expect(ropeDrainSeconds({ rope: 'digi3' }, '아구몬')).toBe(0);
+    expect(ropeDrainSeconds({ rope: 'ultima3' }, '바이킹몬')).toBe(0); // 궁극체
+    expect(ropeDrainSeconds({ rope: 'ultima1' }, '고래몬')).toBe(25); // 완전체 크기 3: 250 × 6
+    // 내구력이 높을수록 멀리 당겨도 끊기지 않는다
+    expect(ropeSnapDistance({ rope: 'digi1' })).toBeLessThan(ropeSnapDistance({ rope: 'digi3' }));
+    const st = { gauge: 6, hp: 1, max: 1 };
+    expect(ropeTick({ rope: 'digi1' }, '즈루몬', st, 20, 1).zone).toBe('safe');
+    const tense = ropeTick({ rope: 'digi1' }, '즈루몬', st, 60, 1);
+    expect(tense).toMatchObject({ zone: 'tense', gauge: 5, hp: 0.75 });
+    expect(ropeTick({ rope: 'digi1' }, '즈루몬', st, 100, 1)).toMatchObject({ zone: 'pull', hp: 0.5 });
+    expect(ropeTick({ rope: 'digi1' }, '즈루몬', st, 115, 1)).toMatchObject({ zone: 'snap', gauge: 0 });
+    expect(ropeTick({ rope: 'digi3' }, '즈루몬', st, 115, 1).zone).toBe('pull');
   });
   it('memory card limits what one hunt can bring back', () => {
     const s = freshSave(0);

@@ -16,7 +16,9 @@
   - +48 f32 이동 속도 배율 0.8~1.1
   - +52 u16×4, +60 u8×2 능력치 곡선 인덱스 6개 (HP·TP·공격·방어·지능·민첩, 코드 추적으로 확인)
   +36~43 각성·수면 범위는 overlay18 수면 진입/종료에서 확인(tools/audit_life_cycle.py).
-  나머지 칸(+0, +33~34, +62~, +84~, +116~)은 아직 쓰지 않는다.
+  - +116 u8 로프 크기 등급 1~3 (궁극체·알은 0 = 로프로 못 잡음), +117 u8 로프 힘 등급 1~2.
+    overlay9_0 0xA4E4(체력 감소 속도 표 열 선택), 0x9D88(힘 2면 로프 게이지가 더 빨리 준다)에서 확인. 뜻(크기·힘)은 추정.
+  나머지 칸(+0, +33~34, +62~, +84~, +118~)은 아직 쓰지 않는다.
 원본 글은 저장소에 옮기지 않는다. 이 파일에는 이름과 분류 값만 쓴다.
 """
 import struct, sys
@@ -45,7 +47,7 @@ def cstr(pointer):
 
 
 lines = ['# 원본 실행 코드의 디지몬 표에서 뽑은 속성·종족 (tools/extract_species.py). 손으로 고치지 말 것',
-         '# 이름|속성|종족|세대|원본 영문 이름|용량|세대 지속 분|능력치 곡선 인덱스(HP,TP,공격,방어,지능,민첩)|속도 배율|각성 범위|수면 범위|타입 번호(+24, 타이틀 참가 조건에 쓰임)']
+         '# 이름|속성|종족|세대|원본 영문 이름|용량|세대 지속 분|능력치 곡선 인덱스(HP,TP,공격,방어,지능,민첩)|속도 배율|각성 범위|수면 범위|타입 번호(+24, 타이틀 참가 조건에 쓰임)|로프 크기 등급(+116)|로프 힘 등급(+117)']
 for i in range(COUNT):
     rec = arm9[TABLE + i*SIZE: TABLE + (i+1)*SIZE]
     english = cstr(struct.unpack_from('<I', rec, 4)[0])
@@ -58,7 +60,7 @@ for i in range(COUNT):
     sleep = struct.unpack_from('<2H', rec, 40)
     lines.append('|'.join([RENAME.get(english, names[i]), ATTR[attr], FAMILY[family], str(stage), english,
                            str(rec[32]), str(struct.unpack_from('<I', rec, 44)[0]), ','.join(map(str, stats)), str(speed),
-                           ','.join(map(str, awake)), ','.join(map(str, sleep)), str(kind)]))
+                           ','.join(map(str, awake)), ','.join(map(str, sleep)), str(kind), str(rec[116]), str(rec[117])]))
 out = REPO / 'src/data/species.txt'
 out.write_text('\n'.join(lines) + '\n', encoding='utf-8', newline='\n')
 print(len(lines) - 2, '종 →', out)

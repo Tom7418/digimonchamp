@@ -7,7 +7,7 @@
 // - 용량이 가득 차면 잡을 수 없다 ('용량이 가득 찼습니다').
 // 출현표: 나무위키 진화 목록의 출현 장소(src/data/habitats.txt). 성숙기·완전체는 그 단계 로프가 있어야 잡힌다.
 // 임시 값: 세대별 HP(유년기I 1, 유년기II 2, 성장기 3), 성장기 25%·성숙기 이상 10% 출현, 밤 18시~, 드묾 1/5, 와이어 가격·개수.
-import { dateOf, FIELDS, getSpecies, SEASON_CODE, type Field } from './data';
+import { dateOf, FIELDS, getSpecies, originalSpecies, SEASON_CODE, type Field } from './data';
 import { rankName, tamerRank, TITLES } from './titles';
 import shopRaw from '../data/shop.txt?raw';
 import type { SaveData } from './types';
@@ -99,7 +99,7 @@ export function pickWild(field: Field, clock: number, rng: () => number): string
  * 로프 12종 (원작 텍스트 txt_list #338~349 이름, #384~395 '○○용의 로프. 내구력 N').
  * 원작 도움말(help #89): 로프는 묶어서 대미지를 주고, 끊어져도 몇 번이고 다시 쓸 수 있으며
  * 내구력이 높을수록 끊어질 위험이 적다. 랭크가 오르면 상점에 열린다(형규 확인, 최대 완전체).
- * 임시 값: 가격, 열리는 랭크, 끊어질 확률 공식, 하위 세대에도 쓸 수 있다는 점.
+ * 가격·열리는 조건은 원본 상점 표, 게이지·체력 감소는 원본 로프 표(아래). 끊기는 거리 식만 임시.
  */
 export interface Rope {
   id: string;
@@ -141,22 +141,75 @@ export function ropeFor(speciesId: string): { name: string } | null {
   return f ? { name: f.name } : null;
 }
 
-/** 로프로 몇 번 당겨야 잡히는가 (임시: 유년기I 1, 유년기II 2, 성장기 3, 성숙기 4, 완전체 5) */
+/** 야생 디지몬의 체력 칸 수 (임시: 세대 1~5). 로프는 이 체력을 시간에 따라 깎고, 0이면 기절한다 */
 export function wildHp(speciesId: string): number {
   return Math.max(1, Math.min(5, getSpecies(speciesId).stage));
 }
 
-/** 로프로 한 번 당겼을 때 깎이는 HP. 0이면 이 로프로는 잡을 수 없다 */
-export function ropeDamage(save: Pick<SaveData, 'rope'>, speciesId: string): number {
-  return getSpecies(speciesId).stage <= ropeOf(save.rope).maxStage ? 1 : 0;
+/**
+ * 원본 로프 표 arm9.bin 0xC8DCC (40바이트 × 12, 디지α~알테마γ). overlay9_0에서 읽는 곳을 확인했다.
+ *  - +4 u8: 로프 게이지 초 (α 6 · β 12 · γ 17, ×60프레임). 0xA798에서 게이지 최대치로 쓴다.
+ *  - +16 u16×12: 체력 감소 표. 세대 묶음(유년기 / 성장기 / 성숙기 / 완전체)마다 크기 등급 1·2·3 값 3개.
+ *    0xA4E4: 묶인 디지몬의 체력이 최대치에서 0까지 깎이는 프레임 = 값 × (유년기I 3, 그 밖 6). 값 0 = 못 감는다.
+ *  - 궁극체는 크기 등급이 0이라 어떤 로프로도 못 잡는다.
+ */
+const ROPE_HOLD_SECONDS = [6, 12, 17];
+const ROPE_DRAIN: Record<string, number[][]> = {
+  digi: [[80, 130, 250]],
+  hard: [[50, 100, 150], [80, 130, 250]],
+  clone: [[50, 50, 50], [50, 100, 150], [80, 130, 250]],
+  ultima: [[50, 50, 50], [50, 50, 50], [50, 100, 150], [80, 130, 250]],
+};
+/**
+ * 0x9C28 매 프레임 판정. 거리는 묶인 디지몬과 테이머가 쥔 로프 끝(터치 지점) 사이.
+ *  - 40px 미만: 게이지 프레임당 +10 (최대치까지)
+ *  - 40~80px: 게이지 −1 (힘 등급 2면 −2), 체력 감소
+ *  - 80px 이상: 게이지 −1 (힘 2면 −3), 체력 2배 감소, 디지몬이 로프 끝 쪽으로 프레임당 3.5px 끌려온다
+ *  - 원본은 160px 넘으면 즉시 끊긴다. 이 저장소는 형규 지시로 끊기는 거리를 내구력으로 정한다(임시 식).
+ */
+export const ROPE_SAFE_DISTANCE = 40;
+export const ROPE_PULL_DISTANCE = 80;
+export const ROPE_DRAG_SPEED = 3.5 * 60;
+/** 끊기는 거리 = 100 + 내구력 (임시, 원본 고정값 160 대신 내구력 10~250을 거리로 쓴다) */
+export const ropeSnapDistance = (save: Pick<SaveData, 'rope'>) => 100 + ropeOf(save.rope).durability;
+export const ropeHoldSeconds = (save: Pick<SaveData, 'rope'>) => ROPE_HOLD_SECONDS[(Number(ropeOf(save.rope).id.slice(-1)) || 1) - 1];
+
+/** 이 로프로 체력을 다 깎는 데 걸리는 초 (중간 거리 기준). 0이면 감을 수 없다 */
+export function ropeDrainSeconds(save: Pick<SaveData, 'rope'>, speciesId: string): number {
+  const sp = getSpecies(speciesId);
+  const size = originalSpecies(speciesId)?.ropeSize ?? Math.min(3, Math.max(1, Math.ceil(sp.size / 8)));
+  if (!size || sp.stage < 1 || sp.stage > 5) return 0;
+  const family = ropeOf(save.rope).id.replace(/\d$/, '');
+  const group = Math.max(0, sp.stage - 2);
+  const value = ROPE_DRAIN[family]?.[group]?.[size - 1] ?? 0;
+  return value ? (value * (sp.stage === 1 ? 3 : 6)) / 60 : 0;
 }
 
-/** 세대별 버티는 힘 (임시) */
-const PULL_STRENGTH = [0, 2, 4, 16, 40, 100, 250];
-/** 당길 때 로프가 끊어질 확률 = 힘 / (내구력 × 4), 최대 60% (임시 공식) */
-export function ropeBreakChance(save: Pick<SaveData, 'rope'>, speciesId: string): number {
-  const strength = PULL_STRENGTH[getSpecies(speciesId).stage] ?? 250;
-  return Math.min(0.6, strength / (ropeOf(save.rope).durability * 4));
+/** 감을 수 있으면 1, 없으면 0 (예전 이름 유지) */
+export function ropeDamage(save: Pick<SaveData, 'rope'>, speciesId: string): number {
+  return ropeDrainSeconds(save, speciesId) > 0 ? 1 : 0;
+}
+
+export type RopeZone = 'safe' | 'tense' | 'pull' | 'snap';
+/**
+ * 로프 한 틱. gauge는 남은 게이지(초), hp는 체력(0이면 기절).
+ * 원본 프레임 단위를 초 단위로 바꿨다(프레임당 1 = 초당 1초).
+ */
+export function ropeTick(save: Pick<SaveData, 'rope'>, speciesId: string, state: { gauge: number; hp: number; max: number }, distance: number, dt: number) {
+  const hold = ropeHoldSeconds(save);
+  const strong = (originalSpecies(speciesId)?.ropePower ?? 1) === 2;
+  const drain = ropeDrainSeconds(save, speciesId);
+  let { gauge, hp } = state;
+  let zone: RopeZone;
+  if (distance > ropeSnapDistance(save)) { zone = 'snap'; gauge = 0; }
+  else if (distance < ROPE_SAFE_DISTANCE) { zone = 'safe'; gauge = Math.min(hold, gauge + 10 * dt); }
+  else {
+    const pull = distance >= ROPE_PULL_DISTANCE;
+    zone = pull ? 'pull' : 'tense';
+    gauge -= (1 + (strong ? (pull ? 2 : 1) : 0)) * dt;
+    if (drain) hp = Math.max(0, hp - (state.max * dt * (pull ? 2 : 1)) / drain);
+  }
+  return { gauge: Math.max(0, gauge), hp, zone };
 }
 
 /** 메모리카드 (원작 텍스트 txt_list #430~435: 사냥으로 32G·64G·96G까지 데려올 수 있다). 가격·랭크는 임시 */
