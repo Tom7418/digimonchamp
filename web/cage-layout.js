@@ -24,7 +24,7 @@ window.CageLayout = {
     cm12: {name:'정글',core:'정글',img:'polished/C12-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[1,1]],capacity:6},
     cm14: {name:'묘지',core:'묘지',img:'polished/C14-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[1,1]],capacity:6},
     cm15: {name:'공장',core:'공장',img:'polished/C15-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[0,1],[1,1]],capacity:6},
-    clinic: {name:'미니 양호실',core:'미니 양호실',img:'polished/C16-scene4',fit:true,polished:true,webp:true,cells:[[0,0]],capacity:2},
+    clinic: {name:'미니 양호실',core:'미니 양호실',img:'polished/C16-scene5',fit:true,polished:true,webp:true,cells:[[0,0]],capacity:2},
     cm17: {name:'병원',core:'병원',img:'polished/C17-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[-1,1],[0,1]],capacity:6},
     cm18: {name:'화원',core:'화원',img:'polished/C18-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[-1,1]],capacity:4},
     cm19: {name:'온천',core:'온천',img:'polished/C19-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[2,0],[3,0]],capacity:8},

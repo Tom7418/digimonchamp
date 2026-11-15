@@ -1027,14 +1027,14 @@
           0
         ]
       ],
-      "asset": "assets/facilities/polished/C16-scene4.png",
+      "asset": "assets/facilities/polished/C16-scene5.png",
       "size": [
         416,
         480
       ],
-      "sha256": "21fba1f113abdaed2ad474e5df27f37a0921e3580ff11f1744dc6974b6f99029",
-      "webpAsset": "assets/facilities/polished/C16-scene4.webp",
-      "webpSha256": "0aab0013d9a65689b8eb956fc05553e6b4e3a81c0647e0b54050b7c2eced9534",
+      "sha256": "eedbc8a4b148b8afefd626ae2ef06fa9e327ccdc07e3bac6c3178f6ea89ea35b",
+      "webpAsset": "assets/facilities/polished/C16-scene5.webp",
+      "webpSha256": "ab2f60f125adbf1516ac0a4fe3fb692c32772d6b85e12bc991dc204ea1d64f51",
       "originalReference": "web/assets/facilities/original/cm16-complete.png",
       "restoredContents": "Previously approved artwork retained.",
       "prompt": "See docs/art-refresh-prompts.md; retained unchanged.",
