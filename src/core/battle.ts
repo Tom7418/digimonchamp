@@ -1,5 +1,6 @@
 import { getSpecies, speciesByStage, typicalStats } from './data';
 import { battleSkills, pickBattleSkill, type BattleSkill } from './battle-skills';
+import { supportSkills, useSupport, reviveSupport, buffMultiplier, battleElement, type BattleBuff, type SupportSkill } from './support-skills';
 import { pick, range, type Rng } from './rng';
 import { PERSONALITIES, type AttackMode, type SpeciesAttr, type Digimon, type Personality, type Stage, type Stats } from './types';
 
@@ -36,11 +37,15 @@ export interface Unit {
   retreat: number;
   wasHit: boolean;
   alive: boolean;
+  buffs?: Partial<Record<BattleBuff,number>>;
+  taunt?: {from:number;until:number};
+  revived?: boolean;
 }
 
 export type BattleEvent =
   | { type: 'hit'; from: number; to: number; damage: number; special: boolean; skill?: BattleSkill }
-  | { type: 'heal'; from: number; to: number; amount: number }
+  | { type: 'heal'; from: number; to: number; amount: number; support?: SupportSkill }
+  | { type: 'support'; from:number; targets:number[]; skill:SupportSkill }
   | { type: 'ko'; id: number };
 
 export interface BattleState {
@@ -150,37 +155,28 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     const foes = s.units.filter((o) => o.alive && o.team !== u.team);
     const allies = s.units.filter((o) => o.alive && o.team === u.team);
     if (!foes.length) break;
-    const near = foes.reduce((a, b) => (dist(u, a) <= dist(u, b) ? a : b));
-    // '게으름'도 처음부터 행동한다. 피격 전 느린 접근만 유지하는 웹판 임시 성격 보정이다.
-    const speed = (40 + Math.min(80, u.stats.spd * 0.4)) * (u.personality === '게으름' && !u.wasHit ? 0.75 : 1);
+    const near = ((u.taunt?.until??0)>s.t && foes.find(f=>f.id===u.taunt?.from)) || foes.reduce((a, b) => (dist(u, a) <= dist(u, b) ? a : b));
+    // 사용자 지정: 게으름은 항상0.85배, 대담은 항상1.1배. 피격 여부로 행동을 막지 않는다.
+    const speed = (40 + Math.min(80, u.stats.spd * buffMultiplier(u,'spd',s.t) * 0.4)) * (u.personality === '게으름' ? 0.85 : u.personality === '대담' ? 1.1 : 1);
     const d = dist(u, near);
 
-    const fleeing = (u.personality === '겁쟁이' && foes.length > allies.length) || u.retreat > 0;
-
-    if (u.mode === '지원') {
-      const weak = allies.filter((a) => a.hp / a.maxHp < 0.7).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
-      if (weak && u.tp >= 15 && u.cd <= 0) {
-        const amount = Math.round(weak.maxHp * 0.12 + u.stats.int * 0.5);
-        weak.hp = Math.min(weak.maxHp, weak.hp + amount);
-        u.tp -= 15;
-        u.cd = 2;
-        events.push({ type: 'heal', from: u.id, to: weak.id, amount });
-        continue;
-      }
-      // 회복/공격 재사용 대기 중에만 원거리 지원 간격을 유지한다.
-      // 행동할 준비가 됐거나 쓸 기술의 TP가 없으면 아래 공통 공격/접근 분기로 간다.
-      if (u.cd > 0 && battleSkills(u.speciesId).some(skill => skill.tpCost <= u.tp)) {
-        if (d < 110) move(u, near.x, near.y, speed, true);
-        else if (d > 145) move(u, near.x, near.y, speed);
-        continue;
-      }
-    } else if (fleeing && d > 45) {
-      move(u, near.x, near.y, speed, true);
+    // 겁쟁이도70px 안의 적에게 맞선다. 성급한은 대기 중에만 치고 빠진다.
+    // 용기는 도주를 막는 소유형 SP로 처리한다(효과 해석은 웹판 정책).
+    const courage=supportSkills(u.speciesId,u.personality).some(sk=>sk.id===30);
+    const coward = !courage && u.personality === '겁쟁이' && foes.length > allies.length;
+    if ((coward && d > 70) || (!courage && u.retreat > 0 && u.cd > 0 && d < 110)) {
+      move(u,near.x,near.y,speed,true);continue;
+    }
+    const supportReady=u.cd<=0&&supportSkills(u.speciesId,u.personality).some(sk=>sk.id<28&&sk.tpCost<=u.tp)&&(u.mode==='지원'||rng()<(u.mode==='일반'?.25:.1));
+    if(!(coward&&d<=70)&&supportReady&&useSupport(s,u,events))continue;
+    if(u.mode==='지원'&&!(coward&&d<=70)&&u.cd>0&&battleSkills(u.speciesId).some(skill=>skill.tpCost<=u.tp)){
+      if(d<110)move(u,near.x,near.y,speed,true);
+      else if(d>145)move(u,near.x,near.y,speed);
       continue;
     }
 
     // 빈도·위력·사거리는 웹판 임시 공식. 기술별 동작/소비TP/이름은 원본 표 값.
-    const base = Math.min(0.6, 0.1 + u.stats.int / 600);
+    const base = Math.min(0.6, 0.1 + u.stats.int * buffMultiplier(u,'int',s.t) / 600);
     const pSpecial = base * (u.mode === '특수' ? 3 : u.mode === '일반' ? 0.4 : 0.3) * (u.personality === '쿨' ? 1.6 : u.personality === '솔직' ? 1.2 : 1);
     const wantsSpecial = u.cd <= 0 && d <= 150 && battleSkills(u.speciesId).some(skill => skill.tpCost <= u.tp) && rng() < pSpecial;
     if (!wantsSpecial && d > 42) {
@@ -191,23 +187,26 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     if (u.cd > 0) continue;
 
     const special = wantsSpecial;
-    const skill = special ? pickBattleSkill(u.speciesId, rng, u.tp) : null;
-    const power = special ? (u.stats.atk + u.stats.int) / 2 : u.stats.atk;
-    let dmg = (8 + power * 0.9) * (100 / (100 + near.stats.def)) * range(rng, 0.85, 1.15) * attrMult(u.attr, near.attr);
+    const skill = special ? pickBattleSkill(u.speciesId, rng, u.tp, u.personality) : null;
+    const attack = u.stats.atk * buffMultiplier(u,'atk',s.t), intelligence=u.stats.int*buffMultiplier(u,'int',s.t);
+    const power = special ? (attack + intelligence) / 2 : attack;
+    let dmg = (8 + power * 0.9) * (100 / (100 + near.stats.def * buffMultiplier(near,'def',s.t))) * range(rng, 0.85, 1.15) * attrMult(u.attr, near.attr);
     if (special) dmg *= 2.2;
     if (u.personality === '열혈') dmg *= 1.2;
-    if (u.personality === '제멋대로') dmg *= 1.1;
+    const element=skill?battleElement(skill.record):undefined;
+    if(element&&(near.buffs?.[element]??0)>s.t)dmg*=.85; // 내성SP 피해 경감15%는 웹판 정책
     if (u.mode === '지원') dmg *= 0.6;
     const damage = Math.max(1, Math.round(dmg));
     near.hp = Math.max(0, near.hp - damage);
     near.wasHit = true;
     if (skill) u.tp -= skill.tpCost;
-    u.cd = (1.3 - Math.min(0.6, u.stats.spd / 400)) * (u.personality === '제멋대로' ? 0.9 : 1);
+    u.cd = (1.3 - Math.min(0.6, u.stats.spd * buffMultiplier(u,'spd',s.t) / 400)) * (u.personality === '대담' ? 0.9 : 1);
     if (u.personality === '성급한') u.retreat = 0.8;
     events.push({ type: 'hit', from: u.id, to: near.id, damage, special, ...(skill ? { skill } : {}) });
     if (near.hp <= 0) {
       near.alive = false;
       events.push({ type: 'ko', id: near.id });
+      reviveSupport(s,near,events);
     }
   }
   const alive = [0, 1].map((t) => s.units.some((u) => u.alive && u.team === t));
@@ -235,7 +234,7 @@ export function applyBattleResult(d: Digimon, won: boolean, ko: boolean, rng: Rn
   // 원작 문장: 알약(프로틴)을 과식하면 부상 위험이 늘어난다. 3개 넘게 먹으면 1개당 +15% (임시)
   const overeat = Math.max(0, (d.protein ?? 0) - PROTEIN_SAFE) * 0.15;
   // 겨울에는 부상 확률이 오른다 (원작 도움말 help #136, 배수 2는 임시)
-  const injuryChance = Math.min(1, ((ko ? (d.personality === '대담' ? 0.6 : 0.3) : 0) + overeat) * (winter ? 2 : 1));
+  const injuryChance = Math.min(1, ((ko ? (d.personality === '대담' ? 0.35 : 0.25) : 0) + overeat) * (winter ? 2 : 1));
   return {
     ...d,
     protein: 0,

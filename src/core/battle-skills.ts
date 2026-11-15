@@ -29,7 +29,16 @@ export function battleSkills(speciesId: string): BattleSkill[] {
 }
 
 /** 사용 가능한 기술을 동일 확률로 선택하는 빈도/AI는 웹판 정책. TP 소비는 원본 값. */
-export function pickBattleSkill(speciesId: string, rng: Rng, tp = Infinity): BattleSkill | null {
+export function pickBattleSkill(speciesId: string, rng: Rng, tp = Infinity, personality?: import('./types').Personality): BattleSkill | null {
   const skills = battleSkills(speciesId).filter(skill => skill.tpCost <= tp);
-  return skills.length ? pick(rng, skills) : null;
+  if (!skills.length) return null;
+  // 희귀도 표는 미확인: 둘 이상인 종의 마지막 슬롯을 희귀 후보로 삼아 가중치3을 준다(웹판 정책).
+  if (personality === '솔직' && battleSkills(speciesId).length > 1) {
+    const last = battleSkills(speciesId).at(-1)!.record;
+    const weights = skills.map(s=>s.record===last?3:1);
+    let roll = rng() * weights.reduce((sum,n)=>sum+n,0);
+    for(let i=0;i<skills.length;i++){roll-=weights[i];if(roll<0)return skills[i];}
+    return skills.at(-1)!;
+  }
+  return pick(rng, skills);
 }

@@ -212,7 +212,8 @@
     view.selected = clamp(view.selected, 0, view.team.length - 1);
     if (view.pickedUid != null && !view.team.some((p) => p.uid === view.pickedUid)) view.pickedUid = null;
     const coreCage = new Map(view.team.map((p) => [p.uid, (p.cageId && L.types[p.cage]?.core) || '기본 케이지']));
-    save = { ...save, digimon: save.digimon.map((d) => (d.cage === coreCage.get(d.uid) ? d : { ...d, cage: coreCage.get(d.uid) })) };
+    const cageInstances=new Map(view.team.map(p=>[p.uid,p.cageId??null]));
+    save = { ...save, digimon: save.digimon.map((d) => (d.cage === coreCage.get(d.uid)&&d.cageInstance===cageInstances.get(d.uid) ? d : { ...d, cage: coreCage.get(d.uid),cageInstance:cageInstances.get(d.uid) })) };
   }
 
   // ---------- 케이지 규칙 연결 ----------
@@ -1009,11 +1010,11 @@
   function trainingMenu(cageId=view.team[view.selected]?.cageId) {
     const cages=view.layout,chosen=cages.find(c=>c.id===cageId)||cages[0];
     if(!chosen)return toast('설치된 케이지가 없습니다.');
-    const cage=C.getCage(L.types[chosen.kind].core),date=C.dateOf(save.clock),preview=C.trainingPreview(cage,date.season);
+    const cage=C.getCage(L.types[chosen.kind].core),date=C.dateOf(save.clock),learner=current(),preview=C.trainingPreview(cage,date.season,learner?.personality);
     const signed=n=>n>0?`+${n}`:String(n);
     const rows=preview.outcomes.map(row=>`<tr><td>${row.weight}%</td><td>${row.changes.length?row.changes.map(c=>`${esc(c.label)} ${signed(c.min)}${c.min===c.max?'':` ~ ${signed(c.max)}`}`).join('<br>'):'능력치·종족·속성·내성 변화 없음'}</td></tr>`).join('');
     showModal('케이지 훈련 효과',`<label>시설 <select id="training-cage">${cages.map(c=>`<option value="${esc(c.id)}"${c.id===chosen.id?' selected':''}>${esc(L.types[c.kind].name)}</option>`).join('')}</select></label>
-      <p>${esc(date.seasonName)} 기준 · ${preview.source==='original'?'원본 시설 결과표':'웹판 임시 효과'}</p>
+      <p>${esc(date.seasonName)} 기준 · ${preview.source==='original'?'원본 시설 결과표':'웹판 임시 효과'}${learner?.personality==='솔직'?' · 솔직: 증가량1.15배(정수 반올림)':''}</p>
       <table class="training-effects-table"><thead><tr><th>발생 비율</th><th>예상 변화 범위</th></tr></thead><tbody>${rows}</tbody></table>
       <p class="hint">한 번의 훈련에서 위 결과 중 하나가 선택됩니다. 계절과 난수 보정을 포함한 범위이며, 실제 증감은 개체의 상·하한에 따라 줄어들 수 있습니다. 훈련은 배치당 한 번이며, 잠든 동안에는 진행되지 않습니다.</p>
       ${cage.battleUp?`<p>웹판 추가 효과: 배틀 수 +${cage.battleUp}</p>`:''}`,'TRAINING');
@@ -1093,7 +1094,7 @@
     };
     showModal('배틀',
       `<p>출전할 디지몬을 선택하세요. <b>1:1은 첫 번째,3:3은 선택한 세 마리</b>가 나갑니다. 다시 누르면 제외됩니다.</p>
-       <div id="battle-roster" class="battle-roster">${save.digimon.map(d=>`<button data-entrant="${d.uid}" aria-pressed="false"${canFight(d)?'':' disabled'}><b><span class="roster-order"></span>${esc(nameOf(d))}</b><small>${d.isEgg?'부화 전':d.sick?'병으로 출전 불가':d.injured?'부상으로 출전 불가':esc(C.STAGE_LABEL[C.getSpecies(d.speciesId).stage])+' · 배틀 '+d.battles+'회'}</small></button>`).join('')}</div>
+       <div id="battle-roster" class="battle-roster">${save.digimon.map(d=>`<button data-entrant="${d.uid}" aria-pressed="false"${canFight(d)?'':' disabled'}><b><span class="roster-order"></span>${esc(nameOf(d))}</b><small>${d.isEgg?'부화 전':d.sick?'병으로 출전 불가':d.injured?'부상으로 출전 불가':esc(C.STAGE_LABEL[C.getSpecies(d.speciesId).stage])+' · '+esc(d.personality)+' · 배틀 '+d.battles+'회'}</small>${d.isEgg?'':`<small>SP: ${C.supportSkills(d.speciesId,d.personality).map(sk=>esc(sk.name)+' ('+sk.tpCost+'TP)').join(' · ')||'없음'}</small>`}</button>`).join('')}</div>
        <p id="battle-roster-count" class="hint" role="status"></p>
        <div class="mode-pick">출전 전 공격 방식 ${['일반','지원','특수'].map(m=>`<button data-mode="${m}" class="${m===mode?'active':''}">${m}</button>`).join('')}</div>
        <h3>타이틀 매치</h3><div class="menu-list">${titles.length?titles.map((m,i)=>`<button data-title="${i}"><b>★ ${esc(m.name)}</b><small>${esc(titleText(m))}</small></button>`).join(''):`<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은07:00~15:00, 일정: ${esc(C.upcoming(save)[0]||'-')}</p>`}</div>
@@ -1205,7 +1206,17 @@
         }
         if (e.type === 'hit')
           b.flashes.push({ id: e.to, text: `-${e.damage}${e.special ? '!' : ''}`, until: performance.now() + 700, color: e.special ? '#ffd36a' : '#fff' });
-        if (e.type === 'heal') b.flashes.push({ id: e.to, text: `+${e.amount}`, until: performance.now() + 700, color: '#8ef0a0' });
+        if (e.type === 'heal') {
+          b.flashes.push({ id: e.to, text: `+${e.amount}`, until: performance.now() + 700, color: '#8ef0a0' });
+          if(e.support)battleLog(`${b.state.units[e.from].name} · ${e.support.name} → ${b.state.units[e.to].name} +${e.amount}`);
+        }
+        if(e.type==='support'){
+          b.flashes.push({id:e.from,text:e.skill.name,until:performance.now()+700,color:'#a3efdf',skill:true});
+          battleLog(`${b.state.units[e.from].name} · ${e.skill.name} (${e.skill.tpCost}TP)`);
+          const actor=b.state.units[e.from];
+          if(e.skill.id>=28)b.actions.delete(e.from);
+          else if(actor.alive)b.actions.set(e.from,{kind:'attack',left:.6,duration:.6,state:'shout'});
+        }
         if (e.type === 'ko') battleLog(`${b.state.units[e.id].name} 쓰러짐!`);
       }
     }
@@ -1423,11 +1434,12 @@
       const d = digi(p.uid);
       if (!d) continue;
       const oldX = p.x, oldY = p.y;
+      const trainingRun=!!p.cageId&&d.personality==='성급한'&&C.isTraining(d);
       // 잡고 옮기는 동안에는 자율 이동·먹기 예약이 드롭 위치를 덮어쓰지 않는다.
       if (board.isDragging(d.uid)) feeding.delete(d.uid);
       if (animDt > 0 && !board.isDragging(d.uid) && !board.isBouncing(d.uid) && !d.isEgg && !hatching.has(d.uid) && !seekFood(p, d, animDt)) {
         // 케이지 안에서도 목표를 유지하며 걷는다. 식사/수면/드래그/튕기기가 우선한다.
-        board.roamPet(p,animDt,16*(d.fatigue>80?0.4:1));
+        board.roamPet(p,animDt,(trainingRun?48:16)*(d.fatigue>80?0.4:1),trainingRun?.15:1);
       }
       const selected = p.uid === view.pickedUid; // 고른 디지몬만 발밑 테두리를 표시
       const scale = d.isEgg ? 1.6 : 2;
@@ -1442,7 +1454,7 @@
         ctx.stroke();
       }
       // 행동별 원본 셀을 재생한다. 인위적인 상하 흔들림은 사용하지 않는다.
-      if (animDt > 0) p.motion = Math.hypot(p.x - oldX, p.y - oldY) > 0.01 ? 'walk' : feeding.has(d.uid) ? 'eat' : 'idle';
+      if (animDt > 0) p.motion = Math.hypot(p.x - oldX, p.y - oldY) > 0.01 ? (trainingRun?'run':'walk') : feeding.has(d.uid) ? 'eat' : 'idle';
       const facility=L.types[p.cage];
       const facilityNo=({field:'cm30',gym:'cm34',clinic:'cm16'})[p.cage] || facility?.img?.match(/cm[0-9]+/)?.[0];
       const trainingSequence=window.DIGIMON_ANIMATIONS.training[facilityNo];
@@ -2405,10 +2417,11 @@
   board.onGrab = (uid) => feeding.delete(uid); // 프레임 사이에 빠르게 드롭해도 먼 먹이를 소비하지 않는다.
   board.onPet = (index) => {
     const p = view.team[index];
-    const r = p && C.pet(save, p.uid);
+    const r = p && C.pet(save, p.uid, Math.random);
     if (!r) return;
     save = r.save;
-    if (r.ok) startCareFx('pet', p, true);
+    if (r.ok&&!C.isSleeping(digi(p.uid))) startCareFx('pet', p, true);
+    else if(r.ok)toast(r.message);
     if (r.soothed) log(r.message);
     render();
     persist();

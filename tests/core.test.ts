@@ -3,11 +3,13 @@ import terrainAudit from '../docs/hunt-terrain-audit.json';
 import skillTable from '../src/data/battle-skills.json';
 import skillAudit from '../docs/battle-skills-audit.json';
 import { BATTLE_MAPS, RANDOM_BATTLE_MAPS, TITLE_BATTLE_MAPS, battleMapFor } from '../src/core/battle-maps';
+import supportTable from '../src/data/support-skills.json';
+import { supportSkills, useSupport, reviveSupport, buffMultiplier, battleElement } from '../src/core/support-skills';
 import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
-import { trainingPreview, applyTraining, trainingBounds, trainingDelta } from '../src/core/training';
-import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isNight, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
+import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
+import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -1110,7 +1112,7 @@ describe('원본 훈련 결과와 실제 변화량', () => {
   });
   it('시설은70/20/10 경계에서 서로 다른 결과를 선택한다', () => {
     const train = (roll: number) => {
-      const d = newDigimon(1, '아구몬');
+      const d = newDigimon(1, '아구몬',()=>.5);
       d.stats.hp = 700; d.stats.tp = 40; d.stats.int = 40; d.stats.spd = 40; d.stats.def = 40;
       return { d, changes: applyTraining(d, getCage('운동장'), 0, rolls(roll, 0.5, 0.5)) };
     };
@@ -1129,18 +1131,18 @@ describe('원본 훈련 결과와 실제 변화량', () => {
     expect(trainingBounds('아구몬', 'atk')).toEqual({ min: 30, max: 53 });
     expect(trainingBounds('피요몬', 'spd').max).toBeGreaterThan(trainingBounds('아르마몬', 'spd').max);
     expect(trainingBounds('아르마몬', 'def').max).toBeGreaterThan(trainingBounds('피요몬', 'def').max);
-    const d = newDigimon(1, '아구몬');d.stats.atk = 52; d.stats.def = 30;
+    const d = newDigimon(1, '아구몬',()=>.5);d.stats.atk = 52; d.stats.def = 30;
     expect(applyTraining(d, getCage('체육관'), 0, rolls(0, 0.5, 0.5))).toEqual(['공격 +1', '방어 +0 (하한)']);
     expect(d.stats.atk).toBe(53);expect(d.stats.def).toBe(30);
     expect(applyTraining(d, getCage('체육관'), 0, rolls(0, 0.5, 0.5))[0]).toBe('공격 +0 (상한)');
   });
   it('기존 저장이 원작 범위 밖이어도 임의로 끌어올리거나 깎지 않는다', () => {
-    const d = newDigimon(1, '아구몬');d.stats.atk = 200;d.stats.def = 2;
+    const d = newDigimon(1, '아구몬',()=>.5);d.stats.atk = 200;d.stats.def = 2;
     expect(applyTraining(d, getCage('체육관'), 0, rolls(0, 0.5, 0.5))).toEqual(['공격 +0 (상한)', '방어 +0 (하한)']);
     expect(d.stats.atk).toBe(200);expect(d.stats.def).toBe(2);
   });
   it('AP·내성의 실제 증감과 한계, 저장 재개를 보존한다', () => {
-    const d = newDigimon(1, '아구몬');d.ap['용'] = 98;d.ap['짐승'] = 2;
+    const d = newDigimon(1, '아구몬',()=>.5);d.ap['용'] = 98;d.ap['짐승'] = 2;
     expect(applyTraining(d, getCage('화산'), 0, rolls(0, 0.5, 0.5))).toEqual(['용 수치 +1', '짐승 수치 -2']);
     const before = JSON.stringify(d);
     expect(applyTraining(d, getCage('화산'), 0, rolls(0.7, 0.5, 0.5))).toEqual(['열 내성 +9', '추위 내성 +0 (하한)']);
@@ -1258,11 +1260,11 @@ describe('배틀 접근 AI 회귀',()=>{
     }
   });
   it('지원의 체력이 낮은 아군 회복 우선순위는 유지한다',()=>{
-    const a={...newDigimon(1,'아구몬'),personality:'게으름' as const},b={...newDigimon(2,'코로몬'),personality:'솔직' as const};
+    const a={...newDigimon(1,'파닥몬'),personality:'열혈' as const},b={...newDigimon(2,'코로몬'),personality:'솔직' as const};
     const state=createBattle([entrantOf(a,'지원'),entrantOf(b,'일반')],[entrantOf(newDigimon(3,'아구몬'),'일반')]);
     state.units[0].cd=0;state.units[0].tp=30;state.units[1].hp=state.units[1].maxHp*.3;
     expect(stepBattle(state,()=>.99)).toEqual(expect.arrayContaining([expect.objectContaining({type:'heal',from:0,to:1})]));
-    expect(state.units[0].tp).toBe(15);
+    expect(state.units[0].tp).toBe(25);
   });
   it('같은 종/성격/능력치라면 사육 출신과 사냥 출신의 이동 처리가 동일하다',()=>{
     const born=newDigimon(1,'아구몬',()=>.68),wild=newDigimon(1,'아구몬',()=>.68,true),foe=newDigimon(2,'아구몬',()=>.5);
@@ -1310,7 +1312,7 @@ describe('training effect preview',()=>{
       const preview=trainingPreview(cage,season);
       expect(preview.outcomes.reduce((n,r)=>n+r.weight,0)).toBe(100);
       for(let roll=0;roll<100;roll++){
-        const d=newDigimon(1,'아구몬');
+        const d={...newDigimon(1,'아구몬'),personality:'쿨' as const};
         const changes=applyTraining(d,cage,season,()=>roll/100);
         let left=roll;const row=preview.outcomes.find(r=>{if(left<r.weight)return true;left-=r.weight;return false;})!;
         for(const text of changes){
@@ -1400,4 +1402,145 @@ describe('original hunt terrain',()=>{
       for(let i=0;i<100;i++){const moved=moveOnHuntTerrain(g,p,{x:p.x+(rng()-0.5)*100,y:p.y+(rng()-0.5)*100});expect(canStandOnHuntTerrain(g,moved)).toBe(true);for(const point of moved.path)expect(canStandOnHuntTerrain(g,point)).toBe(true);p=moved;}
     }
   });
+});
+
+describe('사용자 지정 성격 효과와 원본 SP 연결',()=>{
+  const mon=(uid=1,personality:Digimon['personality']='쿨',species='아구몬'):Digimon=>({...newDigimon(uid,species,()=>.5),personality,hunger:80,restCycle:{species,awakeLeft:10000,sleepLeft:0}});
+  const saveOf=(...digimon:Digimon[]):SaveData=>({...freshEggSave(0),clock:480,digimon});
+  const duel=(p:Digimon['personality']='쿨',mode:'일반'|'지원'|'특수'='일반')=>createBattle([entrantOf(mon(1,p),mode)],[entrantOf(mon(2,'쿨'),'일반')]);
+  it('KO 기본 부상25%, 대담35%의 경계와 기존 부상·알약·겨울 보정을 유지한다',()=>{
+    for(const p of ['솔직','쿨','열혈','대담','겁쟁이','게으름','성급한','제멋대로'] as const){
+      const chance=p==='대담'?.35:.25,d=mon(1,p);
+      expect(applyBattleResult(d,false,true,()=>chance-.0001).injured).toBe(true);
+      expect(applyBattleResult(d,false,true,()=>chance).injured).toBe(false);
+      expect(applyBattleResult(d,true,false,()=>0).injured).toBe(false);
+    }
+    expect(applyBattleResult({...mon(),injured:true},true,false,()=>.99).injured).toBe(true);
+    expect(applyBattleResult(mon(),false,true,()=>.49,true).injured).toBe(true);
+    expect(applyBattleResult({...mon(),protein:4},false,true,()=>.39).injured).toBe(true);
+  });
+  it('게으름0.85배는 첫 피격 전후 동일하고 대담은1.1배 이동한다',()=>{
+    const movement=(p:Digimon['personality'],wasHit=false)=>{const s=duel(p);s.units[0].wasHit=wasHit;stepBattle(s,()=>.99);return s.units[0].x-70;};
+    expect(movement('게으름')/movement('쿨')).toBeCloseTo(.85);
+    expect(movement('게으름',true)).toBeCloseTo(movement('게으름'));
+    expect(movement('대담')/movement('쿨')).toBeCloseTo(1.1);
+  });
+  it('대담 공격 대기0.9배, 제멋대로의 기존 공격/대기 보정은 제거한다',()=>{
+    const attack=(p:Digimon['personality'])=>{const s=duel(p);s.units[0].x=380;s.units[0].cd=0;const hit=stepBattle(s,()=>.99).find(e=>e.type==='hit'&&e.from===0);return {cd:s.units[0].cd,hit};};
+    expect(attack('대담').cd/attack('쿨').cd).toBeCloseTo(.9);
+    expect(attack('제멋대로')).toEqual(attack('쿨'));
+  });
+  it('겁쟁이는 세 모드 모두 먼 수적 열세에서는 후퇴하고 가까워지면 공격한다',()=>{
+    for(const mode of ['일반','지원','특수'] as const){
+      const s=createBattle([entrantOf(mon(1,'겁쟁이'),mode)],[entrantOf(mon(2),'일반'),entrantOf(mon(3),'일반')]);
+      s.units[0].x=100;s.units[0].y=100;s.units[1].x=220;s.units[1].y=100;s.units[2].x=400;
+      stepBattle(s,()=>.99);expect(s.units[0].x).toBeLessThan(100);
+      s.units[0].cd=0;s.units[1].x=s.units[0].x+30;s.units[1].y=s.units[0].y;
+      expect(stepBattle(s,()=>.99)).toEqual(expect.arrayContaining([expect.objectContaining({type:'hit',from:0,to:1})]));
+    }
+  });
+  it('성급한은 공격 직후 대기 중 실제로 뒤로 빠진다',()=>{
+    const s=duel('성급한');s.units[0].x=380;s.units[0].cd=0;
+    stepBattle(s,()=>.99);const x=s.units[0].x;stepBattle(s,()=>.99);expect(s.units[0].x).toBeLessThan(x);
+  });
+  it('솔직 훈련은 양수만1.15배 반올림하고 실제 안내 범위도 일치한다',()=>{
+    expect(personalityTraining(10,'솔직')).toBe(12);expect(personalityTraining(-10,'솔직')).toBe(-10);expect(personalityTraining(0,'솔직')).toBe(0);
+    const cage={...getCage('체육관'),no:999,gain:10,up:['atk' as const],down:['def' as const],apUp:['용' as const],apDown:['물' as const]};
+    const a=mon(1,'솔직'),b=mon();a.stats.atk=b.stats.atk=trainingBounds(a.speciesId,'atk').min;a.ap.물=b.ap.물=20;
+    const before=a.stats.atk,def=a.stats.def;
+    const result=applyTraining(a,cage,0,()=>.5);applyTraining(b,cage,0,()=>.5);
+    expect(a.stats.atk-before).toBe(12);expect(b.stats.atk-before).toBe(10);expect(a.stats.def-def).toBe(-1);expect(a.ap.물).toBe(19);
+    expect(a.ap.용).toBe(35);expect(b.ap.용).toBe(30);expect(result).toContain('공격 +12');
+    expect(trainingPreview(cage,0,'솔직').outcomes[0].changes.find(c=>c.label==='공격')).toMatchObject({min:12,max:12});
+  });
+  it('솔직은 마지막 희귀 후보 기술을3배 가중 선택하며 TP 부족 기술은 선택하지 않는다',()=>{
+    const chosen=Array.from({length:400},(_,i)=>pickBattleSkill('아구몬',()=>(i+.5)/400,100,'솔직')!);
+    expect(chosen.filter(s=>s.slot===1)).toHaveLength(300);
+    for(let i=0;i<100;i++)expect(pickBattleSkill('아구몬',()=>i/100,5,'솔직')).toBeNull();
+  });
+  it('열혈의 깨어 있는 포만감 감소는1.3배이며 잠들면 소비하지 않는다',()=>{
+    const a=mon(1,'열혈'),b=mon(2,'쿨');const s=saveOf(a,b),r=tickFarm(s,()=>.5).save;
+    expect((80-r.digimon[0].hunger)/(80-r.digimon[1].hunger)).toBeCloseTo(1.3);
+    a.restCycle!.sleepLeft=10;expect(tickFarm(saveOf(a),()=>.5).save.digimon[0].hunger).toBe(80);
+  });
+  it('성급한 달리기는 깨어 있고 실제 훈련 중일 때만 판정한다',()=>{
+    const d={...mon(1,'성급한'),cage:'체육관'};expect(isTraining(d)).toBe(true);
+    for(const patch of [{trainDone:true},{sick:true},{injured:true},{hunger:0},{isEgg:true},{cage:'기본 케이지'},{restCycle:{species:d.speciesId,awakeLeft:0,sleepLeft:10}}])expect(isTraining({...d,...patch})).toBe(false);
+  });
+  it('일반 성격은 터치로 깨어나고 게으름은20% 성공, 실패하면 수면/쓰다듬기 보상 보존',()=>{
+    const d=mon(1,'게으름');d.restCycle!.sleepLeft=100;const s=saveOf(d),before=JSON.stringify(s);
+    const fail=pet(s,1,()=>.2);expect(fail.awakened).toBe(false);expect(fail.save).toBe(s);expect(fail.soothed).not.toBe(true);expect(JSON.stringify(s)).toBe(before);
+    const success=pet(s,1,()=>.199);expect(success.awakened).toBe(true);expect(isSleeping(success.save.digimon[0])).toBe(false);
+    const normal=pet(saveOf({...d,personality:'쿨'}),1,()=>.99);expect(normal.awakened).toBe(true);
+    expect(pet({...s,clock:1439},1,()=>0).awakened).toBe(false);
+    expect(pet(saveOf({...d,pettedAt:479}),1,()=>0).awakened).toBe(true);
+  });
+  it('동거 스트레스는 실제 같은 시설의 타인에게 분 단위 가산하며 출처 수와 무관하게 하루10 제한',()=>{
+    const a={...mon(1,'제멋대로'),cageInstance:'a'},b={...mon(2),cageInstance:'a'},c={...mon(3,'제멋대로'),cageInstance:'b'};
+    const s=saveOf(a,b,c),before=JSON.stringify(s),r=tickFarm(s,()=>.5).save;
+    expect(r.digimon[1].socialStress!.added).toBeCloseTo(10/1440);expect(r.digimon[0].socialStress!.added).toBe(0);expect(r.digimon[2].socialStress!.added).toBe(0);
+    const capped=tickFarm(saveOf(a,{...b,socialStress:{day:0,added:9.999}}),()=>.5).save.digimon[1];expect(capped.socialStress!.added).toBe(10);
+    const moved=tickFarm({...r,digimon:r.digimon.map(d=>d.uid===1?{...d,cageInstance:'b'}:d)},()=>.5).save;expect(moved.digimon[1].socialStress!.added).toBe(r.digimon[1].socialStress!.added);
+    const restored=JSON.parse(JSON.stringify(r)) as SaveData;expect(tickFarm(restored,()=>.5).save.digimon[1].socialStress!.added).toBeCloseTo(20/1440);
+    expect(JSON.stringify(s)).toBe(before);
+  });
+  it('같은 종류의 분리 시설/미배치/알은 동거로 치지 않고 다음 날짜에 가산 한도가 초기화된다',()=>{
+    const a={...mon(1,'제멋대로'),cageInstance:'a'},b={...mon(2),cageInstance:'b'};
+    for(const source of [{...a,cageInstance:'b',isEgg:true},{...a,cageInstance:null},a])expect(tickFarm(saveOf(source,b),()=>.5).save.digimon[1].socialStress!.added).toBe(0);
+    b.cageInstance='a';b.socialStress={day:0,added:10};const r=tickFarm({...saveOf(a,b),clock:1439},()=>.5).save;expect(r.digimon[1].socialStress).toMatchObject({day:1});expect(r.digimon[1].socialStress!.added).toBeCloseTo(10/1440);
+  });
+  it('216종×8성격 SP 선택은 원본 조건 두 개/기본 쌍과 같고 TP/이름도 원본을 보존한다',()=>{
+    for(const [species,row] of Object.entries(supportTable.species))for(const personality of ['솔직','쿨','열혈','대담','겁쟁이','게으름','성급한','제멋대로'] as const){
+      const i=row.personalities.indexOf(personality),ids=[...new Set(row.pairs[i<0?2:i])].filter(Boolean);
+      expect(supportSkills(species,personality)).toEqual(ids.map(id=>supportTable.skills.find(sk=>sk.id===id)));
+    }
+    expect(supportSkills('아구몬','열혈').map(s=>s.name)).toEqual(['도발']);expect(supportSkills('아구몬','대담').map(s=>s.id)).toEqual([12]);
+    expect(supportSkills('아구몬','게으름')).toEqual([]);expect(supportSkills('파닥몬','열혈').map(s=>s.id)).toEqual([2]);expect(supportSkills('파닥몬','쿨').map(s=>s.id)).toEqual([28]);
+  });
+  it('SP가 없는 개체/TP 부족은 무료 회복 대신 기본 공격으로 진행한다',()=>{
+    for(const [species,p] of [['아구몬','게으름'],['파닥몬','열혈']] as const){
+      const s=createBattle([entrantOf(mon(1,p,species),'지원')],[entrantOf(mon(2),'일반')]);s.units[0].x=380;s.units[0].cd=0;s.units[0].tp=0;s.units[0].hp=1;
+      expect(stepBattle(s,()=>.99)).toEqual(expect.arrayContaining([expect.objectContaining({type:'hit',from:0,special:false})]));
+    }
+  });
+  it('도발은 적의 타겟을 시전자에게 바꾸고 방어 SP는 지속 중 재사용/TP 낭비를 막는다',()=>{
+    const s=createBattle([entrantOf(mon(1,'열혈'),'지원'),entrantOf(mon(2),'일반')],[entrantOf(mon(3),'일반')]);s.units[0].cd=0;
+    const events=stepBattle(s,()=>.99);expect(events).toEqual(expect.arrayContaining([expect.objectContaining({type:'support',skill:expect.objectContaining({id:1})})]));expect(s.units[2].taunt?.from).toBe(0);
+    const b=duel('대담','지원');b.units[0].cd=0;const tp=b.units[0].tp;stepBattle(b,()=>.99);expect(b.units[0].tp).toBe(tp-10);expect(buffMultiplier(b.units[0],'def',b.t)).toBe(1.15);
+    b.units[0].cd=0;const out:Parameters<typeof useSupport>[2]=[];expect(useSupport(b,b.units[0],out)).toBe(false);expect(b.units[0].tp).toBe(tp-10);expect(buffMultiplier(b.units[0],'def',16)).toBe(1);
+  });
+  it('파닥몬 쿨의 부활은 KO 직후 한 번만 소비하며 승패 판정 전에 복귀한다',()=>{
+    const s=createBattle([entrantOf(mon(1,'쿨','파닥몬'),'일반')],[entrantOf(mon(2),'일반')]);s.units[0].hp=1;s.units[1].x=100;s.units[1].cd=0;const tp=s.units[0].tp;
+    const events=stepBattle(s,()=>.99);expect(events.some(e=>e.type==='ko'&&e.id===0)).toBe(true);expect(events.some(e=>e.type==='support'&&e.skill.id===28)).toBe(true);expect(s.units[0].alive).toBe(true);expect(s.units[0].tp).toBe(tp-5);expect(s.over).toBe(false);
+    s.units[0].hp=1;s.units[1].cd=0;stepBattle(s,()=>.99);expect(s.units[0].alive).toBe(false);expect(s.winner).toBe(1);
+  });
+});
+
+it('원본 단일/전체 치료 SP의 실제 대상 수·상한·TP 차감과 기본 회복 대체를 검사한다',()=>{
+  for(const [species,p,id,all] of [['파닥몬','열혈',2,false],['엔젤몬','열혈',5,true],['엔젤우몬','열혈',6,true],['릴리몬','쿨',4,false],['발키리몬','열혈',7,true]] as const){
+    const caster={...newDigimon(1,species,()=>.5),personality:p},ally=newDigimon(2,'아구몬',()=>.5);
+    const s=createBattle([entrantOf(caster,'지원'),entrantOf(ally,'일반')],[entrantOf(newDigimon(3,'아구몬',()=>.5),'일반')]);
+    s.units[0].tp=100;s.units[0].cd=0;s.units[0].hp=s.units[0].maxHp*.5;s.units[1].hp=s.units[1].maxHp*.3;
+    const events:Parameters<typeof useSupport>[2]=[];expect(useSupport(s,s.units[0],events)).toBe(true);
+    expect(events.filter(e=>e.type==='heal')).toHaveLength(all?2:1);expect(events).toEqual(expect.arrayContaining([expect.objectContaining({type:'heal',to:1,support:expect.objectContaining({id})})]));
+    expect(s.units[0].tp).toBe(100-supportTable.skills.find(sk=>sk.id===id)!.tpCost);expect(s.units.every(u=>u.hp<=u.maxHp)).toBe(true);
+  }
+});
+it('단일/전체 강화와5종 내성 SP가 실제 소유 쌍으로 발동하고15초 뒤 해제된다',()=>{
+  const seen=new Set<number>();
+  for(const [species,row] of Object.entries(supportTable.species))for(let index=0;index<2;index++){
+    const id=row.pairs[index][0];if(id<10||id>27||seen.has(id))continue;seen.add(id);
+    const d={...newDigimon(1,species,()=>.5),personality:row.personalities[index] as Digimon['personality']};
+    const s=createBattle([entrantOf(d,'지원'),entrantOf(newDigimon(2,'아구몬',()=>.5),'일반')],[entrantOf(newDigimon(3,'아구몬',()=>.5),'일반')]);
+    s.units[0].tp=100;s.units[0].cd=0;const events:Parameters<typeof useSupport>[2]=[];
+    expect(useSupport(s,s.units[0],events)).toBe(true);expect(events).toEqual([expect.objectContaining({type:'support',targets:id%2?[0,1]:[0],skill:expect.objectContaining({id})})]);
+    const key=Object.keys(s.units[0].buffs!)[0] as Parameters<typeof buffMultiplier>[1];expect(buffMultiplier(s.units[0],key,0)).toBe(1.15);expect(buffMultiplier(s.units[0],key,15)).toBe(1);
+  }
+  expect([...seen].sort((a,b)=>a-b)).toEqual(Array.from({length:18},(_,i)=>i+10));
+  expect(battleElement(battleSkills('아구몬')[0].record)).toBe('열');expect(battleElement(battleSkills('위자몬')[0].record)).toBe('천둥');
+});
+it('실제 전투의 내성 SP는 대응 속성 필살기만 줄이고 버프를 저장 능력치에 쓰지 않는다',()=>{
+  const a={...newDigimon(1,'아구몬',()=>.5),personality:'쿨' as const},b=newDigimon(2,'아구몬',()=>.5),before=JSON.stringify(a.stats);
+  const attack=(resist:boolean)=>{const s=createBattle([entrantOf(a,'특수')],[entrantOf(b,'일반')]);s.units[0].x=380;s.units[0].cd=0;if(resist)s.units[1].buffs={열:15};const e=stepBattle(s,()=>0).find(e=>e.type==='hit'&&e.from===0);return e?.type==='hit'?e.damage:0;};
+  expect(attack(true)).toBeLessThan(attack(false));expect(JSON.stringify(a.stats)).toBe(before);
 });

@@ -71,6 +71,10 @@ export interface Digimon {
   /** 디지에그화 횟수 */
   eggs: number;
   cage: string;
+  /** 실제 설치 시설 ID. null은 미배치, 옛 저장은 화면 동기화 전까지 cage 이름 사용. */
+  cageInstance?: string | null;
+  /** 제멋대로 동거 스트레스 가산 기록. 자연 회복과 별개로 하루10까지만 누적. */
+  socialStress?: { day: number; added: number };
   rottenEaten: number;
   starvingMinutes: number;
   dirtyMinutes: number;

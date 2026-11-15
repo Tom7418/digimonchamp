@@ -98,7 +98,8 @@ export class BattleScene extends Phaser.Scene {
         } else if (e.type === 'heal') {
           this.push(`${name(e.from)}의 지원! ${name(e.to)} 회복 +${e.amount}`);
           this.floatText(e.to, `+${e.amount}`, '#2f9e44');
-        } else this.push(`${name(e.id)}이(가) 쓰러졌다!`);
+        } else if(e.type==='support')this.push(`${name(e.from)}의 ${e.skill.name}!`);
+        else this.push(`${name(e.id)}이(가) 쓰러졌다!`);
       }
     }
     this.sim.units.forEach((u, i) => {

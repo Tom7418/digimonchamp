@@ -14,3 +14,5 @@ export * from './core/training';
 export * from './core/stats';
 
 export * from './core/hunt-terrain';
+
+export * from './core/support-skills';

@@ -1,7 +1,7 @@
 import table from '../data/training.json';
 import { statBounds, type Cage } from './data';
 import type { Rng } from './rng';
-import { STAT_KEYS, STAT_LABEL, type Digimon, type ApKey } from './types';
+import { STAT_KEYS, STAT_LABEL, type Digimon, type ApKey, type Personality } from './types';
 
 // overlay18 0x02117274의 항목 순서. 표시명은 txt_list #19~40과 대응한다.
 const AP_ORDER: ApKey[] = ['바이러스', '백신', '데이터', '용', '짐승', '물', '새', '기계', '성', '벌레풀', '암흑'];
@@ -24,6 +24,9 @@ export function trainingDelta(key: number, base: number, season: number, rng: Rn
   return key === 16 ? Math.trunc((value + (value < 0 ? -5 : 5)) / 10) * 10 : value;
 }
 
+/** 사용자 지정: 솔직의 양수 훈련 증가량만1.15배, 정수 반올림. 감소/확률/훈련 시간은 그대로다. */
+export const personalityTraining = (amount: number, personality?: Personality) => amount > 0 && personality === '솔직' ? Math.round(amount * 1.15) : amount;
+
 const fallbackChanges = (cage: Cage): number[][] => [
   ...(cage.up ?? []).map(k => [16 + STAT_KEYS.indexOf(k), cage.gain ?? 1]),
   ...(cage.down ?? []).map(k => [16 + STAT_KEYS.indexOf(k), -1]),
@@ -34,13 +37,13 @@ const fallbackChanges = (cage: Cage): number[][] => [
 /** 현재 웹 엔진이 사용하는 결과표 안내. 난수100가지를 열거하므로 HP 반올림·계절 보정도 실제 처리와 같다.
  * 시설 모드/부가 효과의 미확인 동작을 예측에 섞지 않는다. 개체별 상하한 적용 전 범위다.
  */
-export function trainingPreview(cage: Cage, season: number) {
+export function trainingPreview(cage: Cage, season: number, personality?: Personality) {
   const original = outcomes[String(cage.no)];
   const choices = original ?? [{weight:100, changes:fallbackChanges(cage)}];
   const rows = choices.filter(c => c.weight > 0).map(c => ({
     weight:c.weight,
     changes:c.changes.map(([key,base]) => {
-      const values=original ? Array.from({length:100},(_,i)=>trainingDelta(key,base,season,()=>i/100)) : [base];
+      const values=(original ? Array.from({length:100},(_,i)=>trainingDelta(key,base,season,()=>i/100)) : [base]).map(n=>personalityTraining(n,personality));
       const label=key<11 ? `${AP_ORDER[key]} 수치` : key<16 ? `${RESIST_KEYS[key-11]} 내성` : STAT_LABEL[STAT_KEYS[key-16]];
       return {label,min:Math.min(...values),max:Math.max(...values)};
     }),
@@ -66,7 +69,7 @@ export function applyTraining(d: Digimon, cage: Cage, season: number, rng: Rng):
   }
   const result: string[] = [];
   for (const [key, base] of changes) {
-    const amount = choices ? trainingDelta(key, base, season, rng) : base;
+    const amount = personalityTraining(choices ? trainingDelta(key, base, season, rng) : base,d.personality);
     let before: number, after: number, label: string;
     if (key < 11) {
       const k = AP_ORDER[key];

@@ -1569,6 +1569,8 @@ var ChampCore = (function(exports) {
 		if (variation !== 0 && value + variation !== 0) value += variation;
 		return key === 16 ? Math.trunc((value + (value < 0 ? -5 : 5)) / 10) * 10 : value;
 	}
+	/** 사용자 지정: 솔직의 양수 훈련 증가량만1.15배, 정수 반올림. 감소/확률/훈련 시간은 그대로다. */
+	var personalityTraining = (amount, personality) => amount > 0 && personality === "솔직" ? Math.round(amount * 1.15) : amount;
 	var fallbackChanges = (cage) => [
 		...(cage.up ?? []).map((k) => [16 + STAT_KEYS.indexOf(k), cage.gain ?? 1]),
 		...(cage.down ?? []).map((k) => [16 + STAT_KEYS.indexOf(k), -1]),
@@ -1578,7 +1580,7 @@ var ChampCore = (function(exports) {
 	/** 현재 웹 엔진이 사용하는 결과표 안내. 난수100가지를 열거하므로 HP 반올림·계절 보정도 실제 처리와 같다.
 	* 시설 모드/부가 효과의 미확인 동작을 예측에 섞지 않는다. 개체별 상하한 적용 전 범위다.
 	*/
-	function trainingPreview(cage, season) {
+	function trainingPreview(cage, season, personality) {
 		const original = outcomes[String(cage.no)];
 		const rows = (original ?? [{
 			weight: 100,
@@ -1586,7 +1588,7 @@ var ChampCore = (function(exports) {
 		}]).filter((c) => c.weight > 0).map((c) => ({
 			weight: c.weight,
 			changes: c.changes.map(([key, base]) => {
-				const values = original ? Array.from({ length: 100 }, (_, i) => trainingDelta(key, base, season, () => i / 100)) : [base];
+				const values = (original ? Array.from({ length: 100 }, (_, i) => trainingDelta(key, base, season, () => i / 100)) : [base]).map((n) => personalityTraining(n, personality));
 				return {
 					label: key < 11 ? `${AP_ORDER[key]} 수치` : key < 16 ? `${RESIST_KEYS[key - 11]} 내성` : STAT_LABEL[STAT_KEYS[key - 16]],
 					min: Math.min(...values),
@@ -1620,7 +1622,7 @@ var ChampCore = (function(exports) {
 		} else changes = fallbackChanges(cage);
 		const result = [];
 		for (const [key, base] of changes) {
-			const amount = choices ? trainingDelta(key, base, season, rng) : base;
+			const amount = personalityTraining(choices ? trainingDelta(key, base, season, rng) : base, d.personality);
 			let before, after, label;
 			if (key < 11) {
 				const k = AP_ORDER[key];
@@ -2908,6 +2910,11 @@ var ChampCore = (function(exports) {
 	/** 원본 표의 각성/수면 범위. 분 단위 진행과 야간 일괄 수면의 병합은 웹판 정책이다. */
 	var cycleMinutes = (range, rng) => range[0] + Math.floor(rng() * Math.max(1, range[1] - range[0]));
 	var isSleeping = (d) => !d.isEgg && d.restCycle?.species === d.speciesId && d.restCycle.sleepLeft > 0;
+	/** 훈련 상태 판정은 화면의 성급한 달리기와 실제 훈련이 공유한다. */
+	function isTraining(d) {
+		const cage = getCage(d.cage);
+		return !!(cage.up || cage.apUp || cage.battleUp) && !d.isEgg && !d.trainDone && !isSleeping(d) && !d.sick && !d.injured && d.hunger > 0 && d.fatigue < 90;
+	}
 	function tickRestCycle(d, rng, night) {
 		const real = originalSpecies(d.speciesId);
 		if (!real) return false;
@@ -3181,7 +3188,7 @@ var ChampCore = (function(exports) {
 		d.bowel = bowelAt(d, ctx.clock);
 		if (sleeping) d.fatigue = Math.max(0, d.fatigue - .3);
 		else {
-			d.hunger = Math.max(0, d.hunger - (d.personality === "열혈" ? .11 : .08));
+			d.hunger = Math.max(0, d.hunger - .08 * (d.personality === "열혈" ? 1.3 : 1));
 			d.fatigue = Math.max(0, d.fatigue - (cage.rest ? .5 : cage.autoCare ? AUTO_CARE_REST : .04));
 			if (d.bowel.count < 4) d.poopTimer += 1;
 		}
@@ -3324,12 +3331,26 @@ var ChampCore = (function(exports) {
 		const rank = tamerRank(save);
 		const season = dateOf(save.clock).season;
 		let free = capacityOf(save) - usedCapacity(save);
+		const group = (d) => d.cageInstance === null ? null : d.cageInstance ?? d.cage;
+		const socialDay = Math.floor((save.clock + 1) / MIN_PER_DAY);
 		const next = [];
 		const seen = new Set(save.seen);
 		save.digimon.forEach((d, i) => {
 			const before = d.isEgg ? 0 : getSpecies(d.speciesId).size;
 			const isLast = next.length + (save.digimon.length - i) <= 1;
-			const r = tickOne(d, {
+			const key = group(d), old = d.socialStress;
+			const social = old?.day === socialDay ? { ...old } : {
+				day: socialDay,
+				added: 0
+			};
+			const extra = !d.isEgg && key !== null && save.digimon.some((other) => other.uid !== d.uid && !other.isEgg && other.personality === "제멋대로" && group(other) === key) ? Math.max(0, Math.min(10 - social.added, 10 / MIN_PER_DAY)) : 0;
+			social.added = Math.min(10, social.added + extra);
+			const candidate = {
+				...d,
+				socialStress: social
+			};
+			if (extra > 0) addStress(candidate, extra);
+			const r = tickOne(candidate, {
 				rank,
 				free,
 				isLast,
@@ -3484,18 +3505,38 @@ var ChampCore = (function(exports) {
 		};
 	}
 	/** 쓰다듬기: 게임 1시간에 한 번 스트레스가 조금 풀린다 */
-	function pet(save, uid) {
+	function pet(save, uid, rng = defaultRng) {
 		const d = find(save, uid);
 		if (!d || d.isEgg) return fail(save, "아직 쓰다듬을 수 없어요.");
 		const name = getSpecies(d.speciesId).name;
+		let awakened = false;
+		if (isSleeping(d)) {
+			if (isNight(save) || d.personality === "게으름" && rng() >= .2) return {
+				ok: true,
+				save,
+				awakened: false,
+				message: `${name}(은)는 아직 깊이 잠들어 있다.`
+			};
+			save = update(save, uid, (x) => ({
+				...x,
+				restCycle: {
+					species: x.speciesId,
+					sleepLeft: 0,
+					awakeLeft: cycleMinutes(originalSpecies(x.speciesId)?.awake ?? [120, 180], rng)
+				}
+			}));
+			awakened = true;
+		}
 		if (d.pettedAt != null && save.clock - d.pettedAt < PET.cooldown) return {
 			ok: true,
 			save,
-			message: `${name}(은)는 기분이 좋아 보인다.`
+			awakened,
+			message: awakened ? `${name}(이)가 잠에서 깨어났다.` : `${name}(은)는 기분이 좋아 보인다.`
 		};
 		return {
 			ok: true,
 			soothed: true,
+			awakened,
 			message: `${name}(을)를 쓰다듬었다.`,
 			save: update(save, uid, (x) => ({
 				...x,
@@ -7307,9 +7348,864 @@ var ChampCore = (function(exports) {
 		}));
 	}
 	/** 사용 가능한 기술을 동일 확률로 선택하는 빈도/AI는 웹판 정책. TP 소비는 원본 값. */
-	function pickBattleSkill(speciesId, rng, tp = Infinity) {
+	function pickBattleSkill(speciesId, rng, tp = Infinity, personality) {
 		const skills = battleSkills(speciesId).filter((skill) => skill.tpCost <= tp);
-		return skills.length ? pick(rng, skills) : null;
+		if (!skills.length) return null;
+		if (personality === "솔직" && battleSkills(speciesId).length > 1) {
+			const last = battleSkills(speciesId).at(-1).record;
+			const weights = skills.map((s) => s.record === last ? 3 : 1);
+			let roll = rng() * weights.reduce((sum, n) => sum + n, 0);
+			for (let i = 0; i < skills.length; i++) {
+				roll -= weights[i];
+				if (roll < 0) return skills[i];
+			}
+			return skills.at(-1);
+		}
+		return pick(rng, skills);
+	}
+	// src/core/support-skills.ts
+	var DATA = {
+		skills: [
+			{
+				"id": 1,
+				"name": "도발",
+				"tpCost": 5
+			},
+			{
+				"id": 2,
+				"name": "치료α",
+				"tpCost": 5
+			},
+			{
+				"id": 3,
+				"name": "치료β",
+				"tpCost": 15
+			},
+			{
+				"id": 4,
+				"name": "치료γ",
+				"tpCost": 35
+			},
+			{
+				"id": 5,
+				"name": "전원 치료α",
+				"tpCost": 10
+			},
+			{
+				"id": 6,
+				"name": "전원 치료β",
+				"tpCost": 25
+			},
+			{
+				"id": 7,
+				"name": "전원 치료γ",
+				"tpCost": 50
+			},
+			{
+				"id": 8,
+				"name": "회복",
+				"tpCost": 5
+			},
+			{
+				"id": 9,
+				"name": "전원 회복",
+				"tpCost": 15
+			},
+			{
+				"id": 10,
+				"name": "공격업",
+				"tpCost": 10
+			},
+			{
+				"id": 11,
+				"name": "전원 공격업",
+				"tpCost": 30
+			},
+			{
+				"id": 12,
+				"name": "방어업",
+				"tpCost": 10
+			},
+			{
+				"id": 13,
+				"name": "전원 방어업",
+				"tpCost": 30
+			},
+			{
+				"id": 14,
+				"name": "민첩업",
+				"tpCost": 10
+			},
+			{
+				"id": 15,
+				"name": "전원 민첩업",
+				"tpCost": 30
+			},
+			{
+				"id": 16,
+				"name": "크리티컬업",
+				"tpCost": 10
+			},
+			{
+				"id": 17,
+				"name": "전원 명중업 ",
+				"tpCost": 30
+			},
+			{
+				"id": 18,
+				"name": "화염 내성",
+				"tpCost": 10
+			},
+			{
+				"id": 19,
+				"name": "화염 내성A",
+				"tpCost": 30
+			},
+			{
+				"id": 20,
+				"name": "물 내성",
+				"tpCost": 10
+			},
+			{
+				"id": 21,
+				"name": "물 내성A",
+				"tpCost": 30
+			},
+			{
+				"id": 22,
+				"name": "천둥 내성",
+				"tpCost": 10
+			},
+			{
+				"id": 23,
+				"name": "천둥 내성A",
+				"tpCost": 30
+			},
+			{
+				"id": 24,
+				"name": "빛 내성",
+				"tpCost": 10
+			},
+			{
+				"id": 25,
+				"name": "빛 내성A",
+				"tpCost": 30
+			},
+			{
+				"id": 26,
+				"name": "어둠 내성",
+				"tpCost": 10
+			},
+			{
+				"id": 27,
+				"name": "어둠 내성A",
+				"tpCost": 30
+			},
+			{
+				"id": 28,
+				"name": "부활α",
+				"tpCost": 5
+			},
+			{
+				"id": 29,
+				"name": "부활β",
+				"tpCost": 10
+			},
+			{
+				"id": 30,
+				"name": "",
+				"tpCost": 0
+			}
+		],
+		species: /* @__PURE__ */ JSON.parse("{\"즈루몬\":{\"personalities\":[\"열혈\",\"솔직\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"뽈뽈몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"새싹몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"뽀글몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"피치몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"푸니몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"깜몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"포요몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"모크몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"하얀몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"유라몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"푸치몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"카프리몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"코로몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"시드몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"뿔몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"토코몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"야옹몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"퍼그몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"어니몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"둥실몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"쁘띠메라몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"모티몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"베비도몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"산몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"문몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[0,0],[0,0],[0,0]]},\"아구몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[1,0],[12,0],[0,0]]},\"아르마몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[12,0],[10,0],[0,0]]},\"에렉몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[1,0],[12,0],[0,0]]},\"올챙몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[2,0],[2,0],[0,0]]},\"가오몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[1,0],[16,0],[0,0]]},\"가지몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[20,0],[16,0],[0,0]]},\"파피몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[10,0],[28,0],[0,0]]},\"거북몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[20,0],[2,0],[0,0]]},\"기자몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[10,0],[1,0],[0,0]]},\"캔들몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[28,0],[28,0],[0,0]]},\"쿠네몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[14,0],[28,0],[0,0]]},\"울퉁몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[12,0],[14,0],[0,0]]},\"고부리몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[16,0],[10,0],[0,0]]},\"쉬라몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[28,0],[14,0],[0,0]]},\"테리어몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[10,0],[10,0],[0,0]]},\"텐타몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[28,0],[12,0],[0,0]]},\"토이아구몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[2,0],[12,0],[0,0]]},\"테이파몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[26,0],[2,0],[0,0]]},\"톱니몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[12,0],[12,0],[0,0]]},\"파닥몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[2,0],[28,0],[0,0]]},\"팔몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[12,0],[2,0],[0,0]]},\"피코데블몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[26,0],[1,0],[0,0]]},\"피요몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[16,0],[10,0],[0,0]]},\"팔코몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[1,0],[16,0],[0,0]]},\"플롯트몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[2,0],[2,0],[0,0]]},\"플로라몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[20,0],[18,0],[0,0]]},\"머슈몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[16,0],[10,0],[0,0]]},\"스노우아구몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[20,0],[2,0],[0,0]]},\"레나몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[2,0],[24,0],[0,0]]},\"드라코몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[1,0],[28,0],[0,0]]},\"코로나몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[1,0],[18,0],[0,0]]},\"루나몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[2,0],[20,0],[0,0]]},\"크로아구몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[28,0],[16,0],[0,0]]},\"사이케몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[12,0],[10,0],[0,0]]},\"오로라몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[2,0],[26,0],[0,0]]},\"츄카이몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[14,0],[1,0],[0,0]]},\"브이몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[16,0],[1,0],[0,0]]},\"길몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[10,0],[28,0],[0,0]]},\"황금아르마몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[12,0],[12,0],[24,0]]},\"원뿔몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[12,0],[10,0],[18,0]]},\"위자몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[2,0],[22,0],[22,0]]},\"우드몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[2,0],[2,0],[1,0]]},\"에어드라몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[28,0],[10,0],[14,0]]},\"엔젤몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[5,0],[3,0],[24,0]]},\"우가몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[10,0],[14,0],[1,0]]},\"가오가몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[29,0],[10,0],[14,0]]},\"캅테리몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[10,0],[12,0],[1,0]]},\"가르고몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[16,0],[12,0],[14,0]]},\"가루몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[15,0],[14,0],[14,0]]},\"가루몬(흑)\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[28,0],[1,0],[14,0]]},\"가드로몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[3,0],[28,0],[12,0]]},\"키위몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[14,0],[2,0],[22,0]]},\"구미호몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[14,0],[3,0],[18,0]]},\"그레이몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[1,0],[10,0],[12,0]]},\"타임몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[29,0],[2,0],[26,0]]},\"쿠가몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[16,0],[1,0],[14,0]]},\"개굴몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[3,0],[2,0],[2,0]]},\"연체몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[10,0],[17,0],[16,0]]},\"켄터스몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[15,0],[24,0],[14,0]]},\"꼬끼몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[18,0],[1,0],[20,0]]},\"번개콩알몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[23,0],[23,0],[22,0]]},\"쉘몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[21,0],[21,0],[20,0]]},\"지오그레이몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[13,0],[12,0],[16,0]]},\"시드라몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[2,0],[2,0],[1,0]]},\"스카몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[2,0],[1,0],[1,0]]},\"스타몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[16,0],[16,0],[1,0]]},\"다르크몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[16,0],[12,0],[24,0]]},\"다크티라노몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[11,0],[10,0],[10,0]]},\"티라노몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[1,0],[12,0],[14,0]]},\"가트몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[5,0],[3,0],[2,0]]},\"데블드라몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[29,0],[24,0],[16,0]]},\"데블몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[3,0],[2,0],[26,0]]},\"니드몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[12,0],[12,0],[20,0]]},\"토타몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[20,0],[2,0],[12,0]]},\"워매몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[28,0],[28,0],[28,0]]},\"고스몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[16,0],[26,0],[28,0]]},\"버드라몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[10,0],[18,0],[14,0]]},\"베지몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[1,0],[1,0],[18,0]]},\"페크몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[16,0],[15,0],[14,0]]},\"메라몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[17,0],[16,0],[26,0]]},\"모털몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[2,0],[2,0],[2,0]]},\"모노크로몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[18,0],[16,0],[12,0]]},\"프리지몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[12,0],[1,0],[20,0]]},\"유니몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[5,0],[12,0],[12,0]]},\"블랙구미호몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[26,0],[3,0],[22,0]]},\"링스몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[1,0],[18,0],[18,0]]},\"레어몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[3,0],[20,0],[1,0]]},\"레오몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[16,0],[10,0],[24,0]]},\"레드베지몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[12,0],[18,0],[18,0]]},\"코어드라몬(청)\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[17,0],[16,0],[14,0]]},\"코어드라몬(녹)\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[13,0],[12,0],[1,0]]},\"파이라몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[1,0],[19,0],[10,0]]},\"레키스몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[21,0],[3,0],[14,0]]},\"아이스데블몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[3,0],[3,0],[16,0]]},\"구루몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[16,0],[3,0],[20,0]]},\"옐로우워매몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[29,0],[29,0],[28,0]]},\"화이트위자몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[5,0],[5,0],[2,0]]},\"레드꼬끼몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[10,0],[16,0],[14,0]]},\"블랙버드라몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[16,0],[27,0],[26,0]]},\"아이스몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[19,0],[22,0],[18,0]]},\"브이드라몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[11,0],[10,0],[20,0]]},\"그라우몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[29,0],[29,0],[1,0]]},\"아트라캅테리몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[11,12],[11,1],[10,0]]},\"스콜피온몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[21,10],[21,13],[20,0]]},\"안드로몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[13,3],[13,14],[12,0]]},\"에테몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[26,4],[26,1],[26,0]]},\"엔젤우몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[6,12],[6,29],[6,0]]},\"오쿠와몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[17,12],[17,10],[17,0]]},\"가루다몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[25,4],[24,4],[24,0]]},\"가비지몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[1,12],[1,19],[1,0]]},\"사이버드라몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[17,6],[17,3],[17,0]]},\"쥬레이몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[3,12],[3,20],[3,0]]},\"스컬그레이몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[29,26],[29,16],[29,0]]},\"쥬드몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[13,1],[13,18],[12,0]]},\"드라고몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[29,16],[29,5],[29,0]]},\"데드메라몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[1,18],[1,29],[1,0]]},\"뿌띠몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[3,28],[3,21],[3,0]]},\"왕개굴몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[1,4],[1,3],[1,0]]},\"트리세라몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[13,16],[13,16],[12,0]]},\"나이트몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[11,1],[11,5],[10,0]]},\"패롯몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[15,1],[15,6],[14,0]]},\"다이버몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[11,1],[11,14],[10,0]]},\"팬더몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[28,18],[29,10],[28,0]]},\"왕콩알몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[12,29],[13,10],[12,0]]},\"피콜몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[25,29],[25,17],[24,0]]},\"팬텀몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[29,15],[29,14],[29,0]]},\"베이더몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[6,16],[5,16],[5,0]]},\"고래몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[12,23],[13,20],[12,0]]},\"홀리엔젤몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[25,29],[25,13],[24,0]]},\"마하가오가몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[15,17],[15,18],[15,0]]},\"콩알몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[6,1],[3,12],[3,0]]},\"맘모스몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[13,14],[13,3],[13,0]]},\"메가시드라몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[23,15],[23,11],[22,0]]},\"메가드라몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[11,27],[11,17],[11,0]]},\"메탈그레이몬(청)\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[11,29],[15,29],[14,0]]},\"메탈그레이몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[19,11],[19,29],[18,0]]},\"메탈티라노몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[18,10],[23,16],[22,0]]},\"퍼펫몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[16,27],[17,13],[16,0]]},\"야타가라몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[11,29],[10,6],[10,0]]},\"라이즈그레이몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[1,16],[1,14],[1,0]]},\"래비드몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[15,1],[15,11],[15,0]]},\"릴리몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[4,13],[4,12],[3,0]]},\"레이디데블몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[6,16],[6,11],[6,0]]},\"나쁜퍼펫몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[17,12],[17,10],[16,0]]},\"워가루몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[15,10],[15,1],[14,0]]},\"워가루몬(흑)\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[15,10],[15,1],[14,0]]},\"윙드라몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[15,13],[15,11],[15,0]]},\"그라운드라몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[13,29],[13,1],[13,0]]},\"플레어몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[19,1],[19,25],[19,0]]},\"크레세몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[21,4],[21,27],[21,0]]},\"슈퍼스타몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[25,13],[25,1],[24,0]]},\"블랙래비드몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[27,11],[27,10],[26,0]]},\"블루메라몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[21,16],[21,10],[20,0]]},\"바이킹몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[4,29],[4,21],[4,20]]},\"발키리몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[7,17],[7,17],[7,14]]},\"워그레이몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[11,19],[11,1],[11,18]]},\"기가시드라몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[13,4],[13,10],[13,3]]},\"그랜쿠가몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[17,11],[17,15],[17,10]]},\"그리폰몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[15,11],[15,1],[15,10]]},\"이글몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[13,19],[13,25],[13,24]]},\"샤벨레오몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[17,11],[17,1],[17,12]]},\"샤잉레이몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[7,11],[7,27],[7,24]]},\"스컬맘모스몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[29,13],[29,25],[29,14]]},\"세인트가르고몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[15,11],[15,17],[15,10]]},\"하이안드로몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[13,7],[13,29],[13,3]]},\"반쵸레오몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[11,17],[11,16],[11,14]]},\"피에몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[7,29],[7,28],[7,14]]},\"피노키몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[1,27],[1,17],[1,26]]},\"파라오몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[29,25],[29,27],[29,18]]},\"푸쿠몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[1,11],[1,4],[1,20]]},\"블랙워그레이몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[17,19],[17,29],[17,14]]},\"프린스콩알몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[7,29],[7,14],[7,10]]},\"프레시오몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[13,17],[13,4],[13,20]]},\"헤라크레스캅테리몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[11,13],[11,12],[11,16]]},\"페닉스몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[29,16],[29,21],[29,18]]},\"미러지가오몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[15,29],[15,7],[15,10]]},\"파워드라몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[11,29],[11,12],[11,16]]},\"메탈에테몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[17,27],[17,25],[17,20]]},\"메탈가루몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[15,29],[15,17],[15,16]]},\"메탈가루몬(흑)\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[17,21],[17,23],[17,22]]},\"메탈시드라몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[7,23],[7,11],[7,10]]},\"로제몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[7,29],[7,25],[7,12]]},\"지드가루몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[11,15],[11,23],[11,12]]},\"빅토리그레이몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[17,1],[17,12],[17,10]]},\"슬레이어드라몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[17,23],[17,21],[17,14]]},\"브레이크드라몬\":{\"personalities\":[\"열혈\",\"쿨\"],\"pairs\":[[13,29],[13,19],[13,20]]},\"아폴로몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[19,1],[19,25],[19,20]]},\"다이아나몬\":{\"personalities\":[\"쿨\",\"열혈\"],\"pairs\":[[21,7],[21,27],[21,22]]},\"황제드라몬\":{\"personalities\":[\"열혈\",\"대담\"],\"pairs\":[[1,25],[1,27],[1,24]]},\"듀크몬\":{\"personalities\":[\"대담\",\"쿨\"],\"pairs\":[[11,7],[11,27],[11,12]]}}"),
+		elements: {
+			"31": 0,
+			"32": 0,
+			"33": 0,
+			"34": 0,
+			"35": 0,
+			"36": 0,
+			"37": 0,
+			"38": 0,
+			"39": 0,
+			"40": 0,
+			"41": 0,
+			"42": 0,
+			"43": 0,
+			"44": 0,
+			"45": 0,
+			"46": 2,
+			"47": 0,
+			"48": 2,
+			"49": 0,
+			"50": 1,
+			"51": 0,
+			"52": 2,
+			"53": 0,
+			"54": 1,
+			"55": 0,
+			"56": 3,
+			"57": 0,
+			"58": 4,
+			"59": 0,
+			"60": 1,
+			"61": 1,
+			"62": 0,
+			"63": 0,
+			"64": 0,
+			"65": 0,
+			"66": 5,
+			"67": 0,
+			"68": 2,
+			"69": 0,
+			"70": 0,
+			"71": 0,
+			"72": 0,
+			"73": 0,
+			"74": 4,
+			"75": 0,
+			"76": 1,
+			"77": 1,
+			"78": 0,
+			"79": 0,
+			"80": 0,
+			"81": 0,
+			"82": 0,
+			"83": 0,
+			"84": 1,
+			"85": 0,
+			"86": 5,
+			"87": 0,
+			"88": 0,
+			"89": 0,
+			"90": 1,
+			"91": 0,
+			"92": 2,
+			"93": 0,
+			"94": 0,
+			"95": 1,
+			"96": 0,
+			"97": 5,
+			"98": 0,
+			"99": 1,
+			"100": 0,
+			"101": 1,
+			"102": 0,
+			"103": 1,
+			"104": 0,
+			"105": 4,
+			"106": 0,
+			"107": 4,
+			"108": 0,
+			"109": 0,
+			"110": 2,
+			"111": 0,
+			"112": 5,
+			"113": 0,
+			"114": 4,
+			"115": 0,
+			"116": 1,
+			"117": 0,
+			"118": 0,
+			"119": 0,
+			"120": 0,
+			"121": 0,
+			"122": 3,
+			"123": 0,
+			"124": 4,
+			"125": 0,
+			"126": 4,
+			"127": 0,
+			"128": 2,
+			"129": 0,
+			"130": 3,
+			"131": 0,
+			"132": 1,
+			"133": 1,
+			"134": 1,
+			"135": 0,
+			"136": 4,
+			"137": 2,
+			"138": 2,
+			"139": 0,
+			"140": 1,
+			"141": 1,
+			"142": 0,
+			"143": 5,
+			"144": 1,
+			"145": 0,
+			"146": 4,
+			"147": 0,
+			"148": 4,
+			"149": 0,
+			"150": 0,
+			"151": 0,
+			"152": 0,
+			"153": 0,
+			"154": 1,
+			"155": 0,
+			"156": 1,
+			"157": 0,
+			"158": 0,
+			"159": 0,
+			"160": 0,
+			"161": 0,
+			"162": 0,
+			"163": 5,
+			"164": 0,
+			"165": 0,
+			"166": 0,
+			"167": 0,
+			"168": 0,
+			"169": 0,
+			"170": 3,
+			"171": 0,
+			"172": 4,
+			"173": 0,
+			"174": 0,
+			"175": 0,
+			"176": 5,
+			"177": 0,
+			"178": 5,
+			"179": 0,
+			"180": 1,
+			"181": 0,
+			"182": 0,
+			"183": 1,
+			"184": 0,
+			"185": 1,
+			"186": 0,
+			"187": 1,
+			"188": 0,
+			"189": 1,
+			"190": 0,
+			"191": 1,
+			"192": 1,
+			"193": 0,
+			"194": 1,
+			"195": 0,
+			"196": 0,
+			"197": 5,
+			"198": 0,
+			"199": 0,
+			"200": 0,
+			"201": 0,
+			"202": 0,
+			"203": 4,
+			"204": 0,
+			"205": 0,
+			"206": 3,
+			"207": 0,
+			"208": 4,
+			"209": 0,
+			"210": 5,
+			"211": 0,
+			"212": 2,
+			"213": 0,
+			"214": 1,
+			"215": 1,
+			"216": 0,
+			"217": 0,
+			"218": 0,
+			"219": 2,
+			"220": 0,
+			"221": 4,
+			"222": 0,
+			"223": 1,
+			"224": 0,
+			"225": 3,
+			"226": 0,
+			"227": 1,
+			"228": 0,
+			"229": 1,
+			"230": 0,
+			"231": 0,
+			"232": 3,
+			"233": 0,
+			"234": 4,
+			"235": 0,
+			"236": 4,
+			"237": 0,
+			"238": 0,
+			"239": 0,
+			"240": 0,
+			"241": 0,
+			"242": 4,
+			"243": 0,
+			"244": 4,
+			"245": 4,
+			"246": 0,
+			"247": 1,
+			"248": 0,
+			"249": 4,
+			"250": 0,
+			"251": 0,
+			"252": 0,
+			"253": 0,
+			"254": 0,
+			"255": 1,
+			"256": 0,
+			"257": 2,
+			"258": 0,
+			"259": 0,
+			"260": 0,
+			"261": 1,
+			"262": 0,
+			"263": 2,
+			"264": 0,
+			"265": 3,
+			"266": 0,
+			"267": 1,
+			"268": 1,
+			"269": 0,
+			"270": 1,
+			"271": 0,
+			"272": 4,
+			"273": 0,
+			"274": 3,
+			"275": 0,
+			"276": 4,
+			"277": 0,
+			"278": 1,
+			"279": 0,
+			"280": 3,
+			"281": 0,
+			"282": 1,
+			"283": 0,
+			"284": 3,
+			"285": 0,
+			"286": 1,
+			"287": 1,
+			"288": 1,
+			"289": 0,
+			"290": 2,
+			"291": 2,
+			"292": 4,
+			"293": 0,
+			"294": 2,
+			"295": 2,
+			"296": 0,
+			"297": 1,
+			"298": 0,
+			"299": 0,
+			"300": 4,
+			"301": 0,
+			"302": 2,
+			"303": 2,
+			"304": 0,
+			"305": 4,
+			"306": 0,
+			"307": 4,
+			"308": 1,
+			"309": 0,
+			"310": 2,
+			"311": 0,
+			"312": 1,
+			"313": 0,
+			"314": 0,
+			"315": 5,
+			"316": 1,
+			"317": 5,
+			"318": 0,
+			"319": 0,
+			"320": 5,
+			"321": 0,
+			"322": 0,
+			"323": 0,
+			"324": 0,
+			"325": 1,
+			"326": 3,
+			"327": 0,
+			"328": 4,
+			"329": 4,
+			"330": 0,
+			"331": 3,
+			"332": 3,
+			"333": 0,
+			"334": 0,
+			"335": 0,
+			"336": 0,
+			"337": 3,
+			"338": 1,
+			"339": 0,
+			"340": 4,
+			"341": 0,
+			"342": 0,
+			"343": 0,
+			"344": 4,
+			"345": 0,
+			"346": 1,
+			"347": 0,
+			"348": 0,
+			"349": 1,
+			"350": 4,
+			"351": 0,
+			"352": 5,
+			"353": 0,
+			"354": 0,
+			"355": 0,
+			"356": 4,
+			"357": 0,
+			"358": 1,
+			"359": 1,
+			"360": 0,
+			"361": 0,
+			"362": 0,
+			"363": 0,
+			"364": 5,
+			"365": 0,
+			"366": 0,
+			"367": 0,
+			"368": 5,
+			"369": 0,
+			"370": 0,
+			"371": 0,
+			"372": 0,
+			"373": 0,
+			"374": 5,
+			"375": 0,
+			"376": 0,
+			"377": 0,
+			"378": 0,
+			"379": 0,
+			"380": 0,
+			"381": 0,
+			"382": 1,
+			"383": 0,
+			"384": 0,
+			"385": 1,
+			"386": 0,
+			"387": 0,
+			"388": 4,
+			"389": 4,
+			"390": 0,
+			"391": 4,
+			"392": 0,
+			"393": 0,
+			"394": 2,
+			"395": 2,
+			"396": 0,
+			"397": 3,
+			"398": 3,
+			"399": 0,
+			"400": 0,
+			"401": 0,
+			"402": 5,
+			"403": 0,
+			"404": 1,
+			"405": 0,
+			"406": 0,
+			"407": 0,
+			"408": 2,
+			"409": 0,
+			"410": 5,
+			"411": 2,
+			"412": 0,
+			"413": 1,
+			"414": 0,
+			"415": 0,
+			"416": 1,
+			"417": 0,
+			"418": 0,
+			"419": 1,
+			"420": 0,
+			"421": 0,
+			"422": 1,
+			"423": 5,
+			"424": 0,
+			"425": 4,
+			"426": 0,
+			"427": 0,
+			"428": 0,
+			"429": 4,
+			"430": 0,
+			"431": 5,
+			"432": 3,
+			"433": 0,
+			"434": 0,
+			"435": 1,
+			"436": 5,
+			"437": 0,
+			"438": 5,
+			"439": 3,
+			"440": 0,
+			"441": 4,
+			"442": 4,
+			"443": 0,
+			"444": 4,
+			"445": 0,
+			"446": 0,
+			"447": 0,
+			"448": 1,
+			"449": 0,
+			"450": 0,
+			"451": 0,
+			"452": 0,
+			"453": 1,
+			"454": 0,
+			"455": 0,
+			"456": 0,
+			"457": 0,
+			"458": 0,
+			"459": 0,
+			"460": 0,
+			"461": 3,
+			"462": 1,
+			"463": 1,
+			"464": 0,
+			"465": 4,
+			"466": 2,
+			"467": 4,
+			"468": 0,
+			"469": 1,
+			"470": 0,
+			"471": 0,
+			"472": 1,
+			"473": 5,
+			"474": 0,
+			"475": 4,
+			"476": 2,
+			"477": 0,
+			"478": 2,
+			"479": 5,
+			"480": 0,
+			"481": 2,
+			"482": 3,
+			"483": 0,
+			"484": 3,
+			"485": 2,
+			"486": 0,
+			"487": 1,
+			"488": 5,
+			"489": 0,
+			"490": 0,
+			"491": 0,
+			"492": 0,
+			"493": 0,
+			"494": 0,
+			"495": 0,
+			"496": 1,
+			"497": 3,
+			"498": 0,
+			"499": 0,
+			"500": 0,
+			"501": 0,
+			"502": 3,
+			"503": 3,
+			"504": 3,
+			"505": 0,
+			"506": 0,
+			"507": 0,
+			"508": 0,
+			"509": 1,
+			"510": 1,
+			"511": 0,
+			"512": 3,
+			"513": 3,
+			"514": 0,
+			"515": 1,
+			"516": 3,
+			"517": 0,
+			"518": 4,
+			"519": 5,
+			"520": 0,
+			"521": 1,
+			"522": 4,
+			"523": 0,
+			"524": 4,
+			"525": 4,
+			"526": 0,
+			"527": 0,
+			"528": 0,
+			"529": 0,
+			"530": 4,
+			"531": 2,
+			"532": 0,
+			"533": 0,
+			"534": 3,
+			"535": 0,
+			"536": 4,
+			"537": 0,
+			"538": 0,
+			"539": 5,
+			"540": 5,
+			"541": 0,
+			"542": 3,
+			"543": 1,
+			"544": 0,
+			"545": 0,
+			"546": 5,
+			"547": 0,
+			"548": 0,
+			"549": 5,
+			"550": 4,
+			"551": 0,
+			"552": 0,
+			"553": 4,
+			"554": 0,
+			"555": 2,
+			"556": 1,
+			"557": 0,
+			"558": 2,
+			"559": 1,
+			"560": 0,
+			"561": 5,
+			"562": 2,
+			"563": 0,
+			"564": 5,
+			"565": 3,
+			"566": 0,
+			"567": 1,
+			"568": 1,
+			"569": 5,
+			"570": 0,
+			"571": 0,
+			"572": 1,
+			"573": 0,
+			"574": 0,
+			"575": 0,
+			"576": 3,
+			"577": 0,
+			"578": 0,
+			"579": 0,
+			"580": 0,
+			"581": 0,
+			"582": 0,
+			"583": 1,
+			"584": 3,
+			"585": 1,
+			"586": 0,
+			"587": 4,
+			"588": 2,
+			"589": 4,
+			"590": 0,
+			"591": 1,
+			"592": 1,
+			"593": 0,
+			"594": 0,
+			"595": 3
+		}
+	};
+	/** 원본 종 표의 두 성격 조건을 순서대로 비교하고, 불일치하면 기본 두 칸을 사용한다. */
+	function supportSkills(speciesId, personality) {
+		const row = DATA.species[getSpecies(speciesId).name];
+		if (!row) return [];
+		const match = row.personalities.indexOf(personality), ids = row.pairs[match < 0 ? 2 : match];
+		return [...new Set(ids)].filter((id) => id > 0).map((id) => DATA.skills.find((skill) => skill.id === id)).filter(Boolean);
+	}
+	/** 공격 표+88의 값과 알려진 기술명을 대조한 속성 대응 추정. 실행 코드의 enum 의미는 미확인. */
+	var battleElement = (record) => ({
+		1: "열",
+		2: "추위",
+		3: "빛",
+		4: "어둠",
+		5: "천둥"
+	})[DATA.elements[String(record)]];
+	var buffMultiplier = (u, key, time) => (u.buffs?.[key] ?? 0) > time ? 1.15 : 1;
+	var active = (u, key, s) => (u.buffs?.[key] ?? 0) > s.t;
+	var buffKey = (id) => ({
+		10: "atk",
+		11: "atk",
+		12: "def",
+		13: "def",
+		14: "spd",
+		15: "spd",
+		16: "int",
+		17: "int",
+		18: "열",
+		19: "열",
+		20: "추위",
+		21: "추위",
+		22: "천둥",
+		23: "천둥",
+		24: "빛",
+		25: "빛",
+		26: "어둠",
+		27: "어둠"
+	})[id];
+	/** 소유/이름/TP는 원본, 효과량·15초 지속·AI 우선순위는 웹판 임시 정책이다. */
+	function useSupport(s, u, events) {
+		if (u.cd > 0) return false;
+		const allies = s.units.filter((a) => a.team === u.team && a.alive), foes = s.units.filter((a) => a.team !== u.team && a.alive);
+		for (const skill of supportSkills(u.speciesId, u.personality)) {
+			if (skill.tpCost > u.tp || skill.id >= 28) continue;
+			let targets = [], amounts = [];
+			if (skill.id >= 2 && skill.id <= 7) {
+				const weak = allies.filter((a) => a.hp / a.maxHp < .7).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
+				if (!weak.length) continue;
+				targets = skill.id >= 5 ? allies.filter((a) => a.hp < a.maxHp) : [weak[0]];
+				const grade = (skill.id - 2) % 3;
+				amounts = targets.map((a) => Math.min(a.maxHp - a.hp, Math.round(a.maxHp * [
+					.12,
+					.24,
+					.4
+				][grade] + u.stats.int * buffMultiplier(u, "int", s.t) * .5)));
+				targets.forEach((a, i) => {
+					a.hp += amounts[i];
+					events.push({
+						type: "heal",
+						from: u.id,
+						to: a.id,
+						amount: amounts[i],
+						support: skill
+					});
+				});
+			} else if (skill.id === 1) {
+				targets = foes.filter((a) => a.taunt?.from !== u.id || (a.taunt?.until ?? 0) <= s.t);
+				if (!targets.length) continue;
+				targets.forEach((a) => a.taunt = {
+					from: u.id,
+					until: s.t + 15
+				});
+			} else if (skill.id === 8 || skill.id === 9) {
+				targets = allies.filter((a) => a.retreat > 0 || (a.taunt?.until ?? 0) > s.t);
+				if (!targets.length) continue;
+				if (skill.id === 8) targets = targets.slice(0, 1);
+				targets.forEach((a) => {
+					a.retreat = 0;
+					a.taunt = void 0;
+				});
+			} else {
+				const key = buffKey(skill.id);
+				if (!key) continue;
+				const all = skill.id % 2 === 1;
+				targets = allies.filter((a) => !active(a, key, s));
+				if (!targets.length) continue;
+				if (!all) targets = [targets.includes(u) ? u : targets[0]];
+				targets.forEach((a) => a.buffs = {
+					...a.buffs,
+					[key]: s.t + 15
+				});
+			}
+			u.tp -= skill.tpCost;
+			u.cd = 2;
+			if (!amounts.length) events.push({
+				type: "support",
+				from: u.id,
+				targets: targets.map((a) => a.id),
+				skill
+			});
+			return true;
+		}
+		return false;
+	}
+	/** 원작 도움말: 부활 SP는 HP0 직후 자신을 한 번 되살린다. 회복 비율은 임시50/75%. */
+	function reviveSupport(s, u, events) {
+		if (u.revived) return false;
+		const skill = supportSkills(u.speciesId, u.personality).find((sk) => [28, 29].includes(sk.id) && sk.tpCost <= u.tp);
+		if (!skill) return false;
+		u.revived = true;
+		u.alive = true;
+		u.tp -= skill.tpCost;
+		u.hp = Math.max(1, Math.round(u.maxHp * (skill.id === 29 ? .75 : .5)));
+		u.cd = 2;
+		events.push({
+			type: "support",
+			from: u.id,
+			targets: [u.id],
+			skill
+		});
+		return true;
 	}
 	// src/core/battle.ts
 	var ARENA = {
@@ -7428,35 +8324,23 @@ var ChampCore = (function(exports) {
 			const foes = s.units.filter((o) => o.alive && o.team !== u.team);
 			const allies = s.units.filter((o) => o.alive && o.team === u.team);
 			if (!foes.length) break;
-			const near = foes.reduce((a, b) => dist(u, a) <= dist(u, b) ? a : b);
-			const speed = (40 + Math.min(80, u.stats.spd * .4)) * (u.personality === "게으름" && !u.wasHit ? .75 : 1);
+			const near = (u.taunt?.until ?? 0) > s.t && foes.find((f) => f.id === u.taunt?.from) || foes.reduce((a, b) => dist(u, a) <= dist(u, b) ? a : b);
+			const speed = (40 + Math.min(80, u.stats.spd * buffMultiplier(u, "spd", s.t) * .4)) * (u.personality === "게으름" ? .85 : u.personality === "대담" ? 1.1 : 1);
 			const d = dist(u, near);
-			const fleeing = u.personality === "겁쟁이" && foes.length > allies.length || u.retreat > 0;
-			if (u.mode === "지원") {
-				const weak = allies.filter((a) => a.hp / a.maxHp < .7).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
-				if (weak && u.tp >= 15 && u.cd <= 0) {
-					const amount = Math.round(weak.maxHp * .12 + u.stats.int * .5);
-					weak.hp = Math.min(weak.maxHp, weak.hp + amount);
-					u.tp -= 15;
-					u.cd = 2;
-					events.push({
-						type: "heal",
-						from: u.id,
-						to: weak.id,
-						amount
-					});
-					continue;
-				}
-				if (u.cd > 0 && battleSkills(u.speciesId).some((skill) => skill.tpCost <= u.tp)) {
-					if (d < 110) move(u, near.x, near.y, speed, true);
-					else if (d > 145) move(u, near.x, near.y, speed);
-					continue;
-				}
-			} else if (fleeing && d > 45) {
+			const courage = supportSkills(u.speciesId, u.personality).some((sk) => sk.id === 30);
+			const coward = !courage && u.personality === "겁쟁이" && foes.length > allies.length;
+			if (coward && d > 70 || !courage && u.retreat > 0 && u.cd > 0 && d < 110) {
 				move(u, near.x, near.y, speed, true);
 				continue;
 			}
-			const pSpecial = Math.min(.6, .1 + u.stats.int / 600) * (u.mode === "특수" ? 3 : u.mode === "일반" ? .4 : .3) * (u.personality === "쿨" ? 1.6 : u.personality === "솔직" ? 1.2 : 1);
+			const supportReady = u.cd <= 0 && supportSkills(u.speciesId, u.personality).some((sk) => sk.id < 28 && sk.tpCost <= u.tp) && (u.mode === "지원" || rng() < (u.mode === "일반" ? .25 : .1));
+			if (!(coward && d <= 70) && supportReady && useSupport(s, u, events)) continue;
+			if (u.mode === "지원" && !(coward && d <= 70) && u.cd > 0 && battleSkills(u.speciesId).some((skill) => skill.tpCost <= u.tp)) {
+				if (d < 110) move(u, near.x, near.y, speed, true);
+				else if (d > 145) move(u, near.x, near.y, speed);
+				continue;
+			}
+			const pSpecial = Math.min(.6, .1 + u.stats.int * buffMultiplier(u, "int", s.t) / 600) * (u.mode === "특수" ? 3 : u.mode === "일반" ? .4 : .3) * (u.personality === "쿨" ? 1.6 : u.personality === "솔직" ? 1.2 : 1);
 			const wantsSpecial = u.cd <= 0 && d <= 150 && battleSkills(u.speciesId).some((skill) => skill.tpCost <= u.tp) && rng() < pSpecial;
 			if (!wantsSpecial && d > 42) {
 				move(u, near.x, near.y, speed);
@@ -7464,17 +8348,19 @@ var ChampCore = (function(exports) {
 			}
 			if (u.cd > 0) continue;
 			const special = wantsSpecial;
-			const skill = special ? pickBattleSkill(u.speciesId, rng, u.tp) : null;
-			let dmg = (8 + (special ? (u.stats.atk + u.stats.int) / 2 : u.stats.atk) * .9) * (100 / (100 + near.stats.def)) * range(rng, .85, 1.15) * attrMult(u.attr, near.attr);
+			const skill = special ? pickBattleSkill(u.speciesId, rng, u.tp, u.personality) : null;
+			const attack = u.stats.atk * buffMultiplier(u, "atk", s.t), intelligence = u.stats.int * buffMultiplier(u, "int", s.t);
+			let dmg = (8 + (special ? (attack + intelligence) / 2 : attack) * .9) * (100 / (100 + near.stats.def * buffMultiplier(near, "def", s.t))) * range(rng, .85, 1.15) * attrMult(u.attr, near.attr);
 			if (special) dmg *= 2.2;
 			if (u.personality === "열혈") dmg *= 1.2;
-			if (u.personality === "제멋대로") dmg *= 1.1;
+			const element = skill ? battleElement(skill.record) : void 0;
+			if (element && (near.buffs?.[element] ?? 0) > s.t) dmg *= .85;
 			if (u.mode === "지원") dmg *= .6;
 			const damage = Math.max(1, Math.round(dmg));
 			near.hp = Math.max(0, near.hp - damage);
 			near.wasHit = true;
 			if (skill) u.tp -= skill.tpCost;
-			u.cd = (1.3 - Math.min(.6, u.stats.spd / 400)) * (u.personality === "제멋대로" ? .9 : 1);
+			u.cd = (1.3 - Math.min(.6, u.stats.spd * buffMultiplier(u, "spd", s.t) / 400)) * (u.personality === "대담" ? .9 : 1);
 			if (u.personality === "성급한") u.retreat = .8;
 			events.push({
 				type: "hit",
@@ -7490,6 +8376,7 @@ var ChampCore = (function(exports) {
 					type: "ko",
 					id: near.id
 				});
+				reviveSupport(s, near, events);
 			}
 		}
 		const alive = [0, 1].map((t) => s.units.some((u) => u.alive && u.team === t));
@@ -7513,7 +8400,7 @@ var ChampCore = (function(exports) {
 	/** 배틀 결과를 디지몬에게 반영: 횟수·승수, 피로, 쓰러진 디지몬의 부상 */
 	function applyBattleResult(d, won, ko, rng, winter = false) {
 		const overeat = Math.max(0, (d.protein ?? 0) - 3) * .15;
-		const injuryChance = Math.min(1, ((ko ? d.personality === "대담" ? .6 : .3 : 0) + overeat) * (winter ? 2 : 1));
+		const injuryChance = Math.min(1, ((ko ? d.personality === "대담" ? .35 : .25 : 0) + overeat) * (winter ? 2 : 1));
 		return {
 			...d,
 			protein: 0,
@@ -8142,10 +9029,12 @@ var ChampCore = (function(exports) {
 	exports.applyWin = applyWin;
 	exports.availableFood = availableFood;
 	exports.baitOf = baitOf;
+	exports.battleElement = battleElement;
 	exports.battleMapFor = battleMapFor;
 	exports.battleSkills = battleSkills;
 	exports.bestRope = bestRope;
 	exports.biteFloorFood = biteFloorFood;
+	exports.buffMultiplier = buffMultiplier;
 	exports.buy = buy;
 	exports.cageSpaceOf = cageSpaceOf;
 	exports.canHuntNow = canHuntNow;
@@ -8189,6 +9078,7 @@ var ChampCore = (function(exports) {
 	exports.initialStats = initialStats;
 	exports.isNight = isNight;
 	exports.isSleeping = isSleeping;
+	exports.isTraining = isTraining;
 	exports.itemUnlocked = itemUnlocked;
 	exports.makeEnemies = makeEnemies;
 	exports.matchEntryNotice = matchEntryNotice;
@@ -8201,6 +9091,7 @@ var ChampCore = (function(exports) {
 	exports.originalSpecies = originalSpecies;
 	exports.parseCond = parseCond;
 	exports.parseHabitats = parseHabitats;
+	exports.personalityTraining = personalityTraining;
 	exports.pet = pet;
 	exports.pick = pick;
 	exports.pickBattleSkill = pickBattleSkill;
@@ -8213,6 +9104,7 @@ var ChampCore = (function(exports) {
 	exports.release = release;
 	exports.reqScale = reqScale;
 	exports.restoreFloorFood = restoreFloorFood;
+	exports.reviveSupport = reviveSupport;
 	exports.ropeDamage = ropeDamage;
 	exports.ropeDrainSeconds = ropeDrainSeconds;
 	exports.ropeFor = ropeFor;
@@ -8232,6 +9124,7 @@ var ChampCore = (function(exports) {
 	exports.speciesByStage = speciesByStage;
 	exports.statBounds = statBounds;
 	exports.stepBattle = stepBattle;
+	exports.supportSkills = supportSkills;
 	exports.tamerRank = tamerRank;
 	exports.tickFarm = tickFarm;
 	exports.todaysMatches = todaysMatches;
@@ -8245,6 +9138,7 @@ var ChampCore = (function(exports) {
 	exports.upgradeSave = upgradeSave;
 	exports.upgradeStats = upgradeStats;
 	exports.useGear = useGear;
+	exports.useSupport = useSupport;
 	exports.usedCapacity = usedCapacity;
 	exports.wildHp = wildHp;
 	return exports;

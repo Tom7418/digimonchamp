@@ -61,7 +61,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  // 이동 선분을 작은 간격으로 검사해 프레임이 커도 다른 시설을 관통하지 않는다.
  const canMove=(p,to)=>{const s=getState(),own=s.layout.find(c=>c.id===p.cageId);if(!own)return false;const n=Math.max(1,Math.ceil(Math.hypot(to.x-p.x,to.y-p.y)/6));for(let i=1;i<=n;i++){const point={x:p.x+(to.x-p.x)*i/n,y:p.y+(to.y-p.y)*i/n};if(own?!inCage(point,own):s.layout.some(c=>inCage(point,c)))return false;}return true;};
  const movePet=(p,to)=>{if(!canMove(p,to))return false;const c=getState().layout.find(c=>c.id===p.cageId);placePet(p,to,c);return true;};
- function roamPet(p,dt,speed=16){
+ function roamPet(p,dt,speed=16,restScale=1){
    if(!(dt>0)||!Number.isFinite(dt)||editing||bounces.has(p.uid)||getState().team[drag?.pet]===p)return false;
    const cage=getState().layout.find(c=>c.id===p.cageId);if(!cage||!inCage(p,cage))return false;
    let walk=roaming.get(p);
@@ -79,7 +79,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
    }
    if(!walk.goal){walk.wait=0.7;roaming.set(p,walk);return false;}
    const goal=worldPoint(walk.goal,cage),dx=goal.x-p.x,dy=goal.y-p.y,distance=Math.hypot(dx,dy);
-   if(distance<1){walk.goal=null;walk.wait=0.7+Math.random()*1.6;roaming.set(p,walk);return false;}
+   if(distance<1){walk.goal=null;walk.wait=(0.7+Math.random()*1.6)*restScale;roaming.set(p,walk);return false;}
    const step=Math.min(distance,Math.max(0,speed)*dt),point={x:p.x+dx/distance*step,y:p.y+dy/distance*step};
    if(!movePet(p,point)){walk.goal=null;walk.wait=0.3;roaming.set(p,walk);return false;}
    if(Math.abs(dx)>0.01)p.direction=dx>0?1:-1;

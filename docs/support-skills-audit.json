@@ -1,0 +1,56 @@
+{
+  "arm9Sha256": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
+  "overlay19Sha256": "02ef4c126fd11bd5e2bea21202442bd48575b2afcd29c045f70036940ebde671",
+  "species": 216,
+  "skills": 30,
+  "personalityTextRange": [
+    445,
+    453
+  ],
+  "skillTextRange": [
+    1271,
+    1301
+  ],
+  "speciesOffsets": {
+    "conditions": [
+      76,
+      80
+    ],
+    "pairs": [
+      [
+        84,
+        88
+      ],
+      [
+        92,
+        96
+      ],
+      [
+        100,
+        104
+      ]
+    ]
+  },
+  "tpCostOffset": 72,
+  "evidence": [
+    "ARM9 0x0206af18..0x0206af20 species pointer = 0x020c0894 + internalID*132",
+    "ARM9 0x0206b2ec..0x0206b33c selects first matching personality pair, otherwise default",
+    "overlay19 0x02117748..0x02117848 reads two support slots from actor+0x12c/+0x130"
+  ],
+  "instructionChecks": {
+    "0x206b55c": "0x20c0894",
+    "0x206af1c": "0xe3a02084",
+    "0x206b2f0": "0xe5923048",
+    "0x206b2fc": "0xe5923050",
+    "0x206b304": "0xe5922054",
+    "0x206b310": "0xe592304c",
+    "0x206b31c": "0xe5923058",
+    "0x206b324": "0xe592205c",
+    "0x206b330": "0xe5923060",
+    "0x206b338": "0xe5922064"
+  },
+  "unverified": [
+    "support AI frequency, durations and effect magnitudes; web policies explicitly documented",
+    "attack +88 element labels inferred from named fire/cold/thunder/light/dark skills; instruction-level enum mapping unverified"
+  ]
+}

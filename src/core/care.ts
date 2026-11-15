@@ -68,6 +68,11 @@ export function scheduleMealPoop(d: Digimon, clock: number, rng: Rng = defaultRn
 /** 원본 표의 각성/수면 범위. 분 단위 진행과 야간 일괄 수면의 병합은 웹판 정책이다. */
 const cycleMinutes = (range: number[], rng: Rng) => range[0] + Math.floor(rng() * Math.max(1, range[1] - range[0]));
 export const isSleeping = (d: Digimon): boolean => !d.isEgg && d.restCycle?.species === d.speciesId && d.restCycle.sleepLeft > 0;
+/** 훈련 상태 판정은 화면의 성급한 달리기와 실제 훈련이 공유한다. */
+export function isTraining(d: Digimon): boolean {
+  const cage=getCage(d.cage);
+  return !!(cage.up||cage.apUp||cage.battleUp)&&!d.isEgg&&!d.trainDone&&!isSleeping(d)&&!d.sick&&!d.injured&&d.hunger>0&&d.fatigue<90;
+}
 function tickRestCycle(d: Digimon, rng: Rng, night: boolean): boolean {
   const real = originalSpecies(d.speciesId);
   if (!real) return false;
@@ -283,7 +288,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
     // 밤과 종별 낮잠: 배고픔·똥·훈련 없이 피로만 풀린다. 병·부상은 계속 진행된다
     d.fatigue = Math.max(0, d.fatigue - 0.3);
   } else {
-    d.hunger = Math.max(0, d.hunger - (d.personality === '열혈' ? 0.11 : 0.08));
+    d.hunger = Math.max(0, d.hunger - (0.08 * (d.personality === '열혈' ? 1.3 : 1)));
     d.fatigue = Math.max(0, d.fatigue - (cage.rest ? 0.5 : cage.autoCare ? AUTO_CARE_REST : 0.04));
     if (d.bowel.count < POOP_LIMIT_PER_DAY) d.poopTimer += 1;
   }
@@ -400,12 +405,22 @@ export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false): 
   const rank = tamerRank(save);
   const season = dateOf(save.clock).season;
   let free = capacityOf(save) - usedCapacity(save);
+  // 같은 종류의 케이지 두 개를 혼동하지 않는다. 다수의 제멋대로도 하루 가산10으로 제한한다.
+  const group = (d: Digimon) => d.cageInstance === null ? null : d.cageInstance ?? d.cage;
+  const socialDay = Math.floor((save.clock + 1) / MIN_PER_DAY);
   const next: Digimon[] = [];
   const seen = new Set(save.seen);
   save.digimon.forEach((d, i) => {
     const before = d.isEgg ? 0 : getSpecies(d.speciesId).size;
     const isLast = next.length + (save.digimon.length - i) <= 1;
-    const r = tickOne(d, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1 }, events);
+    const key = group(d), old = d.socialStress;
+    const social = old?.day === socialDay ? {...old} : {day:socialDay,added:0};
+    const sharing = !d.isEgg && key !== null && save.digimon.some(other => other.uid !== d.uid && !other.isEgg && other.personality === '제멋대로' && group(other) === key);
+    const extra = sharing ? Math.max(0,Math.min(10 - social.added,10 / MIN_PER_DAY)) : 0;
+    social.added = Math.min(10,social.added + extra);
+    const candidate = {...d,socialStress:social};
+    if(extra>0)addStress(candidate,extra);
+    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1 }, events);
     if (!r) {
       free += before;
       return;
@@ -524,12 +539,19 @@ export function feedRotten(save: SaveData, uid: number): ActionResult {
 }
 
 /** 쓰다듬기: 게임 1시간에 한 번 스트레스가 조금 풀린다 */
-export function pet(save: SaveData, uid: number): ActionResult & { soothed?: boolean } {
+export function pet(save: SaveData, uid: number, rng: Rng = defaultRng): ActionResult & { soothed?: boolean; awakened?: boolean } {
   const d = find(save, uid);
   if (!d || d.isEgg) return fail(save, '아직 쓰다듬을 수 없어요.');
   const name = getSpecies(d.speciesId).name;
-  if (d.pettedAt != null && save.clock - d.pettedAt < PET.cooldown) return { ok: true, save, message: `${name}(은)는 기분이 좋아 보인다.` };
-  return { ok: true, soothed: true, message: `${name}(을)를 쓰다듬었다.`, save: update(save, uid, (x) => ({ ...x, pettedAt: save.clock, stress: Math.max(0, (x.stress ?? 0) - PET.relief) })) };
+  // 원작의 '게으름은 터치해도 잘 깨지 않음'. 성공률20%는 웹판 임시 값, 밤에는 깨우지 않는다.
+  let awakened = false;
+  if (isSleeping(d)) {
+    if (isNight(save) || (d.personality === '게으름' && rng() >= 0.2)) return {ok:true,save,awakened:false,message:`${name}(은)는 아직 깊이 잠들어 있다.`};
+    save = update(save,uid,x=>({...x,restCycle:{species:x.speciesId,sleepLeft:0,awakeLeft:cycleMinutes(originalSpecies(x.speciesId)?.awake ?? [120,180],rng)}}));
+    awakened = true;
+  }
+  if (d.pettedAt != null && save.clock - d.pettedAt < PET.cooldown) return { ok: true, save, awakened, message: awakened ? `${name}(이)가 잠에서 깨어났다.` : `${name}(은)는 기분이 좋아 보인다.` };
+  return { ok: true, soothed: true, awakened, message: `${name}(을)를 쓰다듬었다.`, save: update(save, uid, (x) => ({ ...x, pettedAt: save.clock, stress: Math.max(0, (x.stress ?? 0) - PET.relief) })) };
 }
 
 /** 바닥의 똥 하나 치우기 */
