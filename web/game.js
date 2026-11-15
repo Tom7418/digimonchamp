@@ -1636,7 +1636,7 @@
            return `<button data-field="${i}"${off ? ' disabled' : ''}><b>${esc(f.id)}${f.fee ? ` · ${f.fee} ฿` : ''}</b><small>${why ? esc(why) + ' · ' : ''}이번 계절: ${esc(pool.babies.join(', ') || '없음')}${pool.rookies.length ? ` / 성장기 ${esc(pool.rookies.join(', '))}` : ''}${pool.strong.length ? ` / 성숙기 이상 ${esc(pool.strong.join(', '))}` : ''}</small></button>`;
          })
          .join('')}</div>
-       <p class="hint">드래그로 디지몬을 둘러싸고 처음 위치 근처에서 손을 떼면 로프가 감깁니다. 감긴 디지몬을 눌러 바깥으로 끌었다 놓으면 당겨서 HP가 깎이고, HP를 다 깎으면 포획. 감은 뒤 4초 안에 당기지 않으면 풀립니다. 맞은 디지몬은 맵 밖으로 도망가니 와이어로 길을 막으세요. 성장기는 성장기 로프가 있어야 잡힙니다.</p>`,
+       <p class="hint">드래그로 디지몬을 둘러싸고 처음 위치 근처에서 손을 떼면 로프가 감깁니다. 감긴 디지몬을 누른 채 끌어 로프를 팽팽하게 유지하세요. 가까우면 로프 게이지가 회복되고, 멀어지면 체력이 줄지만 너무 멀거나 게이지가 다 닳으면 끊어집니다. 체력이 0이 되어 기절하면 눌러서 포획하세요. 성장기 이상은 해당 세대를 잡을 수 있는 로프가 필요합니다. 휠로 확대·축소하고, 이동 도구·오른쪽 드래그·방향키로 화면을 움직일 수 있습니다.</p>`,
       'HUNT',
       '취소',
     );
@@ -1715,7 +1715,11 @@
     hunt.notes = hunt.notes.slice(0, 4);
   }
   function setTool(tool) {
-    if (hunt) hunt.tool = tool;
+    if (hunt) {
+      // 도구를 바꾸기 전 그리던 선은 취소한다. 다음 손 떼기로 와이어가 설치되면 안 된다.
+      if (hunt.tool !== tool) { hunt.drawing = false; hunt.trail = []; hunt.pull = null; hunt.pan = null; hunt.lastScreen = null; }
+      hunt.tool = tool;
+    }
     $('#tool-rope').classList.toggle('active', tool === 'rope');
     $('#tool-wire').classList.toggle('active', tool === 'wire');
     $('#tool-move').classList.toggle('active', tool === 'move');
@@ -2041,6 +2045,11 @@
   function huntPointer(type, e) {
     if (!hunt) return;
     e.preventDefault();
+    // OS/브라우저의 터치 취소는 설치/로프 완성과 다르다. 좌표가 없어도 안전하게 정리한다.
+    if (type === 'cancel') {
+      hunt.drawing = false; hunt.trail = []; hunt.pull = null; hunt.pan = null; hunt.lastScreen = null;
+      return;
+    }
     if (huntPanPointer(type, e)) return;
     if (canvas.getBoundingClientRect) hunt.lastScreen = type === 'up' ? null : screenPoint(e);
     const p = canvasPoint(e);
@@ -2063,6 +2072,7 @@
       hunt.pull.w.anchor = { x: p.x, y: p.y };
     } else if (type === 'up' && hunt.pull) {
       // 손을 떼도 로프 끝은 그 자리에 남는다
+      hunt.pull.w.anchor = { x: p.x, y: p.y };
       hunt.pull = null;
     } else if (type === 'move' && hunt.drawing) {
       const last = hunt.trail[hunt.trail.length - 1];
@@ -2162,6 +2172,11 @@
     hunt.cam.x = before.x - s.x / hunt.zoom;
     hunt.cam.y = before.y - s.y / hunt.zoom;
     huntClampCam();
+    // 카메라 배율이 바뀌어도 잡고 있는 로프 끝은 화면의 포인터 아래에 남는다.
+    followHuntPointer();
+  }
+  function followHuntPointer() {
+    if (hunt?.pull && hunt.lastScreen) hunt.pull.w.anchor = huntToWorld(hunt.lastScreen);
   }
   // 방향키·WASD로 화면 이동, 로프를 그리다 화면 가장자리에 닿으면 그쪽으로 흘러간다
   const huntKeys = new Set();
@@ -2181,6 +2196,8 @@
     hunt.cam.x += dx;
     hunt.cam.y += dy;
     huntClampCam();
+    // 가장자리 자동 스크롤/방향키 이동 중에는 pointermove가 없어도 월드 좌표를 갱신한다.
+    followHuntPointer();
   }
 
   function drawHunt(t, dt) {
@@ -2277,7 +2294,7 @@
       ctx.font = 'bold 8px "Noto Sans KR",sans-serif';
       ctx.textAlign = 'center';
       ctx.fillStyle = weak ? '#ffd0c0' : '#ffffff';
-      ctx.fillText(sp.name + (weak ? ` (${C.ropeFor(w.id)?.name ?? '포획 불가'} 필요)` : ''), w.x, w.y + 11);
+      ctx.fillText(sp.name + (w.ko ? ' (기절 · 눌러서 포획)' : weak ? ` (${C.ropeFor(w.id)?.name ?? '포획 불가'} 필요)` : ''), w.x, w.y + 11);
       for (let k = 0; k < w.max; k++) {
         ctx.fillStyle = k < Math.ceil(w.hp) ? '#e0574b' : '#00000055';
         ctx.fillRect(w.x - w.max * 4 + k * 8, w.y + 14, 7, 3);
@@ -2574,7 +2591,7 @@
   canvas.addEventListener('pointerdown', (e) => huntPointer('down', e));
   canvas.addEventListener('pointermove', (e) => huntPointer('move', e));
   canvas.addEventListener('pointerup', (e) => huntPointer('up', e));
-  canvas.addEventListener('pointercancel', (e) => huntPointer('up', e));
+  canvas.addEventListener('pointercancel', (e) => huntPointer('cancel', e));
   canvas.addEventListener('wheel', (e) => { if (hunt) huntWheel(e); }, { passive: false });
   canvas.addEventListener('contextmenu', (e) => { if (hunt) e.preventDefault(); });
   window.addEventListener('keydown', (e) => {
