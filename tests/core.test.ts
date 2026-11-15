@@ -7,7 +7,7 @@ import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta } from '../src/core/training';
-import { advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isNight, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
+import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isNight, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -431,6 +431,40 @@ describe('evolution', () => {
     expect(findEvolution(agu, 3, 100)).toEqual({ kind: 'evolve', to: '그레이몬' }); // 레드 테이머부터 성숙기
     expect(findEvolution(agu, 3, 2)).toEqual({ kind: 'blocked', to: '그레이몬', reason: 'capacity' });
     expect(maxStageForRank(7)).toBe(6);
+  });
+  it('코로몬의 세 번째 배틀 직후 성장 대기나 시간 진행 없이 아구몬으로 진화한다', () => {
+    let s = withMon(freshSave(0), { speciesId: '코로몬', stageAge: 0, battles: 0 });
+    for (let i = 1; i <= 3; i++) {
+      s = { ...s, digimon: s.digimon.map(d => applyBattleResult(d, false, false, () => 0.9)) };
+      const clock = s.clock, hunger = only(s).hunger;
+      const r = evaluateEvolutions(s, () => 0.5, new Set([1]));
+      expect(r.events.filter(e => e.type === 'evolved')).toHaveLength(i === 3 ? 1 : 0);
+      expect(r.save.clock).toBe(clock);expect(only(r.save).hunger).toBe(hunger);
+      s = r.save;
+    }
+    expect(only(s).speciesId).toBe('아구몬');expect(only(s).battles).toBe(3);expect(only(s).stageAge).toBe(0);
+    expect(s.seen).toContain('아구몬');expect(evaluateEvolutions(s).events).toHaveLength(0);
+  });
+  it('배틀 직후에도 분기 우선순위·추가 속성·시간 진화·랭크 제한을 보존한다', () => {
+    const d = { ...newDigimon(1, '코로몬'), battles: 3, stageAge: 0 };
+    expect(findEvolution(d, 1, 100)).toEqual({ kind: 'evolve', to: '아구몬' });
+    d.ap.용 = 20;
+    const r = evaluateEvolutions({ ...freshSave(0), digimon: [d] }, () => 0.5);
+    expect(only(r.save).speciesId).toBe('브이몬');expect(only(r.save).ap.용).toBe(10);
+    expect(findEvolution({ ...d, battles: 2 }, 1, 100)).toBeNull();
+    expect(findEvolution({ ...newDigimon(1, '코로몬'), stageAge: 0 }, 1, 100)).toBeNull();
+    expect(findEvolution({ ...newDigimon(1, '아구몬'), battles: 6 }, 1, 100)?.kind).toBe('blocked');
+  });
+  it('동시 진화는 남은 용량을 순서대로 사용하고 비출전 개체·알은 그대로 둔다', () => {
+    const digimon = ['코로몬', '코로몬', '코로몬', '깜몬'].map((name, i) => ({ ...newDigimon(i + 1, name), battles: i < 2 ? 3 : 0 }));
+    const s = { ...freshSave(0), digimon };
+    expect(s.digimon.reduce((sum,d)=>sum+getSpecies(d.speciesId).size,0)).toBe(30);
+    const r = evaluateEvolutions(s, () => 0.5, new Set([1, 2]));
+    expect(r.events.filter(e=>e.type==='evolved')).toHaveLength(1);
+    expect(r.save.digimon.map(d=>d.speciesId)).toEqual(['아구몬', '코로몬', '코로몬', '깜몬']);
+    const egg = { ...digimon[0], isEgg: true };
+    expect(evaluateEvolutions({ ...s, digimon: [egg] }).events).toHaveLength(0);
+    expect(evaluateEvolutions(s, () => 0.5, new Set([4])).events).toHaveLength(0);
   });
   it('rotten meat causes sickness and a penalty', () => {
     let s = { ...freshSave(0), rotten: 2 };

@@ -21,7 +21,7 @@ function setup() {
   const source=fs.readFileSync(path.join(__dirname,'../web/game.js'),'utf8');
   const a=source.indexOf('  function dropItem('),b=source.indexOf('  // 머리 위 상태',a);
   assert.ok(a>0&&b>a);
-  const sa=source.indexOf('  function sweepFoods('),sb=source.indexOf('  function drawSweeps(',sa);
+  const sa=source.indexOf('  function foodUnderPoop('),sb=source.indexOf('  function drawSweeps(',sa);
   vm.runInContext('const sweeps=[],SWEEP_FRAME=0.3,SWEEP_LOOPS=2,SPARKLE_FRAME=0.15;'+source.slice(sa,sb),ctx);
   vm.runInContext(source.slice(a,b)+'\ninitFarmInput();globalThis.api={seekFood};',ctx);
   const event=(patch={})=>({pointerId:1,button:0,isPrimary:true,clientX:200,clientY:300,preventDefault(){},stopImmediatePropagation(){this.stopped=true;},...patch});
@@ -140,19 +140,32 @@ test('식사 중 먹이가 이동하면 새 옆자리로 걸어간 뒤에만 다
  s.seekFood(p,s.ctx.save.digimon[0],10);assert.equal(s.ctx.save.digimon[0].hunger,10);
 });
 
-test('빗자루 클릭·드래그로 남은 고기·프로틴·상한 고기와 겹친 똥을 한 번에 치운다',()=>{
+test('빗자루는 겹친 똥을 먼저 치우고 먹이는 다음 청소 동작에서 치운다',()=>{
  const s=setup();Object.assign(s.ctx.save,{meat:2,pills:2,rotten:1});s.ctx.save.digimon[0].poop=1;
  s.ctx.view.foods=[{kind:'meat',x:100,y:320,remaining:30},{kind:'pill',x:250,y:320,remaining:75},{kind:'rotten',x:400,y:320},{kind:'meat',x:700,y:320}];
  s.ctx.view.poops=[{uid:1,x:100,y:314}];
  s.choose('broom');s.canvas.fire('pointerdown',s.event({clientX:100}));s.canvas.fire('pointermove',s.event({clientX:400}));s.canvas.fire('pointerup',s.event({clientX:400}));
- assert.equal(s.ctx.view.foods.filter(f=>f.sweeping).length,3);
- s.ctx.updateSweeps(1200);assert.equal(s.ctx.view.foods.length,1);assert.equal(s.ctx.view.foods[0].x,700);assert.equal(s.ctx.view.poops.length,0);
- assert.equal(s.ctx.save.meat,1);assert.equal(s.ctx.save.pills,1);assert.equal(s.ctx.save.rotten,0);assert.equal(s.ctx.save.digimon[0].poop,0);
- s.ctx.updateSweeps(1300);assert.equal(s.ctx.save.meat,1);assert.equal(s.ctx.save.pills,1);
+ assert.equal(s.ctx.view.foods.filter(f=>f.sweeping).length,2);
+ s.ctx.updateSweeps(1200);assert.equal(s.ctx.view.foods.length,2);assert.equal(s.ctx.view.foods[0].x,100);assert.equal(s.ctx.view.poops.length,0);
+ assert.equal(s.ctx.save.meat,2);assert.equal(s.ctx.save.pills,1);assert.equal(s.ctx.save.rotten,0);assert.equal(s.ctx.save.digimon[0].poop,0);
+ s.canvas.fire('pointerdown',s.event({clientX:100}));s.canvas.fire('pointerup',s.event({clientX:100}));s.ctx.updateSweeps(1300);
+ assert.equal(s.ctx.view.foods.length,1);assert.equal(s.ctx.view.foods[0].x,700);assert.equal(s.ctx.save.meat,1);assert.equal(s.ctx.save.pills,1);
 });
 test('식사 중 청소하면 씹기를 취소하고 청소가 끝날 때까지 재섭취하지 않는다',()=>{
  const s=setup();s.choose('meat');s.tap();const p=s.ctx.view.team[0];s.seekFood(p,s.ctx.save.digimon[0],10);
  s.choose('broom');s.tap();assert.equal(s.seekFood(p,s.ctx.save.digimon[0],10),false);
  assert.equal(s.ctx.save.digimon[0].hunger,0);s.ctx.updateSweeps(1200);
  assert.equal(s.ctx.view.foods.length,0);assert.equal(s.ctx.save.meat,1);assert.equal(s.ctx.save.digimon[0].hunger,0);
+});
+
+test('긴 빗자루 드래그 중 똥이 먼저 사라져도 겹친 먹이는 손을 뗄 때까지 보호한다',()=>{
+ const s=setup();s.ctx.save.digimon[0].poop=2;
+ s.ctx.view.foods=[{kind:'meat',x:200,y:320,remaining:50}];s.ctx.view.poops=[{uid:1,x:200,y:314},{uid:1,x:400,y:314}];
+ s.choose('broom');s.canvas.fire('pointerdown',s.event());s.ctx.updateSweeps(1200);
+ assert.equal(s.ctx.view.poops.length,1);assert.equal(s.ctx.view.foods[0].sweeping,undefined);
+ // 식사로 먹이 객체가 교체되어도 같은 청소 동작에서는 중복 제거하지 않는다.
+ s.ctx.view.foods[0]={...s.ctx.view.foods[0],remaining:45};
+ s.canvas.fire('pointermove',s.event({clientX:400}));s.canvas.fire('pointermove',s.event());s.canvas.fire('pointerup',s.event());
+ s.ctx.updateSweeps(1300);assert.equal(s.ctx.view.poops.length,0);assert.equal(s.ctx.view.foods.length,1);assert.equal(s.ctx.save.meat,2);
+ s.tap();s.ctx.updateSweeps(1400);assert.equal(s.ctx.view.foods.length,0);assert.equal(s.ctx.save.meat,1);
 });

@@ -27,6 +27,11 @@ export function explain(d: Digimon, cond: Cond): Check[] {
     const life = LIFESPAN[getSpecies(d.speciesId).stage];
     out.push({ label: '수명이 다할 때까지 다른 조건을 채우지 않음', met: d.stageAge >= life });
   }
+  // 배틀 횟수 조건은 달성 직후 평가한다. 그 밖의 조건에 쓰던 임시 성장 대기는 유지/표시한다.
+  if (cond.battles === undefined && !cond.time) {
+    const need = Math.ceil(LIFESPAN[getSpecies(d.speciesId).stage] * 0.2);
+    out.push({ label: `세대 경과 ${need}분 이상 (현재 ${Math.floor(d.stageAge)}분)`, met: d.stageAge >= need });
+  }
   return out;
 }
 
@@ -48,8 +53,6 @@ export type EvoResult = { kind: 'evolve'; to: string } | { kind: 'blocked'; to: 
 export function findEvolution(d: Digimon, rank: number, freeCapacity: number): EvoResult {
   if (d.isEgg) return null;
   const sp = getSpecies(d.speciesId);
-  const life = LIFESPAN[sp.stage];
-  if (d.stageAge < life * 0.2) return null;
   for (const evo of sp.evos) {
     if (!meets(d, evo.cond)) continue;
     const to = getSpecies(evo.to);

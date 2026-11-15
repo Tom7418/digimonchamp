@@ -111,24 +111,35 @@ test('케이지가 없는 옛 저장은 기본 케이지를 복원하고 내부�
 test('고르지 않은 디지몬은 바닥을 눌러도 움직이지 않고, 다시 누르면 선택이 풀린다',()=>{
  const s=setup(),c=s.board.center(1,1),p=s.state.team[0],start={x:p.x,y:p.y},point={x:c.x+60,y:c.y};
  s.canvas.onpointerdown(s.event(point));s.canvas.onpointerup(s.event(point));
- near(p.x,start.x);near(p.y,start.y);assert.equal(p.cageId,null);assert.equal(s.state.pickedUid,undefined);
+ near(p.x,start.x);near(p.y,start.y);assert.equal(p.cageId,null);assert.equal(s.state.pickedUid,null);
  const tap=()=>{s.canvas.onpointerdown(s.event({x:p.x,y:p.y-25}));s.canvas.onpointerup(s.event({x:p.x,y:p.y-25}));};
  tap();assert.equal(s.state.pickedUid,p.uid);
  tap();assert.equal(s.state.pickedUid,null);
  s.canvas.onpointerdown(s.event(point));s.canvas.onpointerup(s.event(point));near(p.x,start.x);assert.equal(p.cageId,null);
 });
-test('선택 후 클릭도 클릭한 바닥 위치를 쓰고 마지막 pointerup 좌표로 드롭한다',()=>{
+test('선택 후 바닥 클릭은 선택만 해제하고 실제 드래그만 마지막 좌표로 이동한다',()=>{
  const s=setup(),c=s.board.center(1,1),p=s.state.team[0],point={x:c.x+60,y:c.y};
- s.state.pickedUid=p.uid;
+ const original={x:p.x,y:p.y};s.state.pickedUid=p.uid;
  s.canvas.onpointerdown(s.event(point));s.canvas.onpointerup(s.event(point));s.draw();
- near(p.x,point.x);near(p.y,point.y);assert.equal(p.cageId,'clinic');
+ near(p.x,original.x);near(p.y,original.y);assert.equal(s.state.pickedUid,null);
+ s.drop(point);
  const end={x:c.x-60,y:c.y+20};
  s.canvas.onpointerdown(s.event({x:p.x,y:p.y-25}));
  // 마지막 move 이벤트가 생략되어도 실제 놓은 위치를 사용한다.
  s.canvas.onpointerup(s.event({x:end.x,y:end.y-25}));s.draw();near(p.x,end.x);near(p.y,end.y);
  const free=s.board.center(0,0),empty={x:free.x+50,y:free.y};
  s.canvas.onpointerdown(s.event(empty));s.canvas.onpointerup(s.event(empty));s.draw();
- near(p.x,empty.x);near(p.y,empty.y);assert.equal(p.cageId,'clinic');assert.equal(s.board.isBouncing(p.uid),true);
+ near(p.x,end.x);near(p.y,end.y);assert.equal(p.cageId,'clinic');assert.equal(s.board.isBouncing(p.uid),false);assert.equal(s.state.pickedUid,null);
+});
+
+test('다른 디지몬 클릭은 그 개체를 선택하며 이전 선택 개체를 이동시키지 않는다',()=>{
+ const s=setup(),c=s.board.center(1,1);s.drop({x:c.x-50,y:c.y});const first=s.state.team[0];
+ s.state.team.push({uid:2,x:c.x+50,y:c.y,cageId:'clinic',cage:'clinic'});s.draw();s.state.pickedUid=first.uid;
+ const old={x:first.x,y:first.y},second=s.state.team[1],point={x:second.x,y:second.y-25};
+ s.canvas.onpointerdown(s.event(point));s.canvas.onpointerup(s.event(point));s.draw();
+ assert.equal(s.state.pickedUid,2);assert.equal(s.state.selected,1);near(first.x,old.x);near(first.y,old.y);near(second.x,c.x+50);
+ const blank=s.board.center(0,0);s.canvas.onpointerdown(s.event(blank));s.canvas.onpointerup(s.event(blank));s.draw();
+ assert.equal(s.state.pickedUid,null);near(first.x,old.x);near(second.x,c.x+50);
 });
 
 test('틈에 놓으면 가까운 케이지 내부로 튕기고 일시정지·재접속·착지를 보존한다',()=>{

@@ -521,7 +521,7 @@
         ITEMS.map((it) => `<button class="tray-item tool" data-item="${it.kind}" aria-pressed="${selectedItem === it.kind}"${it.count() > 0 ? '' : ' disabled'} title="${it.label}"><img src="${TOOL_ICON[it.kind]}" alt=""><b>${it.label}</b><small>×${Math.max(0, it.count())}</small></button>`).join('') +
         '<button class="tray-item tool" data-item="broom" aria-pressed="' + (selectedItem === 'broom') + '" title="빗자루: 똥·남은 먹이를 클릭하거나 드래그해 치우기"><img src="assets/ui/broom_1.png" alt=""><b>빗자루</b>' + (view.poops.length ? `<small>${view.poops.length}</small>` : '') + '</button>' +
         '<button class="tray-item tool" data-tool="cage" title="케이지 편집"><img src="assets/facilities/cm01.png" alt=""><b>케이지</b></button>' +
-        '<span class="tray-hint">' + (selectedItem === 'broom' ? '똥·남은 먹이를 클릭하거나 드래그해서 치우세요 · 먹이는 폐기됩니다 · Esc로 취소' : selectedItem === 'meat' ? '사육장 바닥을 터치해 고기를 놓으세요 · Esc로 취소' : selectedItem === 'pill' ? '바닥에 알약(프로틴)을 놓으면 디지몬이 먹고 다음 배틀에서 힘이 세집니다 · 과식 주의' : selectedItem === 'shot' ? '병에 걸린 디지몬을 터치해 주사를 놓으세요 · Esc로 취소' : selectedItem === 'heal' ? '다친 디지몬을 터치해 상처약을 바르세요 · Esc로 취소' : '고기·알약 → 바닥 터치 · 약·상처약 → 디지몬 터치') + '</span>',
+        '<span class="tray-hint">' + (selectedItem === 'broom' ? '똥부터 치우세요 · 겹친 먹이는 다음 청소에서 치워집니다 · Esc로 취소' : selectedItem === 'meat' ? '사육장 바닥을 터치해 고기를 놓으세요 · Esc로 취소' : selectedItem === 'pill' ? '바닥에 알약(프로틴)을 놓으면 디지몬이 먹고 다음 배틀에서 힘이 세집니다 · 과식 주의' : selectedItem === 'shot' ? '병에 걸린 디지몬을 터치해 주사를 놓으세요 · Esc로 취소' : selectedItem === 'heal' ? '다친 디지몬을 터치해 상처약을 바르세요 · Esc로 취소' : '고기·알약 → 바닥 터치 · 약·상처약 → 디지몬 터치') + '</span>',
     );
     $('#tray').querySelectorAll('button').forEach((button,i)=>{
       if(i>=9)return;
@@ -623,21 +623,28 @@
     }
   }
   // 고기·상한 고기·프로틴 모두 청소한다. 씹기 예약을 먼저 풀어 중복 섭취를 막는다.
-  function sweepFoods(pt) {
+  function foodUnderPoop(food) {
+    return view.poops.some(p=>Math.hypot(p.x-food.x,(p.y-14)-(food.y-20))<=40);
+  }
+  function sweepFoods(pt,protectedFoods=itemPress?.protectedFoods) {
     for (const food of view.foods) {
       if (food.sweeping || Math.hypot(pt.x-food.x,pt.y-(food.y-20))>40) continue;
+      // 겹친 똥을 먼저 청소한다. 같은 드래그 도중 똥이 사라져도 먹이를 함께 지우지 않는다.
+      if(foodUnderPoop(food)){protectedFoods?.add(food);continue;}
+      // 한 입 먹어 새 객체로 바뀐 먹이도 같은 자리에 있으면 이번 드래그의 보호를 이어간다.
+      if(protectedFoods&&[...protectedFoods].some(f=>f===food||(f.x===food.x&&f.y===food.y)))continue;
       food.sweeping=true;
       for (const [uid,eating] of feeding) if(eating.food===food) feeding.delete(uid);
       sweeps.push({food,start:performance.now(),done:false});
     }
   }
-  function sweepAt(pt) {
-    const hits=view.poops.filter(x=>!x.sweeping&&Math.hypot(pt.x-x.x,pt.y-(x.y-14))<=40);
-    for(const hit of hits){hit.sweeping=true;sweeps.push({poop:hit,start:performance.now(),done:false});}
-    sweepFoods(pt);
+  function sweepAt(pt,protectedFoods=itemPress?.protectedFoods) {
+    const hits=view.poops.filter(x=>Math.hypot(pt.x-x.x,pt.y-(x.y-14))<=40);
+    for(const hit of hits)if(!hit.sweeping){hit.sweeping=true;sweeps.push({poop:hit,start:performance.now(),done:false});}
+    if(!hits.length)sweepFoods(pt,protectedFoods);
   }
   // 빠른 드래그에서도 포인터 사이 구간의 똥과 먹이를 놓치지 않는다.
-  function sweepStroke(from,to){const n=Math.max(1,Math.ceil(Math.hypot(to.x-from.x,to.y-from.y)/12));for(let i=0;i<=n;i++)sweepAt({x:from.x+(to.x-from.x)*i/n,y:from.y+(to.y-from.y)*i/n});}
+  function sweepStroke(from,to,protectedFoods=itemPress?.protectedFoods){const n=Math.max(1,Math.ceil(Math.hypot(to.x-from.x,to.y-from.y)/12));for(let i=0;i<=n;i++)sweepAt({x:from.x+(to.x-from.x)*i/n,y:from.y+(to.y-from.y)*i/n},protectedFoods);}
   function updateSweeps(now) {
     for (const sw of sweeps) {
       if (!sw.done && now - sw.start >= SWEEP_FRAME * 2 * SWEEP_LOOPS * 1000) {
@@ -773,7 +780,7 @@
         e.stopImmediatePropagation();
         e.preventDefault();
         if (e.button !== 0 || e.isPrimary === false || itemPress) return;
-        itemPress = { id: e.pointerId, kind: selectedItem, last: farmPoint(e) };
+        itemPress = { id: e.pointerId, kind: selectedItem, last: farmPoint(e),protectedFoods:selectedItem==='broom'?new Set(view.foods.filter(foodUnderPoop)):null };
         if(selectedItem==='broom'&&itemPress.last)sweepAt(itemPress.last);
         canceledPress = null;
         canvas.setPointerCapture?.(e.pointerId);
@@ -798,10 +805,10 @@
         e.preventDefault();
         swallowUp = false;
         if (itemPress?.id !== e.pointerId) return;
-        const kind = itemPress.kind, last = itemPress.last;
+        const kind = itemPress.kind, last = itemPress.last,protectedFoods=itemPress.protectedFoods;
         itemPress = null;
         const pt = farmPoint(e);
-        if (pt && !farmInputBlocked()) {if(kind==='broom'&&last)sweepStroke(last,pt);else dropItem(kind, pt);}
+        if (pt && !farmInputBlocked()) {if(kind==='broom'&&last)sweepStroke(last,pt,protectedFoods);else dropItem(kind, pt);}
       }
     }, true);
     canvas.addEventListener('pointercancel', (e) => {
@@ -1202,6 +1209,7 @@
     el.scrollTop = el.scrollHeight;
   }
   function finishBattle() {
+    if (!battle || battle.done) return; // 같은 결과를 두 번 반영해 배틀 횟수/진화가 중복되지 않게 한다.
     const b = battle;
     b.done = true;
     const won = b.state.winner === 0;
@@ -1247,6 +1255,10 @@
     $('#modal-title').textContent = won ? 'WIN!' : 'LOSE';
     $('#modal-ok').disabled = false;
     $('#close-modal').disabled = false;
+    // 결과/타이틀에 따른 횟수·랭크를 먼저 반영하고 즉시 진화한다. 연출은 결과창을 닫은 뒤 재생한다.
+    const evolution = C.evaluateEvolutions(save, Math.random, uids);
+    save = evolution.save;
+    evolution.events.forEach(logEvent);
     render();
     persist();
   }
@@ -2361,6 +2373,10 @@
 
   // ---------- 시작 ----------
   load();
+  // 이전 저장에 이미 배틀 조건을 채운 개체가 있어도 다음 한 시간을 기다리지 않는다.
+  const restoredEvolution = C.evaluateEvolutions(save, Math.random, new Set(save.digimon.filter(d=>d.battles>0).map(d=>d.uid)));
+  save = restoredEvolution.save;
+  restoredEvolution.events.forEach(logEvent);
   const board = createCageEditor(
     canvas,
     () => view,

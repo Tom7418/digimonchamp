@@ -159,6 +159,29 @@ export type FarmEvent =
   | { type: 'trained'; uid: number; name: string; changes: string }
   | { type: 'blocked'; uid: number; name: string; reason: 'rank' | 'capacity' };
 
+/** 진화 시 능력치/속성 이월은 사육 틱과 배틀 직후에 같은 규칙을 사용한다. */
+function evolveDigimon(d: Digimon, to: string, rng: Rng): Digimon {
+  const ap = Object.fromEntries(Object.entries(d.ap).map(([k, v]) => [k, Math.floor(v / 2)])) as Record<ApKey, number>;
+  return { ...d, speciesId: to, stageAge: 0, stats: evolvedStats(d, to, d.eggs, rng), statVersion: 1, ap, rottenEaten: 0 };
+}
+
+/** 시간/포만감 등을 진행하지 않고 조건만 평가한다. 한 번에 개체당 한 단계만 진화한다. */
+export function evaluateEvolutions(save: SaveData, rng: Rng = defaultRng, uids?: ReadonlySet<number>): { save: SaveData; events: FarmEvent[] } {
+  const events: FarmEvent[] = [], seen = new Set(save.seen);
+  const rank = tamerRank(save);
+  let free = capacityOf(save) - usedCapacity(save);
+  const digimon = save.digimon.map(d => {
+    if (uids && !uids.has(d.uid)) return d;
+    const evo = findEvolution(d, rank, free);
+    if (evo?.kind !== 'evolve') return d;
+    free -= getSpecies(evo.to).size - getSpecies(d.speciesId).size;
+    events.push({ type: 'evolved', uid: d.uid, from: d.speciesId, to: evo.to });
+    seen.add(evo.to);
+    return evolveDigimon(d, evo.to, rng);
+  });
+  return { save: events.length ? { ...save, digimon, seen: [...seen] } : save, events };
+}
+
 /**
  * 스트레스 (원작 도움말 help #127: 쌓이면 병에 걸린다. 수치는 화면에 나오지 않는다).
  * 값은 형규가 정함: 정원 초과로 하루가 지날 때마다 +20, 상한 먹이 +50, 병 +40, 훈련 한 번마다 +5,
@@ -345,8 +368,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
     if (evo?.kind === 'evolve') {
       events.push({ type: 'evolved', uid: d.uid, from: sp.id, to: evo.to });
       // 진화하면 쌓아 둔 종족·속성 수치는 절반만 이어진다
-      const ap = Object.fromEntries(Object.entries(d.ap).map(([k, v]) => [k, Math.floor(v / 2)])) as Record<ApKey, number>;
-      return { ...d, speciesId: evo.to, stageAge: 0, stats: evolvedStats(d, evo.to, d.eggs, ctx.rng), statVersion: 1, ap, rottenEaten: 0 };
+      return evolveDigimon(d, evo.to, ctx.rng);
     }
     if (d.stageAge >= LIFESPAN[sp.stage]) {
       if (evo?.kind === 'blocked' && d.stageAge === LIFESPAN[sp.stage]) events.push({ type: 'blocked', uid: d.uid, name: sp.name, reason: evo.reason });
