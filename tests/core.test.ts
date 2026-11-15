@@ -1226,6 +1226,55 @@ describe('원본 능력치 생성·진화·저장 이전', () => {
 });
 
 
+describe('배틀 접근 AI 회귀',()=>{
+  it('시작 알에서 깜몬→코로몬→아구몬으로 진화한 게으름 개체도 모든 모드에서 먼저 걷는다',()=>{
+    let save=freshEggSave(0);save.digimon[0].personality='게으름';
+    save=advance(save,30,()=>.5).save;const stages=[only(save)];
+    save={...save,digimon:[{...only(save),stageAge:LIFESPAN[1]}]};save=evaluateEvolutions(save,()=>.5).save;stages.push(only(save));
+    save={...save,digimon:[{...only(save),battles:3}]};save=evaluateEvolutions(save,()=>.5).save;stages.push(only(save));
+    expect(stages.map(d=>d.speciesId)).toEqual(['깜몬','코로몬','아구몬']);
+    for(const d of stages)for(const mode of ['일반','지원','특수'] as const){
+      expect(d.personality).toBe('게으름');
+      const foe={...newDigimon(2,'아구몬',()=>.5),personality:'솔직' as const};
+      const state=createBattle([entrantOf(d,mode)],[entrantOf(foe,'일반')]);
+      for(let i=0;i<20;i++)stepBattle(state,()=>.99);
+      expect(state.units[0].wasHit).toBe(false);expect(state.units[0].x).toBeGreaterThan(110);
+      expect(Number.isFinite(state.units[0].y)).toBe(true);
+    }
+  });
+  it('지원은 기술이 없거나TP가 부족하거나 특수 선택에 실패해도 멈춘 상대에게 접근해 기본 공격한다',()=>{
+    for(const species of ['깜몬','코로몬','아구몬'])for(const tp of [0,100]){
+      const d={...newDigimon(1,species,()=>.5),personality:'게으름' as const};
+      const foe={...newDigimon(2,'아구몬',()=>.5),personality:'솔직' as const};foe.stats={...foe.stats,hp:100000};
+      const state=createBattle([entrantOf(d,'지원')],[entrantOf(foe,'일반')]);
+      state.units[0].x=100;state.units[0].cd=0;state.units[0].tp=tp;
+      const hits=[];
+      for(let i=0;i<80&&!state.over;i++){
+        state.units[1].x=280;state.units[1].cd=100;
+        hits.push(...stepBattle(state,()=>.99).filter(e=>e.type==='hit'&&e.from===0));
+      }
+      expect(hits.length).toBeGreaterThan(0);expect(state.units[0].wasHit).toBe(false);
+      expect(hits.some(e=>e.type==='hit'&&!e.special)).toBe(true);
+    }
+  });
+  it('지원의 체력이 낮은 아군 회복 우선순위는 유지한다',()=>{
+    const a={...newDigimon(1,'아구몬'),personality:'게으름' as const},b={...newDigimon(2,'코로몬'),personality:'솔직' as const};
+    const state=createBattle([entrantOf(a,'지원'),entrantOf(b,'일반')],[entrantOf(newDigimon(3,'아구몬'),'일반')]);
+    state.units[0].cd=0;state.units[0].tp=30;state.units[1].hp=state.units[1].maxHp*.3;
+    expect(stepBattle(state,()=>.99)).toEqual(expect.arrayContaining([expect.objectContaining({type:'heal',from:0,to:1})]));
+    expect(state.units[0].tp).toBe(15);
+  });
+  it('같은 종/성격/능력치라면 사육 출신과 사냥 출신의 이동 처리가 동일하다',()=>{
+    const born=newDigimon(1,'아구몬',()=>.68),wild=newDigimon(1,'아구몬',()=>.68,true),foe=newDigimon(2,'아구몬',()=>.5);
+    expect(born.personality).toBe('게으름');expect(wild.personality).toBe(born.personality);expect(wild.stats).toEqual(born.stats);
+    for(const mode of ['일반','지원','특수'] as const){
+      const a=createBattle([entrantOf(born,mode)],[entrantOf(foe,'일반')]),b=createBattle([entrantOf(wild,mode)],[entrantOf(foe,'일반')]);
+      const ar=seeded(41),br=seeded(41);for(let i=0;i<40;i++){stepBattle(a,ar);stepBattle(b,br);}
+      expect(a.units[0].x).toBe(b.units[0].x);expect(a.units[0].y).toBe(b.units[0].y);
+    }
+  });
+});
+
 describe('유년기Ⅱ 입문 프리 배틀',()=>{
  it('입문1:1/3:3을 추가하며 기존★1~3은 유지한다',()=>{
   expect(FREE_BATTLES.slice(0,2)).toEqual([{label:'입문',format:1,stage:2,prize:30},{label:'입문',format:3,stage:2,prize:60}]);

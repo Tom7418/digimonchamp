@@ -151,10 +151,10 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     const allies = s.units.filter((o) => o.alive && o.team === u.team);
     if (!foes.length) break;
     const near = foes.reduce((a, b) => (dist(u, a) <= dist(u, b) ? a : b));
-    const speed = 40 + Math.min(80, u.stats.spd * 0.4);
+    // '게으름'도 처음부터 행동한다. 피격 전 느린 접근만 유지하는 웹판 임시 성격 보정이다.
+    const speed = (40 + Math.min(80, u.stats.spd * 0.4)) * (u.personality === '게으름' && !u.wasHit ? 0.75 : 1);
     const d = dist(u, near);
 
-    if (u.personality === '게으름' && !u.wasHit) continue;
     const fleeing = (u.personality === '겁쟁이' && foes.length > allies.length) || u.retreat > 0;
 
     if (u.mode === '지원') {
@@ -167,11 +167,11 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
         events.push({ type: 'heal', from: u.id, to: weak.id, amount });
         continue;
       }
-      if (d < 130) {
-        move(u, near.x, near.y, speed, true);
-        if (d > 45) continue;
-      } else if (d > 190) {
-        move(u, near.x, near.y, speed);
+      // 회복/공격 재사용 대기 중에만 원거리 지원 간격을 유지한다.
+      // 행동할 준비가 됐거나 쓸 기술의 TP가 없으면 아래 공통 공격/접근 분기로 간다.
+      if (u.cd > 0 && battleSkills(u.speciesId).some(skill => skill.tpCost <= u.tp)) {
+        if (d < 110) move(u, near.x, near.y, speed, true);
+        else if (d > 145) move(u, near.x, near.y, speed);
         continue;
       }
     } else if (fleeing && d > 45) {
@@ -184,7 +184,8 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     const pSpecial = base * (u.mode === '특수' ? 3 : u.mode === '일반' ? 0.4 : 0.3) * (u.personality === '쿨' ? 1.6 : u.personality === '솔직' ? 1.2 : 1);
     const wantsSpecial = u.cd <= 0 && d <= 150 && battleSkills(u.speciesId).some(skill => skill.tpCost <= u.tp) && rng() < pSpecial;
     if (!wantsSpecial && d > 42) {
-      if (u.mode !== '지원') move(u, near.x, near.y, speed);
+      // 지원도 특수 공격을 선택하지 못하면 기본 공격 사거리로 직접 접근한다.
+      move(u, near.x, near.y, speed);
       continue;
     }
     if (u.cd > 0) continue;

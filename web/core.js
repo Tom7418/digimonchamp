@@ -7429,9 +7429,8 @@ var ChampCore = (function(exports) {
 			const allies = s.units.filter((o) => o.alive && o.team === u.team);
 			if (!foes.length) break;
 			const near = foes.reduce((a, b) => dist(u, a) <= dist(u, b) ? a : b);
-			const speed = 40 + Math.min(80, u.stats.spd * .4);
+			const speed = (40 + Math.min(80, u.stats.spd * .4)) * (u.personality === "게으름" && !u.wasHit ? .75 : 1);
 			const d = dist(u, near);
-			if (u.personality === "게으름" && !u.wasHit) continue;
 			const fleeing = u.personality === "겁쟁이" && foes.length > allies.length || u.retreat > 0;
 			if (u.mode === "지원") {
 				const weak = allies.filter((a) => a.hp / a.maxHp < .7).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
@@ -7448,11 +7447,9 @@ var ChampCore = (function(exports) {
 					});
 					continue;
 				}
-				if (d < 130) {
-					move(u, near.x, near.y, speed, true);
-					if (d > 45) continue;
-				} else if (d > 190) {
-					move(u, near.x, near.y, speed);
+				if (u.cd > 0 && battleSkills(u.speciesId).some((skill) => skill.tpCost <= u.tp)) {
+					if (d < 110) move(u, near.x, near.y, speed, true);
+					else if (d > 145) move(u, near.x, near.y, speed);
 					continue;
 				}
 			} else if (fleeing && d > 45) {
@@ -7462,7 +7459,7 @@ var ChampCore = (function(exports) {
 			const pSpecial = Math.min(.6, .1 + u.stats.int / 600) * (u.mode === "특수" ? 3 : u.mode === "일반" ? .4 : .3) * (u.personality === "쿨" ? 1.6 : u.personality === "솔직" ? 1.2 : 1);
 			const wantsSpecial = u.cd <= 0 && d <= 150 && battleSkills(u.speciesId).some((skill) => skill.tpCost <= u.tp) && rng() < pSpecial;
 			if (!wantsSpecial && d > 42) {
-				if (u.mode !== "지원") move(u, near.x, near.y, speed);
+				move(u, near.x, near.y, speed);
 				continue;
 			}
 			if (u.cd > 0) continue;
