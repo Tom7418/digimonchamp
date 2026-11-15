@@ -1425,10 +1425,13 @@ describe('사용자 지정 성격 효과와 원본 SP 연결',()=>{
     expect(movement('게으름',true)).toBeCloseTo(movement('게으름'));
     expect(movement('대담')/movement('쿨')).toBeCloseTo(1.1);
   });
-  it('대담 공격 대기0.9배, 제멋대로의 기존 공격/대기 보정은 제거한다',()=>{
+  it('대담 공격 대기0.9배를 추가하면서 제멋대로의 기존 피해1.1배/대기0.9배를 유지한다',()=>{
     const attack=(p:Digimon['personality'])=>{const s=duel(p);s.units[0].x=380;s.units[0].cd=0;const hit=stepBattle(s,()=>.99).find(e=>e.type==='hit'&&e.from===0);return {cd:s.units[0].cd,hit};};
     expect(attack('대담').cd/attack('쿨').cd).toBeCloseTo(.9);
-    expect(attack('제멋대로')).toEqual(attack('쿨'));
+    const selfish=attack('제멋대로'),base=attack('쿨');
+    expect(selfish.cd/base.cd).toBeCloseTo(.9);
+    expect(selfish.hit?.type).toBe('hit');expect(base.hit?.type).toBe('hit');
+    if(selfish.hit?.type==='hit'&&base.hit?.type==='hit'){expect(selfish.hit.damage).toBeGreaterThan(base.hit.damage);expect(Math.abs(selfish.hit.damage-base.hit.damage*1.1)).toBeLessThanOrEqual(1);}
   });
   it('겁쟁이는 세 모드 모두 먼 수적 열세에서는 후퇴하고 가까워지면 공격한다',()=>{
     for(const mode of ['일반','지원','특수'] as const){
@@ -1543,4 +1546,22 @@ it('실제 전투의 내성 SP는 대응 속성 필살기만 줄이고 버프를
   const a={...newDigimon(1,'아구몬',()=>.5),personality:'쿨' as const},b=newDigimon(2,'아구몬',()=>.5),before=JSON.stringify(a.stats);
   const attack=(resist:boolean)=>{const s=createBattle([entrantOf(a,'특수')],[entrantOf(b,'일반')]);s.units[0].x=380;s.units[0].cd=0;if(resist)s.units[1].buffs={열:15};const e=stepBattle(s,()=>0).find(e=>e.type==='hit'&&e.from===0);return e?.type==='hit'?e.damage:0;};
   expect(attack(true)).toBeLessThan(attack(false));expect(JSON.stringify(a.stats)).toBe(before);
+});
+
+it('기존 솔직1.2배·쿨1.6배 특수 빈도를 새 훈련/희귀 후보 효과와 함께 유지한다',()=>{
+  const special=(personality:Digimon['personality'],roll:number)=>{
+    const d={...newDigimon(1,'아구몬',()=>.5),personality};d.stats.int=60;
+    const s=createBattle([entrantOf(d,'일반')],[entrantOf({...d,uid:2},'일반')]);s.units[0].x=380;s.units[0].cd=0;
+    const event=stepBattle(s,()=>roll).find(e=>e.type==='hit'&&e.from===0);return event?.type==='hit'&&event.special;
+  };
+  expect(special('게으름',.09)).toBe(false);expect(special('솔직',.09)).toBe(true);
+  expect(special('솔직',.11)).toBe(false);expect(special('쿨',.11)).toBe(true);
+});
+it('열혈은 기존 피해1.2배와 새 포만감 감소1.3배를 함께 유지한다',()=>{
+  const damage=(personality:Digimon['personality'])=>{
+    const d={...newDigimon(1,'아구몬',()=>.5),personality},foe={...d,uid:2,personality:'쿨' as const};
+    const s=createBattle([entrantOf(d,'일반')],[entrantOf(foe,'일반')]);s.units[0].x=380;s.units[0].cd=0;
+    const event=stepBattle(s,()=>.99).find(e=>e.type==='hit'&&e.from===0);return event?.type==='hit'?event.damage:0;
+  };
+  expect(damage('열혈')).toBeGreaterThan(damage('쿨'));expect(Math.abs(damage('열혈')-damage('쿨')*1.2)).toBeLessThanOrEqual(1);
 });

@@ -193,6 +193,8 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     let dmg = (8 + power * 0.9) * (100 / (100 + near.stats.def * buffMultiplier(near,'def',s.t))) * range(rng, 0.85, 1.15) * attrMult(u.attr, near.attr);
     if (special) dmg *= 2.2;
     if (u.personality === '열혈') dmg *= 1.2;
+    // 기존 제멋대로 전투 장점은 유지하고, 동거 스트레스는 별도로 추가한다.
+    if (u.personality === '제멋대로') dmg *= 1.1;
     const element=skill?battleElement(skill.record):undefined;
     if(element&&(near.buffs?.[element]??0)>s.t)dmg*=.85; // 내성SP 피해 경감15%는 웹판 정책
     if (u.mode === '지원') dmg *= 0.6;
@@ -200,7 +202,7 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     near.hp = Math.max(0, near.hp - damage);
     near.wasHit = true;
     if (skill) u.tp -= skill.tpCost;
-    u.cd = (1.3 - Math.min(0.6, u.stats.spd * buffMultiplier(u,'spd',s.t) / 400)) * (u.personality === '대담' ? 0.9 : 1);
+    u.cd = (1.3 - Math.min(0.6, u.stats.spd * buffMultiplier(u,'spd',s.t) / 400)) * (['대담','제멋대로'].includes(u.personality) ? 0.9 : 1);
     if (u.personality === '성급한') u.retreat = 0.8;
     events.push({ type: 'hit', from: u.id, to: near.id, damage, special, ...(skill ? { skill } : {}) });
     if (near.hp <= 0) {

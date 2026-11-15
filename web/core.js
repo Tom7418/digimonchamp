@@ -8353,6 +8353,7 @@ var ChampCore = (function(exports) {
 			let dmg = (8 + (special ? (attack + intelligence) / 2 : attack) * .9) * (100 / (100 + near.stats.def * buffMultiplier(near, "def", s.t))) * range(rng, .85, 1.15) * attrMult(u.attr, near.attr);
 			if (special) dmg *= 2.2;
 			if (u.personality === "열혈") dmg *= 1.2;
+			if (u.personality === "제멋대로") dmg *= 1.1;
 			const element = skill ? battleElement(skill.record) : void 0;
 			if (element && (near.buffs?.[element] ?? 0) > s.t) dmg *= .85;
 			if (u.mode === "지원") dmg *= .6;
@@ -8360,7 +8361,7 @@ var ChampCore = (function(exports) {
 			near.hp = Math.max(0, near.hp - damage);
 			near.wasHit = true;
 			if (skill) u.tp -= skill.tpCost;
-			u.cd = (1.3 - Math.min(.6, u.stats.spd * buffMultiplier(u, "spd", s.t) / 400)) * (u.personality === "대담" ? .9 : 1);
+			u.cd = (1.3 - Math.min(.6, u.stats.spd * buffMultiplier(u, "spd", s.t) / 400)) * (["대담", "제멋대로"].includes(u.personality) ? .9 : 1);
 			if (u.personality === "성급한") u.retreat = .8;
 			events.push({
 				type: "hit",
