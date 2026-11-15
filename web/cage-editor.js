@@ -43,7 +43,20 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
    if(owner===c.id||(!owner&&inCage(item,c))){const local=localPoint(item,c),point=worldPoint(local,next);item.x=point.x;item.y=point.y;item.cageId=c.id;item.cagePosition=local;}
  }}
  const bounces=new Map();
- function bouncePet(p,from){const origin={x:from.x,y:from.y},landing=nearestCage(origin);if(!landing)return false;L.assign(getState(),p,landing.cage.id);placePet(p,landing.point,landing.cage);bounces.set(p.uid,{from:origin,elapsed:0,duration:0.4});return true;}
+ // 사용자 지정 연출: 한 번49~91월드px를 기준으로 최소3회 튕겨 돌아온다.
+ // 저장하는 내부 좌표는 최종 착지점으로 유지해 도중에 닫아도 케이지 밖에 남지 않는다.
+ function nextBounce(b,p){
+   const cage=getState().layout.find(c=>c.id===p.cageId);if(!cage||!p.cagePosition)return false;
+   const goal=worldPoint(p.cagePosition,cage),dx=goal.x-b.from.x,dy=goal.y-b.from.y,distance=Math.hypot(dx,dy);
+   if(b.completed>=3&&distance<1e-6)return false;
+   const reach=R*(0.35+Math.random()*0.3),remaining=Math.max(1,3-b.completed);
+   // 입구 바로 밖에서도 여러 번 튕긴다. 가까우면 남은 거리를 짧게 나눈다.
+   const step=remaining>1?Math.min(reach,distance*(0.35+Math.random()*0.2)):Math.min(reach,distance);
+   const ratio=distance>0?step/distance:1;
+   b.to={x:b.from.x+dx*ratio,y:b.from.y+dy*ratio};
+   b.duration=0.2+step/500;b.height=Math.min(35,12+step*0.25);return true;
+ }
+ function bouncePet(p,from){const origin={x:from.x,y:from.y},landing=nearestCage(origin);if(!landing)return false;L.assign(getState(),p,landing.cage.id);placePet(p,landing.point,landing.cage);const b={from:origin,elapsed:0,completed:0};if(nextBounce(b,p))bounces.set(p.uid,b);return true;}
  // 이동 선분을 작은 간격으로 검사해 프레임이 커도 다른 시설을 관통하지 않는다.
  const canMove=(p,to)=>{const s=getState(),own=s.layout.find(c=>c.id===p.cageId);if(!own)return false;const n=Math.max(1,Math.ceil(Math.hypot(to.x-p.x,to.y-p.y)/6));for(let i=1;i<=n;i++){const point={x:p.x+(to.x-p.x)*i/n,y:p.y+(to.y-p.y)*i/n};if(own?!inCage(point,own):s.layout.some(c=>inCage(point,c)))return false;}return true;};
  const movePet=(p,to)=>{if(!canMove(p,to))return false;const c=getState().layout.find(c=>c.id===p.cageId);placePet(p,to,c);return true;};
@@ -105,7 +118,12 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
    set onGrab(f){onGrab=f;},
    canMove,movePet,attachFloorItem,
    isBouncing(uid){return bounces.has(uid);},
-   advance(dt){for(const [uid,b] of bounces){b.elapsed+=Math.max(0,dt);if(!getState().team.some(p=>p.uid===uid)||b.elapsed>=b.duration)bounces.delete(uid);}},
+   advance(dt){for(const [uid,b] of bounces){
+     const p=getState().team.find(p=>p.uid===uid);if(!p){bounces.delete(uid);continue;}
+     b.elapsed+=Number.isFinite(dt)?Math.max(0,dt):0;
+     // 긴 프레임도 착지를 순서대로 처리하고 남은 시간을 다음 점프로 넘긴다.
+     while(b.elapsed>=b.duration){b.elapsed-=b.duration;b.from=b.to;b.completed++;if(!nextBounce(b,p)){bounces.delete(uid);break;}}
+   }},
    isDragging(uid){return drag?.pet!==undefined&&getState().team[drag.pet]?.uid===uid;},
    reset(){selected=null;drag=null;tool=null;bounces.clear();init();status();},
    world:WORLD, view:VIEW, cam, center, R, get zoom(){return zoom;},
@@ -182,7 +200,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
          p.x=point.x;p.y=point.y;p.target=p.x;p.cage=c.kind;
        }else if(p.cageId||p.cage!=='free'){p.cage='free';p.cageId=null;p.cagePosition=null;}
      }
-     for(const p of s.team){const b=bounces.get(p.uid);if(b){const cage=s.layout.find(c=>c.id===p.cageId);if(!cage||!p.cagePosition){bounces.delete(p.uid);continue;}const t=b.elapsed/b.duration,e=1-(1-t)**2,to=worldPoint(p.cagePosition,cage);p.x=b.from.x+(to.x-b.from.x)*e;p.y=b.from.y+(to.y-b.from.y)*e-35*Math.sin(Math.PI*t);}}
+     for(const p of s.team){const b=bounces.get(p.uid);if(b){const cage=s.layout.find(c=>c.id===p.cageId);if(!cage||!p.cagePosition){bounces.delete(p.uid);continue;}const t=b.elapsed/b.duration,e=1-(1-t)**2;p.x=b.from.x+(b.to.x-b.from.x)*e;p.y=b.from.y+(b.to.y-b.from.y)*e-b.height*Math.sin(Math.PI*t);}}
      if(drag?.pet!==undefined){const p=s.team[drag.pet],point=draggedPoint(drag.point);p.x=point.x;p.y=point.y;p.target=p.x;}
    }
  };

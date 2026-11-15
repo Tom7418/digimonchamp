@@ -1,7 +1,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-function setup(saved){
+function setup(saved,rng){
  const noop=()=>{},nodes={},toolbar={classList:{toggle:noop},querySelector:k=>nodes[k]??=( {} ),querySelectorAll:()=>[]};
- const window={},ctx=vm.createContext({window,document:{createElement:()=>toolbar},Image:function(){},crypto:{randomUUID:()=> 'new'}});
+ const math=Object.create(Math);if(rng)math.random=rng;
+ const window={},ctx=vm.createContext({Math:math,window,document:{createElement:()=>toolbar},Image:function(){},crypto:{randomUUID:()=> 'new'}});
  for(const f of ['cage-layout.js','cage-editor.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),ctx);
  const events={},box={left:80,top:40,width:480,height:280};
  const canvas={style:{},closest:()=>({after:noop}),addEventListener:(k,f)=>events[k]=f,getBoundingClientRect:()=>box,setPointerCapture:noop};
@@ -14,7 +15,38 @@ function setup(saved){
  const drop=point=>{const p=state.team[0];canvas.onpointerdown(event({x:p.x,y:p.y-25}));canvas.onpointermove(event({x:point.x,y:point.y-25}));draw();canvas.onpointerup(event({x:point.x,y:point.y-25}));draw();};
  return {state,board,canvas,events,draw,event,drop,nodes};
 }
+const settle=s=>{for(let i=0;i<1000&&s.board.isBouncing(s.state.team[0].uid);i++){s.board.advance(.05);s.draw();}assert.equal(s.board.isBouncing(s.state.team[0].uid),false);};
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
+// 바닥 높이가 같은 수평 경로에서 실제 그린 좌표의 착지 극점을 찾는다.
+function hops(s,origin){
+ s.drop(origin);const p=s.state.team[0],samples=[{x:p.x,y:p.y}];
+ for(let i=0;i<4000&&s.board.isBouncing(p.uid);i++){s.board.advance(.005);s.draw();samples.push({x:p.x,y:p.y});}
+ assert.equal(s.board.isBouncing(p.uid),false);
+ const landings=[samples[0]];
+ for(let i=1;i<samples.length-1;i++)if(samples[i].y>samples[i-1].y&&samples[i].y>=samples[i+1].y)landings.push(samples[i]);
+ landings.push(samples.at(-1));return landings;
+}
+test('먼 공터는 여러 번 착지하며 한 번의 이동 거리가 제한되고 난수에 따라 달라진다',()=>{
+ const runs=[0,1].map(random=>{const s=setup(undefined,()=>random),c=s.board.center(1,1),landings=hops(s,{x:c.x-550,y:c.y});
+  assert.equal(s.state.team[0].cageId,'clinic');assert.ok(landings.length>=4);
+  for(let i=1;i<landings.length;i++)assert.ok(landings[i].x-landings[i-1].x<=94,'한 번에 먼 거리를 건너뛰지 않는다');
+  assert.ok(s.board.canMove(s.state.team[0],s.state.team[0]));return landings;
+ });
+ assert.ok(Math.abs(runs[0][1].x-runs[0][0].x-(runs[1][1].x-runs[1][0].x))>20);
+});
+test('케이지 바로 옆에 놓아도 최소 세 번 튕기고 일시정지는 중간 점프를 보존한다',()=>{
+ const s=setup(undefined,()=>.5),c=s.board.center(1,1),landings=hops(s,{x:c.x-130,y:c.y});assert.ok(landings.length>=4);
+ s.drop({x:c.x-400,y:c.y});s.board.advance(.1);s.draw();const p=s.state.team[0],point={x:p.x,y:p.y};
+ for(let i=0;i<10;i++){s.board.advance(0);s.draw();near(p.x,point.x);near(p.y,point.y);}
+ settle(s);
+});
+test('튀는 중 목적 케이지를 옮겨도 새 위치로 들어가고 큰 시간 간격도 안전하게 마친다',()=>{
+ const s=setup(undefined,()=>.5),c=s.board.center(1,1);s.drop({x:c.x-450,y:c.y});s.board.advance(.15);s.draw();
+ const cage=s.state.layout[0];cage.q=2;cage.rotation=1;
+ s.board.advance(30);s.draw();assert.equal(s.board.isBouncing(1),false);
+ assert.equal(s.state.team[0].cageId,'clinic');assert.ok(s.board.canMove(s.state.team[0],s.state.team[0]));
+ const p=s.state.team[0],reload=setup(JSON.parse(JSON.stringify(s.state)));reload.draw();near(p.x,reload.state.team[0].x);near(p.y,reload.state.team[0].y);
+});
 test('케이지 중앙 밖에 놓은 실제 발 위치를 매 프레임 보존한다',()=>{
  const s=setup(),c=s.board.center(1,1),point={x:c.x+65,y:c.y+35};s.drop(point);
  const p=s.state.team[0];assert.equal(p.cageId,'clinic');assert.equal(p.cage,'clinic');
@@ -41,13 +73,13 @@ test('드래그 취소는 원래 좌표를 복구하고 사육장 밖 드롭은 
  s.canvas.onpointerdown(s.event({x:p.x,y:p.y-25}));s.canvas.onpointermove(s.event({x:-500,y:-500}));s.draw();
  s.canvas.onpointercancel();s.draw();near(p.x,old.x);near(p.y,old.y);assert.equal(p.cageId,'clinic');
  s.drop({x:-500,y:-500});assert.equal(s.board.isBouncing(p.uid),true);assert.ok(p.cageId);
- s.board.advance(0.4);s.draw();assert.ok(p.x>0);assert.ok(p.y>0);
+ settle(s);assert.ok(p.x>0);assert.ok(p.y>0);
 });
 
 test('케이지가 없는 옛 저장은 기본 케이지를 복원하고 내부의 자유로운 위치는 보존한다',()=>{
  const s=setup({layoutVersion:6,layout:[],team:[{uid:1,x:80,y:80,cageId:null,cage:'free'}],selected:0});
  assert.equal(s.state.layout.length,1);s.draw();const p=s.state.team[0];assert.equal(p.cageId,'start-basic');
- s.board.advance(0.4);s.draw();const old={x:p.x,y:p.y};
+ settle(s);const old={x:p.x,y:p.y};
  const reload=setup(JSON.parse(JSON.stringify(s.state)));reload.draw();near(reload.state.team[0].x,old.x);near(reload.state.team[0].y,old.y);
  const c=s.state.layout[0];p.cageId=c.id;p.cagePosition=null;p.x=s.board.center(c.q,c.r).x-55;p.y=s.board.center(c.q,c.r).y+40;
  s.draw();near(p.x,s.board.center(c.q,c.r).x-55);near(p.y,s.board.center(c.q,c.r).y+40);
@@ -82,7 +114,7 @@ test('틈에 놓으면 가까운 케이지 내부로 튕기고 일시정지·재
  s.board.advance(0);s.draw();near(p.x,gap.x);
  const reload=setup(JSON.parse(JSON.stringify(s.state)));reload.draw();assert.equal(reload.state.team[0].cageId,'clinic');
  s.board.advance(0.2);s.draw();assert.notEqual(p.x,gap.x);
- s.board.advance(0.2);s.draw();assert.equal(s.board.isBouncing(p.uid),false);
+ s.board.advance(0.2);s.draw();assert.equal(s.board.isBouncing(p.uid),true);settle(s);
  assert.ok(Math.hypot(p.x-s.board.center(1,1).x,p.y-s.board.center(1,1).y)<140);
  near(p.x,reload.state.team[0].x);near(p.y,reload.state.team[0].y);
 });
@@ -121,7 +153,7 @@ test('케이지 밖 자유 개체는 가까운 시설로 튕기며 이동 명령
  const s=setup(),p=s.state.team[0],nearField=s.board.center(2,2);p.x=nearField.x+600;p.y=nearField.y;
  assert.equal(s.board.canMove(p,{x:p.x+10,y:p.y}),false);
  s.draw();assert.equal(p.cageId,'field');assert.equal(s.board.isBouncing(p.uid),true);near(p.x,nearField.x+600);
- s.board.advance(0.4);s.draw();assert.equal(s.board.canMove(p,{x:p.x,y:p.y}),true);
+ settle(s);assert.equal(s.board.canMove(p,{x:p.x,y:p.y}),true);
 });
 test('철거한 케이지의 디지몬은 다른 케이지로 이동하고 마지막 케이지는 철거되지 않는다',()=>{
  const s=setup();s.drop(s.board.center(1,1));s.nodes['#edit-cages'].onclick();
