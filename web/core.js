@@ -1738,13 +1738,6 @@ var ChampCore = (function(exports) {
 				met: d.stageAge >= life
 			});
 		}
-		if (cond.battles === void 0 && !cond.time) {
-			const need = Math.ceil(LIFESPAN[getSpecies(d.speciesId).stage] * .2);
-			out.push({
-				label: `세대 경과 ${need}분 이상 (현재 ${Math.floor(d.stageAge)}분)`,
-				met: d.stageAge >= need
-			});
-		}
 		return out;
 	}
 	var meets = (d, cond) => explain(d, cond).every((c) => c.met);
@@ -3033,20 +3026,27 @@ var ChampCore = (function(exports) {
 		const events = [], seen = new Set(save.seen);
 		const rank = tamerRank(save);
 		let free = capacityOf(save) - usedCapacity(save);
-		const digimon = save.digimon.map((d) => {
-			if (uids && !uids.has(d.uid)) return d;
-			const evo = findEvolution(d, rank, free);
-			if (evo?.kind !== "evolve") return d;
-			free -= getSpecies(evo.to).size - getSpecies(d.speciesId).size;
-			events.push({
-				type: "evolved",
-				uid: d.uid,
-				from: d.speciesId,
-				to: evo.to
+		const digimon = [...save.digimon], evolved = /* @__PURE__ */ new Set();
+		let changed = true;
+		while (changed) {
+			changed = false;
+			digimon.forEach((d, i) => {
+				if (uids && !uids.has(d.uid) || evolved.has(d.uid)) return;
+				const evo = findEvolution(d, rank, free);
+				if (evo?.kind !== "evolve") return;
+				free -= getSpecies(evo.to).size - getSpecies(d.speciesId).size;
+				events.push({
+					type: "evolved",
+					uid: d.uid,
+					from: d.speciesId,
+					to: evo.to
+				});
+				seen.add(evo.to);
+				evolved.add(d.uid);
+				changed = true;
+				digimon[i] = evolveDigimon(d, evo.to, rng);
 			});
-			seen.add(evo.to);
-			return evolveDigimon(d, evo.to, rng);
-		});
+		}
 		return {
 			save: events.length ? {
 				...save,
@@ -3278,18 +3278,18 @@ var ChampCore = (function(exports) {
 			d.trainDone = false;
 			d.trainMinutes = 0;
 		}
+		if (d.stageAge % 60 === 0) addStress(d, -(STRESS_RELIEF_CAGES.includes(cage.id) ? STRESS.reliefPerHour : cage.autoCare ? STRESS.autoCarePerHour : STRESS.restPerHour));
+		const evo = findEvolution(d, ctx.rank, ctx.free);
+		if (evo?.kind === "evolve") {
+			events.push({
+				type: "evolved",
+				uid: d.uid,
+				from: sp.id,
+				to: evo.to
+			});
+			return evolveDigimon(d, evo.to, ctx.rng);
+		}
 		if (d.stageAge % 60 === 0) {
-			addStress(d, -(STRESS_RELIEF_CAGES.includes(cage.id) ? STRESS.reliefPerHour : cage.autoCare ? STRESS.autoCarePerHour : STRESS.restPerHour));
-			const evo = findEvolution(d, ctx.rank, ctx.free);
-			if (evo?.kind === "evolve") {
-				events.push({
-					type: "evolved",
-					uid: d.uid,
-					from: sp.id,
-					to: evo.to
-				});
-				return evolveDigimon(d, evo.to, ctx.rng);
-			}
 			if (d.stageAge >= LIFESPAN[sp.stage]) {
 				if (evo?.kind === "blocked" && d.stageAge === LIFESPAN[sp.stage]) events.push({
 					type: "blocked",
@@ -3346,14 +3346,17 @@ var ChampCore = (function(exports) {
 			seen.add(r.speciesId);
 			next.push(r);
 		});
+		const current = {
+			...save,
+			clock: save.clock + 1,
+			digimon: next,
+			seen: [...seen]
+		};
+		const changedIds = new Set(events.filter((e) => e.type === "evolved" || e.type === "hatched" || e.type === "egg").map((e) => e.uid));
+		const ready = evaluateEvolutions(current, rng, new Set(next.filter((d) => !changedIds.has(d.uid)).map((d) => d.uid)));
 		return {
-			save: {
-				...save,
-				clock: save.clock + 1,
-				digimon: next,
-				seen: [...seen]
-			},
-			events
+			save: ready.save,
+			events: [...events, ...ready.events]
 		};
 	}
 	function advance(save, minutes, rng = defaultRng) {

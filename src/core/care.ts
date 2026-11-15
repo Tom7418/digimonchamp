@@ -170,15 +170,21 @@ export function evaluateEvolutions(save: SaveData, rng: Rng = defaultRng, uids?:
   const events: FarmEvent[] = [], seen = new Set(save.seen);
   const rank = tamerRank(save);
   let free = capacityOf(save) - usedCapacity(save);
-  const digimon = save.digimon.map(d => {
-    if (uids && !uids.has(d.uid)) return d;
-    const evo = findEvolution(d, rank, free);
-    if (evo?.kind !== 'evolve') return d;
-    free -= getSpecies(evo.to).size - getSpecies(d.speciesId).size;
-    events.push({ type: 'evolved', uid: d.uid, from: d.speciesId, to: evo.to });
-    seen.add(evo.to);
-    return evolveDigimon(d, evo.to, rng);
-  });
+  const digimon = [...save.digimon], evolved = new Set<number>();
+  let changed = true;
+  // 뒤쪽 개체가 더 작은 종으로 진화해 용량을 비우면, 앞에서 막혔던 개체도 같은 평가에서 재시도한다.
+  while (changed) {
+    changed = false;
+    digimon.forEach((d, i) => {
+      if ((uids && !uids.has(d.uid)) || evolved.has(d.uid)) return;
+      const evo = findEvolution(d, rank, free);
+      if (evo?.kind !== 'evolve') return;
+      free -= getSpecies(evo.to).size - getSpecies(d.speciesId).size;
+      events.push({ type: 'evolved', uid: d.uid, from: d.speciesId, to: evo.to });
+      seen.add(evo.to);evolved.add(d.uid);changed = true;
+      digimon[i] = evolveDigimon(d, evo.to, rng);
+    });
+  }
   return { save: events.length ? { ...save, digimon, seen: [...seen] } : save, events };
 }
 
@@ -364,12 +370,14 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   if (d.stageAge % 60 === 0) {
     // 어디서든 1시간에 1, 동물원·목장 3, 쉬는 케이지 5 회복 (겹치지 않음)
     addStress(d, -(STRESS_RELIEF_CAGES.includes(cage.id) ? STRESS.reliefPerHour : cage.autoCare ? STRESS.autoCarePerHour : STRESS.restPerHour));
-    const evo = findEvolution(d, ctx.rank, ctx.free);
-    if (evo?.kind === 'evolve') {
-      events.push({ type: 'evolved', uid: d.uid, from: sp.id, to: evo.to });
-      // 진화하면 쌓아 둔 종족·속성 수치는 절반만 이어진다
-      return evolveDigimon(d, evo.to, ctx.rng);
-    }
+  }
+  // 훈련/발병/나이 등 이번 분에 바뀐 조건을 곧바로 평가한다. 한 시간 경계까지 기다리지 않는다.
+  const evo = findEvolution(d, ctx.rank, ctx.free);
+  if (evo?.kind === 'evolve') {
+    events.push({ type: 'evolved', uid: d.uid, from: sp.id, to: evo.to });
+    return evolveDigimon(d, evo.to, ctx.rng);
+  }
+  if (d.stageAge % 60 === 0) {
     if (d.stageAge >= LIFESPAN[sp.stage]) {
       if (evo?.kind === 'blocked' && d.stageAge === LIFESPAN[sp.stage]) events.push({ type: 'blocked', uid: d.uid, name: sp.name, reason: evo.reason });
       // 수명이 다한 뒤 하루의 유예가 지나면 디지에그화 또는 로스트
@@ -406,7 +414,12 @@ export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false): 
     seen.add(r.speciesId);
     next.push(r);
   });
-  return { save: { ...save, clock: save.clock + 1, digimon: next, seen: [...seen] }, events };
+  const current = { ...save, clock: save.clock + 1, digimon: next, seen: [...seen] };
+  // 같은 틱에서 로스트/디지에그화/작은 종으로 진화해 비워진 용량도 반영한다. 이미 변한 개체는 제외한다.
+  const changedIds = new Set(events.filter(e => e.type === 'evolved' || e.type === 'hatched' || e.type === 'egg').map(e => e.uid));
+  const pending = new Set(next.filter(d => !changedIds.has(d.uid)).map(d => d.uid));
+  const ready = evaluateEvolutions(current, rng, pending);
+  return { save: ready.save, events: [...events, ...ready.events] };
 }
 
 export function advance(save: SaveData, minutes: number, rng: Rng = defaultRng) {

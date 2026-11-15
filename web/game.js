@@ -67,7 +67,9 @@
     onComplete:event=>toast(`${C.getSpecies(event.from).name} → ${C.getSpecies(event.to).name} 진화!`),
     onDrain:event=>{
       if(!event)return;
-      tipMail('evolve', '디지몬이 진화했습니다.\n스테이터스를 올려 조건을 만족시키거나 시간이 지나면 디지몬은 진화합니다.\n오른쪽 진화 조건표를 확인하세요.');
+      // 다음 단계까지 이미 충족했다면 그 연출부터 이어간다. 모든 진화가 끝난 뒤 안내를 연다.
+      render();
+      if(!evolutionScene.busy)tipMail('evolve', '디지몬이 진화했습니다.\n스테이터스를 올려 조건을 만족시키거나 시간이 지나면 디지몬은 진화합니다.\n오른쪽 진화 조건표를 확인하세요.');
       persist();
     },
   });
@@ -231,8 +233,15 @@
     htmlCache.set(sel, html);
     $(sel).innerHTML = html;
   }
+  function checkReadyEvolutions() {
+    const result=C.evaluateEvolutions(save);
+    save=result.save;
+    result.events.forEach(logEvent);
+  }
   function render() {
     syncTeam();
+    // 돌보기/놓아주기/상점/타이틀로 조건이나 제한이 바뀐 직후, 시간 진행 없이 전체를 재평가한다.
+    checkReadyEvolutions();
     syncPoops();
     renderTray();
     const d = current();
@@ -1048,10 +1057,7 @@
       const r = C.release(save, d.uid);
       if (r.ok) {
         save = r.save;
-        // 부분 섭취는 새 먹이 객체를 예약하고, 배가 차면 남은 고기를 놓아둔다.
-        const left = r.foods[foodIndex], eater = save.digimon.find(x => x.uid === d.uid);
-        if (r.foods.length === oldCount && left && left.x === eating.food.x && left.y === eating.food.y && left.remaining > 0 && eater.hunger < 100)
-          feeding.set(d.uid, {food: left, elapsed: 0, species: d.speciesId});
+        feeding.delete(d.uid); // 놓아준 개체의 식사 예약만 해제한다. 먹이 결과/인덱스는 존재하지 않는다.
         log(`${nameOf(d)}을(를) 놓아주었습니다.`);
         view.selected = 0;
         render();
@@ -1256,7 +1262,7 @@
     $('#modal-ok').disabled = false;
     $('#close-modal').disabled = false;
     // 결과/타이틀에 따른 횟수·랭크를 먼저 반영하고 즉시 진화한다. 연출은 결과창을 닫은 뒤 재생한다.
-    const evolution = C.evaluateEvolutions(save, Math.random, uids);
+    const evolution = C.evaluateEvolutions(save, Math.random);
     save = evolution.save;
     evolution.events.forEach(logEvent);
     render();
@@ -2373,8 +2379,8 @@
 
   // ---------- 시작 ----------
   load();
-  // 이전 저장에 이미 배틀 조건을 채운 개체가 있어도 다음 한 시간을 기다리지 않는다.
-  const restoredEvolution = C.evaluateEvolutions(save, Math.random, new Set(save.digimon.filter(d=>d.battles>0).map(d=>d.uid)));
+  // 이전 저장의 모든 조건 충족 개체도 시간 진행 없이 진화한다(배틀 횟수와 무관).
+  const restoredEvolution = C.evaluateEvolutions(save, Math.random);
   save = restoredEvolution.save;
   restoredEvolution.events.forEach(logEvent);
   const board = createCageEditor(

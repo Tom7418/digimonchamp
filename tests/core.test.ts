@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta } from '../src/core/training';
 import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isNight, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
-import { findEvolution, maxStageForRank } from '../src/core/evolution';
+import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
@@ -465,6 +465,44 @@ describe('evolution', () => {
     const egg = { ...digimon[0], isEgg: true };
     expect(evaluateEvolutions({ ...s, digimon: [egg] }).events).toHaveLength(0);
     expect(evaluateEvolutions(s, () => 0.5, new Set([4])).events).toHaveLength(0);
+  });
+  it('속성 조건은 태어난 직후에도 진화하며 조건표에 임시20% 대기를 붙이지 않는다', () => {
+    const d = newDigimon(1, '코로몬', () => .5);d.ap.물 = 20;
+    expect(d.stageAge).toBe(0);
+    expect(findEvolution(d, 1, 100)).toEqual({ kind: 'evolve', to: '스노우아구몬' });
+    expect(explain(d, { ap: { 물: 20 } })).toHaveLength(1);
+    expect(hints(d, new Set(['스노우아구몬'])).find(h => h.name === '스노우아구몬')?.ready).toBe(true);
+    expect(findEvolution({ ...newDigimon(2, '코로몬'), stageAge: LIFESPAN[2] - 1 }, 1, 100)).toBeNull();
+    expect(findEvolution({ ...newDigimon(2, '코로몬'), stageAge: LIFESPAN[2] }, 1, 100)?.to).toBe('토이아구몬');
+  });
+  it('훈련으로 조건을 채운 바로 그 분에 진화하고 다음 시간을 기다리지 않는다', () => {
+    const d = newDigimon(1, '코로몬', () => .5);d.ap.물 = 19;d.cage = '해변';d.trainMinutes = 14;d.hunger = 100;
+    d.restCycle = { species: d.speciesId, awakeLeft: 5000, sleepLeft: 0 };
+    const s = { ...freshSave(0), digimon: [d] };
+    const r = tickFarm(s, () => .5);
+    expect(r.save.clock).toBe(s.clock + 1);expect(only(r.save).speciesId).toBe('스노우아구몬');
+    expect(r.events.map(e => e.type)).toEqual(expect.arrayContaining(['trained', 'evolved']));
+    expect(only(r.save).stageAge).toBe(0);
+  });
+  it('용량과 랭크 제한이 풀린 즉시 시간 진행 없이 다시 진화한다', () => {
+    const d = newDigimon(1, '코로몬');d.ap.물 = 20;
+    const full = { ...freshSave(0), digimon: [d, ...[2,3,4].map(uid=>newDigimon(uid, '코로몬'))] };
+    expect(evaluateEvolutions(full).events).toHaveLength(0);
+    const freed = { ...full, digimon: full.digimon.slice(0,3) }, r = evaluateEvolutions(freed, () => .5);
+    expect(only(r.save).speciesId).toBe('스노우아구몬');expect(r.save.clock).toBe(full.clock);
+    const agu = { ...newDigimon(1, '아구몬'), battles: 6 };
+    const locked = { ...freshSave(0), digimon: [agu], titles: TITLES.slice(0,2).map(t=>t.id) };
+    expect(tamerRank(locked)).toBe(2);expect(evaluateEvolutions(locked).events).toHaveLength(0);
+    const promoted = { ...locked, titles: TITLES.slice(0,3).map(t=>t.id) }, ready = evaluateEvolutions(promoted);
+    expect(only(ready.save).speciesId).toBe('그레이몬');expect(ready.save.clock).toBe(locked.clock);
+  });
+  it('같은 사육 틱의 뒤쪽 개체가 로스트되어 용량이 비워져도 앞의 대기 개체가 즉시 진화한다', () => {
+    const digimon = [1,2,3,4].map(uid=>newDigimon(uid, '코로몬',()=>.5));digimon[0].ap.물 = 20;
+    digimon[3].sick = true;digimon[3].sickMinutes = 2879;
+    const s = { ...freshSave(0), digimon }, r = tickFarm(s,()=>.5);
+    expect(r.events.some(e=>e.type==='lost'&&e.uid===4)).toBe(true);
+    expect(r.events.filter(e=>e.type==='evolved'&&e.uid===1)).toHaveLength(1);
+    expect(only(r.save).speciesId).toBe('스노우아구몬');expect(r.save.clock).toBe(s.clock+1);
   });
   it('rotten meat causes sickness and a penalty', () => {
     let s = { ...freshSave(0), rotten: 2 };
