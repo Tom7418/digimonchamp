@@ -43,6 +43,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
    if(owner===c.id||(!owner&&inCage(item,c))){const local=localPoint(item,c),point=worldPoint(local,next);item.x=point.x;item.y=point.y;item.cageId=c.id;item.cagePosition=local;}
  }}
  const bounces=new Map();
+ let roaming=new WeakMap(); // 자율 이동 목표는 저장 좌표와 분리해 매 프레임 초기화되지 않도록 한다.
  // 사용자 지정 연출: 한 번49~91월드px를 기준으로 최소3회 튕겨 돌아온다.
  // 저장하는 내부 좌표는 최종 착지점으로 유지해 도중에 닫아도 케이지 밖에 남지 않는다.
  function nextBounce(b,p){
@@ -60,10 +61,34 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  // 이동 선분을 작은 간격으로 검사해 프레임이 커도 다른 시설을 관통하지 않는다.
  const canMove=(p,to)=>{const s=getState(),own=s.layout.find(c=>c.id===p.cageId);if(!own)return false;const n=Math.max(1,Math.ceil(Math.hypot(to.x-p.x,to.y-p.y)/6));for(let i=1;i<=n;i++){const point={x:p.x+(to.x-p.x)*i/n,y:p.y+(to.y-p.y)*i/n};if(own?!inCage(point,own):s.layout.some(c=>inCage(point,c)))return false;}return true;};
  const movePet=(p,to)=>{if(!canMove(p,to))return false;const c=getState().layout.find(c=>c.id===p.cageId);placePet(p,to,c);return true;};
+ function roamPet(p,dt,speed=16){
+   if(!(dt>0)||!Number.isFinite(dt)||editing||bounces.has(p.uid)||getState().team[drag?.pet]===p)return false;
+   const cage=getState().layout.find(c=>c.id===p.cageId);if(!cage||!inCage(p,cage))return false;
+   let walk=roaming.get(p);
+   if(!walk||walk.owner!==cage.id)walk={owner:cage.id,wait:0,goal:null};
+   if(walk.wait>0){walk.wait=Math.max(0,walk.wait-dt);roaming.set(p,walk);return false;}
+   if(!walk.goal){
+     // 자기 케이지 안의 안전하고 직선으로 갈 수 있는 자리만 고른다. 다른 케이지로 넘어가지 않는다.
+     for(let i=0;i<12;i++){
+       const angle=Math.random()*Math.PI*2,radius=30+Math.random()*90;
+       const point={x:p.x+Math.cos(angle)*radius,y:p.y+Math.sin(angle)*radius};
+       if(safeInCage(point,cage)&&canMove(p,point)){walk.goal=localPoint(point,cage);break;}
+     }
+     // 벽 가까이에서 난수 후보가 전부 막히면 도달 가능한 자기 칸 중앙 방향으로 돌아선다.
+     if(!walk.goal){const point=L.cells(cage).map(([q,r])=>center(q,r)).filter(point=>canMove(p,point)).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];if(point)walk.goal=localPoint(point,cage);}
+   }
+   if(!walk.goal){walk.wait=0.7;roaming.set(p,walk);return false;}
+   const goal=worldPoint(walk.goal,cage),dx=goal.x-p.x,dy=goal.y-p.y,distance=Math.hypot(dx,dy);
+   if(distance<1){walk.goal=null;walk.wait=0.7+Math.random()*1.6;roaming.set(p,walk);return false;}
+   const step=Math.min(distance,Math.max(0,speed)*dt),point={x:p.x+dx/distance*step,y:p.y+dy/distance*step};
+   if(!movePet(p,point)){walk.goal=null;walk.wait=0.3;roaming.set(p,walk);return false;}
+   if(Math.abs(dx)>0.01)p.direction=dx>0?1:-1;
+   roaming.set(p,walk);return step>0;
+ }
  // 케이지를 옮기거나 회전해도 같은 바닥 위치를 따라가도록 내부 좌표를 저장한다.
  const localPoint=(p,c)=>{const a=-(c.rotation||0)*Math.PI/3,o=center(c.q,c.r),x=p.x-o.x,y=p.y-o.y;return {id:c.id,x:x*Math.cos(a)-y*Math.sin(a),y:x*Math.sin(a)+y*Math.cos(a)};};
  const worldPoint=(p,c)=>{const a=(c.rotation||0)*Math.PI/3,o=center(c.q,c.r);return {x:o.x+p.x*Math.cos(a)-p.y*Math.sin(a),y:o.y+p.x*Math.sin(a)+p.y*Math.cos(a)};};
- const placePet=(pet,point,cage)=>{pet.x=point.x;pet.y=point.y;pet.target=point.x;pet.cagePosition=cage?localPoint(point,cage):null;};
+ const placePet=(pet,point,cage)=>{roaming.delete(pet);pet.x=point.x;pet.y=point.y;pet.target=point.x;pet.cagePosition=cage?localPoint(point,cage):null;};
  const draggedPoint=point=>({x:point.x+(drag.offset?.x||0),y:point.y+(drag.offset?.y||0)});
  const restoreDrag=()=>{if(drag?.pet!==undefined){const pet=getState().team[drag.pet];if(pet)Object.assign(pet,drag.original);}};
  // 팔레트의 작은 모양 미리보기도 실제 배치 좌표에서 생성한다.
@@ -116,7 +141,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
    set hitTest(f){hitTest=f;},
    set onPet(f){onPet=f;},
    set onGrab(f){onGrab=f;},
-   canMove,movePet,attachFloorItem,
+   canMove,movePet,roamPet,attachFloorItem,
    isBouncing(uid){return bounces.has(uid);},
    advance(dt){for(const [uid,b] of bounces){
      const p=getState().team.find(p=>p.uid===uid);if(!p){bounces.delete(uid);continue;}
@@ -125,7 +150,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
      while(b.elapsed>=b.duration){b.elapsed-=b.duration;b.from=b.to;b.completed++;if(!nextBounce(b,p)){bounces.delete(uid);break;}}
    }},
    isDragging(uid){return drag?.pet!==undefined&&getState().team[drag.pet]?.uid===uid;},
-   reset(){selected=null;drag=null;tool=null;bounces.clear();init();status();},
+   reset(){selected=null;drag=null;tool=null;bounces.clear();roaming=new WeakMap();init();status();},
    world:WORLD, view:VIEW, cam, center, R, get zoom(){return zoom;},
    // 화면(캔버스) 좌표 이벤트 → 월드 좌표
    toWorld:e=>coordinate(e),

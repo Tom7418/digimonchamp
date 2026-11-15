@@ -1401,13 +1401,9 @@
       const oldX = p.x, oldY = p.y;
       // 잡고 옮기는 동안에는 자율 이동·먹기 예약이 드롭 위치를 덮어쓰지 않는다.
       if (board.isDragging(d.uid)) feeding.delete(d.uid);
-      if (animDt > 0 && !board.isDragging(d.uid) && !board.isBouncing(d.uid) && !d.isEgg && !seekFood(p, d, dt) && !p.cageId) {
-        if (Math.abs(p.target - p.x) < 3) {
-          if (Math.random() < 0.008) p.target = Math.max(board.roam.x0, Math.min(board.roam.x1, p.x + (Math.random() - 0.5) * 500));
-        } else {
-          p.direction = p.target > p.x ? 1 : -1;
-          if (!board.movePet(p,{x:p.x+p.direction*dt*16*(d.fatigue>80?0.4:1),y:p.y})) p.target=p.x;
-        }
+      if (animDt > 0 && !board.isDragging(d.uid) && !board.isBouncing(d.uid) && !d.isEgg && !hatching.has(d.uid) && !seekFood(p, d, animDt)) {
+        // 케이지 안에서도 목표를 유지하며 걷는다. 식사/수면/드래그/튕기기가 우선한다.
+        board.roamPet(p,animDt,16*(d.fatigue>80?0.4:1));
       }
       const selected = p.uid === view.pickedUid; // 고른 디지몬만 발밑 테두리를 표시
       const scale = d.isEgg ? 1.6 : 2;
@@ -1427,7 +1423,7 @@
       const facilityNo=({field:'cm30',gym:'cm34',clinic:'cm16'})[p.cage] || facility?.img?.match(/cm[0-9]+/)?.[0];
       const trainingSequence=window.DIGIMON_ANIMATIONS.training[facilityNo];
       // 훈련은 원작 시설 행동표의 동작으로 표시. 복합 행동의 첫 동작만 연결.
-      const state=board.isBouncing(d.uid) ? 'hurtAlt' : C.isSleeping(d) ? 'seq_13' : p.cageId&&p.motion!=='eat'&&trainingSequence!==undefined&&!d.isEgg&&!d.trainDone
+      const state=board.isBouncing(d.uid) ? 'hurtAlt' : C.isSleeping(d) ? 'seq_13' : p.cageId&&p.motion==='idle'&&trainingSequence!==undefined&&!d.isEgg&&!d.trainDone
         ? 'seq_'+trainingSequence : p.motion||'idle';
       if (d.isEgg) asset(SPRITE_BY_NAME[C.getSpecies(d.originBaby || d.speciesId).name]); // 부화 전에 미리 불러 둔다
       // 안내 편지/다른 창 때문에 연출이 대기 중이어도 진화 후 모습을 먼저 보여 주지 않는다.
@@ -1474,10 +1470,8 @@
         ctx.textAlign = 'center';
         ctx.fillText(bub, p.x + 20, top - 9);
       }
-      ctx.font = 'bold 11px "Noto Sans KR",sans-serif';
+      // 육성 화면의 발밑 이름은 숨긴다. 이름/상태는 선택 시 오른쪽 정보창에서 확인한다.
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#eef6f2';
-      ctx.fillText(nameOf(d) + (d.sick || d.injured ? ' ✚' : ''), p.x, p.y + 28);
       if (selected) {
         ctx.fillStyle = '#fff3c2';
         ctx.beginPath();

@@ -17,6 +17,29 @@ function setup(saved,rng){
 }
 const settle=s=>{for(let i=0;i<1000&&s.board.isBouncing(s.state.team[0].uid);i++){s.board.advance(.05);s.draw();}assert.equal(s.board.isBouncing(s.state.team[0].uid),false);};
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
+test('케이지의 매 프레임 위치 복원 뒤에도 자율 이동 목표가 유지되어 계속 걷는다',()=>{
+ const s=setup(undefined,()=>.25),c=s.board.center(1,1);s.drop(c);const p=s.state.team[0];
+ for(let i=0;i<20;i++){s.draw();s.board.roamPet(p,.1);}
+ assert.ok(Math.abs(p.y-c.y)>20);assert.equal(p.cageId,'clinic');assert.ok(s.board.canMove(p,p));
+ const saved=setup(JSON.parse(JSON.stringify(s.state)));saved.draw();near(p.x,saved.state.team[0].x);near(p.y,saved.state.team[0].y);
+});
+test('자율 이동은 단일/여러 칸 케이지와 회전 후에도 벽과 이웃 시설을 넘지 않는다',()=>{
+ let seed=42;const rng=()=>((seed=(seed*1664525+1013904223)>>>0)/2**32);
+ for(const [q,r,id] of [[1,1,'clinic'],[2,2,'field']]){
+  const s=setup(undefined,rng);s.drop(s.board.center(q,r));const p=s.state.team[0],start={x:p.x,y:p.y};
+  for(let i=0;i<900;i++){s.draw();s.board.roamPet(p,.1);assert.equal(p.cageId,id);assert.ok(s.board.canMove(p,p));}
+  assert.ok(Math.hypot(p.x-start.x,p.y-start.y)>5);
+  s.state.layout.find(c=>c.id===id).rotation=1;
+  for(let i=0;i<50;i++){s.draw();s.board.roamPet(p,.1);assert.ok(s.board.canMove(p,p));}
+ }
+});
+test('일시정지·편집·드래그·튕기는 중에는 자율 이동이 위치를 덮어쓰지 않는다',()=>{
+ const s=setup(undefined,()=>.25),c=s.board.center(1,1);s.drop(c);const p=s.state.team[0];
+ const unchanged=dt=>{const old={x:p.x,y:p.y};assert.equal(s.board.roamPet(p,dt),false);near(p.x,old.x);near(p.y,old.y);};
+ unchanged(0);s.nodes['#edit-cages'].onclick();unchanged(.1);s.nodes['#edit-cages'].onclick();
+ s.canvas.onpointerdown(s.event({x:p.x,y:p.y-25}));unchanged(.1);s.canvas.onpointercancel();
+ s.drop({x:c.x-400,y:c.y});unchanged(.1);settle(s);assert.equal(s.board.roamPet(p,.1),true);
+});
 // 바닥 높이가 같은 수평 경로에서 실제 그린 좌표의 착지 극점을 찾는다.
 function hops(s,origin){
  s.drop(origin);const p=s.state.team[0],samples=[{x:p.x,y:p.y}];
