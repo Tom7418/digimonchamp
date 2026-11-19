@@ -91,17 +91,9 @@
           view.logs.unshift({ time: stamp(), text: '디지몬 능력치를 원작 수치 기준으로 갱신했습니다.' });
         view.farmWorld = raw.view.farmWorld; // 없으면 옛 좌표 → 시작할 때 새 월드 크기로 옮긴다
         // 먹이 좌표 복원은 board 생성과 옛 월드 좌표 변환을 마친 뒤 수행한다.
-        // 재접속도23:59에서 멈춘다. 수면은 달력의 '다음 날로'를 누를 때만 진행한다.
-        const pending = Math.min(C.OFFLINE_CAP_MINUTES, Math.max(0,(Date.now()-save.lastSavedAt)/1000*MINUTES_PER_SECOND)) + Math.max(0,Math.min(9.999,Number(view.timeRemainder)||0));
-        const away = Math.floor(pending/C.CLOCK_STEP_MINUTES)*C.CLOCK_STEP_MINUTES;
-        clock = pending % C.CLOCK_STEP_MINUTES;
-        if (away > 0) {
-          const r = C.advanceOffline(save, away);
-          save = r.save;
-          r.events.forEach(logEvent);
-          const elapsed = r.elapsedMinutes;
-          if (elapsed >= 5) view.logs.unshift({ time: stamp(), text: `자리를 비운 동안 게임 시간 ${Math.floor(elapsed / 60)}시간 ${elapsed % 60}분이 지났습니다.` });
-        }
+        // 창을 닫아 둔 동안에는 게임 시간이 흐르지 않는다(형규 지정). 진행 중이던 10초 묶음의 남은 분량만 이어받는다.
+        // 예전에는 닫아 둔 시간을 최대 12게임시간까지 반영해, 15시에 닫고 9분 넘게 지나면 켜자마자 하루가 끝났다.
+        clock = Math.max(0, Math.min(9.999, Number(view.timeRemainder) || 0));
         return;
       }
     } catch {}
@@ -423,6 +415,7 @@
   // 엔트리 시간 내 재접속에도 안내한다. 이미 읽었거나 대기 중인 같은 날 안내는 중복하지 않는다.
   let dayEnding = false;
   function checkSchedule() {
+    if (titleOpen) return; // 타이틀 화면(이어하기·새로하기)을 먼저 보여 준다
     const notice = C.matchEntryNotice(save, view.entryNoticeRead);
     if (notice && activeMail?.entryKey !== notice.key && !mailQueue.some((m) => m.entryKey === notice.key)) {
       mail(`배틀에 참가할 수 있습니다.\n오늘은 ${notice.names.join(', ')}이(가) 열립니다.\n엔트리는 15시 전까지. 아래 '배틀'에서 출전하세요.`, '안내', notice.key);
@@ -2580,7 +2573,7 @@
         <li>배고픔·똥 방치·썩은 고기는 병(페널티)이 됩니다. 병·부상을 이틀 방치하면 로스트됩니다(배틀을 10번 넘게 했거나 완전체 이상이면 디지에그로 다시 태어남).</li>
         <li>타이틀 매치(엔트리 07:00~15:00)에서 이기면 테이머 랭크가 올라 사육 용량, 케이지 공간, 진화 가능 세대가 늘어납니다. 첫 타이틀은 봄 3일 ‘에이스 오브 링’입니다.</li>
         <li>프리 배틀로 배틀 횟수와 비트를 모으고, 상점에서 고기·알약·약·상처약·케이지를 사세요.</li>
-      </ol><p class="hint">비공식 비영리 팬게임입니다. 진행은 이 브라우저에 자동 저장되며, 창을 닫아 둔 시간도 최대 12시간까지 반영됩니다. 사냥은 아직 웹판에 옮기지 않았습니다.</p>`,
+      </ol><p class="hint">비공식 비영리 팬게임입니다. 진행은 이 브라우저에 자동 저장되며, 창을 닫아 둔 동안에는 게임 시간이 멈춥니다. 사냥은 아직 웹판에 옮기지 않았습니다.</p>`,
     );
   // ---------- 타이틀 화면 (원작 title_menu 그림) ----------
   // 페이지를 열면 먼저 보인다. 닫기 전에는 게임 시간이 흐르지 않는다.
@@ -2591,6 +2584,7 @@
     setTimeout(() => (el.hidden = true), 350);
     titleOpen = false;
     lastTime = 0;
+    checkSchedule(); // 하루 마감·경기 안내는 이어하기를 누른 뒤에 띄운다
   }
   function startNewGame() {
     endHunt();

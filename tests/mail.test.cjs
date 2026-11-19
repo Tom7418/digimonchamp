@@ -13,7 +13,7 @@ function setup(readKey = null) {
   const box = { hidden: true, querySelector: () => ({ textContent: '' }) };
   const view = { tips: {}, entryNoticeRead: readKey };
   const saved = [];
-  const context = vm.createContext({ view, save: {}, battle: null,
+  const context = vm.createContext({ view, save: {}, battle: null, titleOpen: false,
     $: () => box, persist: () => saved.push(view.entryNoticeRead),
     C: { isNight: () => false, matchEntryNotice: (_, read) => read === '1:0:3' ? null : { key: '1:0:3', names: ['에이스 오브 링'] } },
   });
