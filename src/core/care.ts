@@ -71,7 +71,7 @@ export const isSleeping = (d: Digimon): boolean => !d.isEgg && d.restCycle?.spec
 /** 훈련 상태 판정은 화면의 성급한 달리기와 실제 훈련이 공유한다. */
 export function isTraining(d: Digimon): boolean {
   const cage=getCage(d.cage);
-  return !!(cage.up||cage.apUp||cage.battleUp)&&!d.isEgg&&!d.trainDone&&!isSleeping(d)&&!d.sick&&!d.injured&&d.hunger>0&&d.fatigue<90;
+  return !!(cage.up||cage.apUp||cage.battleUp)&&!d.isEgg&&!d.trainDone&&!isSleeping(d)&&!d.sick&&!d.injured&&!d.dying&&d.hunger>0&&d.fatigue<90;
 }
 function tickRestCycle(d: Digimon, rng: Rng, night: boolean): boolean {
   const real = originalSpecies(d.speciesId);
@@ -159,6 +159,8 @@ export type FarmEvent =
   | { type: 'lost'; uid: number; name: string; reason: string }
   | { type: 'sick'; uid: number; name: string }
   | { type: 'injured'; uid: number; name: string }
+  | { type: 'dying'; uid: number; name: string; cause: 'sick' | 'injured' | 'hunger' }
+  | { type: 'revived'; uid: number; name: string }
   | { type: 'poop'; uid: number }
   /** 훈련 완료 후 실제로 오른·내린 능력치 (예: 'HP +3, 방어 -1') */
   | { type: 'trained'; uid: number; name: string; changes: string }
@@ -205,6 +207,14 @@ export const STRESS = { crowdedPerDay: 20, rotten: 50, sick: 40, training: 5, hu
 export const TRAINING_MINUTES = 15;
 /** 병·부상을 방치해 로스트되기까지의 게임 분 (임시: 이틀) */
 export const NEGLECT_MINUTES = 2880;
+/**
+ * 빈사 (원작 글: help #124 HP 0이면 빈사·못 움직임, #137 굶주림 지속, #140 부상 방치, #141 병 방치,
+ * #142 빈사 방치 → 로스트(조건을 채웠으면 디지에그), mail #99 HP·병·공복을 고치지 않으면 빈사).
+ * 시간은 임시: 병·부상 하루 방치 → 빈사, 굶주림(배고픔 0) 하루 → 빈사, 빈사 하루 더 → 로스트.
+ * 병·부상만 따지면 예전 '이틀 방치 로스트'와 총 시간이 같다.
+ */
+export const DYING_AFTER_MINUTES = 1440;
+export const DYING_LOST_MINUTES = 1440;
 /**
  * 계절 (원작 도움말 help #136: 여름은 트레이닝 효과가 높고, 겨울은 부상 확률이 오른다).
  * 트레이닝 부상 (help #140: 배틀이나 트레이닝을 할 때 부상당할 수 있다).
@@ -268,7 +278,7 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
 }
 
 /** 디지몬 한 마리의 게임 시간 1분. null이면 로스트 */
-function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number }, events: FarmEvent[]): Digimon | null {
+function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number; dirty?: boolean }, events: FarmEvent[]): Digimon | null {
   let d: Digimon = { ...prev, stats: { ...prev.stats }, ap: { ...prev.ap } };
   d.stageAge += 1;
 
@@ -321,10 +331,11 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
     d.stressSick = true;
     makeSick(d, events, 0);
   }
-  d.starvingMinutes = d.hunger <= 0 && !sleeping ? d.starvingMinutes + 1 : 0;
-  d.dirtyMinutes = d.poop >= 3 && !sleeping ? d.dirtyMinutes + 1 : 0;
-  if (d.starvingMinutes >= 240 || d.dirtyMinutes >= 180 || (d.fatigue >= 95 && ctx.rng() < 0.01)) {
-    d.starvingMinutes = 0;
+  // 굶주림 시간은 잠든 동안 멈추기만 하고 지우지 않는다 (밤을 넘겨도 이어진다)
+  d.starvingMinutes = d.hunger <= 0 ? d.starvingMinutes + (sleeping ? 0 : 1) : 0;
+  // 배설물이나 상한 먹이가 있는 케이지에 오래 있으면 병 (help #139·#141). 상한 먹이는 화면이 케이지별로 알려 준다
+  d.dirtyMinutes = (d.poop >= 3 || ctx.dirty) && !sleeping ? d.dirtyMinutes + 1 : 0;
+  if ((d.starvingMinutes === 240 && !sleeping) || d.dirtyMinutes >= 180 || (d.fatigue >= 95 && ctx.rng() < 0.01)) {
     d.dirtyMinutes = 0;
     makeSick(d, events);
   }
@@ -334,23 +345,42 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
       d.injured = false;
       d.sickMinutes = d.sick ? d.sickMinutes : 0;
     }
-    // 병·부상을 이틀 방치하면 로스트된다 (원작 도움말 help #142: 두 번 다시 돌아오지 않는다.
-    // 단, 일정 조건을 채웠다면 디지에그로 다시 태어난다 → 수명 때와 같은 조건을 쓴다).
-    // 이틀이라는 시간은 임시 값. 마지막 한 마리는 게임이 막히지 않도록 디지에그로 남긴다 (임시)
-    if (d.sickMinutes >= NEGLECT_MINUTES) {
-      if (endOfLife(d) === 'egg' || ctx.isLast) {
-        events.push({ type: 'egg', uid: d.uid, from: sp.id, reason: 'sick' });
-        return toEgg(d, false);
+    if (!d.dying && d.sickMinutes >= DYING_AFTER_MINUTES) {
+      d.dying = true;
+      d.dyingMinutes = 0;
+      events.push({ type: 'dying', uid: d.uid, name: sp.name, cause: d.sick ? 'sick' : 'injured' });
+    }
+  }
+  if (!d.dying && d.hunger <= 0 && d.starvingMinutes >= DYING_AFTER_MINUTES) {
+    d.dying = true;
+    d.dyingMinutes = 0;
+    events.push({ type: 'dying', uid: d.uid, name: sp.name, cause: 'hunger' });
+  }
+  if (d.dying) {
+    if (!d.sick && !d.injured && d.hunger > 0) {
+      // 원인을 모두 고치면 빈사에서 벗어난다 (원작 메일 #97~99: 약·상처약·먹이로 치료)
+      d.dying = false;
+      d.dyingMinutes = 0;
+      events.push({ type: 'revived', uid: d.uid, name: sp.name });
+    } else {
+      d.dyingMinutes = (d.dyingMinutes ?? 0) + 1;
+      // 빈사를 방치하면 로스트 (help #142). 일정 조건을 채웠다면 디지에그 → 수명 때와 같은 조건.
+      // 마지막 한 마리는 게임이 막히지 않도록 디지에그로 남긴다 (임시)
+      if (d.dyingMinutes >= DYING_LOST_MINUTES) {
+        if (endOfLife(d) === 'egg' || ctx.isLast) {
+          events.push({ type: 'egg', uid: d.uid, from: sp.id, reason: 'sick' });
+          return toEgg({ ...d, dying: false, dyingMinutes: 0 }, false);
+        }
+        events.push({ type: 'lost', uid: d.uid, name: sp.name, reason: '빈사 방치' });
+        return null;
       }
-      events.push({ type: 'lost', uid: d.uid, name: sp.name, reason: '병·부상 방치' });
-      return null;
     }
   }
 
   // 훈련: 테이머가 훈련 케이지에 넣으면 15분 훈련을 한 번 한다. 끝나면 훈련 케이지가 아닌 곳에
   // 두었다가 다시 넣기 전에는 훈련하지 않는다 (형규가 정함. 15분은 게임 시간)
   if (cage.up || cage.apUp || cage.battleUp) {
-    if (!d.trainDone && !sleeping && !d.sick && !d.injured && d.hunger > 0 && d.fatigue < 90) {
+    if (!d.trainDone && !sleeping && !d.sick && !d.injured && !d.dying && d.hunger > 0 && d.fatigue < 90) {
       d.trainMinutes = (d.trainMinutes ?? 0) + 1;
       if (d.trainMinutes >= TRAINING_MINUTES) {
         d.trainMinutes = 0;
@@ -400,7 +430,8 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
 }
 
 /** 사육장 전체의 게임 시간 1분 */
-export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false): { save: SaveData; events: FarmEvent[] } {
+/** dirtyCages: 상한 먹이가 놓인 설치 시설 ID (바닥 먹이는 화면이 관리한다) */
+export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, dirtyCages: readonly string[] = []): { save: SaveData; events: FarmEvent[] } {
   const events: FarmEvent[] = [];
   const rank = tamerRank(save);
   const season = dateOf(save.clock).season;
@@ -420,7 +451,8 @@ export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false): 
     social.added = Math.min(10,social.added + extra);
     const candidate = {...d,socialStress:social};
     if(extra>0)addStress(candidate,extra);
-    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1 }, events);
+    const dirty = !!d.cageInstance && dirtyCages.includes(d.cageInstance);
+    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1, dirty }, events);
     if (!r) {
       free += before;
       return;

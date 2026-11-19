@@ -7,7 +7,7 @@
 // - 용량이 가득 차면 잡을 수 없다 ('용량이 가득 찼습니다').
 // 출현표: 나무위키 진화 목록의 출현 장소(src/data/habitats.txt). 성숙기·완전체는 그 단계 로프가 있어야 잡힌다.
 // 임시 값: 세대별 HP(유년기I 1, 유년기II 2, 성장기 3), 성장기 25%·성숙기 이상 10% 출현, 밤 18시~, 드묾 1/5, 와이어 가격·개수.
-import { dateOf, FIELDS, getSpecies, originalSpecies, SEASON_CODE, type Field } from './data';
+import { dateOf, FIELDS, getSpecies, originalSpecies, SEASON_CODE, typicalStats, type Field } from './data';
 import { rankName, tamerRank, TITLES } from './titles';
 import shopRaw from '../data/shop.txt?raw';
 import type { SaveData } from './types';
@@ -144,6 +144,20 @@ export function ropeFor(speciesId: string): { name: string } | null {
 /** 야생 디지몬의 체력 칸 수 (임시: 세대 1~5). 로프는 이 체력을 시간에 따라 깎고, 0이면 기절한다 */
 export function wildHp(speciesId: string): number {
   return Math.max(1, Math.min(5, getSpecies(speciesId).stage));
+}
+
+/**
+ * 야생 체력 자연 회복 (overlay9_0 0x149C).
+ * 원본 야생 체력은 그 개체의 HP 능력치(+0x110 구조체 +0x50/+0x58)이고, 최대치의 80% 아래면
+ * 프레임마다 1/5 확률로 1씩(평균 초당 12) 회복해 80%에서 멈춘다. 기절(체력 0)하면 회복하지 않는다
+ * (0x1848: 기절 표시 후 테이머가 누를 때까지 그대로).
+ * 이 게임의 체력 칸은 비율이라, 원본 HP(종 표준 초기값)에 맞춰 칸 단위로 바꾼다.
+ */
+export const WILD_REGEN_PER_SECOND = 12;
+export function wildRegen(speciesId: string, hp: number, max: number, dt: number): number {
+  const cap = max * 0.8;
+  if (hp <= 0 || hp >= cap) return hp;
+  return Math.min(cap, hp + (max * WILD_REGEN_PER_SECOND * dt) / typicalStats(speciesId).hp);
 }
 
 /**

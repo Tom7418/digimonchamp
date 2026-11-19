@@ -175,7 +175,7 @@
       log(`✦ ${n(e.from)}이(가) ${n(e.to)}(으)로 진화했습니다!`);
       evolutionScene.enqueue(e);
     } else if (e.type === 'egg' && e.reason === 'sick') {
-      log(`${n(e.from)}이(가) 병·부상을 방치해 쓰러졌습니다… 디지에그로 돌아갔습니다.`);
+      log(`${n(e.from)}이(가) 빈사 상태로 방치되어 쓰러졌습니다… 디지에그로 돌아갔습니다.`);
       toast(`${n(e.from)} → 디지에그`);
     } else if (e.type === 'egg') log(`${n(e.from)}이(가) 수명을 다해 디지에그로 돌아갔습니다.`);
     else if (e.type === 'lost') {
@@ -185,10 +185,18 @@
     else if (e.type === 'sick') {
       log(`${e.name}이(가) 병에 걸렸습니다. 약(주사기)을 선택하고 디지몬을 터치하세요. (페널티 +1)`);
       toast(`${e.name} 발병!`);
-      tipMail('sick', '디지몬이 병에 걸렸습니다.\n아래 약(주사기)을 선택한 뒤 디지몬을 터치하면 주사를 놓습니다. 세대가 낮으면 한 번에 안 나을 수도 있어요.\n이틀 동안 방치하면 로스트되어 다시는 돌아오지 않습니다.');
+      tipMail('sick', '디지몬이 병에 걸렸습니다.\n아래 약(주사기)을 선택한 뒤 디지몬을 터치하면 주사를 놓습니다. 세대가 낮으면 한 번에 안 나을 수도 있어요.\n내버려두면 빈사 상태가 되어버립니다.');
     } else if (e.type === 'injured') {
       log(`${e.name}이(가) 훈련하다 다쳤습니다. 상처약을 선택하고 디지몬을 터치하세요.`);
       toast(`${e.name} 부상!`);
+    } else if (e.type === 'dying') {
+      const fix = e.cause === 'sick' ? '약(주사기)으로 병을' : e.cause === 'injured' ? '상처약으로 부상을' : '먹이로 배고픔을';
+      log(`${e.name}이(가) 빈사 상태가 되었습니다! 움직이지 못합니다. ${fix} 고치세요. 계속 내버려두면 로스트됩니다.`);
+      toast(`${e.name} 빈사!`);
+      tipMail('dying', '디지몬이 빈사 상태가 되었습니다.\n병·부상·배고픔을 치료하지 않으면 빈사 상태가 되고, 빈사 상태를 내버려두면 로스트되어 사라질 수도 있습니다.\n원인을 치료하면 다시 움직일 수 있어요.');
+    } else if (e.type === 'revived') {
+      log(`${e.name}이(가) 빈사 상태에서 회복했습니다.`);
+      toast(`${e.name} 회복`);
     } else if (e.type === 'blocked')
       log(
         e.reason === 'rank'
@@ -286,7 +294,7 @@
     const life = d.isEgg ? C.EGG_MINUTES : C.LIFESPAN[sp.stage];
     $('#mood').textContent = d.isEgg
       ? `${Math.max(0, C.EGG_MINUTES - d.stageAge)}분 뒤 부화합니다.`
-      : `성격: ${d.personality} · 배틀 ${d.battles}회 (승 ${d.wins}) · 페널티 ${d.penalties}${d.sick ? ' · 병' : ''}${d.injured ? ' · 부상' : ''}`;
+      : `성격: ${d.personality} · 배틀 ${d.battles}회 (승 ${d.wins}) · 페널티 ${d.penalties}${d.dying ? ' · 빈사' : ''}${d.sick ? ' · 병' : ''}${d.injured ? ' · 부상' : ''}`;
     $('#xp-label').textContent = `${Math.floor(d.stageAge / 60)}시간 / ${Math.floor(life / 60)}시간`;
     $('#xp-bar').style.width = `${clamp((d.stageAge / life) * 100)}%`;
     $('#training-info').disabled=!!battle||!!hunt;
@@ -1072,7 +1080,7 @@
   }
 
   // ---------- 배틀 ----------
-  const canFight = (d) => !d.isEgg && !d.sick && !d.injured;
+  const canFight = (d) => !d.isEgg && !d.sick && !d.injured && !d.dying;
   function members(format,selection) {
     if(Array.isArray(selection))return selection.slice(0,format).map(uid=>save.digimon.find(d=>d.uid===uid)).filter(Boolean);
     const first = current();
@@ -1094,7 +1102,7 @@
     };
     showModal('배틀',
       `<p>출전할 디지몬을 선택하세요. <b>1:1은 첫 번째,3:3은 선택한 세 마리</b>가 나갑니다. 다시 누르면 제외됩니다.</p>
-       <div id="battle-roster" class="battle-roster">${save.digimon.map(d=>`<button data-entrant="${d.uid}" aria-pressed="false"${canFight(d)?'':' disabled'}><b><span class="roster-order"></span>${esc(nameOf(d))}</b><small>${d.isEgg?'부화 전':d.sick?'병으로 출전 불가':d.injured?'부상으로 출전 불가':esc(C.STAGE_LABEL[C.getSpecies(d.speciesId).stage])+' · '+esc(d.personality)+' · 배틀 '+d.battles+'회'}</small>${d.isEgg?'':`<small>SP: ${C.supportSkills(d.speciesId,d.personality).map(sk=>esc(sk.name)+' ('+sk.tpCost+'TP)').join(' · ')||'없음'}</small>`}</button>`).join('')}</div>
+       <div id="battle-roster" class="battle-roster">${save.digimon.map(d=>`<button data-entrant="${d.uid}" aria-pressed="false"${canFight(d)?'':' disabled'}><b><span class="roster-order"></span>${esc(nameOf(d))}</b><small>${d.isEgg?'부화 전':d.dying?'빈사 상태로 출전 불가':d.sick?'병으로 출전 불가':d.injured?'부상으로 출전 불가':esc(C.STAGE_LABEL[C.getSpecies(d.speciesId).stage])+' · '+esc(d.personality)+' · 배틀 '+d.battles+'회'}</small>${d.isEgg?'':`<small>SP: ${C.supportSkills(d.speciesId,d.personality).map(sk=>esc(sk.name)+' ('+sk.tpCost+'TP)').join(' · ')||'없음'}</small>`}</button>`).join('')}</div>
        <p id="battle-roster-count" class="hint" role="status"></p>
        <div class="mode-pick">출전 전 공격 방식 ${['일반','지원','특수'].map(m=>`<button data-mode="${m}" class="${m===mode?'active':''}">${m}</button>`).join('')}</div>
        <h3>타이틀 매치</h3><div class="menu-list">${titles.length?titles.map((m,i)=>`<button data-title="${i}"><b>★ ${esc(m.name)}</b><small>${esc(titleText(m))}</small></button>`).join(''):`<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은07:00~15:00, 일정: ${esc(C.upcoming(save)[0]||'-')}</p>`}</div>
@@ -1437,9 +1445,12 @@
       const trainingRun=!!p.cageId&&d.personality==='성급한'&&C.isTraining(d);
       // 잡고 옮기는 동안에는 자율 이동·먹기 예약이 드롭 위치를 덮어쓰지 않는다.
       if (board.isDragging(d.uid)) feeding.delete(d.uid);
-      if (animDt > 0 && !board.isDragging(d.uid) && !board.isBouncing(d.uid) && !d.isEgg && !hatching.has(d.uid) && !seekFood(p, d, animDt)) {
+      // 빈사: 돌아다니지 못한다 (help #124). 굶주려 빈사가 된 개체만 놓아 준 먹이까지 기어가 먹을 수 있다 (웹판 정책)
+      if (d.dying && d.hunger > 0) feeding.delete(d.uid);
+      if (animDt > 0 && !board.isDragging(d.uid) && !board.isBouncing(d.uid) && !d.isEgg && !hatching.has(d.uid)) {
+        const eating = (!d.dying || d.hunger <= 0) && seekFood(p, d, animDt);
         // 케이지 안에서도 목표를 유지하며 걷는다. 식사/수면/드래그/튕기기가 우선한다.
-        board.roamPet(p,animDt,(trainingRun?48:16)*(d.fatigue>80?0.4:1),trainingRun?.15:1);
+        if (!eating && !d.dying) board.roamPet(p,animDt,(trainingRun?48:16)*(d.fatigue>80?0.4:1),trainingRun?.15:1);
       }
       const selected = p.uid === view.pickedUid; // 고른 디지몬만 발밑 테두리를 표시
       const scale = d.isEgg ? 1.6 : 2;
@@ -1459,7 +1470,7 @@
       const facilityNo=({field:'cm30',gym:'cm34',clinic:'cm16'})[p.cage] || facility?.img?.match(/cm[0-9]+/)?.[0];
       const trainingSequence=window.DIGIMON_ANIMATIONS.training[facilityNo];
       // 훈련은 원작 시설 행동표의 동작으로 표시. 복합 행동의 첫 동작만 연결.
-      const state=board.isBouncing(d.uid) ? 'hurtAlt' : C.isSleeping(d) ? 'seq_13' : p.cageId&&p.motion==='idle'&&trainingSequence!==undefined&&!d.isEgg&&!d.trainDone
+      const state=board.isBouncing(d.uid) ? 'hurtAlt' : d.dying ? 'ko' : C.isSleeping(d) ? 'seq_13' : p.cageId&&p.motion==='idle'&&trainingSequence!==undefined&&!d.isEgg&&!d.trainDone
         ? 'seq_'+trainingSequence : p.motion||'idle';
       if (d.isEgg) asset(SPRITE_BY_NAME[C.getSpecies(d.originBaby || d.speciesId).name]); // 부화 전에 미리 불러 둔다
       // 안내 편지/다른 창 때문에 연출이 대기 중이어도 진화 후 모습을 먼저 보여 주지 않는다.
@@ -1899,6 +1910,7 @@
         }
         continue;
       }
+      w.hp = C.wildRegen(w.id, w.hp, w.max, dt); // 원본: 80% 아래면 저절로 회복
       if (w.poison > 0) {
         // 독: 일정 시간마다 HP 1, HP 1에서 멈춘다
         w.poison -= dt;
@@ -2660,7 +2672,9 @@
           clock = Math.max(0,clock-C.CLOCK_STEP_MINUTES);
           for(let minute=0;minute<C.CLOCK_STEP_MINUTES&&!dayEnding;minute++){
           syncTeam();
-          const r = C.tickFarm(save);
+          // 상한 먹이가 놓인 케이지에 오래 있으면 병 (help #139·#141)
+          const dirtyCages = [...new Set(view.foods.filter((f) => f.kind === 'rotten' && f.cageId).map((f) => f.cageId))];
+          const r = C.tickFarm(save, undefined, false, dirtyCages);
           save = r.save;
           r.events.forEach(logEvent);
           spoilFoods();

@@ -64,6 +64,9 @@ export interface Digimon {
   poop: number;
   sick: boolean;
   injured: boolean;
+  /** 빈사 (help #124·#137·#140~142). 원인(병·부상·굶주림)을 고치면 풀리고, 방치하면 로스트. 옛 저장은 없음=false */
+  dying?: boolean;
+  dyingMinutes?: number;
   /** 발병 횟수 (페널티) */
   penalties: number;
   battles: number;

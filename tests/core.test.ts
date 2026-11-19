@@ -15,7 +15,7 @@ import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evol
 import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
 import { discardFloorFood, ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -500,7 +500,7 @@ describe('evolution', () => {
   });
   it('같은 사육 틱의 뒤쪽 개체가 로스트되어 용량이 비워져도 앞의 대기 개체가 즉시 진화한다', () => {
     const digimon = [1,2,3,4].map(uid=>newDigimon(uid, '코로몬',()=>.5));digimon[0].ap.물 = 20;
-    digimon[3].sick = true;digimon[3].sickMinutes = 2879;
+    digimon[3].sick = true;digimon[3].sickMinutes = 2879;digimon[3].dying = true;digimon[3].dyingMinutes = 1439;
     const s = { ...freshSave(0), digimon }, r = tickFarm(s,()=>.5);
     expect(r.events.some(e=>e.type==='lost'&&e.uid===4)).toBe(true);
     expect(r.events.filter(e=>e.type==='evolved'&&e.uid===1)).toHaveLength(1);
@@ -655,6 +655,13 @@ describe('hunting', () => {
     const item = shopItems({ ...base, titles: ['m3'] }).find((i) => i.id === 'rope:hard2')!;
     expect(item.apply(base).rope).toBe('hard2');
   });
+  it('wild regenerates up to 80% unless fainted (overlay9_0 0x149C)', () => {
+    // 즈루몬 표준 HP 220: 초당 12 → 1칸 기준 초당 12/220
+    expect(wildRegen('즈루몬', 0.5, 1, 1)).toBeCloseTo(0.5 + 12 / 220);
+    expect(wildRegen('즈루몬', 0.5, 1, 100)).toBe(0.8);
+    expect(wildRegen('즈루몬', 0.9, 1, 1)).toBe(0.9);
+    expect(wildRegen('즈루몬', 0, 1, 1)).toBe(0);
+  });
   it('rope follows the original rope table (gauge, drain, distance zones)', () => {
     // 원본 0xC8DCC: α 6초 · β 12초 · γ 17초
     expect([ropeHoldSeconds({ rope: 'digi1' }), ropeHoldSeconds({ rope: 'hard2' }), ropeHoldSeconds({ rope: 'ultima3' })]).toEqual([6, 12, 17]);
@@ -805,7 +812,7 @@ describe('illness', () => {
     const run = (first: Digimon, alone = false) => advance({ ...base, digimon: alone ? [first] : [first, newDigimon(2, '깜몬')], nextUid: 3 }, 2880, seeded(1));
     const lost = run(mon({}));
     expect(lost.save.digimon.some((x) => x.uid === 1)).toBe(false);
-    expect(lost.events.some((e) => e.type === 'lost' && e.reason === '병·부상 방치')).toBe(true);
+    expect(lost.events.some((e) => e.type === 'lost' && e.reason === '빈사 방치')).toBe(true);
     const reborn = run(mon({ battles: 10, eggs: 1 }));
     const d = reborn.save.digimon.find((x) => x.uid === 1)!;
     expect(d.isEgg).toBe(true);
@@ -814,6 +821,31 @@ describe('illness', () => {
     expect(reborn.events.some((e) => e.type === 'egg' && e.reason === 'sick')).toBe(true);
     // 마지막 한 마리는 디지에그로 남는다
     expect(run(mon({}), true).save.digimon[0].isEgg).toBe(true);
+  });
+  it('병·부상·굶주림을 하루 방치하면 빈사, 원인을 고치면 회복 (help #137·#140~142)', () => {
+    const base = { ...freshSave(0), nextUid: 3 };
+    const two = (patch: Partial<Digimon>) => ({ ...base, digimon: [{ ...newDigimon(1, '깜몬'), hunger: 100, ...patch }, newDigimon(2, '깜몬')] });
+    let r = advance(two({ sick: true }), 1440, seeded(1));
+    const hurt = r.save.digimon.find((x) => x.uid === 1)!;
+    expect(hurt.dying).toBe(true);
+    expect(r.events.some((e) => e.type === 'dying' && e.cause === 'sick')).toBe(true);
+    // 빈사 중에는 훈련하지 않는다
+    expect(isTraining({ ...hurt, sick: false, cage: '운동장' })).toBe(false);
+    // 병을 고치면 다음 분에 빈사에서 벗어난다
+    const healed = { ...r.save, digimon: r.save.digimon.map((x) => (x.uid === 1 ? { ...x, sick: false, hunger: 100 } : x)) };
+    r = tickFarm(healed, seeded(1));
+    expect(r.save.digimon.find((x) => x.uid === 1)!.dying).toBe(false);
+    expect(r.events.some((e) => e.type === 'revived')).toBe(true);
+    // 배고픔 0이 깨어 있는 시간으로 하루 이어지면 빈사
+    const starving = tickFarm(two({ hunger: 0, starvingMinutes: 1439 }), seeded(1));
+    expect(starving.events.some((e) => e.type === 'dying' && e.cause === 'hunger')).toBe(true);
+  });
+  it('상한 먹이가 놓인 케이지에 오래 있으면 병 (help #139·#141)', () => {
+    const s: SaveData = { ...freshSave(0), digimon: [{ ...newDigimon(1, '깜몬'), hunger: 100, cageInstance: 'c1' }] };
+    expect(advance({ ...s }, 180, seeded(1)).save.digimon[0].sick).toBe(false);
+    let cur = s;
+    for (let i = 0; i < 180; i++) cur = tickFarm(cur, seeded(i), false, ['c1']).save;
+    expect(cur.digimon[0].sick).toBe(true);
   });
 });
 
