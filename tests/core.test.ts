@@ -9,7 +9,7 @@ import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
-import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
+import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -376,7 +376,7 @@ describe('evolution', () => {
     expect(relief('절')).toBeGreaterThan(44);
     expect(getCage('경기장').capacity).toBe(10);
   });
-  it('계절: 여름은 훈련 효과가 높고, 겨울은 훈련 부상이 잦다', () => {
+  it('계절: 여름은 훈련 효과가 높고, 겨울은 부상 위험도가 더 쌓인다', () => {
     const train = (clock: number, rng = seeded(1)) => {
       let s = withMon({ ...freshSave(0), clock }, { hunger: 100, personality: '쿨' });
       s = { ...s, cages: [...s.cages, '미니 화산'] };
@@ -386,10 +386,13 @@ describe('evolution', () => {
     const day = 1440, noon = 12 * 60;
     expect(only(train(noon).save).ap['용']).toBe(3); // 봄
     expect(only(train(8 * day + noon).save).ap['용']).toBe(5); // 여름: 원본 가산+2
-    const injuries = (clock: number) => Array.from({ length: 300 }, (_, i) => only(train(clock, seeded(i + 1)).save).injured).filter(Boolean).length;
-    const spring = injuries(noon), winter = injuries(24 * day + noon);
-    expect(spring).toBeGreaterThan(0);
-    expect(winter).toBeGreaterThan(spring);
+    // 원본: 훈련마다 부상 위험도가 쌓이고(겨울 +1), 30을 넘으면 그 %로 부상
+    const risk = (clock: number) => only(train(clock).save).injuryRisk ?? 0;
+    expect(risk(noon)).toBe(1); // 미니 화산 부가 명령5 = 1
+    expect(risk(24 * day + noon)).toBe(2);
+    expect(only(train(noon).save).injured).toBe(false);
+    const risky = (clock: number, i: number) => { let s = withMon({ ...freshSave(0), clock }, { hunger: 100, personality: '쿨', injuryRisk: 80 }); s = { ...s, cages: [...s.cages, '미니 화산'] }; s = setCage(s, 1, '미니 화산').save; return only(advance(s, 20, seeded(i)).save).injured; };
+    expect(Array.from({ length: 50 }, (_, i) => risky(noon, i + 1)).filter(Boolean).length).toBeGreaterThan(20);
   });
   it('쓰다듬으면 스트레스가 조금 풀리고, 게임 1시간 안에는 다시 풀리지 않는다', () => {
     const s = withMon(freshSave(0), { stress: 50 });
@@ -899,6 +902,14 @@ describe('illness', () => {
     const d = { ...newDigimon(1, '아구몬', () => 0.5), hpNow: 100 };
     expect(createBattle([entrantOf(d, '일반')], []).units[0].hp).toBe(100);
     expect(applyBattleResult(d, false, false, () => 0.9, false, 40).hpNow).toBe(40);
+  });
+  it('먹으면 HP가 차고(포만감 1칸마다 1%), 아침에 깨면 1/30 오른다', () => {
+    const d = { ...newDigimon(1, '아구몬', () => 0.5), hpNow: 100 };
+    const unit = 100 / getSpecies('아구몬').size;
+    expect(eatHp(d, unit).hpNow).toBe(100 + Math.trunc(d.stats.hp / 100));
+    const s = { ...freshSave(0), digimon: [{ ...d, hunger: 100 }], clock: 23 * 60 + 59 };
+    const r = endDay(s, seeded(1));
+    expect(r.save.digimon[0].hpNow).toBeGreaterThanOrEqual(100 + Math.trunc(d.stats.hp / 30));
   });
   it('디지에그 그림은 디지에그화 횟수로 고른다 (원본 0x2119B2C)', () => {
     expect([0, 1, 2, 6, 7, 8, 100].map(eggSpriteIndex)).toEqual([0, 1, 2, 6, 7, 7, 7]);

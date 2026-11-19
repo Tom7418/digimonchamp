@@ -69,6 +69,8 @@ export interface Digimon {
   hpNow?: number;
   /** 자연 회복 분 세기 (원본 +0x460) */
   hpRegenMinutes?: number;
+  /** 부상 위험도 0~100 (원본 +0x40). 30을 넘으면 훈련 뒤 그 %로 부상 */
+  injuryRisk?: number;
   dying?: boolean;
   /**
    * 기억 (원본 디지몬 구조체 +0x140~+0x154 / +0x158~+0x16C, 세대별 두 칸). 키는 세대 1~6.

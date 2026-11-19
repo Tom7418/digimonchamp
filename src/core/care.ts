@@ -272,6 +272,60 @@ const EFFECTS = facilityEffects as Record<string, { command: number; args: numbe
 export const trainingHpCost = (cageNo: number) => (EFFECTS[String(cageNo)] ?? []).filter((c) => c.command === 1).reduce((n, c) => n + c.args[0], 0);
 /** 시설 상시 효과 [간격 분, 종류, 값] (종류 1 = HP) */
 export const facilityHpEffects = (cageNo: number) => (EFFECTS[String(cageNo)] ?? []).filter((c) => c.command === 6 && c.args[1] === 1).map((c) => ({ every: c.args[0], amount: c.args[2] }));
+/**
+ * 훈련 부가 명령 (overlay18 0x2117BE4~0x2117F30, 표 facility-effects.json). 병·부상·빈사면 적용하지 않는다.
+ *  명령0 포만감(원본 단위 1 = 종 용량 G분의 1) · 1 현재 HP(최소 1) · 2 피로(0~100) · 5 부상 위험도(0~100).
+ *  명령 번호+22 칸의 계절 가산(겨울 부상 위험도 +1)과 난수 폭(HP ±50, 피로 ±1)을 원본 표(arm9 0x209FCF4·0x209FBA4·0x209FB34)대로.
+ *  명령4(배틀 횟수, 링)는 기존 cage.battleUp과 같아 따로 더하지 않는다. 명령3은 쓰는 시설이 없다.
+ *  훈련 뒤 피로 90 이상이거나 배가 비면 부상 위험도 +3(0x211D8C8·0x211D8F4).
+ */
+const SIDE_WINTER = [0, 0, 0, 0, 0, 1];
+const SIDE_VARIANCE = [0, 50, 1, 0, 0, 0];
+export function trainingSideDelta(command: number, base: number, season: number, rng: Rng): number {
+  let value = base + (season === WINTER ? SIDE_WINTER[command] ?? 0 : 0);
+  const width = SIDE_VARIANCE[command] ?? 0;
+  if (width) {
+    const p = Math.min(99, Math.max(0, Math.floor(rng() * 100)));
+    const variation = Math.trunc(((2 * width - 1) * p) / 100) - width;
+    if (variation !== 0) value += variation;
+  }
+  return value;
+}
+function applyTrainingSideEffects(d: Digimon, cageNo: number, season: number, rng: Rng): string[] {
+  const out: string[] = [];
+  if (d.sick || d.injured || d.dying) return out;
+  for (const c of EFFECTS[String(cageNo)] ?? []) {
+    if (c.command > 5) continue;
+    const v = trainingSideDelta(c.command, c.args[0], season, rng);
+    if (c.command === 0) {
+      d.hunger = Math.max(0, Math.min(100, d.hunger + (v * 100) / Math.max(1, getSpecies(d.speciesId).size)));
+      out.push(`포만감 ${v > 0 ? '+' : ''}${v}칸`);
+    } else if (c.command === 1) {
+      d.hpNow = Math.min(d.stats.hp, Math.max(1, hpOf(d) + v));
+      out.push(`현재 HP ${v > 0 ? '+' : ''}${v}`);
+    } else if (c.command === 2) {
+      d.fatigue = Math.max(0, Math.min(100, d.fatigue + v));
+      out.push(`피로 ${v > 0 ? '+' : ''}${v}`);
+    } else if (c.command === 5) {
+      d.injuryRisk = Math.max(0, Math.min(100, (d.injuryRisk ?? 0) + v));
+    }
+  }
+  if (d.fatigue >= 90) d.injuryRisk = Math.min(100, (d.injuryRisk ?? 0) + 3);
+  if (d.hunger <= 0) d.injuryRisk = Math.min(100, (d.injuryRisk ?? 0) + 3);
+  return out;
+}
+
+/**
+ * 먹으면 HP가 찬다 (원본 overlay18 0x211BD38~0x211BDCC·0x212559C~): 네 입마다 포만감 1칸과 최대 HP의 1%.
+ * 이 게임의 포만감은 0~100이라, 원본 1칸(종 용량 G분의 1)을 채울 때마다 1%로 환산해 더한다.
+ */
+export function eatHp(d: Digimon, hungerGain: number): Digimon {
+  if (d.isEgg || hungerGain <= 0) return d;
+  const unit = 100 / Math.max(1, getSpecies(d.speciesId).size);
+  const gain = Math.trunc((d.stats.hp / 100) * (hungerGain / unit));
+  return gain > 0 ? { ...d, hpNow: Math.min(d.stats.hp, hpOf(d) + gain) } : d;
+}
+
 const lowHp = (d: Digimon) => hpOf(d) <= Math.trunc(d.stats.hp / 10);
 
 /** 원본 0x2119B2C: 디지에그 그림 번호 = 디지에그화 횟수(최대 7). 0은 처음 받은 흰 알 e000 */
@@ -283,8 +337,6 @@ export const eggSpriteIndex = (eggs: number) => Math.max(0, Math.min(7, Math.flo
  */
 export const SUMMER = 1;
 export const WINTER = 3;
-export const WINTER_INJURY = 2;
-export const TRAIN_INJURY = 0.03;
 /** 프로틴을 먹은 채 훈련하면 1개당 부상 확률 +2% (help #138, 수치 임시) */
 export const PROTEIN_TRAIN_INJURY = 0.02;
 /** 쓰다듬기 (help #143: 손 아이콘으로 쓰다듬을 수 있다). 효과는 원작에서 확인 못 한 임시 값: 게임 1시간에 한 번 스트레스 -3 */
@@ -474,19 +526,17 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
         d.trainMinutes = 0;
         d.trainDone = true;
         const changes = applyTraining(d, cage, ctx.season ?? 0, ctx.rng);
-        // 훈련 부가 명령1: 현재 HP 감소 (원본 최소 1)
-        const cost = trainingHpCost(cage.no);
-        if (cost) {
-          d.hpNow = Math.min(d.stats.hp, Math.max(1, hpOf(d) + cost));
-          changes.push(`현재 HP ${cost}`);
-        }
+        changes.push(...applyTrainingSideEffects(d, cage.no, ctx.season ?? 0, ctx.rng));
         events.push({ type: 'trained', uid: d.uid, name: sp.name, changes: changes.join(', ') });
-        d.fatigue = Math.min(100, d.fatigue + 5);
         addStress(d, STRESS.training);
-        const risk = (TRAIN_INJURY + (d.protein ?? 0) * PROTEIN_TRAIN_INJURY) * (ctx.season === WINTER ? WINTER_INJURY : 1);
-        if (!d.injured && ctx.rng() < risk) {
+        // 부상 (원본 overlay18 0x211D5F8): 부상 위험도가 30을 넘으면 그 % 확률로 부상, 페널티 +1(최대 7은 원본 칸 크기).
+        // 프로틴을 먹은 채 훈련하면 1개당 +2%p는 웹판 임시(help #138).
+        const risk = d.injuryRisk ?? 0;
+        const chance = (risk > 30 ? risk / 100 : 0) + (d.protein ?? 0) * PROTEIN_TRAIN_INJURY;
+        if (!d.injured && chance > 0 && ctx.rng() < chance) {
           d.injured = true;
           d.sickMinutes = 0;
+          d.penalties += 1;
           events.push({ type: 'injured', uid: d.uid, name: sp.name });
         }
       }
@@ -618,6 +668,8 @@ export function endDay(save: SaveData, rng: Rng = defaultRng, crowded: number[] 
       const d = { ...x, protein: 0 };
       if (d.isEgg) return d;
       if (crowded.includes(d.uid)) addStress(d, STRESS.crowdedPerDay);
+      // 아침에 깨어날 때 최대 HP의 1/30 (원본 기상 처리 overlay18 0x2120048)
+      d.hpNow = Math.min(d.stats.hp, hpOf(d) + Math.trunc(d.stats.hp / 30));
       return d;
     }),
   };
@@ -642,7 +694,7 @@ export function feed(save: SaveData, uid: number): ActionResult {
   if (!d || d.isEgg || isSleeping(d)) return fail(save, '먹이를 줄 수 없어요.');
   if (save.meat <= 0) return fail(save, '고기가 없어요. 상점에서 사세요.');
   if (d.hunger >= 100) return fail(save, '배가 불러서 안 먹어요.');
-  return { ok: true, message: '고기를 먹었다.', save: { ...update(save, uid, (x) => scheduleMealPoop({ ...x, hunger: Math.min(100, x.hunger + 35) },save.clock)), meat: save.meat - 1 } };
+  return { ok: true, message: '고기를 먹었다.', save: { ...update(save, uid, (x) => scheduleMealPoop(eatHp({ ...x, hunger: Math.min(100, x.hunger + 35) }, Math.min(100, x.hunger + 35) - x.hunger),save.clock)), meat: save.meat - 1 } };
 }
 
 /** 썩은 고기 두 개를 먹으면 병에 걸린다 (페널티 진화용) */
@@ -653,7 +705,7 @@ export function feedRotten(save: SaveData, uid: number): ActionResult {
   if (d.sick) return fail(save, '이미 병에 걸려 있어요.');
   const events: FarmEvent[] = [];
   const s = update(save, uid, (x) => {
-    const y = scheduleMealPoop({ ...x, hunger: Math.min(100, x.hunger + 15), rottenEaten: x.rottenEaten + 1 },save.clock);
+    const y = scheduleMealPoop(eatHp({ ...x, hunger: Math.min(100, x.hunger + 15), rottenEaten: x.rottenEaten + 1 }, Math.min(100, x.hunger + 15) - x.hunger),save.clock);
     addStress(y, STRESS.rotten);
     if (y.rottenEaten >= 2) {
       y.rottenEaten = 0;
@@ -715,7 +767,8 @@ export function treat(save: SaveData, uid: number, rng: Rng = defaultRng): Actio
   if (save.salve <= 0) return fail(save, '상처약이 없어요. 상점에서 사세요.');
   const used = { ...save, salve: save.salve - 1 };
   if (rng() >= TREAT_CHANCE[getSpecies(d.speciesId).stage]) return { ok: true, message: '상처약을 발랐지만 아직 낫지 않았다…', save: used };
-  return { ok: true, message: '상처가 나았다!', save: update(used, uid, (x) => ({ ...x, injured: false, sickMinutes: 0 })) };
+  // 원본 0x2119A40: 치료하면 방치 시간과 부상 위험도가 0으로 (어느 약이 위험도를 지우는지는 추정)
+  return { ok: true, message: '상처가 나았다!', save: update(used, uid, (x) => ({ ...x, injured: false, sickMinutes: 0, injuryRisk: 0 })) };
 }
 
 /** 예전 '치료' 버튼 호환: 병이면 약, 다쳤으면 상처약 */

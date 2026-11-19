@@ -3612,6 +3612,73 @@ var ChampCore = (function(exports) {
 		every: c.args[0],
 		amount: c.args[2]
 	}));
+	/**
+	* 훈련 부가 명령 (overlay18 0x2117BE4~0x2117F30, 표 facility-effects.json). 병·부상·빈사면 적용하지 않는다.
+	*  명령0 포만감(원본 단위 1 = 종 용량 G분의 1) · 1 현재 HP(최소 1) · 2 피로(0~100) · 5 부상 위험도(0~100).
+	*  명령 번호+22 칸의 계절 가산(겨울 부상 위험도 +1)과 난수 폭(HP ±50, 피로 ±1)을 원본 표(arm9 0x209FCF4·0x209FBA4·0x209FB34)대로.
+	*  명령4(배틀 횟수, 링)는 기존 cage.battleUp과 같아 따로 더하지 않는다. 명령3은 쓰는 시설이 없다.
+	*  훈련 뒤 피로 90 이상이거나 배가 비면 부상 위험도 +3(0x211D8C8·0x211D8F4).
+	*/
+	var SIDE_WINTER = [
+		0,
+		0,
+		0,
+		0,
+		0,
+		1
+	];
+	var SIDE_VARIANCE = [
+		0,
+		50,
+		1,
+		0,
+		0,
+		0
+	];
+	function trainingSideDelta(command, base, season, rng) {
+		let value = base + (season === 3 ? SIDE_WINTER[command] ?? 0 : 0);
+		const width = SIDE_VARIANCE[command] ?? 0;
+		if (width) {
+			const p = Math.min(99, Math.max(0, Math.floor(rng() * 100)));
+			const variation = Math.trunc((2 * width - 1) * p / 100) - width;
+			if (variation !== 0) value += variation;
+		}
+		return value;
+	}
+	function applyTrainingSideEffects(d, cageNo, season, rng) {
+		const out = [];
+		if (d.sick || d.injured || d.dying) return out;
+		for (const c of EFFECTS[String(cageNo)] ?? []) {
+			if (c.command > 5) continue;
+			const v = trainingSideDelta(c.command, c.args[0], season, rng);
+			if (c.command === 0) {
+				d.hunger = Math.max(0, Math.min(100, d.hunger + v * 100 / Math.max(1, getSpecies(d.speciesId).size)));
+				out.push(`포만감 ${v > 0 ? "+" : ""}${v}칸`);
+			} else if (c.command === 1) {
+				d.hpNow = Math.min(d.stats.hp, Math.max(1, hpOf(d) + v));
+				out.push(`현재 HP ${v > 0 ? "+" : ""}${v}`);
+			} else if (c.command === 2) {
+				d.fatigue = Math.max(0, Math.min(100, d.fatigue + v));
+				out.push(`피로 ${v > 0 ? "+" : ""}${v}`);
+			} else if (c.command === 5) d.injuryRisk = Math.max(0, Math.min(100, (d.injuryRisk ?? 0) + v));
+		}
+		if (d.fatigue >= 90) d.injuryRisk = Math.min(100, (d.injuryRisk ?? 0) + 3);
+		if (d.hunger <= 0) d.injuryRisk = Math.min(100, (d.injuryRisk ?? 0) + 3);
+		return out;
+	}
+	/**
+	* 먹으면 HP가 찬다 (원본 overlay18 0x211BD38~0x211BDCC·0x212559C~): 네 입마다 포만감 1칸과 최대 HP의 1%.
+	* 이 게임의 포만감은 0~100이라, 원본 1칸(종 용량 G분의 1)을 채울 때마다 1%로 환산해 더한다.
+	*/
+	function eatHp(d, hungerGain) {
+		if (d.isEgg || hungerGain <= 0) return d;
+		const unit = 100 / Math.max(1, getSpecies(d.speciesId).size);
+		const gain = Math.trunc(d.stats.hp / 100 * (hungerGain / unit));
+		return gain > 0 ? {
+			...d,
+			hpNow: Math.min(d.stats.hp, hpOf(d) + gain)
+		} : d;
+	}
 	var lowHp = (d) => hpOf(d) <= Math.trunc(d.stats.hp / 10);
 	/** 원본 0x2119B2C: 디지에그 그림 번호 = 디지에그화 횟수(최대 7). 0은 처음 받은 흰 알 e000 */
 	var eggSpriteIndex = (eggs) => Math.max(0, Math.min(7, Math.floor(eggs || 0)));
@@ -3622,8 +3689,6 @@ var ChampCore = (function(exports) {
 	*/
 	var SUMMER = 1;
 	var WINTER = 3;
-	var WINTER_INJURY = 2;
-	var TRAIN_INJURY = .03;
 	/** 프로틴을 먹은 채 훈련하면 1개당 부상 확률 +2% (help #138, 수치 임시) */
 	var PROTEIN_TRAIN_INJURY = .02;
 	/** 쓰다듬기 (help #143: 손 아이콘으로 쓰다듬을 수 있다). 효과는 원작에서 확인 못 한 임시 값: 게임 1시간에 한 번 스트레스 -3 */
@@ -3855,23 +3920,20 @@ var ChampCore = (function(exports) {
 					d.trainMinutes = 0;
 					d.trainDone = true;
 					const changes = applyTraining(d, cage, ctx.season ?? 0, ctx.rng);
-					const cost = trainingHpCost(cage.no);
-					if (cost) {
-						d.hpNow = Math.min(d.stats.hp, Math.max(1, hpOf(d) + cost));
-						changes.push(`현재 HP ${cost}`);
-					}
+					changes.push(...applyTrainingSideEffects(d, cage.no, ctx.season ?? 0, ctx.rng));
 					events.push({
 						type: "trained",
 						uid: d.uid,
 						name: sp.name,
 						changes: changes.join(", ")
 					});
-					d.fatigue = Math.min(100, d.fatigue + 5);
 					addStress(d, STRESS.training);
-					const risk = (TRAIN_INJURY + (d.protein ?? 0) * PROTEIN_TRAIN_INJURY) * (ctx.season === 3 ? 2 : 1);
-					if (!d.injured && ctx.rng() < risk) {
+					const risk = d.injuryRisk ?? 0;
+					const chance = (risk > 30 ? risk / 100 : 0) + (d.protein ?? 0) * PROTEIN_TRAIN_INJURY;
+					if (!d.injured && chance > 0 && ctx.rng() < chance) {
 						d.injured = true;
 						d.sickMinutes = 0;
+						d.penalties += 1;
 						events.push({
 							type: "injured",
 							uid: d.uid,
@@ -4043,6 +4105,7 @@ var ChampCore = (function(exports) {
 				};
 				if (d.isEgg) return d;
 				if (crowded.includes(d.uid)) addStress(d, STRESS.crowdedPerDay);
+				d.hpNow = Math.min(d.stats.hp, hpOf(d) + Math.trunc(d.stats.hp / 30));
 				return d;
 			})
 		};
@@ -4070,10 +4133,10 @@ var ChampCore = (function(exports) {
 			ok: true,
 			message: "고기를 먹었다.",
 			save: {
-				...update(save, uid, (x) => scheduleMealPoop({
+				...update(save, uid, (x) => scheduleMealPoop(eatHp({
 					...x,
 					hunger: Math.min(100, x.hunger + 35)
-				}, save.clock)),
+				}, Math.min(100, x.hunger + 35) - x.hunger), save.clock)),
 				meat: save.meat - 1
 			}
 		};
@@ -4086,11 +4149,11 @@ var ChampCore = (function(exports) {
 		if (d.sick) return fail(save, "이미 병에 걸려 있어요.");
 		const events = [];
 		const s = update(save, uid, (x) => {
-			const y = scheduleMealPoop({
+			const y = scheduleMealPoop(eatHp({
 				...x,
 				hunger: Math.min(100, x.hunger + 15),
 				rottenEaten: x.rottenEaten + 1
-			}, save.clock);
+			}, Math.min(100, x.hunger + 15) - x.hunger), save.clock);
 			addStress(y, STRESS.rotten);
 			if (y.rottenEaten >= 2) {
 				y.rottenEaten = 0;
@@ -4239,7 +4302,8 @@ var ChampCore = (function(exports) {
 			save: update(used, uid, (x) => ({
 				...x,
 				injured: false,
-				sickMinutes: 0
+				sickMinutes: 0,
+				injuryRisk: 0
 			}))
 		};
 	}
@@ -9342,11 +9406,11 @@ var ChampCore = (function(exports) {
 			save: {
 				...save,
 				meat: save.meat - (rest <= 0 ? 1 : 0),
-				digimon: save.digimon.map((p) => p.uid === uid ? scheduleMealPoop({
+				digimon: save.digimon.map((p) => p.uid === uid ? scheduleMealPoop(eatHp({
 					...p,
 					hunger: p.hunger + bite * 2,
 					starvingMinutes: 0
-				}, save.clock) : p)
+				}, bite * 2), save.clock) : p)
 			},
 			foods: rest <= 0 ? foods.filter((_, i) => i !== index) : foods.map((f, i) => i === index ? {
 				...f,
@@ -9622,7 +9686,6 @@ var ChampCore = (function(exports) {
 	exports.TITLES = TITLES;
 	exports.TITLE_BATTLE_MAPS = TITLE_BATTLE_MAPS;
 	exports.TRAINING_MINUTES = TRAINING_MINUTES;
-	exports.TRAIN_INJURY = TRAIN_INJURY;
 	exports.TREAT_CHANCE = TREAT_CHANCE;
 	exports.WILD_COUNT = WILD_COUNT;
 	exports.WILD_REGEN_PER_SECOND = WILD_REGEN_PER_SECOND;
@@ -9630,7 +9693,6 @@ var ChampCore = (function(exports) {
 	exports.WILD_WAKE_RATIO = WILD_WAKE_RATIO;
 	exports.WILD_WALK_RATIO = WILD_WALK_RATIO;
 	exports.WINTER = WINTER;
-	exports.WINTER_INJURY = WINTER_INJURY;
 	exports.WIRE_COOLDOWN = WIRE_COOLDOWN;
 	exports.WIRE_PACK = WIRE_PACK;
 	exports.WIRE_STICK = WIRE_STICK;
@@ -9665,6 +9727,7 @@ var ChampCore = (function(exports) {
 	exports.defaultRng = defaultRng;
 	exports.discardFloorFood = discardFloorFood;
 	exports.eatFloorFood = eatFloorFood;
+	exports.eatHp = eatHp;
 	exports.eggSpriteIndex = eggSpriteIndex;
 	exports.endDay = endDay;
 	exports.endOfLife = endOfLife;
@@ -9754,6 +9817,7 @@ var ChampCore = (function(exports) {
 	exports.trainingDelta = trainingDelta;
 	exports.trainingHpCost = trainingHpCost;
 	exports.trainingPreview = trainingPreview;
+	exports.trainingSideDelta = trainingSideDelta;
 	exports.treat = treat;
 	exports.typicalStats = typicalStats;
 	exports.unlockText = unlockText;
