@@ -3629,12 +3629,9 @@ var ChampCore = (function(exports) {
 		crowdedPerDay: 20,
 		rotten: 50,
 		sick: 40,
-		training: 5,
 		hungerBelow: 20,
 		perHunger: 1.5,
 		show: 70,
-		reliefPerHour: 5,
-		autoCarePerHour: 3,
 		restPerHour: 1
 	};
 	/** 훈련 한 번에 걸리는 게임 분 */
@@ -3665,16 +3662,19 @@ var ChampCore = (function(exports) {
 	/** 훈련 한 번의 HP 증감 (부가 명령1 기본값. 계절·난수 폭 표는 아직 연결하지 않음) */
 	var trainingHpCost = (cageNo) => (EFFECTS[String(cageNo)] ?? []).filter((c) => c.command === 1).reduce((n, c) => n + c.args[0], 0);
 	/** 시설 상시 효과 [간격 분, 종류, 값] (종류 1 = HP) */
-	var facilityHpEffects = (cageNo) => (EFFECTS[String(cageNo)] ?? []).filter((c) => c.command === 6 && c.args[1] === 1).map((c) => ({
+	var facilityHpEffects = (cageNo) => facilityPeriodic(cageNo, 1);
+	/** 시설 상시 효과 중 한 종류. 종류 번호는 훈련 부가 명령과 같다(1 HP, 2 스트레스) */
+	var facilityPeriodic = (cageNo, type) => (EFFECTS[String(cageNo)] ?? []).filter((c) => c.command === 6 && c.args[1] === type).map((c) => ({
 		every: c.args[0],
 		amount: c.args[2]
 	}));
 	/**
 	* 훈련 부가 명령 (overlay18 0x2117BE4~0x2117F30, 표 facility-effects.json). 병·부상·빈사면 적용하지 않는다.
-	*  명령0 포만감(원본 단위 1 = 종 용량 G분의 1) · 1 현재 HP(최소 1) · 2 피로(0~100) · 5 부상 위험도(0~100).
+	*  명령0 포만감(원본 단위 1 = 종 용량 G분의 1) · 1 현재 HP(최소 1) · 2 스트레스(+0x1C, 0~100) · 5 부상 위험도(0~100).
+	*  +0x1C가 스트레스인 근거: 같은 칸이 케이지 인원 수만큼 늘고(0x211AE94), 변비 때 +3(0x211B95C), 100이 되면 병(help #127·mail #96).
 	*  명령 번호+22 칸의 계절 가산(겨울 부상 위험도 +1)과 난수 폭(HP ±50, 피로 ±1)을 원본 표(arm9 0x209FCF4·0x209FBA4·0x209FB34)대로.
 	*  명령4(배틀 횟수, 링)는 기존 cage.battleUp과 같아 따로 더하지 않는다. 명령3은 쓰는 시설이 없다.
-	*  훈련 뒤 피로 90 이상이거나 배가 비면 부상 위험도 +3(0x211D8C8·0x211D8F4).
+	*  훈련 뒤 배가 비면 부상 위험도 +3(0x211D8C8). 0x211D8F4의 +3 조건(+0x404 플래그)은 미해석이라 웹판은 피로 90 이상으로 둔다(임시).
 	*/
 	var SIDE_WINTER = [
 		0,
@@ -3715,8 +3715,8 @@ var ChampCore = (function(exports) {
 				d.hpNow = Math.min(d.stats.hp, Math.max(1, hpOf(d) + v));
 				out.push(`현재 HP ${v > 0 ? "+" : ""}${v}`);
 			} else if (c.command === 2) {
-				d.fatigue = Math.max(0, Math.min(100, d.fatigue + v));
-				out.push(`피로 ${v > 0 ? "+" : ""}${v}`);
+				addStress(d, v);
+				out.push(`스트레스 ${v > 0 ? "+" : ""}${v}`);
 			} else if (c.command === 5) d.injuryRisk = Math.max(0, Math.min(100, (d.injuryRisk ?? 0) + v));
 		}
 		if (d.fatigue >= 90) d.injuryRisk = Math.min(100, (d.injuryRisk ?? 0) + 3);
@@ -3757,11 +3757,6 @@ var ChampCore = (function(exports) {
 	var AUTO_FEED_BELOW = 50;
 	/** 스트레스가 풀리는 케이지. 온천·양호실·동물원·미니 동물원은 아직 게임에 없지만 추가되면 바로 적용된다 */
 	/** 쉬는 시설: 시간당 -5 */
-	var STRESS_RELIEF_CAGES = [
-		"온천",
-		"미니 양호실",
-		"양호실"
-	];
 	/** 동물원·목장: 쉬는 시설보다 약하게 시간당 -3, 피로도 조금 빨리 풀린다 (형규가 정한 방향, 수치는 임시) */
 	var AUTO_CARE_REST = .2;
 	function addStress(d, amount) {
@@ -3856,6 +3851,7 @@ var ChampCore = (function(exports) {
 		} else d.hpRegenMinutes = 0;
 		const hpFactor = CAGE_LEVEL_FACTOR[ctx.cageLevels?.[cage.id] ?? 0] ?? 1;
 		for (const e of facilityHpEffects(cage.no)) if (ctx.clock % e.every === 0) hp += e.amount * hpFactor;
+		for (const e of facilityPeriodic(cage.no, 2)) if (ctx.clock % e.every === 0) addStress(d, e.amount * hpFactor);
 		d.hpNow = Math.min(maxHp, Math.max(0, hp));
 		d.bowel = bowelAt(d, ctx.clock);
 		if (sleeping) d.fatigue = Math.max(0, d.fatigue - .3);
@@ -3987,7 +3983,6 @@ var ChampCore = (function(exports) {
 						name: sp.name,
 						changes: changes.join(", ")
 					});
-					addStress(d, STRESS.training);
 					const risk = d.injuryRisk ?? 0;
 					const chance = (risk > 30 ? risk / 100 : 0) + (d.protein ?? 0) * PROTEIN_TRAIN_INJURY;
 					if (!d.injured && chance > 0 && ctx.rng() < chance) {
@@ -4006,7 +4001,7 @@ var ChampCore = (function(exports) {
 			d.trainDone = false;
 			d.trainMinutes = 0;
 		}
-		if (d.stageAge % 60 === 0) addStress(d, -(STRESS_RELIEF_CAGES.includes(cage.id) ? STRESS.reliefPerHour : cage.autoCare ? STRESS.autoCarePerHour : STRESS.restPerHour));
+		if (d.stageAge % 60 === 0) addStress(d, -STRESS.restPerHour);
 		const evo = lifespanEvolution(d, findEvolution(d, ctx.rank, ctx.free), ctx.free, ctx.rng);
 		if (evo?.kind === "evolve") {
 			events.push({
@@ -9870,7 +9865,6 @@ var ChampCore = (function(exports) {
 	exports.STAT_KEYS = STAT_KEYS;
 	exports.STAT_LABEL = STAT_LABEL;
 	exports.STRESS = STRESS;
-	exports.STRESS_RELIEF_CAGES = STRESS_RELIEF_CAGES;
 	exports.STRONG_CHANCE = STRONG_CHANCE;
 	exports.SUMMER = SUMMER;
 	exports.TIME_LIMIT = TIME_LIMIT;
@@ -9931,6 +9925,7 @@ var ChampCore = (function(exports) {
 	exports.evolvedStats = evolvedStats;
 	exports.explain = explain;
 	exports.facilityHpEffects = facilityHpEffects;
+	exports.facilityPeriodic = facilityPeriodic;
 	exports.faintWakeSeconds = faintWakeSeconds;
 	exports.feed = feed;
 	exports.feedFromTray = feedFromTray;

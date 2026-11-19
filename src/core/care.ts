@@ -243,7 +243,7 @@ export function evaluateEvolutions(save: SaveData, rng: Rng = defaultRng, uids?:
  * 게임 1시간마다 -1, 쉬는 케이지(온천·미니 양호실·양호실·동물원·미니 동물원)에서는 -5.
  * 임시(Claude가 정함): 100이 되면 병.
  */
-export const STRESS = { crowdedPerDay: 20, rotten: 50, sick: 40, training: 5, hungerBelow: 20, perHunger: 1.5, show: 70, reliefPerHour: 5, autoCarePerHour: 3, restPerHour: 1 };
+export const STRESS = { crowdedPerDay: 20, rotten: 50, sick: 40, hungerBelow: 20, perHunger: 1.5, show: 70, restPerHour: 1 };
 /** 훈련 한 번에 걸리는 게임 분 */
 export const TRAINING_MINUTES = 15;
 /** 병·부상을 방치해 로스트되기까지의 게임 분 (임시: 이틀) */
@@ -272,13 +272,16 @@ const EFFECTS = facilityEffects as Record<string, { command: number; args: numbe
 /** 훈련 한 번의 HP 증감 (부가 명령1 기본값. 계절·난수 폭 표는 아직 연결하지 않음) */
 export const trainingHpCost = (cageNo: number) => (EFFECTS[String(cageNo)] ?? []).filter((c) => c.command === 1).reduce((n, c) => n + c.args[0], 0);
 /** 시설 상시 효과 [간격 분, 종류, 값] (종류 1 = HP) */
-export const facilityHpEffects = (cageNo: number) => (EFFECTS[String(cageNo)] ?? []).filter((c) => c.command === 6 && c.args[1] === 1).map((c) => ({ every: c.args[0], amount: c.args[2] }));
+export const facilityHpEffects = (cageNo: number) => facilityPeriodic(cageNo, 1);
+/** 시설 상시 효과 중 한 종류. 종류 번호는 훈련 부가 명령과 같다(1 HP, 2 스트레스) */
+export const facilityPeriodic = (cageNo: number, type: number) => (EFFECTS[String(cageNo)] ?? []).filter((c) => c.command === 6 && c.args[1] === type).map((c) => ({ every: c.args[0], amount: c.args[2] }));
 /**
  * 훈련 부가 명령 (overlay18 0x2117BE4~0x2117F30, 표 facility-effects.json). 병·부상·빈사면 적용하지 않는다.
- *  명령0 포만감(원본 단위 1 = 종 용량 G분의 1) · 1 현재 HP(최소 1) · 2 피로(0~100) · 5 부상 위험도(0~100).
+ *  명령0 포만감(원본 단위 1 = 종 용량 G분의 1) · 1 현재 HP(최소 1) · 2 스트레스(+0x1C, 0~100) · 5 부상 위험도(0~100).
+ *  +0x1C가 스트레스인 근거: 같은 칸이 케이지 인원 수만큼 늘고(0x211AE94), 변비 때 +3(0x211B95C), 100이 되면 병(help #127·mail #96).
  *  명령 번호+22 칸의 계절 가산(겨울 부상 위험도 +1)과 난수 폭(HP ±50, 피로 ±1)을 원본 표(arm9 0x209FCF4·0x209FBA4·0x209FB34)대로.
  *  명령4(배틀 횟수, 링)는 기존 cage.battleUp과 같아 따로 더하지 않는다. 명령3은 쓰는 시설이 없다.
- *  훈련 뒤 피로 90 이상이거나 배가 비면 부상 위험도 +3(0x211D8C8·0x211D8F4).
+ *  훈련 뒤 배가 비면 부상 위험도 +3(0x211D8C8). 0x211D8F4의 +3 조건(+0x404 플래그)은 미해석이라 웹판은 피로 90 이상으로 둔다(임시).
  */
 const SIDE_WINTER = [0, 0, 0, 0, 0, 1];
 const SIDE_VARIANCE = [0, 50, 1, 0, 0, 0];
@@ -305,8 +308,8 @@ function applyTrainingSideEffects(d: Digimon, cageNo: number, season: number, rn
       d.hpNow = Math.min(d.stats.hp, Math.max(1, hpOf(d) + v));
       out.push(`현재 HP ${v > 0 ? '+' : ''}${v}`);
     } else if (c.command === 2) {
-      d.fatigue = Math.max(0, Math.min(100, d.fatigue + v));
-      out.push(`피로 ${v > 0 ? '+' : ''}${v}`);
+      addStress(d, v);
+      out.push(`스트레스 ${v > 0 ? '+' : ''}${v}`);
     } else if (c.command === 5) {
       d.injuryRisk = Math.max(0, Math.min(100, (d.injuryRisk ?? 0) + v));
     }
@@ -346,7 +349,6 @@ export const PET = { relief: 3, cooldown: 60 };
 export const AUTO_FEED_BELOW = 50;
 /** 스트레스가 풀리는 케이지. 온천·양호실·동물원·미니 동물원은 아직 게임에 없지만 추가되면 바로 적용된다 */
 /** 쉬는 시설: 시간당 -5 */
-export const STRESS_RELIEF_CAGES = ['온천', '미니 양호실', '양호실'];
 /** 동물원·목장: 쉬는 시설보다 약하게 시간당 -3, 피로도 조금 빨리 풀린다 (형규가 정한 방향, 수치는 임시) */
 export const AUTO_CARE_REST = 0.2;
 export function addStress(d: Digimon, amount: number) {
@@ -431,6 +433,8 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   // 양호실 등 쉬는 시설의 HP 회복에도 케이지 레벨 배율(×2·×3)을 붙인다 — 사용자 결정(원본 미확인)
   const hpFactor = CAGE_LEVEL_FACTOR[ctx.cageLevels?.[cage.id] ?? 0] ?? 1;
   for (const e of facilityHpEffects(cage.no)) if (ctx.clock % e.every === 0) hp += e.amount * hpFactor;
+  // 시설 상시 스트레스 (원본 시설 표 명령6 종류2): 미니 양호실·목장·양호실 6분마다 -1, 온천 3분마다 -1, 동물원 4시간마다 +1. 배율은 HP와 같게(형규 지정)
+  for (const e of facilityPeriodic(cage.no, 2)) if (ctx.clock % e.every === 0) addStress(d, e.amount * hpFactor);
   d.hpNow = Math.min(maxHp, Math.max(0, hp));
   d.bowel = bowelAt(d, ctx.clock);
   if (sleeping) {
@@ -533,7 +537,6 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
         const changes = applyTraining(d, cage, ctx.season ?? 0, ctx.rng, CAGE_LEVEL_FACTOR[level] ?? 1);
         changes.push(...applyTrainingSideEffects(d, cage.no, ctx.season ?? 0, ctx.rng, level));
         events.push({ type: 'trained', uid: d.uid, name: sp.name, changes: changes.join(', ') });
-        addStress(d, STRESS.training);
         // 부상 (원본 overlay18 0x211D5F8): 부상 위험도가 30을 넘으면 그 % 확률로 부상, 페널티 +1(최대 7은 원본 칸 크기).
         // 프로틴을 먹은 채 훈련하면 1개당 +2%p는 웹판 임시(help #138).
         const risk = d.injuryRisk ?? 0;
@@ -552,8 +555,8 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   }
 
   if (d.stageAge % 60 === 0) {
-    // 어디서든 1시간에 1, 동물원·목장 3, 쉬는 케이지 5 회복 (겹치지 않음)
-    addStress(d, -(STRESS_RELIEF_CAGES.includes(cage.id) ? STRESS.reliefPerHour : cage.autoCare ? STRESS.autoCarePerHour : STRESS.restPerHour));
+    // 어디서든 1시간에 1 회복 (웹판 임시). 쉬는 시설의 회복은 위의 원본 시설 효과가 맡는다
+    addStress(d, -STRESS.restPerHour);
   }
   // 훈련/발병/나이 등 이번 분에 바뀐 조건을 곧바로 평가한다. 한 시간 경계까지 기다리지 않는다.
   const evo = lifespanEvolution(d, findEvolution(d, ctx.rank, ctx.free), ctx.free, ctx.rng);

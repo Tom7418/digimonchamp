@@ -9,7 +9,7 @@ import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
-import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
+import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -371,9 +371,10 @@ describe('evolution', () => {
       z = setCage(z, 1, cage).save;
       return only(advance(z, 120, seeded(1)).save).stress;
     };
-    expect(relief('온천')).toBe(40);
-    expect(relief('목장')).toBe(44);
-    expect(relief('절')).toBeGreaterThan(44);
+    // 원본 시설 상시 효과: 온천 3분마다 -1, 목장 6분마다 -1, 그 밖은 1시간마다 -1(임시)
+    expect(relief('온천')).toBe(8);
+    expect(relief('목장')).toBe(28);
+    expect(relief('절')).toBe(48);
     expect(getCage('경기장').capacity).toBe(10);
   });
   it('계절: 여름은 훈련 효과가 높고, 겨울은 부상 위험도가 더 쌓인다', () => {
@@ -1192,13 +1193,14 @@ describe('스트레스 (형규가 정한 값)', () => {
     expect(s.digimon[0]).toMatchObject({ sick: true, stress: 100, penalties: 1 });
     expect(STRESS.show).toBe(70);
   });
-  it('훈련 한 번에 +5, 1시간마다 -1, 미니 양호실에서는 -5', () => {
+  it('훈련 스트레스는 원본 시설 표대로(연구소·병원·가스실 +10±1), 1시간마다 -1', () => {
     const tick = (patch: Partial<Digimon>) => tickFarm(one({ stress: 10, ...patch }), seeded(1)).save.digimon[0];
     const trained = tick({ cage: '미니 운동장', trainMinutes: 14 });
-    expect(trained).toMatchObject({ stress: 15, trainDone: true });
+    expect(trained).toMatchObject({ stress: 10, trainDone: true });
+    for (const r of [0, 0.5, 0.99]) expect(trainingSideDelta(2, 10, 0, () => r)).toBeGreaterThanOrEqual(9);
+    expect(trainingSideDelta(2, 10, 0, () => 0.99)).toBeLessThanOrEqual(11);
     expect(tick({ cage: '미니 운동장', trainDone: true, trainMinutes: 0 }).stress).toBe(10); // 다시 넣기 전에는 훈련 없음
     expect(tick({ cage: '기본 케이지', trainDone: true }).trainDone).toBe(false);
-    expect(tick({ cage: '미니 양호실', stageAge: 59 }).stress).toBe(5);
     expect(tick({ cage: '기본 케이지', stageAge: 59 }).stress).toBe(9);
   });
 });
