@@ -12,11 +12,11 @@ function setup(){
 }
 test('놓아주기로 용량을 비우면 먹이 참조 오류 없이 전체 진화를 즉시 재평가한다',()=>{
  const s=setup(),c=s.ctx;
- vm.runInContext(`save.digimon=[1,2,3,4].map(uid=>C.newDigimon(uid,'코로몬'));save.digimon[1].ap.물=20;feeding.set(1,{});feeding.set(3,{});`,c);
+ vm.runInContext(`save.digimon=[...[1,2,3,4].map(uid=>C.newDigimon(uid,'코로몬')),C.newDigimon(5,'그레이몬'),C.newDigimon(6,'메탈그레이몬')];save.digimon[1].ap.물=20;feeding.set(1,{});feeding.set(3,{});`,c);
  c.render();assert.equal(s.events.length,0);const time=c.save.clock,food={kind:'meat',x:200,y:300};c.view.foods=[food];
  const a=s.src.indexOf('  function releaseMenu()'),b=s.src.indexOf('  // ---------- 배틀',a);vm.runInContext(s.src.slice(a,b),c);
  c.releaseMenu();s.nodes['#confirm-release'].onclick();
- assert.equal(c.save.digimon.length,3);assert.equal(c.save.digimon[0].uid,2);assert.equal(c.save.digimon[0].speciesId,'스노우아구몬');
+ assert.equal(c.save.digimon.length,5);assert.equal(c.save.digimon[0].uid,2);assert.equal(c.save.digimon[0].speciesId,'스노우아구몬');
  assert.equal(c.save.clock,time);assert.equal(s.events.length,1);assert.equal(s.persisted,1);assert.equal(c.feeding.has(1),false);assert.equal(c.feeding.has(3),true);assert.equal(c.view.foods[0],food);
 });
 test('새 속성 조건과 옛 배틀0회 저장도 화면/시작 시점에 시간 진행 없이 진화한다',()=>{

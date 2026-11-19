@@ -124,12 +124,13 @@ export function rankName(rank: number): string {
  */
 export const RANK_BADGES = [0, 0, 1, 3, 6, 10, 15, 21, 28];
 
-/** 랭크별 최대 사육 용량(G). 레드 테이머 96G만 영상 확인 값 */
-export const CAPACITY_BY_RANK = [0, 32, 64, 96, 120, 144, 172, 200, 200, 200, 200];
-/** 랭크별 케이지 공간(칸). 레드 테이머 16칸만 영상 확인 값 */
-export const CAGE_SPACE_BY_RANK = [0, 8, 12, 16, 20, 24, 28, 30, 30, 30, 30];
+/** 랭크 표 (원본 arm9 0x020E213C, 랭크마다 36바이트, 그린~마스터 10줄). 영상의 레드 96G·16칸과 일치.
+ *  +8 최대 사육 용량(G, 0x20E2144를 overlay18·19가 읽음) · +12 케이지 공간(0x20E2148, 케이지 편집 overlay15)
+ *  +16 케이지 레벨 한도 · +24 진화 가능 세대(0x20E2154, 진화 판정 overlay18 0x2116484 — maxStageForRank와 같음) */
+export const CAPACITY_BY_RANK = [0, 64, 74, 96, 112, 160, 168, 180, 192, 200, 200];
+export const CAGE_SPACE_BY_RANK = [0, 14, 14, 16, 16, 18, 18, 20, 20, 20, 20];
 export const capacityOf = (save: Pick<SaveData, 'titles' | 'champion'>) => CAPACITY_BY_RANK[tamerRank(save)] ?? 200;
-export const cageSpaceOf = (save: Pick<SaveData, 'titles' | 'champion'>) => CAGE_SPACE_BY_RANK[tamerRank(save)] ?? 30;
+export const cageSpaceOf = (save: Pick<SaveData, 'titles' | 'champion'>) => CAGE_SPACE_BY_RANK[tamerRank(save)] ?? 20;
 
 // ---------- 챔피언십 ----------
 // 원작(기획 문서): 가을에 5일간 예선 → 다음 해 본선, 우승하면 랭크 9.

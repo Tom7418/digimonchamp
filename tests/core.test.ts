@@ -465,11 +465,13 @@ describe('evolution', () => {
   });
   it('동시 진화는 남은 용량을 순서대로 사용하고 비출전 개체·알은 그대로 둔다', () => {
     const digimon = ['코로몬', '코로몬', '코로몬', '깜몬'].map((name, i) => ({ ...newDigimon(i + 1, name), battles: i < 2 ? 3 : 0 }));
-    const s = { ...freshSave(0), digimon };
-    expect(s.digimon.reduce((sum,d)=>sum+getSpecies(d.speciesId).size,0)).toBe(30);
+    // 그린 테이머 용량 64G(원본 랭크 표): 진화 못 하는 큰 디지몬으로 채워 남은 용량을 2G로 맞춘다
+    const filler = [{ ...newDigimon(5, '그레이몬'), battles: 0 }, { ...newDigimon(6, '메탈그레이몬'), battles: 0 }];
+    const s = { ...freshSave(0), digimon: [...digimon, ...filler] };
+    expect(s.digimon.reduce((sum,d)=>sum+getSpecies(d.speciesId).size,0)).toBe(62);
     const r = evaluateEvolutions(s, () => 0.5, new Set([1, 2]));
     expect(r.events.filter(e=>e.type==='evolved')).toHaveLength(1);
-    expect(r.save.digimon.map(d=>d.speciesId)).toEqual(['아구몬', '코로몬', '코로몬', '깜몬']);
+    expect(r.save.digimon.map(d=>d.speciesId)).toEqual(['아구몬', '코로몬', '코로몬', '깜몬', '그레이몬', '메탈그레이몬']);
     const egg = { ...digimon[0], isEgg: true };
     expect(evaluateEvolutions({ ...s, digimon: [egg] }).events).toHaveLength(0);
     expect(evaluateEvolutions(s, () => 0.5, new Set([4])).events).toHaveLength(0);
@@ -494,10 +496,11 @@ describe('evolution', () => {
   });
   it('용량과 랭크 제한이 풀린 즉시 시간 진행 없이 다시 진화한다', () => {
     const d = newDigimon(1, '코로몬');d.ap.물 = 20;
-    const full = { ...freshSave(0), digimon: [d, ...[2,3,4].map(uid=>newDigimon(uid, '코로몬'))] };
+    const filler = [newDigimon(5, '그레이몬'), newDigimon(6, '메탈그레이몬')]; // 32G + 32G = 64G 가득
+    const full = { ...freshSave(0), digimon: [d, ...[2,3,4].map(uid=>newDigimon(uid, '코로몬')), ...filler] };
     expect(evaluateEvolutions(full).events).toHaveLength(0);
-    const freed = { ...full, digimon: full.digimon.slice(0,3) }, r = evaluateEvolutions(freed, () => .5);
-    expect(only(r.save).speciesId).toBe('스노우아구몬');expect(r.save.clock).toBe(full.clock);
+    const freed = { ...full, digimon: full.digimon.filter(x=>x.uid!==4) }, r = evaluateEvolutions(freed, () => .5);
+    expect(r.save.digimon.find(x=>x.uid===1)!.speciesId).toBe('스노우아구몬');expect(r.save.clock).toBe(full.clock);
     const agu = { ...newDigimon(1, '아구몬'), battles: 6 };
     const locked = { ...freshSave(0), digimon: [agu], titles: TITLES.slice(0,2).map(t=>t.id) };
     expect(tamerRank(locked)).toBe(2);expect(evaluateEvolutions(locked).events).toHaveLength(0);
@@ -615,7 +618,8 @@ describe('titles and hunting', () => {
     const s = freshSave(0);
     const r = capture(s, '포요몬', seeded(1));
     expect(r.save.digimon.length).toBe(2);
-    const full = { ...s, digimon: Array.from({ length: 8 }, (_, i) => ({ ...s.digimon[0], uid: i + 1 })) };
+    const size = getSpecies(s.digimon[0].speciesId).size;
+    const full = { ...s, digimon: Array.from({ length: Math.ceil(capacityOf(s) / size) }, (_, i) => ({ ...s.digimon[0], uid: i + 1 })) };
     expect(capture(full, '포요몬', seeded(1)).ok).toBe(false);
   });
 });
@@ -1183,14 +1187,14 @@ describe('스트레스 (형규가 정한 값)', () => {
     expect(r.save.digimon[0]).toMatchObject({ sick: true, stress: 50 });
   });
   it('정원 초과면 1시간마다 그 케이지의 디지몬 수 - 1만큼 오른다 (원본 0x211AE94)', () => {
-    const mon = (uid: number) => ({ ...newDigimon(uid, '아구몬'), hunger: 100, stress: 50, cage: '미니 양호실', cageInstance: 'c1' });
+    const mon = (uid: number) => ({ ...newDigimon(uid, '아구몬'), personality: '열혈' as const, hunger: 100, stress: 50, cage: '미니 양호실', cageInstance: 'c1' });
     const base = { ...freshEggSave(0), clock: 10 * 60 + 59 } as SaveData; // 다음 분이 정각
     const three = tickFarm({ ...base, digimon: [mon(1), mon(2), mon(3)] }, seeded(1)).save.digimon; // 정원 2에 3마리
     const two = tickFarm({ ...base, digimon: [mon(1), mon(2)] }, seeded(1)).save.digimon;
     const relief = two[0].stress!; // 정원 안: 시설 효과·자연 회복만
     expect(three[0].stress).toBe(relief + 2);
     const off = tickFarm({ ...base, clock: 10 * 60 + 10, digimon: [mon(1), mon(2), mon(3)] }, seeded(1)).save.digimon;
-    expect(off[0].stress).toBeLessThanOrEqual(50); // 정각이 아니면 오르지 않는다
+    expect(off[0].stress).toBeLessThan(51); // 정각이 아니면 정원 초과 가산 없음
   });
   it('100이 되면 병에 걸린다 (한 번만)', () => {
     const s = tickFarm(one({ stress: 100 }), seeded(1)).save;
@@ -1500,7 +1504,7 @@ describe('legacy title migration follows current rank rules',()=>{
     const copy=JSON.stringify(before),after=upgradeSave(before),rank=tamerRank(after);
     expect(after.titles).toEqual(['m8','m4','m55','m25','m30','m38']);
     expect(rankName(rank)).toBe('화이트 테이머');expect(rank).toBe(4);
-    expect(capacityOf(after)).toBe(120);expect(cageSpaceOf(after)).toBe(20);expect(maxStageForRank(rank)).toBe(4);
+    expect(capacityOf(after)).toBe(112);expect(cageSpaceOf(after)).toBe(16);expect(maxStageForRank(rank)).toBe(4);
     expect(after.digimon.length).toBe(before.digimon.length);expect(JSON.stringify(before)).toBe(copy);
   });
   it('옛/새 ID 혼합·중복 기록은 한 번만 집계하고 여러 번 불러와도 승리가 추가되지 않는다',()=>{
