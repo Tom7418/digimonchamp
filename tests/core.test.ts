@@ -10,9 +10,9 @@ import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
 import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
-import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
+import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
-import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, freeFoeStats, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
+import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
@@ -1466,6 +1466,23 @@ describe('프리 배틀 (원본 대진·상금)',()=>{
   expect(top.hp).toBe(4320); // 다이아나몬 HP 곡선19
   expect(top.tp).toBe(234);
  });
+ it('내성: 종 기본값·훈련값·NPC 값 (원본 내성 곡선, 속성 1~5 = 열·추위·빛·어둠·천둥)',()=>{
+  const base=baseResist('듀크몬');
+  expect(Object.keys(base)).toEqual(['열','추위','빛','어둠','천둥']);
+  expect(base.열).toBeGreaterThan(baseResist('코로몬').열);
+  const d={...newDigimon(1,'코로몬'),resistance:{빛:7}};
+  expect(digimonResist(d).빛).toBe(baseResist('코로몬').빛+7);
+  expect(Object.values(freeFoeResist(FREE_FOES.get(575)!)).every(v=>v>0)).toBe(true);
+  const u=createBattle([entrantOf(d,'일반')],freeBattleFoes(freeBattleLineup(1,0,3)[0],seeded(1))).units[0];
+  expect(u.resist.빛).toBe(digimonResist(d).빛);
+ });
+ it('배틀 상대 성격은 원본 규칙: 백신은 쿨·대담이 드물다 (0x02061DA8)',()=>{
+  const vaccine=Object.values(SPECIES).find(s=>originalSpecies(s.id)?.attr==='백신')!.id;
+  const count=(p:string)=>Array.from({length:181},(_,r)=>foePersonality(vaccine,()=>r/181)).filter(x=>x===p).length;
+  expect(count('대담')).toBe(1);
+  expect(count('쿨')).toBe(4);
+  expect(count('솔직')).toBeGreaterThan(count('겁쟁이'));
+ });
  it('프리 배틀 상대로 실제 배틀이 끝난다',()=>{
   for(const entry of freeBattleLineup(1,1,2).slice(0,2)){
    const foes=freeBattleFoes(entry,seeded(12));
@@ -1512,6 +1529,16 @@ describe('training effect preview',()=>{
     const cage=getCage('체육관'),before=JSON.stringify(cage);
     expect(trainingPreview(cage,1)).toEqual(trainingPreview(cage,1));expect(JSON.stringify(cage)).toBe(before);
     expect(trainingPreview({...cage,no:999},0).source).toBe('temporary');
+  });
+});
+
+describe('내성 이름 이전',()=>{
+  it('예전 기록의 빛·어둠 내성을 한 번만 맞바꾼다',()=>{
+    const old={...freshSave(0),digimon:[{...newDigimon(1,'코로몬'),resistVersion:undefined,resistance:{빛:3,열:2}}]} as SaveData;
+    const up=upgradeSave(old);
+    expect(up.digimon[0].resistance).toEqual({열:2,어둠:3});
+    expect(upgradeSave(up).digimon[0].resistance).toEqual({열:2,어둠:3});
+    expect(newDigimon(2,'코로몬').resistVersion).toBe(1);
   });
 });
 

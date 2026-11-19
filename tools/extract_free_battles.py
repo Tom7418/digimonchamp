@@ -27,7 +27,7 @@ text = [p.decode('utf-16-le', 'replace').rstrip('\0').strip() for p in parts[2:]
 species = [l.split('|')[0] for l in (REPO / 'src/data/species.txt').read_text(encoding='utf-8').splitlines() if l and not l.startswith('#')]
 
 lines = ['# 원본 프리 배틀 상대 (tools/extract_free_battles.py). 손으로 고치지 말 것',
-         '# 번호|별명|종|레벨(1~10)|상금|TP·공격·방어·지능·속도 곡선 번호(+0x14~+0x24, HP는 종 값 0x2061F4C)',
+         '# 번호|별명|종|레벨(1~10)|상금|TP·공격·방어·지능·속도 곡선 번호(+0x14~+0x24, HP는 종 값 0x2061F4C)|내성 곡선 번호(+0x28~+0x38: 열,추위,빛,어둠,천둥)',
          '# pool|레벨(0~9)|계절(0봄~3겨울, 4공통)|후보 번호']
 for i in range(FIRST, LAST + 1):
     rec = arm9[NPC + i * NPC_SIZE: NPC + (i + 1) * NPC_SIZE]
@@ -35,7 +35,8 @@ for i in range(FIRST, LAST + 1):
     prize = struct.unpack_from('<H', rec, 0xC)[0]
     level = rec[0x43]
     curves = struct.unpack_from('<5I', rec, 0x14)
-    lines.append(f'{i}|{text[name_id]}|{species[code - 8]}|{level}|{prize}|{",".join(map(str, curves))}')
+    resist = struct.unpack_from('<5I', rec, 0x28)
+    lines.append(f'{i}|{text[name_id]}|{species[code - 8]}|{level}|{prize}|{",".join(map(str, curves))}|{",".join(map(str, resist))}')
 for lv in range(10):
     for season in range(5):
         p = struct.unpack_from('<I', arm9, POOLS + lv * 0x14 + season * 4)[0] - BASE

@@ -28,6 +28,7 @@ export function newDigimon(uid: number, speciesId: string, rng: Rng = defaultRng
     stageAge: 0,
     hunger: 70,
     fatigue: 0,
+    resistVersion: 1,
     poop: 0,
     sick: false,
     injured: false,
@@ -120,8 +121,20 @@ export function upgradeSave(save: SaveData): SaveData {
   if (s.digimon.some((d) => CAGE_RENAMES[d.cage])) s.digimon = s.digimon.map((d) => (CAGE_RENAMES[d.cage] ? { ...d, cage: renamed(d.cage) } : d));
   // 기존 바닥 똥/배치/능력치는 보존한다. 새 예약/일일 횟수만 추가하며 재접속으로 초기화하지 않는다.
   s.digimon = s.digimon.map(d => ({...upgradeStats(d),bowel:bowelAt(d,s.clock),
-    poopTimer:Number.isFinite(d.poopTimer)?Math.max(0,d.poopTimer):0}));
+    poopTimer:Number.isFinite(d.poopTimer)?Math.max(0,d.poopTimer):0, ...fixResistNames(d)}));
   return s;
+}
+
+/** 예전 훈련 기록은 빛·어둠 내성 이름이 서로 바뀌어 있었다. 한 번만 맞바꾸고 resistVersion 1을 붙인다 */
+function fixResistNames(d: Digimon): Partial<Digimon> {
+  if (d.resistVersion === 1) return {};
+  const r = d.resistance;
+  if (!r || (r.빛 === undefined && r.어둠 === undefined)) return { resistVersion: 1 };
+  const fixed = { ...r };
+  delete fixed.빛; delete fixed.어둠;
+  if (r.어둠 !== undefined) fixed.빛 = r.어둠;
+  if (r.빛 !== undefined) fixed.어둠 = r.빛;
+  return { resistance: fixed, resistVersion: 1 };
 }
 
 export function freshSave(now = Date.now()): SaveData {

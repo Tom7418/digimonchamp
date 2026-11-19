@@ -1,4 +1,4 @@
-import { getSpecies, originalSpecies, speciesByStage, STAT_CURVES, typicalStats } from './data';
+import { baseResist, getSpecies, originalSpecies, RESIST_CURVE, RESIST_ORDER, speciesByStage, STAT_CURVES, typicalStats, type ResistKey } from './data';
 import { battleSkills, pickBattleSkill, type BattleSkill } from './battle-skills';
 import { supportSkills, useSupport, reviveSupport, buffMultiplier, battleElement, type BattleBuff, type SupportSkill } from './support-skills';
 import { pick, range, seeded, type Rng } from './rng';
@@ -10,7 +10,7 @@ export const TIME_LIMIT = 90;
 const DT = 0.1;
 
 // ---------- 프리 배틀 (원본 대진·상금, tools/extract_free_battles.py → free-battles.txt) ----------
-export interface FreeFoe { no: number; nick: string; speciesId: string; level: number; prize: number; curves: number[] }
+export interface FreeFoe { no: number; nick: string; speciesId: string; level: number; prize: number; curves: number[]; resist: number[] }
 export interface FreeBattle { label: string; format: 1 | 3; level: number; stage: Stage; foes: FreeFoe[]; prize: number }
 export const FREE_FOES = new Map<number, FreeFoe>();
 /** 후보표 [레벨 0~9][계절 0~3, 4=공통] (원본 0x020C7E24) */
@@ -19,7 +19,7 @@ for (const line of freeRaw.split('\n')) {
   if (!line || line.startsWith('#')) continue;
   const f = line.split('|');
   if (f[0] === 'pool') FREE_POOLS[+f[1]][+f[2]] = f[3] ? f[3].split(',').map(Number) : [];
-  else FREE_FOES.set(+f[0], { no: +f[0], nick: f[1], speciesId: f[2], level: +f[3], prize: +f[4], curves: (f[5] ?? '').split(',').filter(Boolean).map(Number) });
+  else FREE_FOES.set(+f[0], { no: +f[0], nick: f[1], speciesId: f[2], level: +f[3], prize: +f[4], curves: (f[5] ?? '').split(',').filter(Boolean).map(Number), resist: (f[6] ?? '').split(',').filter(Boolean).map(Number) });
 }
 const candidates = (level: number, season: number) => [...FREE_POOLS[level][season], ...FREE_POOLS[level][4]];
 
@@ -66,12 +66,16 @@ export function freeFoeStats(f: FreeFoe): Stats {
   const [tp, atk, def, int, spd] = f.curves.map((lv, k) => STAT_CURVES[Math.min(24, lv)][k + 1]);
   return { hp: STAT_CURVES[Math.min(24, hpIndex)][0], tp, atk, def, int, spd };
 }
-/** 프리 배틀 상대를 배틀 참가자로 만든다. 성격·공격 방식은 웹판 임시(NPC 표의 해당 칸은 미해석) */
+/** 프리 배틀 상대의 내성 (NPC 표 +0x28~+0x38 곡선 번호 → 내성 곡선 값) */
+export const freeFoeResist = (f: FreeFoe): Record<ResistKey, number> =>
+  f.resist.length === 5 ? Object.fromEntries(RESIST_ORDER.map((k, i) => [k, RESIST_CURVE[Math.min(24, f.resist[i])]])) as Record<ResistKey, number> : baseResist(f.speciesId);
+/** 프리 배틀 상대를 배틀 참가자로 만든다. 성격은 원본 규칙(foePersonality), 공격 방식은 웹판 임시 */
 export function freeBattleFoes(b: FreeBattle, rng: Rng): Entrant[] {
   return b.foes.map((f) => ({
     speciesId: f.speciesId,
+    resist: freeFoeResist(f),
     stats: f.curves.length === 5 ? freeFoeStats(f) : typicalStats(f.speciesId),
-    personality: pick(rng, PERSONALITIES),
+    personality: foePersonality(f.speciesId, rng),
     mode: pick(rng, ['일반', '일반', '특수', '지원'] as AttackMode[]),
   }));
 }
@@ -97,6 +101,7 @@ export interface Unit {
   wasHit: boolean;
   alive: boolean;
   buffs?: Partial<Record<BattleBuff,number>>;
+  resist: Record<ResistKey, number>;
   taunt?: {from:number;until:number};
   revived?: boolean;
 }
@@ -123,6 +128,8 @@ export interface Entrant {
   mode: AttackMode;
   /** 시작 HP. 원본은 배틀을 현재 HP로 시작한다(overlay19 0x21179DC). 없으면 가득 */
   hp?: number;
+  /** 내성 값(열·추위·빛·어둠·천둥). 없으면 종 기본값 */
+  resist?: Record<ResistKey, number>;
 }
 
 /** 알약(프로틴) 하나당 공격 +15%, 최대 3개분 (임시 값) */
@@ -135,7 +142,30 @@ export const entrantOf = (d: Digimon, mode: AttackMode): Entrant => ({
   personality: d.personality,
   mode,
   hp: d.hpNow,
+  resist: digimonResist(d),
 });
+/** 내 디지몬의 내성 = 종 기본값 + 훈련으로 얻은 값 */
+export function digimonResist(d: Digimon): Record<ResistKey, number> {
+  const base = baseResist(d.speciesId);
+  return Object.fromEntries(RESIST_ORDER.map((k) => [k, base[k] + (d.resistance?.[k] ?? 0)])) as Record<ResistKey, number>;
+}
+/**
+ * 배틀 상대의 성격 (원본 arm9 0x02061DA8, 성격 인자 -1일 때). 0~180 난수 r로
+ *  백신: r=0 대담, 1~4 쿨, 그 밖 r%8(쿨·대담이면 솔직) · 바이러스: r=0 열혈, 1~4 대담, 그 밖 r%8(열혈·대담이면 솔직)
+ *  데이터: r=0 쿨, 1~4 열혈, 그 밖 r%8(열혈·쿨이면 솔직) · 그 밖 속성: r%8.
+ *  원본 성격 번호 0 솔직 1 제멋대로 2 성급한 3 게으름 4 열혈 5 쿨 6 대담 7 겁쟁이 (txt_list #445~452)
+ */
+const ORIGINAL_PERSONALITY: Personality[] = ['솔직', '제멋대로', '성급한', '게으름', '열혈', '쿨', '대담', '겁쟁이'];
+export function foePersonality(speciesId: string, rng: Rng): Personality {
+  const r = Math.min(180, Math.floor(rng() * 181));
+  const attr = originalSpecies(speciesId)?.attr;
+  const rule: Record<string, [number, number, number[]]> = { 백신: [6, 5, [5, 6]], 바이러스: [4, 6, [4, 6]], 데이터: [5, 4, [4, 5]] };
+  const x = rule[attr ?? ''];
+  if (!x) return ORIGINAL_PERSONALITY[r % 8];
+  if (r === 0) return ORIGINAL_PERSONALITY[x[0]];
+  if (r <= 4) return ORIGINAL_PERSONALITY[x[1]];
+  return ORIGINAL_PERSONALITY[x[2].includes(r % 8) ? 0 : r % 8];
+}
 
 export function makeEnemies(stage: Stage, count: number, scale: number, rng: Rng): Entrant[] {
   const pool = speciesByStage(stage);
@@ -144,7 +174,7 @@ export function makeEnemies(stage: Stage, count: number, scale: number, rng: Rng
     return {
       speciesId: sp.id,
       stats: typicalStats(sp.id, scale * range(rng, 0.9, 1.1)),
-      personality: pick(rng, PERSONALITIES),
+      personality: foePersonality(sp.id, rng),
       mode: pick(rng, ['일반', '일반', '특수', '지원'] as AttackMode[]),
     };
   });
@@ -178,6 +208,7 @@ export function createBattle(mine: Entrant[], foes: Entrant[]): BattleState {
         retreat: 0,
         wasHit: false,
         alive: true,
+        resist: e.resist ?? baseResist(sp.id),
       });
     });
   place(mine, 0);
@@ -252,12 +283,14 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     const skill = special ? pickBattleSkill(u.speciesId, rng, u.tp, u.personality) : null;
     const attack = u.stats.atk * buffMultiplier(u,'atk',s.t), intelligence=u.stats.int*buffMultiplier(u,'int',s.t);
     const power = special ? (attack + intelligence) / 2 : attack;
-    let dmg = (8 + power * 0.9) * (100 / (100 + near.stats.def * buffMultiplier(near,'def',s.t))) * range(rng, 0.85, 1.15) * attrMult(u.attr, near.attr);
+    // 속성 공격은 방어 대신 그 속성의 내성으로 막는다 (원본 overlay19 0x2118254: 공격 표 +0x58 속성 1~5 → 내성 칸)
+    const element=skill?battleElement(skill.record):undefined;
+    const guard = element ? near.resist[element as ResistKey] ?? near.stats.def : near.stats.def * buffMultiplier(near,'def',s.t);
+    let dmg = (8 + power * 0.9) * (100 / (100 + guard)) * range(rng, 0.85, 1.15) * attrMult(u.attr, near.attr);
     if (special) dmg *= 2.2;
     if (u.personality === '열혈') dmg *= 1.2;
     // 기존 제멋대로 전투 장점은 유지하고, 동거 스트레스는 별도로 추가한다.
     if (u.personality === '제멋대로') dmg *= 1.1;
-    const element=skill?battleElement(skill.record):undefined;
     if(element&&(near.buffs?.[element]??0)>s.t)dmg*=.85; // 내성SP 피해 경감15%는 웹판 정책
     if (u.mode === '지원') dmg *= 0.6;
     const damage = Math.max(1, Math.round(dmg));

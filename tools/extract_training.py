@@ -58,7 +58,10 @@ for i in range(216):
     assert all(0 <= index <= 24 for index in [*struct.unpack_from('<4H', rec, 52), *rec[60:62]])
 out = {'facilities': facilities, 'summerAdd': array_at_literal(0x02117bc4),
        'winterAdd': array_at_literal(0x02117bc8), 'variance': array_at_literal(0x02117bd4),
-       'curves': curves, 'rebirthBonus': list(arm[0x9ee7c:0x9ee7c + 20])}
+       'curves': curves,
+       # 내성 곡선: 같은 표의 7번째 칸(+12). 배틀 피해 계산 overlay19 0x2118294에서 속성 공격의 방어값으로 쓴다
+       'resistCurve': [struct.unpack_from('<H', arm, 0xc9528 + i * 16 + 12)[0] for i in range(25)],
+       'rebirthBonus': list(arm[0x9ee7c:0x9ee7c + 20])}
 (REPO / 'src/data/training.json').write_text(json.dumps(out, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 audit = {'facilityCount': len(facilities), 'curveCount': len(curves),
          'hashes': {name: hashlib.sha256(data).hexdigest() for name, data in [('arm9', arm), ('overlay18', farm), ('overlay0', hunt)]},

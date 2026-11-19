@@ -5,7 +5,9 @@ import { STAT_KEYS, STAT_LABEL, type Digimon, type ApKey, type Personality } fro
 
 // overlay18 0x02117274의 항목 순서. 표시명은 txt_list #19~40과 대응한다.
 const AP_ORDER: ApKey[] = ['바이러스', '백신', '데이터', '용', '짐승', '물', '새', '기계', '성', '벌레풀', '암흑'];
-export const RESIST_KEYS = ['열', '추위', '천둥', '빛', '어둠'] as const;
+/** 훈련 결과 번호 11~15의 내성 (원본 overlay18 0x2117274: 11 +0x70 열, 12 +0x74 추위, 13 +0x80 천둥, 14 +0x7C 어둠, 15 +0x78 빛.
+ *  신전(빛)은 15, 동굴(어둠)은 14를 올린다). 예전에는 14·15를 빛·어둠으로 거꾸로 붙였다 → upgradeSave에서 바로잡음 */
+export const RESIST_KEYS = ['열', '추위', '천둥', '어둠', '빛'] as const;
 const outcomes = table.facilities as Record<string, { weight: number; changes: number[][] }[]>;
 const percentile = (rng: Rng) => Math.min(99, Math.max(0, Math.floor(rng() * 100)));
 

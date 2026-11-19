@@ -316,8 +316,8 @@
       (ap.length
         ? ap.map(([k, v]) => `<span>${k} ${Math.floor(v)}</span>`).join('')
         : '<span class="muted">종족·속성 수치 없음 — 훈련 케이지에 넣어 올리세요</span>') +
-        Object.entries(d.resistance ?? {}).filter(([, v]) => v > 0)
-          .map(([k, v]) => `<span title="훈련 기록입니다. 배틀 피해에 반영하는 규칙은 추가 예정입니다.">${esc(k)} 내성 ${v}</span>`).join(''),
+        (d.isEgg ? '' : Object.entries(C.digimonResist(d))
+          .map(([k, v]) => `<span title="종 기본값 + 훈련으로 얻은 값. 이 속성의 필살기를 맞을 때 방어 대신 쓰입니다.">${esc(k)} 내성 ${v}</span>`).join('')),
     );
 
     // 진화 힌트: 위에서부터 먼저 충족한 쪽으로 진화
