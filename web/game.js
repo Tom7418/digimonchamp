@@ -276,7 +276,7 @@
         .join(''),
     );
     $('#scene-title').textContent = battle ? '배틀 아레나' : hunt ? `사냥터 · ${hunt.field.id}` : '사육장';
-    $('#speed').textContent = `▶▶ ×${speed}`;
+    $('#next-day').disabled = !!battle || titleOpen || dayEnding;
 
     setHtml(
       '#partner-tabs',
@@ -2552,9 +2552,22 @@
     paused = !paused;
     $('#pause').textContent = paused ? '▶ 다시 진행' : 'Ⅱ 일시 정지';
   };
-  $('#speed').onclick = () => {
-    speed = speed === 1 ? 5 : speed === 5 ? 20 : 1;
+  // 다음 날로: 남은 낮 시간을 1분씩 한꺼번에 처리하고(배고픔·진화·편지 등은 그대로 일어난다) 하루 마감을 연다
+  $('#next-day').onclick = () => {
+    if (battle || titleOpen || dayEnding || board.editing) return;
+    if (hunt) endHunt('다음 날로 넘김');
+    for (let i = 0; i < 2 * 1440 && !dayEnding; i++) {
+      syncTeam();
+      const dirtyCages = [...new Set(view.foods.filter((f) => f.kind === 'rotten' && f.cageId).map((f) => f.cageId))];
+      const r = C.tickFarm(save, undefined, false, dirtyCages);
+      save = r.save;
+      r.events.forEach(logEvent);
+      spoilFoods();
+      checkSchedule();
+    }
+    clock = 0;
     render();
+    persist();
   };
   $('#help').onclick = () =>
     showModal(
