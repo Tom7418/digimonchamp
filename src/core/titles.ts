@@ -139,11 +139,15 @@ export const PRELIM_DAYS = [1, 2, 3, 4, 5];
 export const CHAMP_DAY = 5;
 export const PRELIM_MIN_RANK = 3;
 export const PRELIM_WINS = 3;
-export const PRELIM: Match = { id: 'prelim', name: '챔피언십 예선', minRank: PRELIM_MIN_RANK, season: CHAMP_SEASON, day: 1, format: 3, stage: 4, scale: 1.15, prize: 1500 };
+/** 챔피언십 상금 (원본 arm9 0x020A914C 예선 50,000 · 0x020A913C 본선 300,000, overlay9_10 0x2115838·0x211589C).
+ *  원본은 연속 배틀을 모두 이겼을 때 한 번에 준다(overlay9_8 0x2110668). 웹판은 예선 통과·본선 우승 때 준다. */
+export const PRELIM_PRIZE = 50000;
+export const CHAMP_PRIZE = 300000;
+export const PRELIM: Match = { id: 'prelim', name: '챔피언십 예선', minRank: PRELIM_MIN_RANK, season: CHAMP_SEASON, day: 1, format: 3, stage: 4, scale: 1.15, prize: 0 };
 export const FINAL_ROUNDS: Match[] = [
-  { id: 'final', name: '챔피언십 본선 8강', minRank: 1, season: CHAMP_SEASON, day: CHAMP_DAY, format: 3, stage: 5, scale: 1.0, prize: 3000 },
-  { id: 'final', name: '챔피언십 본선 4강', minRank: 1, season: CHAMP_SEASON, day: CHAMP_DAY, format: 3, stage: 5, scale: 1.2, prize: 5000 },
-  { id: 'final', name: '챔피언십 결승', minRank: 1, season: CHAMP_SEASON, day: CHAMP_DAY, format: 3, stage: 6, scale: 1.1, prize: 10000 },
+  { id: 'final', name: '챔피언십 본선 8강', minRank: 1, season: CHAMP_SEASON, day: CHAMP_DAY, format: 3, stage: 5, scale: 1.0, prize: 0 },
+  { id: 'final', name: '챔피언십 본선 4강', minRank: 1, season: CHAMP_SEASON, day: CHAMP_DAY, format: 3, stage: 5, scale: 1.2, prize: 0 },
+  { id: 'final', name: '챔피언십 결승', minRank: 1, season: CHAMP_SEASON, day: CHAMP_DAY, format: 3, stage: 6, scale: 1.1, prize: CHAMP_PRIZE },
 ];
 /** 이전 코드·테스트 호환용: 결승전 */
 export const FINAL = FINAL_ROUNDS[FINAL_ROUNDS.length - 1];
@@ -224,13 +228,13 @@ export function applyMatch(save: SaveData, m: Match, won: boolean): SaveData {
     const p = prelimOf(save, d.year);
     const next = { year: d.year, days: [...p.days, d.day], wins: p.wins + (won ? 1 : 0) };
     const qualified = next.wins >= PRELIM_WINS;
-    return { ...save, prelim: next, qualifiedYear: qualified ? d.year : save.qualifiedYear, bits: save.bits + (won ? m.prize : 0) };
+    return { ...save, prelim: next, qualifiedYear: qualified ? d.year : save.qualifiedYear, bits: save.bits + (next.wins === PRELIM_WINS && p.wins < PRELIM_WINS ? PRELIM_PRIZE : 0) };
   }
   if (m.id === 'final') {
     if (!won) return { ...save, qualifiedYear: null, finalRound: 0, prelim: null };
     const round = (save.finalRound ?? 0) + 1;
     const champion = round >= FINAL_ROUNDS.length;
-    return { ...save, finalRound: champion ? 0 : round, champion: save.champion || champion, bits: save.bits + m.prize };
+    return { ...save, finalRound: champion ? 0 : round, champion: save.champion || champion, bits: save.bits + (champion ? CHAMP_PRIZE : 0) };
   }
   return won ? { ...save, titles: [...save.titles, m.id], bits: save.bits + m.prize } : save;
 }

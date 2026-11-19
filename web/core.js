@@ -2466,6 +2466,10 @@ var ChampCore = (function(exports) {
 	var CHAMP_DAY = 5;
 	var PRELIM_MIN_RANK = 3;
 	var PRELIM_WINS = 3;
+	/** 챔피언십 상금 (원본 arm9 0x020A914C 예선 50,000 · 0x020A913C 본선 300,000, overlay9_10 0x2115838·0x211589C).
+	*  원본은 연속 배틀을 모두 이겼을 때 한 번에 준다(overlay9_8 0x2110668). 웹판은 예선 통과·본선 우승 때 준다. */
+	var PRELIM_PRIZE = 5e4;
+	var CHAMP_PRIZE = 3e5;
 	var PRELIM = {
 		id: "prelim",
 		name: "챔피언십 예선",
@@ -2475,7 +2479,7 @@ var ChampCore = (function(exports) {
 		format: 3,
 		stage: 4,
 		scale: 1.15,
-		prize: 1500
+		prize: 0
 	};
 	var FINAL_ROUNDS = [
 		{
@@ -2487,7 +2491,7 @@ var ChampCore = (function(exports) {
 			format: 3,
 			stage: 5,
 			scale: 1,
-			prize: 3e3
+			prize: 0
 		},
 		{
 			id: "final",
@@ -2498,7 +2502,7 @@ var ChampCore = (function(exports) {
 			format: 3,
 			stage: 5,
 			scale: 1.2,
-			prize: 5e3
+			prize: 0
 		},
 		{
 			id: "final",
@@ -2509,7 +2513,7 @@ var ChampCore = (function(exports) {
 			format: 3,
 			stage: 6,
 			scale: 1.1,
-			prize: 1e4
+			prize: CHAMP_PRIZE
 		}
 	];
 	/** 이전 코드·테스트 호환용: 결승전 */
@@ -2602,7 +2606,7 @@ var ChampCore = (function(exports) {
 				...save,
 				prelim: next,
 				qualifiedYear: qualified ? d.year : save.qualifiedYear,
-				bits: save.bits + (won ? m.prize : 0)
+				bits: save.bits + (next.wins === 3 && p.wins < 3 ? PRELIM_PRIZE : 0)
 			};
 		}
 		if (m.id === "final") {
@@ -2618,7 +2622,7 @@ var ChampCore = (function(exports) {
 				...save,
 				finalRound: champion ? 0 : round,
 				champion: save.champion || champion,
-				bits: save.bits + m.prize
+				bits: save.bits + (champion ? CHAMP_PRIZE : 0)
 			};
 		}
 		return won ? {
@@ -8978,6 +8982,8 @@ var ChampCore = (function(exports) {
 		});
 		return true;
 	}
+	// src/data/free-battles.txt?raw
+	var free_battles_default = "# 원본 프리 배틀 상대 (tools/extract_free_battles.py). 손으로 고치지 말 것\n# 번호|별명|종|레벨(1~10)|상금\n# pool|레벨(0~9)|계절(0봄~3겨울, 4공통)|후보 번호\n456|카픈|카프리몬|1|40\n457|타넬|시드몬|1|30\n458|남|야옹몬|1|50\n459|페스토리|어니몬|1|50\n460|모치치|모티몬|1|50\n461|코로코로|코로몬|2|70\n462|푸카|둥실몬|2|40\n463|모치린|모티몬|1|50\n464|페티미어|쁘띠메라몬|1|50\n465|파구구|퍼그몬|2|40\n466|선사|산몬|2|100\n467|모나|문몬|2|100\n468|틴틴|뿔몬|1|50\n469|카피|카프리몬|1|30\n470|시드|시드몬|1|30\n471|코너|쿠네몬|2|200\n472|고브라|고부리몬|3|120\n473|코니|쿠네몬|3|80\n474|가제트|가지몬|3|120\n475|가이아|길몬|4|420\n476|고티|울퉁몬|3|60\n477|페스토디오|피코데블몬|3|120\n478|가오거|가오몬|4|360\n479|피터|피요몬|4|80\n480|테리|테리어몬|3|330\n481|기잠|기자몬|3|210\n482|왈터|올챙몬|3|70\n483|파파루루|팔몬|3|210\n484|무시|머슈몬|3|90\n485|플레임|캔들몬|3|120\n486|팔|팔코몬|4|220\n487|아르마|아르마몬|4|230\n488|바카라|고스몬|4|600\n489|메랍|쁘띠메라몬|3|210\n490|탄타|텐타몬|4|350\n491|토그탄|토이아구몬|3|120\n492|서니|산몬|3|200\n493|아그린|아구몬|4|260\n494|브랙커|크로아구몬|4|220\n495|아루라|오로라몬|4|150\n496|레나레나|레나몬|3|120\n497|패튼|파닥몬|3|90\n498|티노|티라노몬|5|410\n499|위자르|위자몬|5|500\n500|스커|스카몬|5|150\n501|슬리미|워매몬|5|330\n502|그레이|모노크로몬|6|410\n503|클러커|꼬끼몬|5|350\n504|스테리|스타몬|5|410\n505|가루루다|가루몬|6|620\n506|베지스|베지몬|5|150\n507|게서|연체몬|5|350\n508|샤라리오|쉘몬|5|410\n509|랑|링스몬|5|350\n510|카미나르|번개콩알몬|5|450\n511|우즈|우드몬|5|350\n512|오베크|고스몬|5|130\n513|유진|프리지몬|5|820\n514|아이시|아이스몬|5|410\n515|오지|우가몬|5|410\n516|크와이거|쿠가몬|6|800\n517|시드런|시드라몬|6|800\n518|클럭커|타임몬|6|550\n519|글렌|그레이몬|6|860\n520|테루|가트몬|5|550\n521|메라사|메라몬|6|770\n522|리아라|레어몬|5|130\n523|그레로|옐로우워매몬|5|410\n524|사베르돈|블랙버드라몬|5|550\n525|키키|키위몬|5|340\n526|델란|뿌띠몬|6|330\n527|테츠오|메탈그레이몬(청)|8|1050\n528|케베라|가비지몬|7|550\n529|파이터|팬텀몬|7|510\n530|케네디|나이트몬|7|610\n531|주자|쥬레이몬|7|550\n532|리세라|트리세라몬|7|600\n533|픽키|피콜몬|7|950\n534|강|다이버몬|7|550\n535|쇼거|왕개굴몬|8|350\n536|비기|오쿠와몬|8|1000\n537|파로로|패롯몬|7|430\n538|몬자|퍼펫몬|8|610\n539|마멧|콩알몬|7|700\n540|스컬리오|스컬그레이몬|7|550\n541|만타|맘모스몬|7|330\n542|드라고|드라고몬|8|950\n543|바다바다|베이더몬|7|330\n544|라피|래비드몬|8|700\n545|스파클|슈퍼스타몬|7|550\n546|노마|스콜피온몬|7|700\n547|킹스터|팬더몬|7|550\n548|사유리|레이디데블몬|8|1050\n549|브라핀|블랙래비드몬|8|800\n550|와르가르|워가루몬(흑)|8|1200\n551|빅보스|왕콩알몬|7|600\n552|베피|뿌띠몬|7|330\n553|쉐이커|크레세몬|8|1400\n554|델리아|뿌띠몬|7|310\n555|그랜크|그랜쿠가몬|10|1630\n556|아폴론|아폴로몬|10|2650\n557|비비|바이킹몬|10|1800\n558|그리핀|그리폰몬|9|920\n559|본|스컬맘모스몬|9|800\n560|프린스|프린스콩알몬|9|920\n561|세인터|세인트가르고몬|10|1400\n562|발스|발키리몬|9|800\n563|노저|피노키몬|9|1020\n564|퍼피스터|푸쿠몬|9|670\n565|라오우|파라오몬|9|800\n566|기가|기가시드라몬|10|1500\n567|크로노스|이글몬|9|920\n568|피에르|피에몬|10|1630\n569|안드로|하이안드로몬|9|1200\n570|타로우|메탈가루몬|10|1630\n571|벨레오|샤벨레오몬|10|2000\n572|플레어|플레어몬|9|310\n573|블루|프레시오몬|9|1020\n574|메테오|메탈에테몬|10|2000\n575|문킹|다이아나몬|10|4300\npool|0|0|459,460,463\npool|0|1|459,460,463,464\npool|0|2|459,463,464\npool|0|3|460\npool|0|4|456,457,458,468,469,470\npool|1|0|461,466\npool|1|1|462,466,471\npool|1|2|461,462,467\npool|1|3|462,467\npool|1|4|465\npool|2|0|480,481,482,483,492,496,497\npool|2|1|480,481,482,483,484,485,489,492\npool|2|2|477,480,484,485,489,497\npool|2|3|477,496,497\npool|2|4|472,473,474,476,491\npool|3|0|479,490,495\npool|3|1|475,486,490,493,494,495\npool|3|2|475,486,488,490,493,494,495\npool|3|3|479,488\npool|3|4|478,487\npool|4|0|503,504,506,508,511,520,522,523,525\npool|4|1|503,504,506,507,508,509,511,520,525\npool|4|2|503,507,509,510,511,512,513,514,522,523,524\npool|4|3|510,512,513,514,520,522,523,524\npool|4|4|498,499,500,501,515\npool|5|0|505,516,517,526\npool|5|1|516,517,519,521,526\npool|5|2|505,518,519,521\npool|5|3|505,519\npool|5|4|502\npool|6|0|529,531,532,533,534,537,541,545,547,551,552,554\npool|6|1|531,532,534,545,546,547,552,554\npool|6|2|529,531,532,533,537,540,541,546,547,551\npool|6|3|529,537,540,541,546,551\npool|6|4|528,530,539,543\npool|7|0|527,536,544,549\npool|7|1|527,535,536,542,544,549\npool|7|2|527,535,542,548,550,553\npool|7|3|542,548,549,550,553\npool|7|4|538\npool|8|0|562,563,567,569,572\npool|8|1|562,564,565,567\npool|8|2|563,564,565,567,569,573\npool|8|3|562,563,565,569,573\npool|8|4|558,559,560\npool|9|0|555,561,570,574\npool|9|1|555,556,561,566,574\npool|9|2|556,557,561,566,568,570,575\npool|9|3|557,566,568,570,575\npool|9|4|571\n";
 	// src/core/battle.ts
 	var ARENA = {
 		w: 480,
@@ -8985,20 +8991,89 @@ var ChampCore = (function(exports) {
 	};
 	var TIME_LIMIT = 90;
 	var DT = .1;
-	/** 웹판 프리 배틀.입문은 사용자 요청으로 유년기Ⅱ 상대를 추가, 상금은 임시30/60비트.
-	* 기존 ★1~3의 상대 세대·상금은 유지한다.
-	*/
-	var FREE_BATTLES = [
-		0,
-		1,
-		2,
-		3
-	].flatMap((stars) => [1, 3].map((format) => ({
-		label: stars === 0 ? "입문" : "★".repeat(stars),
-		format,
-		stage: stars === 0 ? 2 : 2 + stars,
-		prize: (stars === 0 ? 30 : 60 * stars) * (format === 3 ? 2 : 1)
-	})));
+	var FREE_FOES = /* @__PURE__ */ new Map();
+	/** 후보표 [레벨 0~9][계절 0~3, 4=공통] (원본 0x020C7E24) */
+	var FREE_POOLS = Array.from({ length: 10 }, () => Array.from({ length: 5 }, () => []));
+	for (const line of free_battles_default.split("\n")) {
+		if (!line || line.startsWith("#")) continue;
+		const f = line.split("|");
+		if (f[0] === "pool") FREE_POOLS[+f[1]][+f[2]] = f[3] ? f[3].split(",").map(Number) : [];
+		else FREE_FOES.set(+f[0], {
+			no: +f[0],
+			nick: f[1],
+			speciesId: f[2],
+			level: +f[3],
+			prize: +f[4]
+		});
+	}
+	var candidates = (level, season) => [...FREE_POOLS[level][season], ...FREE_POOLS[level][4]];
+	/** 그날의 프리 배틀 대진 (원본 0x02067F04). 1:1·3:3 각각 레벨 슬롯 0·2·4·6·8 + 무작위 0~4칸.
+	*  같은 날에는 같은 대진이 나오도록 날짜로 난수를 고정한다(웹판 정책: 원본은 하루 시작에 한 번 만들어 저장).
+	*  계절 칸 번호는 웹판 계절(0 봄~3 겨울)과 같다고 본다(추정). 상금 = 상대 디지몬 상금의 합(0x02088334). */
+	function freeBattleLineup(year, season, day) {
+		const rng = seeded(((year * 4 + season) * 32 + day) * 2654435761);
+		const int = (n) => Math.floor(rng() * n);
+		const slots = () => {
+			const extra = int(5);
+			return [
+				0,
+				2,
+				4,
+				6,
+				8,
+				...Array.from({ length: extra }, () => int(10))
+			].sort((a, b) => a - b);
+		};
+		const make = (format, level, ids) => {
+			const foes = ids.map((id) => FREE_FOES.get(id));
+			return {
+				label: `Lv${level + 1} ${foes[0].nick}`,
+				format,
+				level: level + 1,
+				stage: getSpecies(foes[0].speciesId).stage,
+				foes,
+				prize: foes.reduce((n, f) => n + f.prize, 0)
+			};
+		};
+		const out = [];
+		const used1 = [];
+		for (const lv of slots()) {
+			const list = candidates(lv, season).filter((id) => !used1.includes(id));
+			if (!list.length) continue;
+			const id = list[int(list.length)];
+			used1.push(id);
+			out.push(make(1, lv, [id]));
+		}
+		const leads = [];
+		for (const lv of slots()) {
+			const list = candidates(lv, season).filter((id) => !leads.includes(id));
+			if (!list.length) continue;
+			const lead = list[int(list.length)];
+			leads.push(lead);
+			const mates = candidates(lv < 9 ? lv + 1 : lv - 1, season).filter((id) => !leads.includes(id));
+			const pickMate = () => mates.length ? mates[int(mates.length)] : lead;
+			out.push(make(3, lv, [
+				lead,
+				pickMate(),
+				pickMate()
+			]));
+		}
+		return out;
+	}
+	/** 프리 배틀 상대를 배틀 참가자로 만든다. 능력치는 그 종의 표준값(웹판 임시, 원본 NPC 능력치 칸은 미해석) */
+	function freeBattleFoes(b, rng) {
+		return b.foes.map((f) => ({
+			speciesId: f.speciesId,
+			stats: typicalStats(f.speciesId, range(rng, .9, 1.1)),
+			personality: pick(rng, PERSONALITIES),
+			mode: pick(rng, [
+				"일반",
+				"일반",
+				"특수",
+				"지원"
+			])
+		}));
+	}
 	/** 알약(프로틴) 하나당 공격 +15%, 최대 3개분 (임시 값) */
 	var PROTEIN_ATK = .15;
 	var PROTEIN_SAFE = 3;
@@ -9719,6 +9794,7 @@ var ChampCore = (function(exports) {
 	exports.CAPACITY = CAPACITY;
 	exports.CAPACITY_BY_RANK = CAPACITY_BY_RANK;
 	exports.CHAMP_DAY = CHAMP_DAY;
+	exports.CHAMP_PRIZE = CHAMP_PRIZE;
 	exports.CHAMP_SEASON = CHAMP_SEASON;
 	exports.CLOCK_STEP_MINUTES = CLOCK_STEP_MINUTES;
 	exports.CURE_CHANCE = CURE_CHANCE;
@@ -9737,7 +9813,8 @@ var ChampCore = (function(exports) {
 	exports.FIELDS = FIELDS;
 	exports.FINAL = FINAL;
 	exports.FINAL_ROUNDS = FINAL_ROUNDS;
-	exports.FREE_BATTLES = FREE_BATTLES;
+	exports.FREE_FOES = FREE_FOES;
+	exports.FREE_POOLS = FREE_POOLS;
 	exports.GEARS = GEARS;
 	exports.HUNT_CLOSE_HOUR = HUNT_CLOSE_HOUR;
 	exports.HUNT_MAP = HUNT_MAP;
@@ -9762,6 +9839,7 @@ var ChampCore = (function(exports) {
 	exports.PRELIM = PRELIM;
 	exports.PRELIM_DAYS = PRELIM_DAYS;
 	exports.PRELIM_MIN_RANK = PRELIM_MIN_RANK;
+	exports.PRELIM_PRIZE = PRELIM_PRIZE;
 	exports.PRELIM_WINS = PRELIM_WINS;
 	exports.PRIZE_SCALE = PRIZE_SCALE;
 	exports.PROTEIN_ATK = PROTEIN_ATK;
@@ -9857,6 +9935,8 @@ var ChampCore = (function(exports) {
 	exports.feedFromTray = feedFromTray;
 	exports.feedRotten = feedRotten;
 	exports.findEvolution = findEvolution;
+	exports.freeBattleFoes = freeBattleFoes;
+	exports.freeBattleLineup = freeBattleLineup;
 	exports.freshSave = freshSave;
 	exports.gearCount = gearCount;
 	exports.gearDamage = gearDamage;

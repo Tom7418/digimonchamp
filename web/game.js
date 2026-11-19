@@ -1092,7 +1092,7 @@
     return [first, ...rest].slice(0, format);
   }
   function battleMenu() {
-    const date=C.dateOf(save.clock),titles=C.todaysMatches(save),free=C.FREE_BATTLES;
+    const date=C.dateOf(save.clock),titles=C.todaysMatches(save),free=C.freeBattleLineup(date.year,date.season,date.day);
     const freeOpen=date.hour>=8&&date.hour<21;
     let mode='일반';
     const first=canFight(current())?current():save.digimon.find(canFight);
@@ -1102,7 +1102,8 @@
     const titleText=m=>{
       const team=teamFor(m.format),problems=C.entryProblems(m,team),limits=C.entryLimits(m);
       if(team.length<m.format)problems.unshift(m.format+'마리를 선택해 주세요');
-      return `${m.format} VS ${m.foes??m.format} · 상대 ${C.STAGE_LABEL[m.stage]} · 상금 ${m.prize.toLocaleString('ko-KR')} ฿${limits?' · '+limits:''}${problems.length?' (조건 미충족: '+problems.join(', ')+')':''}`;
+      const prizeText=m.id==='prelim'?`예선 통과 시 ${C.PRELIM_PRIZE.toLocaleString('ko-KR')}`:m.id==='final'?`우승 시 ${C.CHAMP_PRIZE.toLocaleString('ko-KR')}`:m.prize.toLocaleString('ko-KR');
+      return `${m.format} VS ${m.foes??m.format} · 상대 ${C.STAGE_LABEL[m.stage]} · 상금 ${prizeText} ฿${limits?' · '+limits:''}${problems.length?' (조건 미충족: '+problems.join(', ')+')':''}`;
     };
     showModal('배틀',
       `<p>출전할 디지몬을 선택하세요. <b>1:1은 첫 번째,3:3은 선택한 세 마리</b>가 나갑니다. 다시 누르면 제외됩니다.</p>
@@ -1110,7 +1111,7 @@
        <p id="battle-roster-count" class="hint" role="status"></p>
        <div class="mode-pick">출전 전 공격 방식 ${['일반','지원','특수'].map(m=>`<button data-mode="${m}" class="${m===mode?'active':''}">${m}</button>`).join('')}</div>
        <h3>타이틀 매치</h3><div class="menu-list">${titles.length?titles.map((m,i)=>`<button data-title="${i}"><b>★ ${esc(m.name)}</b><small>${esc(titleText(m))}</small></button>`).join(''):`<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은07:00~15:00, 일정: ${esc(C.upcoming(save)[0]||'-')}</p>`}</div>
-       <h3>프리 배틀 ${freeOpen?'':'(08:00~21:00)'}</h3><div class="menu-list two">${free.map((f,i)=>`<button data-free="${i}"><b>${f.label} ${f.format}:${f.format}</b><small>상대 ${C.STAGE_LABEL[f.stage]} · ${f.prize} ฿</small></button>`).join('')}</div>`,
+       <h3>프리 배틀 ${freeOpen?'':'(08:00~21:00)'}</h3><div class="menu-list two">${free.map((f,i)=>`<button data-free="${i}"><b>${esc(f.label)} ${f.format}:${f.format}</b><small>${f.foes.map(x=>esc(C.getSpecies(x.speciesId).name)).join(' · ')} · ${f.prize.toLocaleString('ko-KR')} ฿</small></button>`).join('')}</div>`,
       'BATTLE ENTRY','취소');
     const body=$('#modal-body');
     function updateRoster(){
@@ -1141,7 +1142,7 @@
       const m=titles[+b.dataset.title];startBattle({title:m.name,match:m,format:m.format,foes:m.foes,stage:m.stage,scale:m.scale,prize:m.prize},mode,[...roster]);
     });
     body.querySelectorAll('[data-free]').forEach(b=>b.onclick=()=>{
-      const f=free[+b.dataset.free];startBattle({title:`프리 배틀 ${f.label}`,format:f.format,stage:f.stage,scale:1,prize:f.prize},mode,[...roster]);
+      const f=free[+b.dataset.free];startBattle({title:`프리 배틀 ${f.label}`,format:f.format,stage:f.stage,scale:1,prize:f.prize,free:f},mode,[...roster]);
     });
     updateRoster();
   }
@@ -1151,7 +1152,7 @@
     if (team.length < setup.format) return toast(`${setup.format}:${setup.format}에는 건강한 디지몬 ${setup.format}마리가 필요해요.`);
     if(new Set(team.map(d=>d.uid)).size!==team.length)return toast('같은 디지몬을 중복 출전시킬 수 없어요.');
     if(setup.match){const problems=C.entryProblems(setup.match,team);if(problems.length)return toast(problems.join(', '));}
-    const foes = C.makeEnemies(setup.stage, setup.foes ?? setup.format, setup.scale, Math.random);
+    const foes = setup.free ? C.freeBattleFoes(setup.free, Math.random) : C.makeEnemies(setup.stage, setup.foes ?? setup.format, setup.scale, Math.random);
     const state = C.createBattle(
       team.map((d) => C.entrantOf(d, mode)),
       foes,
@@ -1257,12 +1258,14 @@
     const m = b.setup.match;
     const wasQualified = save.qualifiedYear;
     // 타이틀은 이겼을 때만, 챔피언십 예선·본선은 진 것도 기록한다
+    const bitsBefore = save.bits;
     if (m) save = C.applyMatch(save, m, won);
     else if (won) save = { ...save, bits: save.bits + b.setup.prize };
     const after = C.tamerRank(save);
     const why = b.state.reason === 'timeout' ? ' (시간 종료 판정)' : '';
-    battleLog(won ? `승리!${why} 상금 ${b.setup.prize.toLocaleString('ko-KR')} ฿` : `패배…${why}`);
-    log(`${b.setup.title} ${won ? '승리' : '패배'}${won ? ` · ${b.setup.prize} ฿` : ''}`);
+    const gained = save.bits - bitsBefore;
+    battleLog(won ? `승리!${why}${gained ? ` 상금 ${gained.toLocaleString('ko-KR')} ฿` : ''}` : `패배…${why}`);
+    log(`${b.setup.title} ${won ? '승리' : '패배'}${gained ? ` · ${gained.toLocaleString('ko-KR')} ฿` : ''}`);
     const champLine = (t) => {
       battleLog(t);
       log(t);

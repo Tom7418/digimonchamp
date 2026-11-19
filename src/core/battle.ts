@@ -1,21 +1,74 @@
 import { getSpecies, speciesByStage, typicalStats } from './data';
 import { battleSkills, pickBattleSkill, type BattleSkill } from './battle-skills';
 import { supportSkills, useSupport, reviveSupport, buffMultiplier, battleElement, type BattleBuff, type SupportSkill } from './support-skills';
-import { pick, range, type Rng } from './rng';
+import { pick, range, seeded, type Rng } from './rng';
+import freeRaw from '../data/free-battles.txt?raw';
 import { PERSONALITIES, type AttackMode, type SpeciesAttr, type Digimon, type Personality, type Stage, type Stats } from './types';
 
 export const ARENA = { w: 480, h: 250 };
 export const TIME_LIMIT = 90;
 const DT = 0.1;
 
-/** 웹판 프리 배틀.입문은 사용자 요청으로 유년기Ⅱ 상대를 추가, 상금은 임시30/60비트.
- * 기존 ★1~3의 상대 세대·상금은 유지한다.
- */
-export const FREE_BATTLES = [0, 1, 2, 3].flatMap(stars => ([1, 3] as const).map(format => ({
-  label: stars === 0 ? '입문' : '★'.repeat(stars),
-  format, stage: (stars === 0 ? 2 : 2 + stars) as Stage,
-  prize: (stars === 0 ? 30 : 60 * stars) * (format === 3 ? 2 : 1),
-})));
+// ---------- 프리 배틀 (원본 대진·상금, tools/extract_free_battles.py → free-battles.txt) ----------
+export interface FreeFoe { no: number; nick: string; speciesId: string; level: number; prize: number }
+export interface FreeBattle { label: string; format: 1 | 3; level: number; stage: Stage; foes: FreeFoe[]; prize: number }
+export const FREE_FOES = new Map<number, FreeFoe>();
+/** 후보표 [레벨 0~9][계절 0~3, 4=공통] (원본 0x020C7E24) */
+export const FREE_POOLS: number[][][] = Array.from({ length: 10 }, () => Array.from({ length: 5 }, () => []));
+for (const line of freeRaw.split('\n')) {
+  if (!line || line.startsWith('#')) continue;
+  const f = line.split('|');
+  if (f[0] === 'pool') FREE_POOLS[+f[1]][+f[2]] = f[3] ? f[3].split(',').map(Number) : [];
+  else FREE_FOES.set(+f[0], { no: +f[0], nick: f[1], speciesId: f[2], level: +f[3], prize: +f[4] });
+}
+const candidates = (level: number, season: number) => [...FREE_POOLS[level][season], ...FREE_POOLS[level][4]];
+
+/** 그날의 프리 배틀 대진 (원본 0x02067F04). 1:1·3:3 각각 레벨 슬롯 0·2·4·6·8 + 무작위 0~4칸.
+ *  같은 날에는 같은 대진이 나오도록 날짜로 난수를 고정한다(웹판 정책: 원본은 하루 시작에 한 번 만들어 저장).
+ *  계절 칸 번호는 웹판 계절(0 봄~3 겨울)과 같다고 본다(추정). 상금 = 상대 디지몬 상금의 합(0x02088334). */
+export function freeBattleLineup(year: number, season: number, day: number): FreeBattle[] {
+  const rng = seeded(((year * 4 + season) * 32 + day) * 2654435761);
+  const int = (n: number) => Math.floor(rng() * n);
+  const slots = () => {
+    const extra = int(5);
+    return [0, 2, 4, 6, 8, ...Array.from({ length: extra }, () => int(10))].sort((a, b) => a - b);
+  };
+  const make = (format: 1 | 3, level: number, ids: number[]): FreeBattle => {
+    const foes = ids.map((id) => FREE_FOES.get(id)!);
+    return { label: `Lv${level + 1} ${foes[0].nick}`, format, level: level + 1, stage: getSpecies(foes[0].speciesId).stage as Stage, foes, prize: foes.reduce((n, f) => n + f.prize, 0) };
+  };
+  const out: FreeBattle[] = [];
+  const used1: number[] = [];
+  for (const lv of slots()) {
+    const list = candidates(lv, season).filter((id) => !used1.includes(id));
+    if (!list.length) continue;
+    const id = list[int(list.length)];
+    used1.push(id);
+    out.push(make(1, lv, [id]));
+  }
+  const leads: number[] = [];
+  for (const lv of slots()) {
+    const list = candidates(lv, season).filter((id) => !leads.includes(id));
+    if (!list.length) continue;
+    const lead = list[int(list.length)];
+    leads.push(lead);
+    // 나머지 둘은 한 단계 위 레벨(레벨 9는 8)의 후보에서, 다른 대진의 대표는 빼고 고른다
+    const mates = candidates(lv < 9 ? lv + 1 : lv - 1, season).filter((id) => !leads.includes(id));
+    const pickMate = () => (mates.length ? mates[int(mates.length)] : lead);
+    out.push(make(3, lv, [lead, pickMate(), pickMate()]));
+  }
+  return out;
+}
+
+/** 프리 배틀 상대를 배틀 참가자로 만든다. 능력치는 그 종의 표준값(웹판 임시, 원본 NPC 능력치 칸은 미해석) */
+export function freeBattleFoes(b: FreeBattle, rng: Rng): Entrant[] {
+  return b.foes.map((f) => ({
+    speciesId: f.speciesId,
+    stats: typicalStats(f.speciesId, range(rng, 0.9, 1.1)),
+    personality: pick(rng, PERSONALITIES),
+    mode: pick(rng, ['일반', '일반', '특수', '지원'] as AttackMode[]),
+  }));
+}
 
 export interface Unit {
   id: number;

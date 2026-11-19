@@ -12,7 +12,7 @@ import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personal
 import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
-import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
+import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
@@ -961,11 +961,14 @@ describe('championship', () => {
     let s = red(at(1, 1));
     const m = todaysMatches(s).find((x) => x.id === 'prelim')!;
     expect(m.name).toBe('챔피언십 예선 1전');
+    const bits0 = s.bits;
     s = applyMatch(s, m, true);
     expect(todaysMatches(s).some((x) => x.id === 'prelim')).toBe(false); // 하루 한 경기
     s = applyMatch({ ...s, clock: at(1, 2) }, m, true);
+    expect(s.bits).toBe(bits0); // 상금은 통과했을 때 한 번 (원본 50,000)
     s = applyMatch({ ...s, clock: at(1, 3) }, m, true);
     expect(s.qualifiedYear).toBe(1);
+    expect(s.bits).toBe(bits0 + 50000);
     expect(todaysMatches({ ...s, clock: at(1, 4) }).some((x) => x.id === 'prelim')).toBe(false);
   });
 
@@ -985,6 +988,7 @@ describe('championship', () => {
       s = applyMatch(s, m, true);
     }
     expect(s.champion).toBe(true);
+    expect(s.bits).toBe(red(0).bits + 300000); // 원본 본선 우승 상금
     expect(tamerRank(s)).toBe(9);
     expect(upcoming(s).some((l) => l.includes('챔피언십'))).toBe(false);
   });
@@ -1408,25 +1412,38 @@ describe('배틀 접근 AI 회귀',()=>{
   });
 });
 
-describe('유년기Ⅱ 입문 프리 배틀',()=>{
- it('입문1:1/3:3을 추가하며 기존★1~3은 유지한다',()=>{
-  expect(FREE_BATTLES.slice(0,2)).toEqual([{label:'입문',format:1,stage:2,prize:30},{label:'입문',format:3,stage:2,prize:60}]);
-  expect(FREE_BATTLES.slice(2).map(x=>[x.stage,x.format,x.prize])).toEqual([[3,1,60],[3,3,120],[4,1,120],[4,3,240],[5,1,180],[5,3,360]]);
+describe('프리 배틀 (원본 대진·상금)',()=>{
+ it('원본 NPC 표: 상대 120명, 상금은 디지몬마다 정해져 있다',()=>{
+  expect(FREE_FOES.size).toBe(120);
+  expect(FREE_FOES.get(456)).toMatchObject({nick:'카픈',speciesId:'카프리몬',level:1,prize:40});
+  expect(FREE_FOES.get(575)).toMatchObject({speciesId:'다이아나몬',level:10,prize:4300});
+  expect(FREE_POOLS[0][4]).toEqual([456,457,458,468,469,470]);
+ });
+ it('하루 대진: 1:1·3:3 각각 레벨 슬롯 0·2·4·6·8을 포함하고, 상금은 상대 상금의 합',()=>{
+  const list=freeBattleLineup(1,0,3);
+  expect(freeBattleLineup(1,0,3)).toEqual(list); // 같은 날은 같은 대진
+  for(const f of [1,3] as const){
+   const xs=list.filter(x=>x.format===f);
+   expect(xs.length).toBeGreaterThanOrEqual(5);expect(xs.length).toBeLessThanOrEqual(9);
+   for(const lv of [1,3,5,7,9])expect(xs.some(x=>x.level===lv)).toBe(true);
+   for(const x of xs){expect(x.foes).toHaveLength(f);expect(x.prize).toBe(x.foes.reduce((n,y)=>n+y.prize,0));}
+  }
+  const ones=list.filter(x=>x.format===1).map(x=>x.foes[0].no);
+  expect(new Set(ones).size).toBe(ones.length);
+ });
+ it('프리 배틀 상대로 실제 배틀이 끝난다',()=>{
+  for(const entry of freeBattleLineup(1,1,2).slice(0,2)){
+   const foes=freeBattleFoes(entry,seeded(12));
+   expect(foes.map(x=>x.speciesId)).toEqual(entry.foes.map(x=>x.speciesId));
+   const mine=Array.from({length:entry.format},(_,i)=>entrantOf(newDigimon(i+1,'코로몬',seeded(i)),'일반'));
+   expect(runBattle(mine,foes,seeded(33)).over).toBe(true);
+  }
  });
  it('인원이 다른 타이틀 매치(3 VS 1, 1 VS 3, 3 VS 2)도 배틀이 끝난다',()=>{
   for(const [a,b] of [[3,1],[1,3],[3,2]]){
    const foes=makeEnemies(3,b,1,seeded(5));
    const mine=Array.from({length:a},(_,i)=>entrantOf(newDigimon(i+1,'아구몬',seeded(i)),'일반'));
    expect(runBattle(mine,foes,seeded(9)).over).toBe(true);
-  }
- });
- it('입문 상대는 유년기Ⅱ만 생성하며 실제 배틀이 종료된다',()=>{
-  for(const entry of FREE_BATTLES.filter(x=>x.stage===2)){
-   const foes=makeEnemies(entry.stage,entry.format,1,seeded(12));
-   expect(foes).toHaveLength(entry.format);
-   expect(foes.every(x=>getSpecies(x.speciesId).stage===2)).toBe(true);
-   const mine=Array.from({length:entry.format},(_,i)=>entrantOf(newDigimon(i+1,'코로몬',seeded(i)),'일반'));
-   expect(runBattle(mine,foes,seeded(33)).over).toBe(true);
   }
  });
 });
