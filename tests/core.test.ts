@@ -873,6 +873,11 @@ describe('illness', () => {
     const egg = { ...young, digimon: [{ ...newDigimon(1, '깜몬'), isEgg: true, stageAge: 29, memory: mem }, newDigimon(2, '깜몬')] };
     expect(tickFarm(egg, () => 0.2).save.digimon[0].speciesId).toBe('푸니몬');
   });
+  it('원본 진화표: 페널티 진화는 수명이 다했을 때만 (아구몬 → 스카몬)', () => {
+    const mon = (stageAge: number) => ({ ...newDigimon(1, '아구몬'), penalties: 4, stageAge });
+    expect(findEvolution(mon(10), 9, 999)).toBe(null);
+    expect(findEvolution(mon(LIFESPAN[3]), 9, 999)).toMatchObject({ kind: 'evolve', to: '스카몬' });
+  });
   it('디지에그 그림은 디지에그화 횟수로 고른다 (원본 0x2119B2C)', () => {
     expect([0, 1, 2, 6, 7, 8, 100].map(eggSpriteIndex)).toEqual([0, 1, 2, 6, 7, 7, 7]);
   });
