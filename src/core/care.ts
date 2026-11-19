@@ -428,7 +428,9 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
       hp += Math.trunc(maxHp / 100);
     }
   } else d.hpRegenMinutes = 0;
-  for (const e of facilityHpEffects(cage.no)) if (ctx.clock % e.every === 0) hp += e.amount;
+  // 양호실 등 쉬는 시설의 HP 회복에도 케이지 레벨 배율(×2·×3)을 붙인다 — 사용자 결정(원본 미확인)
+  const hpFactor = CAGE_LEVEL_FACTOR[ctx.cageLevels?.[cage.id] ?? 0] ?? 1;
+  for (const e of facilityHpEffects(cage.no)) if (ctx.clock % e.every === 0) hp += e.amount * hpFactor;
   d.hpNow = Math.min(maxHp, Math.max(0, hp));
   d.bowel = bowelAt(d, ctx.clock);
   if (sleeping) {
@@ -748,8 +750,9 @@ export function clean(save: SaveData, uid: number): ActionResult {
   return { ok: true, message: '깨끗하게 치웠다!', save: update(save, uid, (x) => ({ ...x, poop: 0, dirtyMinutes: 0 })) };
 }
 
-/** 약(병)이 들을 확률 — 원본 overlay18 표 0x2129AA4(세대 1~6: 50·50·60·80·90·100%), 0x2119990에서 사용 */
-export const CURE_CHANCE = [0, 0.5, 0.5, 0.6, 0.8, 0.9, 1];
+/** 약(병)이 들을 확률 — 사용자 결정으로 모든 세대 100%.
+ *  (원본 overlay18 표 0x2129AA4는 세대 1~6: 50·50·60·80·90·100%, 0x2119990에서 사용) */
+export const CURE_CHANCE = [0, 1, 1, 1, 1, 1, 1];
 /** 상처약(부상)이 들을 확률 — 원본 표 0x2129ADC(100·100·90·80·60·50%) */
 export const TREAT_CHANCE = [0, 1, 1, 0.9, 0.8, 0.6, 0.5];
 

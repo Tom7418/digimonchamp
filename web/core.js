@@ -3849,7 +3849,8 @@ var ChampCore = (function(exports) {
 				hp += Math.trunc(maxHp / 100);
 			}
 		} else d.hpRegenMinutes = 0;
-		for (const e of facilityHpEffects(cage.no)) if (ctx.clock % e.every === 0) hp += e.amount;
+		const hpFactor = CAGE_LEVEL_FACTOR[ctx.cageLevels?.[cage.id] ?? 0] ?? 1;
+		for (const e of facilityHpEffects(cage.no)) if (ctx.clock % e.every === 0) hp += e.amount * hpFactor;
 		d.hpNow = Math.min(maxHp, Math.max(0, hp));
 		d.bowel = bowelAt(d, ctx.clock);
 		if (sleeping) d.fatigue = Math.max(0, d.fatigue - .3);
@@ -4293,14 +4294,15 @@ var ChampCore = (function(exports) {
 			}))
 		};
 	}
-	/** 약(병)이 들을 확률 — 원본 overlay18 표 0x2129AA4(세대 1~6: 50·50·60·80·90·100%), 0x2119990에서 사용 */
+	/** 약(병)이 들을 확률 — 사용자 결정으로 모든 세대 100%.
+	*  (원본 overlay18 표 0x2129AA4는 세대 1~6: 50·50·60·80·90·100%, 0x2119990에서 사용) */
 	var CURE_CHANCE = [
 		0,
-		.5,
-		.5,
-		.6,
-		.8,
-		.9,
+		1,
+		1,
+		1,
+		1,
+		1,
 		1
 	];
 	/** 상처약(부상)이 들을 확률 — 원본 표 0x2129ADC(100·100·90·80·60·50%) */

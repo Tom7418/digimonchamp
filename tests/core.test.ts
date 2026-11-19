@@ -903,6 +903,14 @@ describe('illness', () => {
     expect(createBattle([entrantOf(d, '일반')], []).units[0].hp).toBe(100);
     expect(applyBattleResult(d, false, false, () => 0.9, false, 40).hpNow).toBe(40);
   });
+  it('양호실 HP 회복에도 케이지 레벨 배율이 붙는다', () => {
+    const max = newDigimon(1, '아구몬', () => 0.5).stats.hp;
+    const s = (lv: number): SaveData => ({ ...freshSave(0), nextUid: 3, cageLevels: { '미니 양호실': lv }, digimon: [{ ...newDigimon(1, '아구몬', () => 0.5), hunger: 100, cage: '미니 양호실', hpNow: max - 100 }, newDigimon(2, '깜몬')] });
+    const gain = (lv: number) => (advance(s(lv), 2, seeded(1)).save.digimon[0].hpNow ?? 0) - (max - 100);
+    expect(gain(0)).toBe(8);
+    expect(gain(1)).toBe(16);
+    expect(gain(2)).toBe(24);
+  });
   it('먹으면 HP가 차고(포만감 1칸마다 1%), 다음 날 아침에는 가득 찬다', () => {
     const d = { ...newDigimon(1, '아구몬', () => 0.5), hpNow: 100 };
     const unit = 100 / getSpecies('아구몬').size;
@@ -923,7 +931,7 @@ describe('illness', () => {
     expect(trainingDelta(0, 3, 0, () => 0.5, 2)).toBe(trainingDelta(0, 6, 0, () => 0.5, 1));
   });
   it('부상 위험도는 상처약·진화로 0이 되고, 약·상처약 확률은 원본 표', () => {
-    expect(CURE_CHANCE.slice(1)).toEqual([0.5, 0.5, 0.6, 0.8, 0.9, 1]);
+    expect(CURE_CHANCE.slice(1)).toEqual([1, 1, 1, 1, 1, 1]);
     expect(TREAT_CHANCE.slice(1)).toEqual([1, 1, 0.9, 0.8, 0.6, 0.5]);
     const d = { ...newDigimon(1, '코로몬'), injured: true, injuryRisk: 50, battles: 3 };
     const s = { ...freshSave(0), digimon: [d], salve: 1 };
@@ -1098,16 +1106,13 @@ describe('약·상처약·알약(프로틴): 원작 문장 기준으로 역할�
     const d = { ...newDigimon(1, stage), sick: true, injured: true };
     return { ...s, digimon: [d] } as SaveData;
   };
-  it('약(주사기)은 병만 고치고, 세대가 낮을수록 실패할 수 있다', () => {
+  it('약(주사기)은 병만 고치고, 어느 세대든 항상 듣는다', () => {
     const s = sickSave('깜몬');
     const ok = cure(s, 1, () => 0);
     expect(ok.save.digimon[0].sick).toBe(false);
     expect(ok.save.digimon[0].injured).toBe(true); // 부상은 그대로
     expect(ok.save.medicine).toBe(s.medicine - 1);
-    const miss = cure(s, 1, () => 0.99);
-    expect(miss.ok).toBe(true);
-    expect(miss.save.digimon[0].sick).toBe(true);
-    expect(miss.save.medicine).toBe(s.medicine - 1);
+    expect(cure(s, 1, () => 0.99).save.digimon[0].sick).toBe(false);
     expect(cure({ ...s, medicine: 0 }, 1).ok).toBe(false);
   });
   it('상처약은 부상만 고친다', () => {
