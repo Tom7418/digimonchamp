@@ -133,6 +133,8 @@ export function getSpecies(id: string): Species {
   return s;
 }
 
+/** 원본 능력치 곡선 표 (arm9 0x020C9528, 25단계 × HP·TP·공격·방어·지능·속도) */
+export const STAT_CURVES: number[][] = statTable.curves;
 /** 원본 종별 곡선 인덱스가 가리키는 기본 훈련 범위. */
 export function statBounds(id: string, key: StatKey): { min: number; max: number } {
   const column = STAT_KEYS.indexOf(key), index = ORIGINAL[id]?.stats[column] ?? 0;

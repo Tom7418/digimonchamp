@@ -1,4 +1,4 @@
-import { getSpecies, speciesByStage, typicalStats } from './data';
+import { getSpecies, originalSpecies, speciesByStage, STAT_CURVES, typicalStats } from './data';
 import { battleSkills, pickBattleSkill, type BattleSkill } from './battle-skills';
 import { supportSkills, useSupport, reviveSupport, buffMultiplier, battleElement, type BattleBuff, type SupportSkill } from './support-skills';
 import { pick, range, seeded, type Rng } from './rng';
@@ -10,7 +10,7 @@ export const TIME_LIMIT = 90;
 const DT = 0.1;
 
 // ---------- 프리 배틀 (원본 대진·상금, tools/extract_free_battles.py → free-battles.txt) ----------
-export interface FreeFoe { no: number; nick: string; speciesId: string; level: number; prize: number }
+export interface FreeFoe { no: number; nick: string; speciesId: string; level: number; prize: number; curves: number[] }
 export interface FreeBattle { label: string; format: 1 | 3; level: number; stage: Stage; foes: FreeFoe[]; prize: number }
 export const FREE_FOES = new Map<number, FreeFoe>();
 /** 후보표 [레벨 0~9][계절 0~3, 4=공통] (원본 0x020C7E24) */
@@ -19,7 +19,7 @@ for (const line of freeRaw.split('\n')) {
   if (!line || line.startsWith('#')) continue;
   const f = line.split('|');
   if (f[0] === 'pool') FREE_POOLS[+f[1]][+f[2]] = f[3] ? f[3].split(',').map(Number) : [];
-  else FREE_FOES.set(+f[0], { no: +f[0], nick: f[1], speciesId: f[2], level: +f[3], prize: +f[4] });
+  else FREE_FOES.set(+f[0], { no: +f[0], nick: f[1], speciesId: f[2], level: +f[3], prize: +f[4], curves: (f[5] ?? '').split(',').filter(Boolean).map(Number) });
 }
 const candidates = (level: number, season: number) => [...FREE_POOLS[level][season], ...FREE_POOLS[level][4]];
 
@@ -60,11 +60,17 @@ export function freeBattleLineup(year: number, season: number, day: number): Fre
   return out;
 }
 
-/** 프리 배틀 상대를 배틀 참가자로 만든다. 능력치는 그 종의 표준값(웹판 임시, 원본 NPC 능력치 칸은 미해석) */
+/** 프리 배틀 상대의 원본 능력치 (arm9 0x02061DA8): HP는 종 HP 곡선의 시작값, 나머지는 NPC 표의 곡선 번호 값. 난수 없음 */
+export function freeFoeStats(f: FreeFoe): Stats {
+  const hpIndex = originalSpecies(f.speciesId)?.stats[0] ?? 0;
+  const [tp, atk, def, int, spd] = f.curves.map((lv, k) => STAT_CURVES[Math.min(24, lv)][k + 1]);
+  return { hp: STAT_CURVES[Math.min(24, hpIndex)][0], tp, atk, def, int, spd };
+}
+/** 프리 배틀 상대를 배틀 참가자로 만든다. 성격·공격 방식은 웹판 임시(NPC 표의 해당 칸은 미해석) */
 export function freeBattleFoes(b: FreeBattle, rng: Rng): Entrant[] {
   return b.foes.map((f) => ({
     speciesId: f.speciesId,
-    stats: typicalStats(f.speciesId, range(rng, 0.9, 1.1)),
+    stats: f.curves.length === 5 ? freeFoeStats(f) : typicalStats(f.speciesId),
     personality: pick(rng, PERSONALITIES),
     mode: pick(rng, ['일반', '일반', '특수', '지원'] as AttackMode[]),
   }));
