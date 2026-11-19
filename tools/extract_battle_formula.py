@@ -3,6 +3,7 @@
 확인한 원본 코드 (overlay9_19 피해 계산 0x2118218~0x21184EC)
 - 공격 기록 표 arm9 0x020D02CC (104바이트): +0x48 TP, +0x4A 위력, +0x50 종류(0 일반·1 필살기·2 지원), +0x58 속성(0 없음, 1 열·2 추위·3 빛·4 어둠·5 천둥)
 - 지형 상성 표 overlay19 0x021339DC: [종의 지형 번호(종 표 +72)][배틀 맵 번호] = +1 유리 / -1 불리 (11바이트 줄)
+- 작전 표·TP 예산 표 (AI 행동 선택 0x211919C)
 - 크리티컬 확률 표 overlay19 0x021337C4: 단계 0~3 → 216분의 2·3·5·7
 
 사용: python tools/extract_battle_formula.py [root 폴더]
@@ -26,13 +27,20 @@ for i in range(600):
     power = struct.unpack_from('<H', rec, 0x4A)[0]
     kind = struct.unpack_from('<I', rec, 0x50)[0]
     element = struct.unpack_from('<I', rec, 0x58)[0]
+    base, var = struct.unpack_from('<HH', rec, 0x4C)
     if power or kind or element:
-        records[str(i)] = {'power': power, 'kind': kind, 'element': element}
+        records[str(i)] = {'power': power, 'kind': kind, 'element': element, 'time': [base, var]}
 terrain = [list(struct.unpack_from('<11b', ov19, 0x021339DC - OV + r * 11)) for r in range(12)]
 crit = list(struct.unpack_from('<4I', ov19, 0x021337C4 - OV))
 habitat = [struct.unpack_from('<I', arm9, 0xC0CB0 + i * 132 + 72)[0] for i in range(216)]
+# 맞는 쪽 종의 크리티컬 단계: 종 표 +63 바이트 (피해 계산이 대상 배우+0x14 → +0x3B로 읽는다, 0x2118460)
+crit_level = [arm9[0xC0CB0 + i * 132 + 63] for i in range(216)]
 names = [l.split('|')[0] for l in (REPO / 'src/data/species.txt').read_text(encoding='utf-8').splitlines() if l and not l.startswith('#')]
-out = {'records': records, 'terrain': terrain, 'critTable': crit, 'critRoll': 216,
-       'habitat': dict(zip(names, habitat))}
+# 작전 표 overlay19 0x021338E8 (작전마다 216분의 누적 경계: 필살기A·필살기B·일반 공격·?·지원·?) — 0 특수, 1 일반, 2 지원
+tactics = [list(struct.unpack_from('<6H', ov19, 0x021338E8 - OV + r * 12)) for r in range(3)]
+# 작전별 TP 예산 표 overlay19 0x02133954 [작전][단계 0~7] = 최대 TP의 %. 단계 = 배틀 경과 900프레임(15초)마다 +1 (0x2110F90)
+budget = [list(struct.unpack_from('<8H', ov19, 0x02133954 - OV + r * 16)) for r in range(3)]
+out = {'records': records, 'tactics': tactics, 'tpBudget': budget, 'terrain': terrain, 'critTable': crit, 'critRoll': 216,
+       'habitat': dict(zip(names, habitat)), 'critLevel': dict(zip(names, crit_level))}
 (REPO / 'src/data/battle-formula.json').write_text(json.dumps(out, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
 print(len(records), 'records')

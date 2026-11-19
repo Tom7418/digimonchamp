@@ -104,6 +104,8 @@ export interface Unit {
   buffs?: Partial<Record<BattleBuff,number>>;
   resist: Record<ResistKey, number>;
   taunt?: {from:number;until:number};
+  /** 정해 둔 다음 행동 (사거리에 들어가면 실행) */
+  intent?: { kind: 'basic' } | { kind: 'special'; skill: BattleSkill };
   revived?: boolean;
 }
 
@@ -221,7 +223,7 @@ export function createBattle(mine: Entrant[], foes: Entrant[], field = 0): Battl
 
 /** 백신 > 바이러스 > 데이터 > 백신 */
 // ---------- 원본 피해 계산 (overlay19 0x2118218~0x21184EC, 표는 tools/extract_battle_formula.py) ----------
-const FORMULA = formula as { records: Record<string, { power: number; kind: number; element: number }>; terrain: number[][]; critTable: number[]; critRoll: number; habitat: Record<string, number> };
+const FORMULA = formula as { records: Record<string, { power: number; kind: number; element: number; time: number[] }>; terrain: number[][]; critTable: number[]; critRoll: number; habitat: Record<string, number>; critLevel: Record<string, number>; tactics: number[][]; tpBudget: number[][] };
 /** 공격 기록의 위력(+0x4A). 일반 공격 100, 필살기 280~500 등 */
 export const attackPower = (record: number | null | undefined) => (record == null ? 100 : FORMULA.records[String(record)]?.power ?? 100);
 /** 강화 기술은 곡선 번호를 한 칸 올린다(원본 +1). 웹판 능력치는 값이라, 지금 값이 놓인 곡선 칸의 다음 칸과의 차이만큼 더한다 */
@@ -237,14 +239,50 @@ export const terrainOf = (speciesId: string, field: number) => FORMULA.terrain[F
  * 원본 피해 = ⌊(⌊공격×5/2⌋ − 방어) × 위력 / 100⌋. 속성 공격은 방어 대신 그 속성 내성.
  * 공격 쪽이 유리한 지형이면 ×1.2, 맞는 쪽이 불리한 지형이면 ×1.2. 0 이하이면 튕겨 낸다(피해 0).
  * 크리티컬 216분의 2(크리티컬업이면 3) → ×1.5. 마지막에 (0~215 난수 % 100)/1000만큼 더한다(최대 +9.9%).
- * 원본의 크리티컬 단계(디지몬 +0x3B)는 미해석이라 0으로 둔다.
+ * 크리티컬 단계는 맞는 쪽 종의 값(종 표 +63, 0~2 → 216분의 2·3·5). 크리티컬업은 웹판에서 공격하는 쪽 +1(원본 버프 번호 대응 미확인).
  */
-export function originalDamage(attack: number, guard: number, power: number, rng: Rng, opts: { attackerTerrain?: number; targetTerrain?: number; critUp?: boolean } = {}) {
+/** 곡선에서 이 값이 놓인 칸 번호 (원본 배틀은 능력치 대신 곡선 번호를 읽는다) */
+export function curveIndexOf(value: number, column: number): number {
+  let i = 0;
+  while (i + 1 < STAT_CURVES.length && STAT_CURVES[i + 1][column] <= value) i++;
+  return i;
+}
+/** 다음 행동까지 기다리는 시간(초): 90 − 2×지능 곡선 번호 프레임 (overlay19 0x2119114), 민첩업이면 ×0.8 */
+export function thinkSeconds(intValue: number, quick = false) {
+  const frames = Math.max(0, 90 - Math.trunc((curveIndexOf(intValue, 4) * 48) / 24));
+  return ((quick ? Math.trunc((frames * 80) / 100) : frames) / 60);
+}
+/** 행동 하나에 걸리는 시간(초): 기록 +0x4C + +0x4E × (1 − 민첩 곡선 번호/24) 프레임 (0x211FE2C). 지원 기술은 120프레임 */
+export function actionSeconds(record: number | null | undefined, spdValue: number) {
+  const r = record == null ? undefined : FORMULA.records[String(record)];
+  if (r?.kind === 2) return 120 / 60;
+  const [base, varying] = r?.time ?? [120, 30];
+  return (base + varying - Math.trunc((varying * curveIndexOf(spdValue, 5)) / 24)) / 60;
+}
+/** 맞는 쪽 종의 크리티컬 단계 (종 표 +63, 0~2) */
+export const critLevelOf = (speciesId: string) => FORMULA.critLevel[getSpecies(speciesId).id] ?? 0;
+/** 작전 행 번호: 0 특수 · 1 일반 · 2 지원 (overlay19 0x021338E8) */
+const TACTIC_ROW: Record<AttackMode, number> = { 특수: 0, 일반: 1, 지원: 2 };
+/** 작전과 경과 시간으로 쓸 수 있는 TP 예산 (최대 TP × 표 %, 15초마다 단계 +1, 0x21191A4) */
+export function tpBudget(mode: AttackMode, maxTp: number, tp: number, t: number) {
+  const phase = Math.min(7, Math.floor(t / 15));
+  return Math.min(tp, Math.trunc((maxTp * FORMULA.tpBudget[TACTIC_ROW[mode]][phase]) / 100));
+}
+/** 216 난수 하나로 행동을 고른다 (0x2119224~): 필살기 → 일반 공격 → 지원 기술 → 그 밖은 이동 */
+export function chooseAction(mode: AttackMode, roll: number, specialScale = 1): 'special' | 'basic' | 'support' | 'move' {
+  const [, b, c, , e] = FORMULA.tactics[TACTIC_ROW[mode]];
+  // 형규가 정한 성격 효과: 솔직 1.2배·쿨 1.6배로 필살기 구간을 넓힌다(일반 공격 구간 안에서)
+  if (roll < Math.min(c, b * specialScale)) return 'special';
+  if (roll < c) return 'basic';
+  if (roll < e) return 'support';
+  return 'move';
+}
+export function originalDamage(attack: number, guard: number, power: number, rng: Rng, opts: { attackerTerrain?: number; targetTerrain?: number; critUp?: boolean; critLevel?: number } = {}) {
   let dmg = Math.trunc(((Math.trunc((attack * 5) / 2) - guard) * power) / 100);
   if (dmg <= 0) return { damage: 0, critical: false };
   if ((opts.attackerTerrain ?? 0) > 0) dmg = Math.trunc((dmg * 120) / 100);
   if ((opts.targetTerrain ?? 0) < 0) dmg = Math.trunc((dmg * 120) / 100);
-  const critical = Math.floor(rng() * FORMULA.critRoll) < FORMULA.critTable[opts.critUp ? 1 : 0];
+  const critical = Math.floor(rng() * FORMULA.critRoll) < FORMULA.critTable[Math.min(3, (opts.critLevel ?? 0) + (opts.critUp ? 1 : 0))];
   if (critical) dmg = Math.trunc((dmg * 15) / 10);
   const roll = Math.floor(rng() * 216) % 100;
   dmg += Math.trunc((dmg * roll) / 1000);
@@ -286,27 +324,30 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     if ((coward && d > 70) || (!courage && u.retreat > 0 && u.cd > 0 && d < 110)) {
       move(u,near.x,near.y,speed,true);continue;
     }
-    const supportReady=u.cd<=0&&supportSkills(u.speciesId,u.personality).some(sk=>sk.id<28&&sk.tpCost<=u.tp)&&(u.mode==='지원'||rng()<(u.mode==='일반'?.25:.1));
-    if(!(coward&&d<=70)&&supportReady&&useSupport(s,u,events))continue;
-    if(u.mode==='지원'&&!(coward&&d<=70)&&u.cd>0&&battleSkills(u.speciesId).some(skill=>skill.tpCost<=u.tp)){
-      if(d<110)move(u,near.x,near.y,speed,true);
-      else if(d>145)move(u,near.x,near.y,speed);
+    // 원본 AI (overlay19 0x2118F84·0x211919C): 기다림이 끝나면 216 난수와 작전 표로 행동을 정한다.
+    if (u.cd <= 0 && !u.intent) {
+      const action = chooseAction(u.mode, Math.floor(rng() * 216), u.personality === '쿨' ? 1.6 : u.personality === '솔직' ? 1.2 : 1);
+      const wait = thinkSeconds(u.stats.int, buffMultiplier(u, 'spd', s.t) > 1) * (['대담','제멋대로'].includes(u.personality) ? 0.9 : 1);
+      if (action === 'special') {
+        // 예산 안에서 고를 기술이 없으면 원본처럼 일반 공격으로 넘어간다 (cost < 예산)
+        const budget = tpBudget(u.mode, u.maxTp, u.tp, s.t);
+        const skill = budget > 0 ? pickBattleSkill(u.speciesId, rng, budget - 1, u.personality) : null;
+        u.intent = skill ? { kind: 'special', skill } : { kind: 'basic' };
+      } else if (action === 'basic') u.intent = { kind: 'basic' };
+      else if (action === 'support' && !(coward && d <= 70) && useSupport(s, u, events)) { u.cd = actionSeconds(null, u.stats.spd) + wait; continue; }
+      else u.cd = wait;
+    }
+    if (!u.intent) {
+      // 기다리는 동안은 움직인다. 지원 작전은 거리를 둔다.
+      if (u.mode === '지원') { if (d < 110) move(u, near.x, near.y, speed, true); else if (d > 145) move(u, near.x, near.y, speed); }
+      else if (d > 42) move(u, near.x, near.y, speed);
       continue;
     }
-
-    // 빈도·위력·사거리는 웹판 임시 공식. 기술별 동작/소비TP/이름은 원본 표 값.
-    const base = Math.min(0.6, 0.1 + u.stats.int * buffMultiplier(u,'int',s.t) / 600);
-    const pSpecial = base * (u.mode === '특수' ? 3 : u.mode === '일반' ? 0.4 : 0.3) * (u.personality === '쿨' ? 1.6 : u.personality === '솔직' ? 1.2 : 1);
-    const wantsSpecial = u.cd <= 0 && d <= 150 && battleSkills(u.speciesId).some(skill => skill.tpCost <= u.tp) && rng() < pSpecial;
-    if (!wantsSpecial && d > 42) {
-      // 지원도 특수 공격을 선택하지 못하면 기본 공격 사거리로 직접 접근한다.
-      move(u, near.x, near.y, speed);
-      continue;
-    }
-    if (u.cd > 0) continue;
-
+    const wantsSpecial = u.intent.kind === 'special';
+    if (d > (wantsSpecial ? 150 : 42)) { move(u, near.x, near.y, speed); continue; }
     const special = wantsSpecial;
-    const skill = special ? pickBattleSkill(u.speciesId, rng, u.tp, u.personality) : null;
+    const skill = u.intent.kind === 'special' && u.intent.skill.tpCost <= u.tp ? u.intent.skill : null;
+    u.intent = undefined;
     // 원본 피해 계산: 공격 곡선 값(공격업이면 한 칸 위), 방어 또는 속성 내성(방어업·내성업이면 한 칸 위), 기술 위력
     const element = skill ? battleElement(skill.record) : undefined;
     const attack = u.stats.atk + (buffMultiplier(u, 'atk', s.t) > 1 ? curveStep(u.stats.atk, 2) : 0);
@@ -315,7 +356,7 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     const guardUp = resistKey ? (near.buffs?.[element!] ?? 0) > s.t : buffMultiplier(near, 'def', s.t) > 1;
     const guard = guardBase + (guardUp ? curveStep(guardBase, resistKey ? 'resist' : 3) : 0);
     const hit = originalDamage(attack, guard, attackPower(skill ? skill.record : basicRecordOf(u.speciesId)), rng, {
-      attackerTerrain: terrainOf(u.speciesId, s.field ?? 0), targetTerrain: terrainOf(near.speciesId, s.field ?? 0), critUp: buffMultiplier(u, 'int', s.t) > 1,
+      attackerTerrain: terrainOf(u.speciesId, s.field ?? 0), targetTerrain: terrainOf(near.speciesId, s.field ?? 0), critUp: buffMultiplier(u, 'int', s.t) > 1, critLevel: critLevelOf(near.speciesId),
     });
     // 형규가 정한 성격 효과는 원본 피해 위에 그대로 곱한다: 열혈 ×1.2, 제멋대로 ×1.1
     const dmg = hit.damage * (u.personality === '열혈' ? 1.2 : 1) * (u.personality === '제멋대로' ? 1.1 : 1);
@@ -323,7 +364,8 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     near.hp = Math.max(0, near.hp - damage);
     near.wasHit = true;
     if (skill) u.tp -= skill.tpCost;
-    u.cd = (1.3 - Math.min(0.6, u.stats.spd * buffMultiplier(u,'spd',s.t) / 400)) * (['대담','제멋대로'].includes(u.personality) ? 0.9 : 1);
+    // 행동 시간(민첩) + 다음 행동까지 기다림(지능). 형규가 정한 대담·제멋대로 0.9배 유지
+    u.cd = (actionSeconds(skill ? skill.record : basicRecordOf(u.speciesId), u.stats.spd) + thinkSeconds(u.stats.int, buffMultiplier(u, 'spd', s.t) > 1)) * (['대담','제멋대로'].includes(u.personality) ? 0.9 : 1);
     if (u.personality === '성급한') u.retreat = 0.8;
     events.push({ type: 'hit', from: u.id, to: near.id, damage, special, ...(hit.critical ? { critical: true } : {}), ...(skill ? { skill } : {}) });
     if (near.hp <= 0) {
