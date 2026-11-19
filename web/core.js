@@ -2411,19 +2411,21 @@ var ChampCore = (function(exports) {
 		return `${RANK_NAMES[rank]} 테이머`;
 	}
 	/**
-	* 랭크별 필요 타이틀(뱃지) 수. 레드 = 3개만 영상으로 확인, 나머지는 임시(1·3·6·10·15·21·28).
-	* 원작 실행 코드에서 이 기준을 아직 찾지 못했다. 챔프는 챔피언십 우승, 마스터는 챔프 + 빅7 전부(임시).
+	* 랭크 업 조건 (원본 overlay9_8 0x211084C~0x21109F0, 랭크 표 arm9 0x020E2138 +0 필요 수·+4 등급).
+	* 타이틀 표 +0x10 등급(0~4)별로 딴 타이틀 수를 세어, 지금 랭크 줄의 등급에서 필요 수 이상이면 한 단계 오른다.
+	*  그린→블루 등급0 2개 · 블루→레드 등급0 4개 · 레드→화이트 등급1 3개 · 화이트→브론즈 등급1 6개
+	*  브론즈→실버 등급2 3개 · 실버→골드 등급2 7개 · 골드→플래티넘 등급3 3개
+	*  챔프 = 챔피언십 우승(랭크가 낮아도 바로 챔프), 마스터 = 챔프에서 타이틀 61개 전부.
+	* 원본은 배틀이 끝날 때 한 단계씩 오르지만 웹판은 조건을 채운 만큼 한 번에 계산한다.
 	*/
-	var RANK_BADGES = [
-		0,
-		0,
-		1,
-		3,
-		6,
-		10,
-		15,
-		21,
-		28
+	var RANK_UP = [
+		[0, 2],
+		[0, 4],
+		[1, 3],
+		[1, 6],
+		[2, 3],
+		[2, 7],
+		[3, 3]
 	];
 	/** 랭크 표 (원본 arm9 0x020E213C, 랭크마다 36바이트, 그린~마스터 10줄). 영상의 레드 96G·16칸과 일치.
 	*  +8 최대 사육 용량(G, 0x20E2144를 overlay18·19가 읽음) · +12 케이지 공간(0x20E2148, 케이지 편집 overlay15)
@@ -2528,10 +2530,18 @@ var ChampCore = (function(exports) {
 		};
 	}
 	function tamerRank(save) {
-		const won = TITLES.filter((t) => save.titles.includes(t.id)).length;
-		if (save.champion) return TITLES.filter((t) => t.grade === 4).every((t) => save.titles.includes(t.id)) ? 10 : 9;
+		const won = TITLES.filter((t) => save.titles.includes(t.id));
+		if (save.champion) return won.length === TITLES.length ? 10 : 9;
+		const byGrade = [
+			0,
+			0,
+			0,
+			0,
+			0
+		];
+		for (const t of won) byGrade[t.grade ?? 0] += 1;
 		let rank = 1;
-		while (rank < 8 && won >= RANK_BADGES[rank + 1]) rank += 1;
+		while (rank < 8 && byGrade[RANK_UP[rank - 1][0]] >= RANK_UP[rank - 1][1]) rank += 1;
 		return rank;
 	}
 	/** 타이틀 매치 엔트리 시간 (원작 텍스트 txt_list #634: 7:00~15:00) */
@@ -9849,8 +9859,8 @@ var ChampCore = (function(exports) {
 	exports.PROTEIN_SAFE = PROTEIN_SAFE;
 	exports.PROTEIN_TRAIN_INJURY = PROTEIN_TRAIN_INJURY;
 	exports.RANDOM_BATTLE_MAPS = RANDOM_BATTLE_MAPS;
-	exports.RANK_BADGES = RANK_BADGES;
 	exports.RANK_NAMES = RANK_NAMES;
+	exports.RANK_UP = RANK_UP;
 	exports.RARE_WEIGHT = RARE_WEIGHT;
 	exports.RESIST_KEYS = RESIST_KEYS;
 	exports.ROOKIE_CHANCE = ROOKIE_CHANCE;

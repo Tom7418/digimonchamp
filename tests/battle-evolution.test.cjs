@@ -21,9 +21,9 @@ test('옛 배틀3회 저장도 시작 시 평가해 진화시키고 다시 열�
 test('타이틀로 랭크가 풀리면 출전하지 않은 대기 개체도 결과 반영 직후 진화한다',()=>{
  const events=[],noop=()=>{},nodes={},ctx=vm.createContext({window:{},$:key=>nodes[key]??={},battleLog:noop,log:noop,toast:noop,render:noop,persist:noop,logEvent:e=>events.push(e)});
  vm.runInContext(fs.readFileSync('web/core.js','utf8'),ctx);
- vm.runInContext(`globalThis.C=ChampCore;globalThis.save=C.freshSave(0);save.titles=C.TITLES.slice(0,2).map(t=>t.id);
+ vm.runInContext(`globalThis.C=ChampCore;globalThis.save=C.freshSave(0);const g0=C.TITLES.filter(t=>t.grade===0);save.titles=g0.slice(0,3).map(t=>t.id);
  save.digimon=[C.newDigimon(1,'코로몬'),{...C.newDigimon(2,'아구몬'),battles:6}];
- globalThis.battle={done:false,state:{winner:0,reason:'hp',units:[{uid:1,team:0,alive:true}]},setup:{match:C.TITLES[2],prize:0,title:'타이틀'}};`,ctx);
+ globalThis.battle={done:false,state:{winner:0,reason:'hp',units:[{uid:1,team:0,alive:true}]},setup:{match:g0[3],prize:0,title:'타이틀'}};`,ctx);
  assert.equal(ctx.C.tamerRank(ctx.save),2);const time=ctx.save.clock;
  const src=fs.readFileSync('web/game.js','utf8'),a=src.indexOf('  function finishBattle()'),b=src.indexOf('  function drawArena(',a);
  vm.runInContext(src.slice(a,b),ctx);ctx.finishBattle();

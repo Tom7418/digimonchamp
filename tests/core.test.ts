@@ -13,7 +13,7 @@ import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture,
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
-import { migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
+import { RANK_UP, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
@@ -502,9 +502,9 @@ describe('evolution', () => {
     const freed = { ...full, digimon: full.digimon.filter(x=>x.uid!==4) }, r = evaluateEvolutions(freed, () => .5);
     expect(r.save.digimon.find(x=>x.uid===1)!.speciesId).toBe('스노우아구몬');expect(r.save.clock).toBe(full.clock);
     const agu = { ...newDigimon(1, '아구몬'), battles: 6 };
-    const locked = { ...freshSave(0), digimon: [agu], titles: TITLES.slice(0,2).map(t=>t.id) };
+    const locked = { ...freshSave(0), digimon: [agu], titles: rankUp(2) };
     expect(tamerRank(locked)).toBe(2);expect(evaluateEvolutions(locked).events).toHaveLength(0);
-    const promoted = { ...locked, titles: TITLES.slice(0,3).map(t=>t.id) }, ready = evaluateEvolutions(promoted);
+    const promoted = { ...locked, titles: rankUp(3) }, ready = evaluateEvolutions(promoted);
     expect(only(ready.save).speciesId).toBe('그레이몬');expect(ready.save.clock).toBe(locked.clock);
   });
   it('같은 사육 틱의 뒤쪽 개체가 로스트되어 용량이 비워져도 앞의 대기 개체가 즉시 진화한다', () => {
@@ -561,20 +561,29 @@ describe('battle', () => {
 
 /** 쉬운 순서로 n개의 타이틀을 딴 상태 */
 const won = (n: number) => TITLES.slice(0, n).map((t) => t.id);
+/** 그 랭크가 되는 최소 타이틀 묶음 (원본 랭크 업 조건 RANK_UP) */
+const rankUp = (rank: number) => {
+  const need = [0, 0, 0, 0, 0];
+  for (const [g, n] of RANK_UP.slice(0, rank - 1)) need[g] = Math.max(need[g], n);
+  return need.flatMap((n, g) => TITLES.filter((t) => t.grade === g).slice(0, n).map((t) => t.id));
+};
 
 describe('titles and hunting', () => {
   it('winning titles raises tamer rank', () => {
     let s = freshSave(0);
     expect(tamerRank(s)).toBe(1);
-    s = applyWin(s, TITLES[0]);
-    expect(tamerRank(s)).toBe(2);
-    expect(rankName(tamerRank(s))).toBe('블루 테이머');
-    expect(s.bits).toBe(500 + 5300); // 봄의 시작: 원본 상금 그대로
-    s = applyWin(s, TITLES[1]);
-    expect(tamerRank(s)).toBe(2); // 레드는 뱃지 3개부터 (영상 확인)
-    s = applyWin(s, TITLES[2]);
-    expect(rankName(tamerRank(s))).toBe('레드 테이머');
-    expect(tamerRank({ ...s, titles: won(28) })).toBe(8);
+    const g0 = TITLES.filter((t) => t.grade === 0);
+    s = applyWin(s, g0[0]);
+    expect(tamerRank(s)).toBe(1);
+    expect(s.bits).toBe(500 + g0[0].prize);
+    s = applyWin(s, g0[1]);
+    expect(rankName(tamerRank(s))).toBe('블루 테이머'); // 등급0 타이틀 2개 (원본 랭크 표)
+    s = applyWin(applyWin(s, g0[2]), g0[3]);
+    expect(rankName(tamerRank(s))).toBe('레드 테이머'); // 등급0 4개
+    expect(tamerRank({ ...s, titles: [...s.titles, ...TITLES.filter((t) => t.grade === 1).map((t) => t.id)] })).toBe(5); // 등급1 6개 이상이면 브론즈
+    expect(tamerRank({ ...s, titles: rankUp(8) })).toBe(8);
+    expect(tamerRank({ ...s, titles: TITLES.map((t) => t.id) })).toBe(8); // 챔피언십 없이는 플래티넘까지
+    expect(tamerRank({ ...s, titles: TITLES.map((t) => t.id), champion: true })).toBe(10);
     expect(rankName(tamerRank({ ...s, champion: true }))).toBe('챔프 테이머');
     expect(capacityOf(s)).toBe(96);
   });
@@ -602,7 +611,7 @@ describe('titles and hunting', () => {
     // 예전 임시 타이틀 기록을 옮긴 뒤 현재 승급 기준으로 재계산한다
     const old = upgradeSave({ ...freshSave(0), titles: ['t1', 't2', 't3', 't9'] });
     expect(old.titles).toEqual([...won(3), 'm52']);
-    expect(rankName(tamerRank({ ...old, titles: won(3) }))).toBe('레드 테이머');
+    expect(rankName(tamerRank({ ...old, titles: rankUp(3) }))).toBe('레드 테이머');
   });
   it('a new game starts from a digi-egg that hatches into 깜몬', () => {
     const s = freshEggSave(0);
@@ -657,8 +666,10 @@ describe('hunting', () => {
     const ropes = (s: typeof base) => shopItems(s).filter((i) => i.id.startsWith('rope:')).map((i) => i.id.slice(5));
     // 원본 해금 조건: 디지β는 처음부터, 디지γ는 '작은 도전자'(25번) 타이틀, 하드α는 블루, 하드β는 '벡터 파티션'(3번) 타이틀
     expect(ropes(base)).toEqual(['digi2']);
-    expect(ropes({ ...base, titles: ['m25'] })).toEqual(['digi2', 'digi3', 'hard1']);
-    expect(ropes({ ...base, titles: ['m25', 'm3'] })).toEqual(['digi2', 'digi3', 'hard1', 'hard2']);
+    expect(ropes({ ...base, titles: ['m25'] })).toEqual(['digi2', 'digi3']);
+    const blue = rankUp(2).filter((id) => id !== 'm25').slice(0, 1);
+    expect(ropes({ ...base, titles: ['m25', ...blue] })).toEqual(['digi2', 'digi3', 'hard1']);
+    expect(ropes({ ...base, titles: ['m25', ...blue, 'm3'] })).toEqual(['digi2', 'digi3', 'hard1', 'hard2']);
     expect(ROPES.map((r) => r.price)).toEqual([1000, 2500, 5500, 9000, 14000, 18000, 20000, 25000, 32000, 45000, 60000, 90000]);
     expect(ROPES.map((r) => r.durability)).toEqual([10, 15, 20, 32, 44, 56, 60, 80, 100, 150, 150, 250]);
     // 사면 가장 좋은 로프를 든다
@@ -793,7 +804,7 @@ describe('사냥 장비', () => {
     expect(gearDamage(70, 5)).toBe(3);
     expect(gearDamage(70, 2)).toBe(1);
     expect(gearDamage(10, 5)).toBe(0);
-    expect(shopItems({ ...freshSave(0), bits: 99999, titles: won(2) }).some((i) => i.id === 'gear:bomb1')).toBe(true);
+    expect(shopItems({ ...freshSave(0), bits: 99999, titles: rankUp(2) }).some((i) => i.id === 'gear:bomb1')).toBe(true);
   });
   it('장비는 쓸 때마다 줄고, 상점에서 묶음으로 산다. 예전 저장에는 빈 장비 칸이 생긴다', () => {
     const s = freshSave(0);
@@ -807,8 +818,8 @@ describe('사냥 장비', () => {
     // 원본 해금: 핸드 건β는 실버가 아니라 레드(랭크 값 2), 샷 건α는 '자연의 신'(17번) 타이틀
     const ids = (x: SaveData) => shopItems({ ...x, bits: 99999 }).map((i) => i.id);
     expect(ids(s)).not.toContain('gear:hand2');
-    expect(ids({ ...s, titles: won(3) })).toContain('gear:hand2');
-    expect(ids({ ...s, titles: won(3) })).not.toContain('gear:shotgun1');
+    expect(ids({ ...s, titles: rankUp(3) })).toContain('gear:hand2');
+    expect(ids({ ...s, titles: rankUp(3) })).not.toContain('gear:shotgun1');
     expect(ids({ ...s, titles: ['m17'] })).toContain('gear:shotgun1');
     const old = { ...s } as SaveData;
     delete old.gear;
@@ -959,10 +970,10 @@ describe('illness', () => {
 describe('championship', () => {
   // y년차 가을 d일 09:00
   const at = (y: number, d: number) => (((y - 1) * 32 + 16 + (d - 1)) * 1440) + 9 * 60;
-  const red = (clock: number): SaveData => ({ ...freshSave(0), clock, titles: won(3) });
+  const red = (clock: number): SaveData => ({ ...freshSave(0), clock, titles: rankUp(3) });
 
   it('prelims need 레드 테이머 and run one match a day on autumn days 1-5', () => {
-    expect(todaysMatches({ ...red(at(1, 1)), titles: won(1) }).map((m) => m.id)).not.toContain('prelim');
+    expect(todaysMatches({ ...red(at(1, 1)), titles: rankUp(2) }).map((m) => m.id)).not.toContain('prelim');
     let s = red(at(1, 1));
     const m = todaysMatches(s).find((x) => x.id === 'prelim')!;
     expect(m.name).toBe('챔피언십 예선 1전');
@@ -1033,7 +1044,7 @@ describe('day flow', () => {
     expect(matchEntryNotice(freshSave(0))).toBeNull();
   });
   it('championship notices respect rank, played prelims and the final round', () => {
-    const s = { ...freshSave(0), clock: 16 * 1440 + 10 * 60, titles: won(3) };
+    const s = { ...freshSave(0), clock: 16 * 1440 + 10 * 60, titles: rankUp(3) };
     expect(matchEntryNotice({ ...s, titles: [] })).toBeNull();
     expect(matchEntryNotice(s)?.names).toContain('챔피언십 예선 1전');
     // 같은 날 타이틀 매치(원작 61개)도 열리므로 예선만 골라 치른다
@@ -1499,12 +1510,13 @@ describe('training effect preview',()=>{
 });
 
 describe('legacy title migration follows current rank rules',()=>{
-  it('임시 타이틀6개 저장은 승리 기록을 더하지 않고 새 기준으로 랭크·용량·진화 제한을 계산한다',()=>{
+  it('임시 타이틀6개 저장은 승리 기록을 더하지 않고 원본 랭크 업 기준으로 랭크·용량·진화 제한을 계산한다',()=>{
     const before={...freshSave(0),titles:['t1','t2','t3','t4','t5','t6']};
     const copy=JSON.stringify(before),after=upgradeSave(before),rank=tamerRank(after);
     expect(after.titles).toEqual(['m8','m4','m55','m25','m30','m38']);
-    expect(rankName(rank)).toBe('화이트 테이머');expect(rank).toBe(4);
-    expect(capacityOf(after)).toBe(128);expect(cageSpaceOf(after)).toBe(20);expect(maxStageForRank(rank)).toBe(4);
+    // 여섯 개 모두 등급0 타이틀 → 원본 조건(등급0 4개)으로 레드
+    expect(rankName(rank)).toBe('레드 테이머');expect(rank).toBe(3);
+    expect(capacityOf(after)).toBe(96);expect(cageSpaceOf(after)).toBe(18);expect(maxStageForRank(rank)).toBe(4);
     expect(after.digimon.length).toBe(before.digimon.length);expect(JSON.stringify(before)).toBe(copy);
   });
   it('옛/새 ID 혼합·중복 기록은 한 번만 집계하고 여러 번 불러와도 승리가 추가되지 않는다',()=>{
@@ -1517,7 +1529,7 @@ describe('legacy title migration follows current rank rules',()=>{
   it('새 저장/이미 변환된 ID는 유지하고 챔피언십 우승도 현재 규칙으로 계산한다',()=>{
     expect(migrateTitleIds([])).toEqual([]);
     expect(migrateTitleIds(['future-title','constructor'])).toEqual(['future-title','constructor']);
-    const now=upgradeSave({...freshSave(0),titles:['m8','m4','m55']});expect(now.titles).toEqual(['m8','m4','m55']);expect(tamerRank(now)).toBe(3);
+    const now=upgradeSave({...freshSave(0),titles:['m8','m4','m55']});expect(now.titles).toEqual(['m8','m4','m55']);expect(tamerRank(now)).toBe(2);
     const champion=upgradeSave({...freshSave(0),titles:['t1'],champion:true});expect(champion.champion).toBe(true);expect(tamerRank(champion)).toBe(9);
   });
 });
