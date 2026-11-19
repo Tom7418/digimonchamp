@@ -11,6 +11,83 @@
     "name": "디지에그"
   },
   {
+    "id": "e001_digitama",
+    "width": 32,
+    "height": 32,
+    "frames": 13,
+    "baseline": 29,
+    "cx": 16.0,
+    "body": 15,
+    "source": "digimon/e001_digitama_main",
+    "name": "디지에그1"
+  },
+  {
+    "id": "e002_digitama",
+    "width": 32,
+    "height": 32,
+    "frames": 13,
+    "baseline": 29,
+    "cx": 16.0,
+    "body": 15,
+    "source": "digimon/e002_digitama_main",
+    "name": "디지에그2"
+  },
+  {
+    "id": "e003_digitama",
+    "width": 32,
+    "height": 32,
+    "frames": 13,
+    "baseline": 29,
+    "cx": 16.0,
+    "body": 15,
+    "source": "digimon/e003_digitama_main",
+    "name": "디지에그3"
+  },
+  {
+    "id": "e004_digitama",
+    "width": 32,
+    "height": 32,
+    "frames": 13,
+    "baseline": 29,
+    "cx": 16.0,
+    "body": 15,
+    "source": "digimon/e004_digitama_main",
+    "name": "디지에그4"
+  },
+  {
+    "id": "e005_digitama",
+    "width": 32,
+    "height": 32,
+    "frames": 13,
+    "baseline": 29,
+    "cx": 16.0,
+    "body": 15,
+    "source": "digimon/e005_digitama_main",
+    "name": "디지에그5"
+  },
+  {
+    "id": "e006_digitama",
+    "width": 32,
+    "height": 32,
+    "frames": 13,
+    "baseline": 29,
+    "cx": 16.0,
+    "body": 15,
+    "source": "digimon/e006_digitama_main",
+    "name": "디지에그6"
+  },
+  {
+    "id": "e007_digitama",
+    "width": 32,
+    "height": 32,
+    "frames": 13,
+    "baseline": 29,
+    "cx": 16.0,
+    "body": 15,
+    "source": "digimon/e007_digitama_main",
+    "name": "디지에그7"
+  },
+  {
     "id": "m001_zurumon",
     "width": 33,
     "height": 29,

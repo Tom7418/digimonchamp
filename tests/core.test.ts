@@ -9,7 +9,7 @@ import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
-import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
+import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -807,10 +807,10 @@ describe('사냥 장비', () => {
 });
 
 describe('illness', () => {
-  it('병을 이틀 방치하면 로스트되고, 배틀 10회 이상이면 디지에그로 다시 태어난다', () => {
+  it('병을 방치하면 20시간 뒤 빈사, 24시간 더 지나면 로스트되고, 배틀 10회 이상이면 디지에그로 다시 태어난다', () => {
     const base = freshSave(0);
     const mon = (patch: Partial<Digimon>) => ({ ...newDigimon(1, '깜몬'), hunger: 100, sick: true, ...patch });
-    const run = (first: Digimon, alone = false) => advance({ ...base, digimon: alone ? [first] : [first, newDigimon(2, '깜몬')], nextUid: 3 }, 2880, seeded(1));
+    const run = (first: Digimon, alone = false) => advance({ ...base, digimon: alone ? [first] : [first, newDigimon(2, '깜몬')], nextUid: 3 }, 2650, seeded(1));
     const lost = run(mon({}));
     expect(lost.save.digimon.some((x) => x.uid === 1)).toBe(false);
     expect(lost.events.some((e) => e.type === 'lost' && e.reason === '빈사 방치')).toBe(true);
@@ -818,15 +818,15 @@ describe('illness', () => {
     const d = reborn.save.digimon.find((x) => x.uid === 1)!;
     expect(d.isEgg).toBe(true);
     expect(d.sick).toBe(false);
-    expect(d.eggs).toBe(1); // 병으로 죽은 것은 디지에그화 횟수로 세지 않는다
+    expect(d.eggs).toBe(2); // 원본 0x2119B2C: 빈사 방치로 디지에그가 되어도 디지에그화 횟수가 오른다
     expect(reborn.events.some((e) => e.type === 'egg' && e.reason === 'sick')).toBe(true);
     // 마지막 한 마리는 디지에그로 남는다
     expect(run(mon({}), true).save.digimon[0].isEgg).toBe(true);
   });
-  it('병·부상·굶주림을 하루 방치하면 빈사, 원인을 고치면 회복 (help #137·#140~142)', () => {
+  it('병·부상·굶주림을 20시간 방치하면 빈사, 원인을 고치면 회복 (help #137·#140~142)', () => {
     const base = { ...freshSave(0), nextUid: 3 };
     const two = (patch: Partial<Digimon>) => ({ ...base, digimon: [{ ...newDigimon(1, '깜몬'), hunger: 100, ...patch }, newDigimon(2, '깜몬')] });
-    let r = advance(two({ sick: true }), 1440, seeded(1));
+    let r = advance(two({ sick: true }), 1200, seeded(1));
     const hurt = r.save.digimon.find((x) => x.uid === 1)!;
     expect(hurt.dying).toBe(true);
     expect(r.events.some((e) => e.type === 'dying' && e.cause === 'sick')).toBe(true);
@@ -838,8 +838,11 @@ describe('illness', () => {
     expect(r.save.digimon.find((x) => x.uid === 1)!.dying).toBe(false);
     expect(r.events.some((e) => e.type === 'revived')).toBe(true);
     // 배고픔 0이 깨어 있는 시간으로 하루 이어지면 빈사
-    const starving = tickFarm(two({ hunger: 0, starvingMinutes: 1439 }), seeded(1));
+    const starving = tickFarm(two({ hunger: 0, starvingMinutes: 1199 }), seeded(1));
     expect(starving.events.some((e) => e.type === 'dying' && e.cause === 'hunger')).toBe(true);
+  });
+  it('디지에그 그림은 디지에그화 횟수로 고른다 (원본 0x2119B2C)', () => {
+    expect([0, 1, 2, 6, 7, 8, 100].map(eggSpriteIndex)).toEqual([0, 1, 2, 6, 7, 7, 7]);
   });
   it('상한 먹이가 놓인 케이지에 오래 있으면 병 (help #139·#141)', () => {
     const s: SaveData = { ...freshSave(0), digimon: [{ ...newDigimon(1, '깜몬'), hunger: 100, cageInstance: 'c1' }] };

@@ -1,6 +1,13 @@
 {
   "_note": "원본 파일명(digimon/<id>_main.*) → 진화표(src/data/evolutions.txt) 한글 이름. 이름만으로 확신하기 어려운 몇 종은 진화 경로로 맞췄다: 연체몬=gesomon(→드라고몬), 워매몬=geremon(→가비지몬), 옐로우워매몬=numemon(→베이더몬), 모털몬=mojyamon(→맘모스몬), 뿌띠몬=delumon, 이글몬=crossmon, 파워드라몬=mugendramon. 틀린 것이 있으면 이 파일만 고치고 extract_sprites.py를 다시 실행한다.",
   "e000_digitama": "디지에그",
+  "e001_digitama": "디지에그1",
+  "e002_digitama": "디지에그2",
+  "e003_digitama": "디지에그3",
+  "e004_digitama": "디지에그4",
+  "e005_digitama": "디지에그5",
+  "e006_digitama": "디지에그6",
+  "e007_digitama": "디지에그7",
   "m001_zurumon": "즈루몬",
   "m002_choromon": "뽈뽈몬",
   "m003_nyokimon": "새싹몬",

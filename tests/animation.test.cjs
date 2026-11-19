@@ -7,8 +7,8 @@ const ctx=vm.createContext({window:{}});
 for(const file of ['assets/sprites.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../web',file),'utf8'),ctx);
 const data=ctx.window.DIGIMON_ANIMATIONS;
 const player=ctx.window.createAnimationPlayer(data);
-test('217종의 모든 연결 프레임은 실제 스프라이트 범위 안이고 유지 시간이 양수다',()=>{
-  assert.equal(Object.keys(data.sprites).length,217);
+test('224개(216종+디지에그 8종) 모든 연결 프레임은 실제 스프라이트 범위 안이고 유지 시간이 양수다',()=>{
+  assert.equal(Object.keys(data.sprites).length,224);
   for(const sp of ctx.window.SPRITES)for(const seq of data.banks[data.sprites[sp.id]]){
     assert.ok(seq.frames.length>0);
     for(const [cell,ticks] of seq.frames){assert.ok(cell>=0&&cell<sp.frames);assert.ok(ticks>0);}
@@ -61,7 +61,7 @@ test('216종의 필수 동작은 모두 존재하고 디지에그는 별도 구�
  const required=['idle','walk','eat','hurt','hurtAlt','ko','boundIdle','boundRun'];
  for(const sp of ctx.window.SPRITES){
   const bank=data.banks[data.sprites[sp.id]];
-  if(sp.id==='e000_digitama'){assert.equal(bank.length,2);continue;}
+  if(sp.id.endsWith('_digitama')){assert.equal(bank.length,2);continue;}
   assert.equal(bank.length,40,sp.id);
   for(const state of required)assert.ok(bank[data.states[state]]?.frames.length,sp.id+':'+state);
  }

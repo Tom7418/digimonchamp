@@ -16,7 +16,7 @@ test('216종의 진화39 셀은 실제 원본의 밝은 실루엣이고 투명 �
  const dataContext=vm.createContext({window:{}});vm.runInContext(fs.readFileSync('web/assets/animations.js','utf8'),dataContext);
  const data=dataContext.window.DIGIMON_ANIMATIONS;let count=0;
  for(const sp of sprites){
-  if(sp.id==='e000_digitama')continue;
+  if(sp.id.endsWith('_digitama'))continue;
   const cell=data.banks[data.sprites[sp.id]][39].frames[0][0],image=png('web/assets/'+sp.id+'.png');let visible=0,empty=0;
   for(let y=0;y<sp.height;y++)for(let x=0;x<sp.width;x++){
    const offset=(y*image.naturalWidth+cell*sp.width+x)*4,pixel=image.rgba.subarray(offset,offset+4);
@@ -42,8 +42,8 @@ function setup(){
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
 function world(a,pose,x,y){return {x:Math.round(pose.x)+(pose.flip?-1:1)*(x-(a.cx??a.width/2))*pose.scale,y:Math.round(pose.y)+(y-(a.baseline??a.height))*pose.scale};}
 
-test('217종의 실제 첫 프레임 픽셀은 크기·반전·배율과 관계없이 잡히고 위쪽 공기는 잡히지 않는다',()=>{
- const s=setup();assert.equal(s.sprites.length,217);
+test('224개(216종+디지에그 8종)의 실제 첫 프레임 픽셀은 크기·반전·배율과 관계없이 잡히고 위쪽 공기는 잡히지 않는다',()=>{
+ const s=setup();assert.equal(s.sprites.length,224);
  for(const meta of s.sprites){const a=s.lookup(meta.id),g=s.spriteFrameGeometry(a,0);if(g.empty)continue;
   const i=g.alpha.findIndex(x=>x),px=i%a.width+0.5,py=Math.floor(i/a.width)+0.5;
   for(const scale of [1.6,2])for(const flip of [false,true]){

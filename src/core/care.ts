@@ -208,13 +208,17 @@ export const TRAINING_MINUTES = 15;
 /** 병·부상을 방치해 로스트되기까지의 게임 분 (임시: 이틀) */
 export const NEGLECT_MINUTES = 2880;
 /**
- * 빈사 (원작 글: help #124 HP 0이면 빈사·못 움직임, #137 굶주림 지속, #140 부상 방치, #141 병 방치,
- * #142 빈사 방치 → 로스트(조건을 채웠으면 디지에그), mail #99 HP·병·공복을 고치지 않으면 빈사).
- * 시간은 임시: 병·부상 하루 방치 → 빈사, 굶주림(배고픔 0) 하루 → 빈사, 빈사 하루 더 → 로스트.
- * 병·부상만 따지면 예전 '이틀 방치 로스트'와 총 시간이 같다.
+ * 빈사 (원작 글: help #124·#137·#140~142, mail #97~99). 시간은 원본 사육 overlay18에서 확인.
+ *  - 0x2118188~0x2118214: 병 또는 부상인 동안 +0x180, 배고픈 동안(잠든 때 제외) +0x184가 게임 분마다 는다.
+ *  - 0x211B108: 둘 중 하나가 20×60분(20시간) 이상이거나 HP가 최대의 1/10 이하면 빈사(+0x13c=1).
+ *  - 0x211F2A0: 빈사 시간(+0x188)이 12시간을 넘으면 상태가 한 번 바뀌고, 24시간을 넘으면 로스트/디지에그 처리.
+ *  - 0x2119A50: 약·상처약으로 고치면 +0x180이 0, 먹이를 먹으면 +0x184가 0 → 세 조건이 모두 풀리면 빈사 해제.
+ * 이 게임은 사육 중 HP가 줄지 않아 'HP 1/10 이하' 조건은 아직 없다.
  */
-export const DYING_AFTER_MINUTES = 1440;
+export const DYING_AFTER_MINUTES = 1200;
 export const DYING_LOST_MINUTES = 1440;
+/** 원본 0x2119B2C: 디지에그 그림 번호 = 디지에그화 횟수(최대 7). 0은 처음 받은 흰 알 e000 */
+export const eggSpriteIndex = (eggs: number) => Math.max(0, Math.min(7, Math.floor(eggs || 0)));
 /**
  * 계절 (원작 도움말 help #136: 여름은 트레이닝 효과가 높고, 겨울은 부상 확률이 오른다).
  * 트레이닝 부상 (help #140: 배틀이나 트레이닝을 할 때 부상당할 수 있다).
@@ -248,7 +252,10 @@ function makeSick(d: Digimon, events: FarmEvent[], stress = STRESS.sick) {
   events.push({ type: 'sick', uid: d.uid, name: getSpecies(d.speciesId).name });
 }
 
-/** countEgg=false: 병·부상 방치로 죽어 알로 돌아간 경우. 디지에그화 횟수(진화 조건)는 늘지 않는다 */
+/**
+ * 디지에그로 되돌린다. 원본 사육 overlay18 0x2119B2C: 완전체·궁극체이거나 배틀 10회 이상이면 디지에그,
+ * 아니면 로스트. 수명이든 빈사 방치든 같은 함수를 지나며 디지에그화 횟수(+0x3c)를 1 올린다(최대 100).
+ */
 function toEgg(d: Digimon, countEgg = true): Digimon {
   return {
     ...d,
@@ -369,7 +376,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
       if (d.dyingMinutes >= DYING_LOST_MINUTES) {
         if (endOfLife(d) === 'egg' || ctx.isLast) {
           events.push({ type: 'egg', uid: d.uid, from: sp.id, reason: 'sick' });
-          return toEgg({ ...d, dying: false, dyingMinutes: 0 }, false);
+          return toEgg({ ...d, dying: false, dyingMinutes: 0 });
         }
         events.push({ type: 'lost', uid: d.uid, name: sp.name, reason: '빈사 방치' });
         return null;
@@ -621,7 +628,7 @@ export function treat(save: SaveData, uid: number, rng: Rng = defaultRng): Actio
   if (save.salve <= 0) return fail(save, '상처약이 없어요. 상점에서 사세요.');
   const used = { ...save, salve: save.salve - 1 };
   if (rng() >= TREAT_CHANCE[getSpecies(d.speciesId).stage]) return { ok: true, message: '상처약을 발랐지만 아직 낫지 않았다…', save: used };
-  return { ok: true, message: '상처가 나았다!', save: update(used, uid, (x) => ({ ...x, injured: false })) };
+  return { ok: true, message: '상처가 나았다!', save: update(used, uid, (x) => ({ ...x, injured: false, sickMinutes: 0 })) };
 }
 
 /** 예전 '치료' 버튼 호환: 병이면 약, 다쳤으면 상처약 */

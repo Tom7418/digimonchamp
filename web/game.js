@@ -140,6 +140,8 @@
 
   // ---------- 상태 도우미 ----------
   const nameOf = (d) => (d.isEgg ? '디지에그' : C.getSpecies(d.speciesId).name);
+  // 디지에그 그림: 원본처럼 디지에그화 횟수에 따라 e000(처음 흰 알)~e007
+  const eggName = (d) => { const i = C.eggSpriteIndex(d.eggs); return i ? '디지에그' + i : '디지에그'; };
   const digi = (uid) => save.digimon.find((d) => d.uid === uid);
   const current = () => digi(view.team[view.selected]?.uid) || save.digimon[0];
   function stamp() {
@@ -853,7 +855,7 @@
   }
   // 먹는 동안의 예약은 화면에서만 유지한다. 저장 후 재접속하면 바닥 먹이는 남고 다시 접근한다.
   const feeding = new Map();
-  const animationId = (d) => SPRITE_BY_NAME[d.isEgg ? '디지에그' : C.getSpecies(d.speciesId).name];
+  const animationId = (d) => SPRITE_BY_NAME[d.isEgg ? eggName(d) : C.getSpecies(d.speciesId).name];
   /** 부화 연출 중인 디지몬: uid → 지난 초 */
   const hatching = new Map();
   const HATCH = { id: 'e000_digitama', state: 'seq_1' };
@@ -1386,7 +1388,7 @@
   // 원본 그림이 아예 없는 종만 종족 색 원과 이름 첫 글자로 표시한다.
   // 그림은 있는데 아직 불러오는 중이면 아무것도 그리지 않는다 (부화·진화 직후 임시 원이 번쩍이지 않게).
   function body(context, speciesId, isEgg, x, y, scale, frame, flip) {
-    const name = isEgg ? '디지에그' : C.getSpecies(speciesId).name;
+    const name = isEgg ? (typeof isEgg === 'string' ? isEgg : '디지에그') : C.getSpecies(speciesId).name;
     if (sprite(context, SPRITE_BY_NAME[name], x, y, scale, frame, flip)) return;
     if (SPRITE_BY_NAME[name] && asset(SPRITE_BY_NAME[name])) return;
     const sp = C.getSpecies(speciesId);
@@ -1408,7 +1410,7 @@
 
   // 그림자(발밑 하이라이트) 가로 반지름: 서 있는 몸 폭에 맞춘다
   function spriteOf(speciesId, isEgg) {
-    return asset(SPRITE_BY_NAME[isEgg ? '디지에그' : C.getSpecies(speciesId).name]);
+    return asset(SPRITE_BY_NAME[isEgg ? (typeof isEgg === 'string' ? isEgg : '디지에그') : C.getSpecies(speciesId).name]);
   }
   function footprint(speciesId, isEgg, scale) {
     const a = spriteOf(speciesId, isEgg);
@@ -1480,10 +1482,11 @@
         const elapsed = hatching.get(d.uid) + hatchDt;
         hatching.set(d.uid, elapsed);
         const born = asset(SPRITE_BY_NAME[C.getSpecies(evolutionFrom||d.speciesId).name]);
+        const hatchId = SPRITE_BY_NAME[eggName(d)] || HATCH.id; // 깨어나는 알도 그 디지몬의 알 그림
         if (elapsed < animations.duration(HATCH.id, HATCH.state) || (born && !born.image.complete)) {
           const hatchFrame = animations.sample(HATCH.id, HATCH.state, elapsed);
           spriteFrames.set(p, { frame: hatchFrame, speciesId: d.speciesId, isEgg: true });
-          sprite(ctx, HATCH.id, p.x, p.y, 1.6, hatchFrame, false);
+          sprite(ctx, hatchId, p.x, p.y, 1.6, hatchFrame, false);
           continue;
         }
         hatching.delete(d.uid);
@@ -1496,7 +1499,7 @@
       }
       const frame = animations.pose(p, animationId(d), state, animDt);
       spriteFrames.set(p,{frame,speciesId:d.speciesId,isEgg:!!d.isEgg});
-      body(ctx, d.speciesId, d.isEgg, p.x, p.y, scale, frame, p.direction > 0); // 원본 도트는 왼쪽을 향하므로 오른쪽 이동에서만 반전
+      body(ctx, d.speciesId, d.isEgg && eggName(d), p.x, p.y, scale, frame, p.direction > 0); // 원본 도트는 왼쪽을 향하므로 오른쪽 이동에서만 반전
       // 머리 위 상태 말풍선 (배고픔·병·부상·똥·피로)
       const bub = bubbleOf(d);
       // 병·부상·스트레스·배고픔은 원작 말풍선 그림(common/e001_ikusei 30·31·34·36)
@@ -1600,7 +1603,7 @@
     portrait.ellipse(120, 119, rx, Math.max(5, rx * 0.28), 0, 0, 7);
     portrait.fill();
     const frame = animations.pose(portraitActor, animationId(d), C.isSleeping(d) ? 'seq_13' : 'idle', dt);
-    body(portrait, d.speciesId, d.isEgg, 120, 120, scale, frame, false);
+    body(portrait, d.speciesId, d.isEgg && eggName(d), 120, 120, scale, frame, false);
   }
 
 

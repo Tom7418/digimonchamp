@@ -34,9 +34,14 @@ def main():
     sprites = json.loads((PROJECT / 'web/assets/sprites.json').read_text(encoding='utf-8'))
     banks, ids = [], {}
     for sp in sprites:
-        sequences = decode(args.source_root / (sp['source'] + '.nanr'), sp['frames'])
+        nanr = args.source_root / (sp['source'] + '.nanr')
+        if sp['id'].endswith('_digitama') and sp['id'] != 'e000_digitama' and not nanr.exists():
+            # e001~e007 디지에그는 e000과 셀 배치(NCER)가 같다. 동작 파일이 없으면 e000 동작을 쓴다
+            ids[sp['id']] = ids['e000_digitama']
+            continue
+        sequences = decode(nanr, sp['frames'])
         # 역할은 실행 코드 추적 근거로 연결한다. 셀 번호는 각 종의 NANR에서 개별 추출.
-        if len(sequences) != (2 if sp['id']=='e000_digitama' else 40):
+        if len(sequences) != (2 if sp['id'].endswith('_digitama') else 40):
             raise ValueError('Unexpected species sequence layout: '+sp['id'])
         # 전체 시퀀스를 보존한다. 같은 번호를 모든 상황에 임의 배정하지 않는다.
         if sequences not in banks:
