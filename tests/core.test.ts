@@ -15,7 +15,7 @@ import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evol
 import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
 import { discardFloorFood, ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -655,12 +655,12 @@ describe('hunting', () => {
     const item = shopItems({ ...base, titles: ['m3'] }).find((i) => i.id === 'rope:hard2')!;
     expect(item.apply(base).rope).toBe('hard2');
   });
-  it('wild regenerates up to 80% unless fainted (overlay9_0 0x149C)', () => {
+  it('fainted wild recovers to 80% (overlay9_0 0x149C) after 5 idle seconds', () => {
     // 즈루몬 표준 HP 220: 초당 12 → 1칸 기준 초당 12/220
-    expect(wildRegen('즈루몬', 0.5, 1, 1)).toBeCloseTo(0.5 + 12 / 220);
+    expect(wildRegen('즈루몬', 0, 1, 1)).toBeCloseTo(12 / 220);
     expect(wildRegen('즈루몬', 0.5, 1, 100)).toBe(0.8);
     expect(wildRegen('즈루몬', 0.9, 1, 1)).toBe(0.9);
-    expect(wildRegen('즈루몬', 0, 1, 1)).toBe(0);
+    expect(faintWakeSeconds('즈루몬')).toBeCloseTo(5 + 220 * 0.8 / 12);
   });
   it('rope follows the original rope table (gauge, drain, distance zones)', () => {
     // 원본 0xC8DCC: α 6초 · β 12초 · γ 17초

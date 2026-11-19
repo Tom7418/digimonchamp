@@ -2349,18 +2349,22 @@ var ChampCore = (function(exports) {
 		return Math.max(1, Math.min(5, getSpecies(speciesId).stage));
 	}
 	/**
-	* 야생 체력 자연 회복 (overlay9_0 0x149C).
-	* 원본 야생 체력은 그 개체의 HP 능력치(+0x110 구조체 +0x50/+0x58)이고, 최대치의 80% 아래면
-	* 프레임마다 1/5 확률로 1씩(평균 초당 12) 회복해 80%에서 멈춘다. 기절(체력 0)하면 회복하지 않는다
-	* (0x1848: 기절 표시 후 테이머가 누를 때까지 그대로).
-	* 이 게임의 체력 칸은 비율이라, 원본 HP(종 표준 초기값)에 맞춰 칸 단위로 바꾼다.
+	* 기절한 야생 디지몬의 회복.
+	*  - 회복량: overlay9_0 0x149C. 프레임마다 1/5 확률로 HP +1(평균 초당 12), 최대치의 8/10에 닿으면 회복 상태를 끝낸다.
+	*    원본 야생 체력은 그 개체의 HP 능력치(+0x110 구조체 +0x50/+0x58)라, 칸 비율은 종 표준 초기 HP로 환산한다.
+	*  - 언제 회복하는가: 로프로 기절시킨 뒤 테이머가 5초 동안 아무것도 하지 않으면 회복을 시작한다(형규 지정).
+	*    80%까지 차면 깨어나 달아난다. 회복하는 동안에도 쓰러져 있으므로 누르면 포획된다.
 	*/
 	var WILD_REGEN_PER_SECOND = 12;
+	var FAINT_RECOVER_DELAY = 5;
+	var WILD_WAKE_RATIO = .8;
 	function wildRegen(speciesId, hp, max, dt) {
-		const cap = max * .8;
-		if (hp <= 0 || hp >= cap) return hp;
+		const cap = max * WILD_WAKE_RATIO;
+		if (hp >= cap) return hp;
 		return Math.min(cap, hp + max * 12 * dt / typicalStats(speciesId).hp);
 	}
+	/** 기절에서 깨어날 때까지 걸리는 초 (5초 대기 + 0에서 80%까지) */
+	var faintWakeSeconds = (speciesId) => 5 + typicalStats(speciesId).hp * WILD_WAKE_RATIO / 12;
 	/**
 	* 원본 로프 표 arm9.bin 0xC8DCC (40바이트 × 12, 디지α~알테마γ). overlay9_0에서 읽는 곳을 확인했다.
 	*  - +4 u8: 로프 게이지 초 (α 6 · β 12 · γ 17, ×60프레임). 0xA798에서 게이지 최대치로 쓴다.
@@ -9009,6 +9013,7 @@ var ChampCore = (function(exports) {
 	exports.EGG_MINUTES = EGG_MINUTES;
 	exports.ENTRY_CLOSE_HOUR = ENTRY_CLOSE_HOUR;
 	exports.ENTRY_OPEN_HOUR = ENTRY_OPEN_HOUR;
+	exports.FAINT_RECOVER_DELAY = FAINT_RECOVER_DELAY;
 	exports.FAMILIES = FAMILIES;
 	exports.FIELDS = FIELDS;
 	exports.FINAL = FINAL;
@@ -9077,6 +9082,7 @@ var ChampCore = (function(exports) {
 	exports.TREAT_CHANCE = TREAT_CHANCE;
 	exports.WILD_COUNT = WILD_COUNT;
 	exports.WILD_REGEN_PER_SECOND = WILD_REGEN_PER_SECOND;
+	exports.WILD_WAKE_RATIO = WILD_WAKE_RATIO;
 	exports.WINTER = WINTER;
 	exports.WINTER_INJURY = WINTER_INJURY;
 	exports.WIRE_COOLDOWN = WIRE_COOLDOWN;
@@ -9121,6 +9127,7 @@ var ChampCore = (function(exports) {
 	exports.evaluateEvolutions = evaluateEvolutions;
 	exports.evolvedStats = evolvedStats;
 	exports.explain = explain;
+	exports.faintWakeSeconds = faintWakeSeconds;
 	exports.feed = feed;
 	exports.feedFromTray = feedFromTray;
 	exports.feedRotten = feedRotten;

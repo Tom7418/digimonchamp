@@ -1869,7 +1869,22 @@
       w.movedX = 0; w.movedY = 0;
       const oldX = w.x, oldY = w.y;
       w.flash = Math.max(0, w.flash - dt);
-      if (w.ko) continue; // 기절: 테이머가 눌러서 포획할 때까지 그 자리에 쓰러져 있다
+      if (w.ko) {
+        // 기절: 쓰러져 있다. 테이머가 5초 동안 손대지 않으면 천천히 회복하고 80%가 되면 깨어나 달아난다
+        w.koTime = (w.koTime || 0) + dt;
+        if (w.koTime >= C.FAINT_RECOVER_DELAY) {
+          w.hp = C.wildRegen(w.id, w.hp, w.max, dt);
+          if (w.hp >= w.max * C.WILD_WAKE_RATIO - 1e-9) {
+            w.ko = false;
+            w.koTime = 0;
+            w.flee = 3;
+            w.vx = (w.x - AREA.x0 < AREA.x1 - w.x ? -1 : 1) * 95;
+            w.vy = (Math.random() - 0.5) * 40;
+            huntNote(`${C.getSpecies(w.id).name}이(가) 정신을 차리고 달아났다!`);
+          }
+        }
+        continue;
+      }
       if (w.bound > 0) {
         // 로프에 묶이면 로프 끝(테이머가 쥔 곳) 반대쪽으로 끌고 도망친다. 원작 로프 표대로 거리에 따라 게이지·체력이 준다
         const a = w.anchor || { x: w.x, y: w.y - ROPE_BODY_Y + 1 };
@@ -1910,7 +1925,6 @@
         }
         continue;
       }
-      w.hp = C.wildRegen(w.id, w.hp, w.max, dt); // 원본: 80% 아래면 저절로 회복
       if (w.poison > 0) {
         // 독: 일정 시간마다 HP 1, HP 1에서 멈춘다
         w.poison -= dt;
@@ -2045,12 +2059,13 @@
   // 체력이 0이 되면 그 자리에서 기절한다. 테이머가 누르면 포획
   function faint(w) {
     w.ko = true;
+    w.koTime = 0;
     w.bound = 0;
     w.hp = 0;
     w.stun = 0;
     w.vx = 0; w.vy = 0;
     if (hunt.pull?.w === w) hunt.pull = null;
-    huntNote(`${C.getSpecies(w.id).name}이(가) 기절했다! 눌러서 포획하세요`);
+    huntNote(`${C.getSpecies(w.id).name}이(가) 기절했다! 눌러서 포획하세요 (5초가 지나면 회복하기 시작해요)`);
   }
   function captureFainted(w) {
     const r = C.capture(save, w.id, Math.random, hunt.carried);
