@@ -32,3 +32,21 @@ for i in range(COUNT):
 out = REPO / 'src/data/shop.txt'
 out.write_text('\n'.join(lines) + '\n', encoding='utf-8', newline='\n')
 print(COUNT, '개 →', out)
+
+# ---- 케이지 (같은 아이템 표의 분류 3) → src/data/cage-shop.txt ----
+# 0xE0578부터 56바이트 레코드(분류, 0, 시설 종류 번호, 주소, 해금 종류, 해금 값, 처음 가진 수, 1, 최대, 이름 글, 설명 글, 사는 값, 레벨 업 값, 0).
+# 레벨 업 값(+0x30)과 랭크별 최대 레벨(표 0xE214C, 랭크마다 36바이트의 첫 칸)은 상점 overlay9_17 0x2110D90~0x2110EA0에서 확인:
+#   다음 레벨 n이 '최대 레벨 칸'보다 작아야 하고(같으면 '지금의 테이머 랭크로는 레벨 업 할 수 없습니다', n=3이면 더 못 올림),
+#   값은 n × 레벨 업 값, n=2면 그 절반을 뺀다(1.5배). 산 레벨은 세이브의 시설 종류별 칸(+0x70)에 저장(0x2066994).
+CAGE_TABLE, CAGE_FIRST, CAGE_LAST = 0xE0578, 83, 117
+cage_lines = ['# 원본 아이템 표의 케이지 (tools/extract_shop.py). 손으로 고치지 말 것',
+              '# 이름|시설 종류 번호|사는 값|레벨 업 값|해금 종류(0 처음, 1 랭크, 2 타이틀)|해금 값|처음 가진 수']
+for i in range(CAGE_FIRST, CAGE_LAST + 1):
+    r = struct.unpack_from('<14i', arm9, CAGE_TABLE + i*SIZE)
+    assert r[0] == 3, i
+    cage_lines.append('|'.join(map(str, [text[r[9]].strip(), r[2], r[11], r[12], r[4], r[5], r[6]])))
+cage_lines.append('# 랭크별 최대 레벨 칸(랭크 0~8, 표 0xE214C 36바이트마다 첫 칸): 다음 레벨이 이 값보다 작아야 레벨 업')
+cage_lines.append('#max|' + ','.join(str(struct.unpack_from('<i', arm9, 0xE214C + k*36)[0]) for k in range(9)))
+cage_out = REPO / 'src/data/cage-shop.txt'
+cage_out.write_text('\n'.join(cage_lines) + '\n', encoding='utf-8', newline='\n')
+print(CAGE_LAST - CAGE_FIRST + 1, '개 케이지 →', cage_out)

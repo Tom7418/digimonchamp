@@ -140,6 +140,8 @@ export interface SaveData {
   /** 사냥 장비(샷·고기) 수량. 키는 hunt.ts의 SHOTS·BAITS id */
   gear?: Record<string, number>;
   cages: string[];
+  /** 케이지 레벨(0~2, 시설 종류별). 원본 세이브 +0x70 칸. 옛 저장은 없음 = 모두 0 */
+  cageLevels?: Record<string, number>;
   digimon: Digimon[];
   titles: string[];
   /** 챔피언십 예선 통과 연도 (본선은 다음 해) */

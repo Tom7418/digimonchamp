@@ -1022,11 +1022,11 @@
   function trainingMenu(cageId=view.team[view.selected]?.cageId) {
     const cages=view.layout,chosen=cages.find(c=>c.id===cageId)||cages[0];
     if(!chosen)return toast('설치된 케이지가 없습니다.');
-    const cage=C.getCage(L.types[chosen.kind].core),date=C.dateOf(save.clock),learner=current(),preview=C.trainingPreview(cage,date.season,learner?.personality);
+    const cage=C.getCage(L.types[chosen.kind].core),date=C.dateOf(save.clock),learner=current(),level=C.cageLevelOf(save,cage.id),preview=C.trainingPreview(cage,date.season,learner?.personality,C.CAGE_LEVEL_FACTOR[level]??1);
     const signed=n=>n>0?`+${n}`:String(n);
     const rows=preview.outcomes.map(row=>`<tr><td>${row.weight}%</td><td>${row.changes.length?row.changes.map(c=>`${esc(c.label)} ${signed(c.min)}${c.min===c.max?'':` ~ ${signed(c.max)}`}`).join('<br>'):'능력치·종족·속성·내성 변화 없음'}</td></tr>`).join('');
     showModal('케이지 훈련 효과',`<label>시설 <select id="training-cage">${cages.map(c=>`<option value="${esc(c.id)}"${c.id===chosen.id?' selected':''}>${esc(L.types[c.kind].name)}</option>`).join('')}</select></label>
-      <p>${esc(date.seasonName)} 기준 · ${preview.source==='original'?'원본 시설 결과표':'웹판 임시 효과'}${learner?.personality==='솔직'?' · 솔직: 증가량1.15배(정수 반올림)':''}</p>
+      <p>${esc(date.seasonName)} 기준 · 케이지 Lv${level}${level?` (효과 ×${C.CAGE_LEVEL_FACTOR[level]})`:''} · ${preview.source==='original'?'원본 시설 결과표':'웹판 임시 효과'}${learner?.personality==='솔직'?' · 솔직: 증가량1.15배(정수 반올림)':''}</p>
       <table class="training-effects-table"><thead><tr><th>발생 비율</th><th>예상 변화 범위</th></tr></thead><tbody>${rows}</tbody></table>
       <p class="hint">한 번의 훈련에서 위 결과 중 하나가 선택됩니다. 계절과 난수 보정을 포함한 범위이며, 실제 증감은 개체의 상·하한에 따라 줄어들 수 있습니다. 훈련은 배치당 한 번이며, 잠든 동안에는 진행되지 않습니다.</p>
       ${cage.battleUp?`<p>웹판 추가 효과: 배틀 수 +${cage.battleUp}</p>`:''}`,'TRAINING');

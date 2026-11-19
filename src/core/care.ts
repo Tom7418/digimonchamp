@@ -1,7 +1,7 @@
 import { applyTraining } from './training';
 import facilityEffects from '../data/facility-effects.json';
 import { evolvedStats, upgradeStats } from './stats';
-import { CAGE_RENAMES, CAGES, dateOf, DAY_END_MINUTE, DAY_START_HOUR, EGG_MINUTES, initialStats, getCage, getSpecies, originalSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK } from './data';
+import { CAGE_LEVEL_FACTOR, CAGE_LEVEL_ROWS, CAGE_LEVEL_SIDE_FACTOR, CAGE_SHOP, CAGE_RENAMES, CAGES, dateOf, DAY_END_MINUTE, DAY_START_HOUR, EGG_MINUTES, initialStats, getCage, getSpecies, originalSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK } from './data';
 import { endOfLife, findEvolution, type EvoResult } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, migrateTitleIds, tamerRank } from './titles';
@@ -198,7 +198,8 @@ export function memoryEvolution(d: Digimon, normal: string | null, rng: Rng): st
 function evolveDigimon(d: Digimon, to: string, rng: Rng): Digimon {
   // 원본 ARM9 0x2062258: 새 종 구조체(속성·종족 수치 0)를 만들고 능력치만 이월한다 → 진화하면 속성·종족 수치는 0부터
   const ap = Object.fromEntries(Object.keys(d.ap).map((k) => [k, 0])) as Record<ApKey, number>;
-  return { ...d, speciesId: to, stageAge: 0, stats: evolvedStats(d, to, d.eggs, rng), statVersion: 1, ap, rottenEaten: 0, memory: remember(d) };
+  // 부상 위험도(원본 +0x40)는 이월하지 않아 진화하면 0 (ARM9 0x2062258)
+  return { ...d, speciesId: to, stageAge: 0, stats: evolvedStats(d, to, d.eggs, rng), statVersion: 1, ap, rottenEaten: 0, memory: remember(d), injuryRisk: 0 };
 }
 
 /** 수명이 다한 뒤의 판정에 기억 진화를 덧씌운다. 기억 진화는 원본처럼 랭크 제한을 다시 보지 않고 용량만 확인한다 */
@@ -291,12 +292,12 @@ export function trainingSideDelta(command: number, base: number, season: number,
   }
   return value;
 }
-function applyTrainingSideEffects(d: Digimon, cageNo: number, season: number, rng: Rng): string[] {
+function applyTrainingSideEffects(d: Digimon, cageNo: number, season: number, rng: Rng, level = 0): string[] {
   const out: string[] = [];
   if (d.sick || d.injured || d.dying) return out;
   for (const c of EFFECTS[String(cageNo)] ?? []) {
     if (c.command > 5) continue;
-    const v = trainingSideDelta(c.command, c.args[0], season, rng);
+    const v = trainingSideDelta(c.command, c.args[0] * (CAGE_LEVEL_SIDE_FACTOR[level]?.[c.command] ?? 1), season, rng);
     if (c.command === 0) {
       d.hunger = Math.max(0, Math.min(100, d.hunger + (v * 100) / Math.max(1, getSpecies(d.speciesId).size)));
       out.push(`포만감 ${v > 0 ? '+' : ''}${v}칸`);
@@ -390,13 +391,14 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
     cage: '기본 케이지',
     restCycle: undefined,
     resistance: undefined,
-    // 원본 0x2062258: 디지에그가 될 때도 마지막 모습을 그 세대 기억에 적는다
+    // 원본 0x2062258: 디지에그가 될 때도 마지막 모습을 그 세대 기억에 적는다. 부상 위험도는 0
     memory: remember(d),
+    injuryRisk: 0,
   };
 }
 
 /** 디지몬 한 마리의 게임 시간 1분. null이면 로스트 */
-function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number; dirty?: boolean }, events: FarmEvent[]): Digimon | null {
+function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number; dirty?: boolean; cageLevels?: Record<string, number> }, events: FarmEvent[]): Digimon | null {
   let d: Digimon = { ...prev, stats: { ...prev.stats }, ap: { ...prev.ap } };
   d.stageAge += 1;
 
@@ -525,8 +527,9 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
       if (d.trainMinutes >= TRAINING_MINUTES) {
         d.trainMinutes = 0;
         d.trainDone = true;
-        const changes = applyTraining(d, cage, ctx.season ?? 0, ctx.rng);
-        changes.push(...applyTrainingSideEffects(d, cage.no, ctx.season ?? 0, ctx.rng));
+        const level = ctx.cageLevels?.[cage.id] ?? 0;
+        const changes = applyTraining(d, cage, ctx.season ?? 0, ctx.rng, CAGE_LEVEL_FACTOR[level] ?? 1);
+        changes.push(...applyTrainingSideEffects(d, cage.no, ctx.season ?? 0, ctx.rng, level));
         events.push({ type: 'trained', uid: d.uid, name: sp.name, changes: changes.join(', ') });
         addStress(d, STRESS.training);
         // 부상 (원본 overlay18 0x211D5F8): 부상 위험도가 30을 넘으면 그 % 확률로 부상, 페널티 +1(최대 7은 원본 칸 크기).
@@ -596,7 +599,7 @@ export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, d
     const candidate = {...d,socialStress:social};
     if(extra>0)addStress(candidate,extra);
     const dirty = !!d.cageInstance && dirtyCages.includes(d.cageInstance);
-    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1, dirty }, events);
+    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1, dirty, cageLevels: save.cageLevels }, events);
     if (!r) {
       free += before;
       return;
@@ -668,8 +671,8 @@ export function endDay(save: SaveData, rng: Rng = defaultRng, crowded: number[] 
       const d = { ...x, protein: 0 };
       if (d.isEgg) return d;
       if (crowded.includes(d.uid)) addStress(d, STRESS.crowdedPerDay);
-      // 아침에 깨어날 때 최대 HP의 1/30 (원본 기상 처리 overlay18 0x2120048)
-      d.hpNow = Math.min(d.stats.hp, hpOf(d) + Math.trunc(d.stats.hp / 30));
+      // 다음 날 아침에는 HP가 가득 찬다 (형규 지정. 원본 기상 처리 0x2120048은 1/30이지만 이 게임은 하루 마감 뒤 완전 회복)
+      d.hpNow = d.stats.hp;
       return d;
     }),
   };
@@ -745,10 +748,10 @@ export function clean(save: SaveData, uid: number): ActionResult {
   return { ok: true, message: '깨끗하게 치웠다!', save: update(save, uid, (x) => ({ ...x, poop: 0, dirtyMinutes: 0 })) };
 }
 
-/** 약이 들을 확률. 원작 문장: 세대가 낮으면 나을 확률이 낮아지기도 한다 (값은 임시) */
-export const CURE_CHANCE = [0, 0.7, 0.8, 0.9, 1, 1, 1];
-/** 상처약이 들을 확률. 원작 문장: 세대가 높으면 나을 확률이 낮아지기도 한다 (값은 임시) */
-export const TREAT_CHANCE = [0, 1, 1, 1, 0.9, 0.8, 0.7];
+/** 약(병)이 들을 확률 — 원본 overlay18 표 0x2129AA4(세대 1~6: 50·50·60·80·90·100%), 0x2119990에서 사용 */
+export const CURE_CHANCE = [0, 0.5, 0.5, 0.6, 0.8, 0.9, 1];
+/** 상처약(부상)이 들을 확률 — 원본 표 0x2129ADC(100·100·90·80·60·50%) */
+export const TREAT_CHANCE = [0, 1, 1, 0.9, 0.8, 0.6, 0.5];
 
 /** 약(주사기)으로 병을 고친다. 실패해도 약은 쓴다 */
 export function cure(save: SaveData, uid: number, rng: Rng = defaultRng): ActionResult {
@@ -846,8 +849,28 @@ export function shopItems(save: SaveData): ShopItem[] {
   for (const c of CAGES) {
     if (c.price > 0)
       items.push({ id: `cage:${c.id}`, name: `케이지: ${c.id}`, price: c.price, apply: (s) => ({ ...s, cages: [...s.cages, c.id] }), available: (s) => !s.cages.includes(c.id) && rank >= c.minRank });
+    // 케이지 레벨 업 (원본 상점 overlay9_17 0x2110D90): 가진 케이지만, 랭크가 허락하는 레벨까지
+    const up = cageLevelUp(save, c.id);
+    if (up.ok)
+      items.push({ id: `cagelv:${c.id}`, name: `케이지 레벨 업: ${c.id} Lv${up.next} (훈련 효과 ×${CAGE_LEVEL_FACTOR[up.next]})`, price: up.price, apply: (s) => ({ ...s, cageLevels: { ...s.cageLevels, [c.id]: up.next } }), available: () => true });
   }
   return items.filter((i) => i.available(save));
+}
+
+export const cageLevelOf = (save: Pick<SaveData, 'cageLevels'>, cageId: string) => save.cageLevels?.[cageId] ?? 0;
+/**
+ * 케이지 레벨 업 가능 여부와 값 (원본 상점 overlay9_17 0x2110D90~0x2110EA0, 랭크 표 arm9 0xE214C).
+ * 다음 레벨 n(1·2)이 랭크 줄의 '최대 레벨 칸'보다 작아야 한다. 값 = n × 레벨 업 값, n=2면 그 절반을 뺀다.
+ */
+export function cageLevelUp(save: SaveData, cageId: string): { ok: true; next: number; price: number } | { ok: false; reason: string } {
+  const shop = CAGE_SHOP[cageId];
+  if (!shop || !shop.levelPrice) return { ok: false, reason: '레벨 업할 수 없는 케이지입니다.' };
+  if (!save.cages.includes(cageId)) return { ok: false, reason: '가진 케이지가 아닙니다.' };
+  const next = cageLevelOf(save, cageId) + 1;
+  if (next >= 3) return { ok: false, reason: '이 이상의 케이지는 레벨 업 할 수 없습니다.' };
+  const row = CAGE_LEVEL_ROWS[Math.max(0, Math.min(CAGE_LEVEL_ROWS.length - 1, tamerRank(save) - 1))] ?? 1;
+  if (next >= row) return { ok: false, reason: '지금의 테이머 랭크로는 레벨 업 할 수 없습니다.' };
+  return { ok: true, next, price: next * shop.levelPrice - (next === 2 ? shop.levelPrice >> 1 : 0) };
 }
 
 export function buy(save: SaveData, item: ShopItem): ActionResult {

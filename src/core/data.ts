@@ -4,6 +4,7 @@ import raw from '../data/evolutions.txt?raw';
 import habitatRaw from '../data/habitats.txt?raw';
 import speciesRaw from '../data/species.txt?raw';
 import speciesApiRaw from '../data/species-api.txt?raw';
+import cageShopRaw from '../data/cage-shop.txt?raw';
 import { ATTRS, FAMILIES, STAT_KEYS, type ApKey, type Attr, type Cond, type Family, type Species, type SpeciesAttr, type Stage, type StatKey, type Stats } from './types';
 
 export const STAGE_LABEL: Record<Stage, string> = { 1: '유년기I', 2: '유년기II', 3: '성장기', 4: '성숙기', 5: '완전체', 6: '궁극체' };
@@ -321,3 +322,19 @@ export function parseHabitats(text: string): Record<string, [string, string][]> 
 const HABITATS = parseHabitats(habitatRaw);
 export const FIELDS: Field[] = FIELD_LIST.map((f) => ({ ...f, spawns: HABITATS[f.id] ?? [] }));
 export const SEASON_CODE = ['봄', '여', '가', '겨'];
+
+// ---------- 케이지 레벨 업 (원본 아이템 표 분류 3, tools/extract_shop.py → cage-shop.txt) ----------
+/** 이름 → 원본 상점 값. levelPrice는 레벨 업 기준 값 */
+export const CAGE_SHOP: Record<string, { type: number; buy: number; levelPrice: number; unlockKind: number; unlockValue: number }> = {};
+/** 랭크 줄(0~8)별 '최대 레벨 칸'. 다음 레벨이 이 값보다 작아야 한다 */
+export let CAGE_LEVEL_ROWS: number[] = [];
+for (const line of cageShopRaw.split(/\r?\n/)) {
+  if (line.startsWith('#max|')) CAGE_LEVEL_ROWS = line.slice(5).split(',').map(Number);
+  if (!line.trim() || line.startsWith('#')) continue;
+  const [name, type, buy, levelPrice, unlockKind, unlockValue] = line.split('|');
+  CAGE_SHOP[name] = { type: Number(type), buy: Number(buy), levelPrice: Number(levelPrice), unlockKind: Number(unlockKind), unlockValue: Number(unlockValue) };
+}
+/** 레벨별 훈련 배율 (원본 시설 모드 1·2 = 표 0x209FC14·0x209FC84: 결과 22항목 ×2·×3, 부가 명령은 HP만 ×2·×3) */
+export const CAGE_LEVEL_FACTOR = [1, 2, 3];
+export const CAGE_LEVEL_SIDE_FACTOR = [[1, 1, 1, 1, 1, 1], [1, 2, 1, 1, 1, 1], [1, 3, 1, 1, 1, 1]];
+

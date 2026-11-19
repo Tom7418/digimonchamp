@@ -9,7 +9,7 @@ import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
-import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
+import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -903,13 +903,33 @@ describe('illness', () => {
     expect(createBattle([entrantOf(d, '일반')], []).units[0].hp).toBe(100);
     expect(applyBattleResult(d, false, false, () => 0.9, false, 40).hpNow).toBe(40);
   });
-  it('먹으면 HP가 차고(포만감 1칸마다 1%), 아침에 깨면 1/30 오른다', () => {
+  it('먹으면 HP가 차고(포만감 1칸마다 1%), 다음 날 아침에는 가득 찬다', () => {
     const d = { ...newDigimon(1, '아구몬', () => 0.5), hpNow: 100 };
     const unit = 100 / getSpecies('아구몬').size;
     expect(eatHp(d, unit).hpNow).toBe(100 + Math.trunc(d.stats.hp / 100));
     const s = { ...freshSave(0), digimon: [{ ...d, hunger: 100 }], clock: 23 * 60 + 59 };
     const r = endDay(s, seeded(1));
-    expect(r.save.digimon[0].hpNow).toBeGreaterThanOrEqual(100 + Math.trunc(d.stats.hp / 30));
+    expect(r.save.digimon[0].hpNow).toBe(d.stats.hp); // 다음 날은 가득 (형규 지정)
+  });
+  it('케이지 레벨 업: 랭크가 허락하면 Lv1(값×1)·Lv2(값×1.5), 훈련 효과 2·3배', () => {
+    const base = { ...freshSave(0), cages: [...freshSave(0).cages, '운동장'], bits: 999999 };
+    expect(cageLevelUp(base, '운동장')).toMatchObject({ ok: false, reason: '지금의 테이머 랭크로는 레벨 업 할 수 없습니다.' });
+    const champ = { ...base, champion: true };
+    expect(cageLevelUp(champ, '운동장')).toEqual({ ok: true, next: 1, price: 10000 });
+    expect(cageLevelUp({ ...champ, cageLevels: { 운동장: 1 } }, '운동장')).toEqual({ ok: true, next: 2, price: 15000 });
+    expect(cageLevelUp({ ...champ, cageLevels: { 운동장: 2 } }, '운동장')).toMatchObject({ ok: false });
+    expect(shopItems(champ).some((i) => i.id === 'cagelv:운동장')).toBe(true);
+    // 배율: 계절 가산 뒤 곱하고 난수 폭을 더한다
+    expect(trainingDelta(0, 3, 0, () => 0.5, 2)).toBe(trainingDelta(0, 6, 0, () => 0.5, 1));
+  });
+  it('부상 위험도는 상처약·진화로 0이 되고, 약·상처약 확률은 원본 표', () => {
+    expect(CURE_CHANCE.slice(1)).toEqual([0.5, 0.5, 0.6, 0.8, 0.9, 1]);
+    expect(TREAT_CHANCE.slice(1)).toEqual([1, 1, 0.9, 0.8, 0.6, 0.5]);
+    const d = { ...newDigimon(1, '코로몬'), injured: true, injuryRisk: 50, battles: 3 };
+    const s = { ...freshSave(0), digimon: [d], salve: 1 };
+    expect(only(treat(s, 1, () => 0).save).injuryRisk).toBe(0);
+    const evo = evaluateEvolutions({ ...freshSave(0), digimon: [{ ...d, injured: false }] }, () => 0.5);
+    expect(only(evo.save).injuryRisk).toBe(0);
   });
   it('디지에그 그림은 디지에그화 횟수로 고른다 (원본 0x2119B2C)', () => {
     expect([0, 1, 2, 6, 7, 8, 100].map(eggSpriteIndex)).toEqual([0, 1, 2, 6, 7, 7, 7]);

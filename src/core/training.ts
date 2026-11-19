@@ -13,8 +13,9 @@ const percentile = (rng: Rng) => Math.min(99, Math.max(0, Math.floor(rng() * 100
 export const trainingBounds = statBounds;
 
 /** 원본 시설 결과표 + 여름/겨울 가산 + 항목별 난수 폭. 시설 모드 배수는 미연결(기본0). */
-export function trainingDelta(key: number, base: number, season: number, rng: Rng): number {
-  let value = base + (season === 1 ? table.summerAdd[key] : season === 3 ? table.winterAdd[key] : 0);
+/** factor: 케이지 레벨 배율(원본 시설 모드, overlay18 0x2117C68: 계절 가산 뒤, 난수 폭 전에 곱한다) */
+export function trainingDelta(key: number, base: number, season: number, rng: Rng, factor = 1): number {
+  let value = (base + (season === 1 ? table.summerAdd[key] : season === 3 ? table.winterAdd[key] : 0)) * factor;
   // 원작 여름 보정으로 -2가 0이 되는 경우에도 감소를 남긴다.
   if (season === 1 && value === 0) value = -1;
   const width = table.variance[key];
@@ -37,13 +38,13 @@ const fallbackChanges = (cage: Cage): number[][] => [
 /** 현재 웹 엔진이 사용하는 결과표 안내. 난수100가지를 열거하므로 HP 반올림·계절 보정도 실제 처리와 같다.
  * 시설 모드/부가 효과의 미확인 동작을 예측에 섞지 않는다. 개체별 상하한 적용 전 범위다.
  */
-export function trainingPreview(cage: Cage, season: number, personality?: Personality) {
+export function trainingPreview(cage: Cage, season: number, personality?: Personality, factor = 1) {
   const original = outcomes[String(cage.no)];
   const choices = original ?? [{weight:100, changes:fallbackChanges(cage)}];
   const rows = choices.filter(c => c.weight > 0).map(c => ({
     weight:c.weight,
     changes:c.changes.map(([key,base]) => {
-      const values=(original ? Array.from({length:100},(_,i)=>trainingDelta(key,base,season,()=>i/100)) : [base]).map(n=>personalityTraining(n,personality));
+      const values=(original ? Array.from({length:100},(_,i)=>trainingDelta(key,base,season,()=>i/100,factor)) : [base]).map(n=>personalityTraining(n,personality));
       const label=key<11 ? `${AP_ORDER[key]} 수치` : key<16 ? `${RESIST_KEYS[key-11]} 내성` : STAT_LABEL[STAT_KEYS[key-16]];
       return {label,min:Math.min(...values),max:Math.max(...values)};
     }),
@@ -54,7 +55,7 @@ export function trainingPreview(cage: Cage, season: number, personality?: Person
 }
 
 /** 실제 적용 뒤의 차이만 표시한다. 기존 저장이 원작 범위 밖이면 경계로 강제 이동시키지 않는다. */
-export function applyTraining(d: Digimon, cage: Cage, season: number, rng: Rng): string[] {
+export function applyTraining(d: Digimon, cage: Cage, season: number, rng: Rng, factor = 1): string[] {
   const choices = outcomes[String(cage.no)];
   let changes: number[][] = [];
   if (choices) {
@@ -69,7 +70,7 @@ export function applyTraining(d: Digimon, cage: Cage, season: number, rng: Rng):
   }
   const result: string[] = [];
   for (const [key, base] of changes) {
-    const amount = personalityTraining(choices ? trainingDelta(key, base, season, rng) : base,d.personality);
+    const amount = personalityTraining(choices ? trainingDelta(key, base, season, rng, factor) : base * factor,d.personality);
     let before: number, after: number, label: string;
     if (key < 11) {
       const k = AP_ORDER[key];
