@@ -65,6 +65,10 @@ export interface Digimon {
   sick: boolean;
   injured: boolean;
   /** 빈사 (help #124·#137·#140~142). 원인(병·부상·굶주림)을 고치면 풀리고, 방치하면 로스트. 옛 저장은 없음=false */
+  /** 현재 HP (원본 구조체 +0x50). 최대는 stats.hp. 옛 저장은 없음 = 가득 */
+  hpNow?: number;
+  /** 자연 회복 분 세기 (원본 +0x460) */
+  hpRegenMinutes?: number;
   dying?: boolean;
   /**
    * 기억 (원본 디지몬 구조체 +0x140~+0x154 / +0x158~+0x16C, 세대별 두 칸). 키는 세대 1~6.

@@ -1679,6 +1679,402 @@ var ChampCore = (function(exports) {
 		}
 		return result.length ? result : ["변화 없음"];
 	}
+	// src/data/facility-effects.json
+	var facility_effects_default = {
+		"1": [
+			{
+				"command": 0,
+				"args": [-1]
+			},
+			{
+				"command": 1,
+				"args": [-120]
+			},
+			{
+				"command": 5,
+				"args": [1]
+			}
+		],
+		"2": [
+			{
+				"command": 0,
+				"args": [-1]
+			},
+			{
+				"command": 1,
+				"args": [-120]
+			},
+			{
+				"command": 5,
+				"args": [2]
+			}
+		],
+		"3": [
+			{
+				"command": 0,
+				"args": [-1]
+			},
+			{
+				"command": 1,
+				"args": [-120]
+			},
+			{
+				"command": 5,
+				"args": [2]
+			}
+		],
+		"4": [
+			{
+				"command": 0,
+				"args": [-1]
+			},
+			{
+				"command": 1,
+				"args": [-120]
+			},
+			{
+				"command": 5,
+				"args": [2]
+			}
+		],
+		"5": [
+			{
+				"command": 0,
+				"args": [-1]
+			},
+			{
+				"command": 1,
+				"args": [-200]
+			},
+			{
+				"command": 5,
+				"args": [2]
+			}
+		],
+		"6": [{
+			"command": 1,
+			"args": [-100]
+		}, {
+			"command": 2,
+			"args": [10]
+		}],
+		"7": [
+			{
+				"command": 0,
+				"args": [-1]
+			},
+			{
+				"command": 1,
+				"args": [-240]
+			},
+			{
+				"command": 5,
+				"args": [1]
+			}
+		],
+		"8": [{
+			"command": 0,
+			"args": [-1]
+		}, {
+			"command": 1,
+			"args": [-120]
+		}],
+		"9": [{
+			"command": 0,
+			"args": [-1]
+		}, {
+			"command": 1,
+			"args": [-240]
+		}],
+		"10": [{
+			"command": 0,
+			"args": [-1]
+		}, {
+			"command": 1,
+			"args": [-240]
+		}],
+		"11": [{
+			"command": 0,
+			"args": [-1]
+		}, {
+			"command": 1,
+			"args": [-120]
+		}],
+		"12": [
+			{
+				"command": 0,
+				"args": [-1]
+			},
+			{
+				"command": 1,
+				"args": [-220]
+			},
+			{
+				"command": 5,
+				"args": [1]
+			}
+		],
+		"13": [{
+			"command": 1,
+			"args": [-120]
+		}, {
+			"command": 5,
+			"args": [2]
+		}],
+		"14": [
+			{
+				"command": 0,
+				"args": [-1]
+			},
+			{
+				"command": 1,
+				"args": [-200]
+			},
+			{
+				"command": 5,
+				"args": [2]
+			}
+		],
+		"15": [{
+			"command": 0,
+			"args": [-1]
+		}, {
+			"command": 1,
+			"args": [-220]
+		}],
+		"16": [{
+			"command": 6,
+			"args": [
+				2,
+				1,
+				8
+			]
+		}, {
+			"command": 6,
+			"args": [
+				6,
+				2,
+				-1
+			]
+		}],
+		"17": [{
+			"command": 1,
+			"args": [-100]
+		}, {
+			"command": 2,
+			"args": [10]
+		}],
+		"18": [{
+			"command": 0,
+			"args": [-1]
+		}, {
+			"command": 1,
+			"args": [-180]
+		}],
+		"19": [
+			{
+				"command": 6,
+				"args": [
+					2,
+					1,
+					20
+				]
+			},
+			{
+				"command": 6,
+				"args": [
+					3,
+					2,
+					-1
+				]
+			},
+			{
+				"command": 6,
+				"args": [
+					120,
+					3,
+					1
+				]
+			}
+		],
+		"20": [{
+			"command": 1,
+			"args": [-120]
+		}, {
+			"command": 5,
+			"args": [2]
+		}],
+		"21": [{
+			"command": 1,
+			"args": [-200]
+		}, {
+			"command": 5,
+			"args": [2]
+		}],
+		"22": [{
+			"command": 1,
+			"args": [-200]
+		}, {
+			"command": 5,
+			"args": [2]
+		}],
+		"23": [{
+			"command": 1,
+			"args": [-250]
+		}, {
+			"command": 2,
+			"args": [10]
+		}],
+		"24": [
+			{
+				"command": 0,
+				"args": [-1]
+			},
+			{
+				"command": 1,
+				"args": [-120]
+			},
+			{
+				"command": 5,
+				"args": [2]
+			}
+		],
+		"25": [{
+			"command": 6,
+			"args": [
+				3,
+				1,
+				5
+			]
+		}, {
+			"command": 6,
+			"args": [
+				240,
+				2,
+				1
+			]
+		}],
+		"26": [{
+			"command": 6,
+			"args": [
+				3,
+				1,
+				10
+			]
+		}, {
+			"command": 6,
+			"args": [
+				6,
+				2,
+				-1
+			]
+		}],
+		"27": [
+			{
+				"command": 0,
+				"args": [-1]
+			},
+			{
+				"command": 1,
+				"args": [-300]
+			},
+			{
+				"command": 4,
+				"args": [1]
+			},
+			{
+				"command": 5,
+				"args": [4]
+			}
+		],
+		"30": [
+			{
+				"command": 0,
+				"args": [-1]
+			},
+			{
+				"command": 1,
+				"args": [-120]
+			},
+			{
+				"command": 5,
+				"args": [2]
+			}
+		],
+		"31": [{
+			"command": 6,
+			"args": [
+				2,
+				1,
+				12
+			]
+		}, {
+			"command": 6,
+			"args": [
+				6,
+				2,
+				-1
+			]
+		}],
+		"32": [{
+			"command": 0,
+			"args": [-1]
+		}, {
+			"command": 1,
+			"args": [-80]
+		}],
+		"34": [
+			{
+				"command": 0,
+				"args": [-1]
+			},
+			{
+				"command": 1,
+				"args": [-120]
+			},
+			{
+				"command": 5,
+				"args": [2]
+			}
+		],
+		"35": [
+			{
+				"command": 0,
+				"args": [-1]
+			},
+			{
+				"command": 1,
+				"args": [-120]
+			},
+			{
+				"command": 5,
+				"args": [1]
+			}
+		],
+		"37": [{
+			"command": 0,
+			"args": [-1]
+		}, {
+			"command": 1,
+			"args": [-120]
+		}],
+		"39": [{
+			"command": 0,
+			"args": [-1]
+		}, {
+			"command": 1,
+			"args": [-120]
+		}],
+		"40": [{
+			"command": 1,
+			"args": [-120]
+		}, {
+			"command": 5,
+			"args": [2]
+		}],
+		"28": [],
+		"29": []
+	};
 	// src/core/stats.ts
 	/** 원본 재탄생 횟수 보정표. 99의 별도 분기 공백도 임의로 보정하지 않는다. */
 	function rebirthPercent(eggs) {
@@ -3198,6 +3594,25 @@ var ChampCore = (function(exports) {
 	*/
 	var DYING_AFTER_MINUTES = 1200;
 	var DYING_LOST_MINUTES = 1440;
+	/**
+	* 현재 HP (원본 디지몬 구조체 +0x50, 최대 +0x58 = stats.hp).
+	*  - 배틀은 현재 HP로 시작하고 끝난 HP가 그대로 남는다(배틀 overlay19 0x21179DC: 시작 때 가득 채우지 않음).
+	*  - 자연 회복: HP가 최대보다 낮으면 10분이 넘을 때마다 최대의 1%(사육 overlay18 0x21186BC).
+	*  - 잠에서 깰 때 최대의 1/30(0x2120048).
+	*  - 시설 상시 효과(0x2118648 → 0x2117F54, 표 facility-effects.json 명령6): 간격마다 HP·피로 등 가감.
+	*  - 훈련 부가 명령1(0x2117E0C): 훈련 한 번에 HP 감소, 최소 1.
+	*  - HP가 최대의 1/10 이하면 빈사(0x211B16C), 1/10을 넘고 다른 원인이 없으면 회복(0x211892C).
+	*/
+	var hpOf = (d) => Math.max(0, Math.min(d.stats.hp, d.hpNow ?? d.stats.hp));
+	var EFFECTS = facility_effects_default;
+	/** 훈련 한 번의 HP 증감 (부가 명령1 기본값. 계절·난수 폭 표는 아직 연결하지 않음) */
+	var trainingHpCost = (cageNo) => (EFFECTS[String(cageNo)] ?? []).filter((c) => c.command === 1).reduce((n, c) => n + c.args[0], 0);
+	/** 시설 상시 효과 [간격 분, 종류, 값] (종류 1 = HP) */
+	var facilityHpEffects = (cageNo) => (EFFECTS[String(cageNo)] ?? []).filter((c) => c.command === 6 && c.args[1] === 1).map((c) => ({
+		every: c.args[0],
+		amount: c.args[2]
+	}));
+	var lowHp = (d) => hpOf(d) <= Math.trunc(d.stats.hp / 10);
 	/** 원본 0x2119B2C: 디지에그 그림 번호 = 디지에그화 횟수(최대 7). 0은 처음 받은 흰 알 e000 */
 	var eggSpriteIndex = (eggs) => Math.max(0, Math.min(7, Math.floor(eggs || 0)));
 	/**
@@ -3304,7 +3719,20 @@ var ChampCore = (function(exports) {
 		}
 		const sp = getSpecies(d.speciesId);
 		const cage = getCage(d.cage);
+		const wasSleeping = isSleeping(prev);
 		const sleeping = tickRestCycle(d, ctx.rng, !!ctx.sleep) || !!ctx.sleep;
+		const maxHp = d.stats.hp;
+		let hp = hpOf(d);
+		if (wasSleeping && !sleeping) hp += Math.trunc(maxHp / 30);
+		if (hp < maxHp) {
+			d.hpRegenMinutes = (d.hpRegenMinutes ?? 0) + 1;
+			if (d.hpRegenMinutes > 10) {
+				d.hpRegenMinutes = 0;
+				hp += Math.trunc(maxHp / 100);
+			}
+		} else d.hpRegenMinutes = 0;
+		for (const e of facilityHpEffects(cage.no)) if (ctx.clock % e.every === 0) hp += e.amount;
+		d.hpNow = Math.min(maxHp, Math.max(0, hp));
 		d.bowel = bowelAt(d, ctx.clock);
 		if (sleeping) d.fatigue = Math.max(0, d.fatigue - .3);
 		else {
@@ -3375,8 +3803,18 @@ var ChampCore = (function(exports) {
 				cause: "hunger"
 			});
 		}
+		if (!d.dying && lowHp(d)) {
+			d.dying = true;
+			d.dyingMinutes = 0;
+			events.push({
+				type: "dying",
+				uid: d.uid,
+				name: sp.name,
+				cause: "hp"
+			});
+		}
 		if (d.dying) {
-			if (!d.sick && !d.injured && d.hunger > 0) {
+			if (!d.sick && !d.injured && d.hunger > 0 && !lowHp(d)) {
 				d.dying = false;
 				d.dyingMinutes = 0;
 				events.push({
@@ -3417,6 +3855,11 @@ var ChampCore = (function(exports) {
 					d.trainMinutes = 0;
 					d.trainDone = true;
 					const changes = applyTraining(d, cage, ctx.season ?? 0, ctx.rng);
+					const cost = trainingHpCost(cage.no);
+					if (cost) {
+						d.hpNow = Math.min(d.stats.hp, Math.max(1, hpOf(d) + cost));
+						changes.push(`현재 HP ${cost}`);
+					}
 					events.push({
 						type: "trained",
 						uid: d.uid,
@@ -8400,7 +8843,8 @@ var ChampCore = (function(exports) {
 			atk: Math.round(d.stats.atk * (1 + PROTEIN_ATK * Math.min(3, d.protein)))
 		} : d.stats,
 		personality: d.personality,
-		mode
+		mode,
+		hp: d.hpNow
 	});
 	function makeEnemies(stage, count, scale, rng) {
 		const pool = speciesByStage(stage);
@@ -8437,7 +8881,7 @@ var ChampCore = (function(exports) {
 				mode: e.mode,
 				x: team === 0 ? 70 : ARENA.w - 70,
 				y: ARENA.h / (list.length + 1) * (i + 1),
-				hp: maxHp,
+				hp: e.hp === void 0 ? maxHp : Math.max(0, Math.min(maxHp, e.hp)),
 				maxHp,
 				tp: maxTp,
 				maxTp,
@@ -8560,7 +9004,8 @@ var ChampCore = (function(exports) {
 		return s;
 	}
 	/** 배틀 결과를 디지몬에게 반영: 횟수·승수, 피로, 쓰러진 디지몬의 부상 */
-	function applyBattleResult(d, won, ko, rng, winter = false) {
+	/** endHp: 배틀이 끝났을 때 남은 HP. 원본처럼 그대로 현재 HP로 남는다 */
+	function applyBattleResult(d, won, ko, rng, winter = false, endHp) {
 		const overeat = Math.max(0, (d.protein ?? 0) - 3) * .15;
 		const injuryChance = Math.min(1, ((ko ? d.personality === "대담" ? .35 : .25 : 0) + overeat) * (winter ? 2 : 1));
 		return {
@@ -8570,7 +9015,8 @@ var ChampCore = (function(exports) {
 			wins: d.wins + (won ? 1 : 0),
 			fatigue: Math.min(100, d.fatigue + 20),
 			hunger: Math.max(0, d.hunger - 10),
-			injured: d.injured || rng() < injuryChance
+			injured: d.injured || rng() < injuryChance,
+			...endHp === void 0 ? {} : { hpNow: Math.max(0, Math.min(d.stats.hp, Math.round(endHp))) }
 		};
 	}
 	var battle_maps_default = {
@@ -9228,6 +9674,7 @@ var ChampCore = (function(exports) {
 	exports.evaluateEvolutions = evaluateEvolutions;
 	exports.evolvedStats = evolvedStats;
 	exports.explain = explain;
+	exports.facilityHpEffects = facilityHpEffects;
 	exports.faintWakeSeconds = faintWakeSeconds;
 	exports.feed = feed;
 	exports.feedFromTray = feedFromTray;
@@ -9241,6 +9688,7 @@ var ChampCore = (function(exports) {
 	exports.getSpecies = getSpecies;
 	exports.heal = heal;
 	exports.hints = hints;
+	exports.hpOf = hpOf;
 	exports.huntFields = huntFields;
 	exports.huntPool = huntPool;
 	exports.huntSpawnPoints = huntSpawnPoints;
@@ -9304,6 +9752,7 @@ var ChampCore = (function(exports) {
 	exports.todaysMatches = todaysMatches;
 	exports.trainingBounds = trainingBounds;
 	exports.trainingDelta = trainingDelta;
+	exports.trainingHpCost = trainingHpCost;
 	exports.trainingPreview = trainingPreview;
 	exports.treat = treat;
 	exports.typicalStats = typicalStats;

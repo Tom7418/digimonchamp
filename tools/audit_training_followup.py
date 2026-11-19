@@ -69,4 +69,8 @@ report = {
     ]
 }
 (REPO/'docs/training-followup-audit.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+# 게임에서 쓰는 사본. 명령 뜻(overlay18 0x2117BE4 훈련 부가 명령 / 0x2117F54 시설 상시 효과로 확인, Claude 2026-11-19):
+#  0 포만감, 1 현재 HP(최소 1), 2 피로(0~100), 3 +0x20 값(0~100, 뜻 미확정), 4 배틀 횟수, 5 +0x40 값(0~100, 뜻 미확정)
+#  6 시설 상시 효과 [간격(게임 분), 종류(0~4는 위 0~4와 같음), 값] — 간격마다 한 번 적용
+(REPO/'src/data/facility-effects.json').write_text(json.dumps(supplementary,ensure_ascii=False,indent=1)+'\n',encoding='utf-8')
 print(f'{len(supplementary)} supplementary tables; modes1/2 factors2/3 verified; AP normalization unresolved')

@@ -9,7 +9,7 @@ import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
-import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
+import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -340,6 +340,8 @@ describe('evolution', () => {
       if (i === 0) expect(only(advance(s, 60, () => 0.5).save).ap['암흑']).toBe(4); // 그대로 두면 더 훈련하지 않는다
       s = setCage(s, 1, '기본 케이지').save;
       s = advance(s, 1, () => 0.5).save;
+      // 훈련은 현재 HP를 깎는다(원본 부가 명령1). 이 테스트는 분기만 보므로 쉬게 해서 HP를 채운다
+      s = { ...s, digimon: s.digimon.map((d) => ({ ...d, hpNow: undefined })) };
     }
     const r = advance(s, 8 * 60, () => 0.5);
     expect(only(r.save).speciesId).toBe('퍼그몬');
@@ -878,6 +880,25 @@ describe('illness', () => {
     expect(findEvolution(tuno, 9, 999)).toMatchObject({ kind: 'evolve', to: '사이케몬' });
     // 위키: 아구몬은 페널티4면 바로 스카몬
     expect(findEvolution({ ...newDigimon(2, '아구몬'), penalties: 4 }, 9, 999)).toMatchObject({ kind: 'evolve', to: '스카몬' });
+  });
+  it('현재 HP: 훈련으로 줄고(최소1) 1/10 이하면 빈사, 자연 회복·양호실로 찬다', () => {
+    expect(trainingHpCost(1)).toBe(-120);
+    expect(facilityHpEffects(16)).toEqual([{ every: 2, amount: 8 }]);
+    const base = { ...freshSave(0), nextUid: 3 };
+    const mon = (patch: Partial<Digimon>) => ({ ...base, digimon: [{ ...newDigimon(1, '아구몬', () => 0.5), hunger: 100, ...patch }, newDigimon(2, '깜몬')] });
+    const max = newDigimon(1, '아구몬', () => 0.5).stats.hp;
+    // 자연 회복: 11분째에 최대의 1%
+    let r = advance(mon({ hpNow: max - 50 }), 11, seeded(1));
+    expect(r.save.digimon[0].hpNow).toBe(max - 50 + Math.trunc(max / 100));
+    // 1/10 이하 → 빈사, 회복하면 해제
+    r = tickFarm(mon({ hpNow: Math.trunc(max / 10) }), seeded(1));
+    expect(r.events.some((e) => e.type === 'dying' && e.cause === 'hp')).toBe(true);
+    const healed = { ...r.save, digimon: r.save.digimon.map((d) => (d.uid === 1 ? { ...d, hpNow: max } : d)) };
+    expect(tickFarm(healed, seeded(1)).save.digimon[0].dying).toBe(false);
+    // 배틀은 현재 HP로 시작하고 남은 HP가 그대로 남는다
+    const d = { ...newDigimon(1, '아구몬', () => 0.5), hpNow: 100 };
+    expect(createBattle([entrantOf(d, '일반')], []).units[0].hp).toBe(100);
+    expect(applyBattleResult(d, false, false, () => 0.9, false, 40).hpNow).toBe(40);
   });
   it('디지에그 그림은 디지에그화 횟수로 고른다 (원본 0x2119B2C)', () => {
     expect([0, 1, 2, 6, 7, 8, 100].map(eggSpriteIndex)).toEqual([0, 1, 2, 6, 7, 7, 7]);

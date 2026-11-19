@@ -1,4 +1,5 @@
 import { applyTraining } from './training';
+import facilityEffects from '../data/facility-effects.json';
 import { evolvedStats, upgradeStats } from './stats';
 import { CAGE_RENAMES, CAGES, dateOf, DAY_END_MINUTE, DAY_START_HOUR, EGG_MINUTES, initialStats, getCage, getSpecies, originalSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK } from './data';
 import { endOfLife, findEvolution, type EvoResult } from './evolution';
@@ -159,7 +160,7 @@ export type FarmEvent =
   | { type: 'lost'; uid: number; name: string; reason: string }
   | { type: 'sick'; uid: number; name: string }
   | { type: 'injured'; uid: number; name: string }
-  | { type: 'dying'; uid: number; name: string; cause: 'sick' | 'injured' | 'hunger' }
+  | { type: 'dying'; uid: number; name: string; cause: 'sick' | 'injured' | 'hunger' | 'hp' }
   | { type: 'revived'; uid: number; name: string }
   | { type: 'poop'; uid: number }
   /** 훈련 완료 후 실제로 오른·내린 능력치 (예: 'HP +3, 방어 -1') */
@@ -256,6 +257,23 @@ export const NEGLECT_MINUTES = 2880;
  */
 export const DYING_AFTER_MINUTES = 1200;
 export const DYING_LOST_MINUTES = 1440;
+/**
+ * 현재 HP (원본 디지몬 구조체 +0x50, 최대 +0x58 = stats.hp).
+ *  - 배틀은 현재 HP로 시작하고 끝난 HP가 그대로 남는다(배틀 overlay19 0x21179DC: 시작 때 가득 채우지 않음).
+ *  - 자연 회복: HP가 최대보다 낮으면 10분이 넘을 때마다 최대의 1%(사육 overlay18 0x21186BC).
+ *  - 잠에서 깰 때 최대의 1/30(0x2120048).
+ *  - 시설 상시 효과(0x2118648 → 0x2117F54, 표 facility-effects.json 명령6): 간격마다 HP·피로 등 가감.
+ *  - 훈련 부가 명령1(0x2117E0C): 훈련 한 번에 HP 감소, 최소 1.
+ *  - HP가 최대의 1/10 이하면 빈사(0x211B16C), 1/10을 넘고 다른 원인이 없으면 회복(0x211892C).
+ */
+export const hpOf = (d: Digimon) => Math.max(0, Math.min(d.stats.hp, d.hpNow ?? d.stats.hp));
+const EFFECTS = facilityEffects as Record<string, { command: number; args: number[] }[]>;
+/** 훈련 한 번의 HP 증감 (부가 명령1 기본값. 계절·난수 폭 표는 아직 연결하지 않음) */
+export const trainingHpCost = (cageNo: number) => (EFFECTS[String(cageNo)] ?? []).filter((c) => c.command === 1).reduce((n, c) => n + c.args[0], 0);
+/** 시설 상시 효과 [간격 분, 종류, 값] (종류 1 = HP) */
+export const facilityHpEffects = (cageNo: number) => (EFFECTS[String(cageNo)] ?? []).filter((c) => c.command === 6 && c.args[1] === 1).map((c) => ({ every: c.args[0], amount: c.args[2] }));
+const lowHp = (d: Digimon) => hpOf(d) <= Math.trunc(d.stats.hp / 10);
+
 /** 원본 0x2119B2C: 디지에그 그림 번호 = 디지에그화 횟수(최대 7). 0은 처음 받은 흰 알 e000 */
 export const eggSpriteIndex = (eggs: number) => Math.max(0, Math.min(7, Math.floor(eggs || 0)));
 /**
@@ -343,7 +361,21 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
 
   const sp = getSpecies(d.speciesId);
   const cage = getCage(d.cage);
+  const wasSleeping = isSleeping(prev);
   const sleeping = tickRestCycle(d, ctx.rng, !!ctx.sleep) || !!ctx.sleep;
+  // 현재 HP 회복
+  const maxHp = d.stats.hp;
+  let hp = hpOf(d);
+  if (wasSleeping && !sleeping) hp += Math.trunc(maxHp / 30);
+  if (hp < maxHp) {
+    d.hpRegenMinutes = (d.hpRegenMinutes ?? 0) + 1;
+    if (d.hpRegenMinutes > 10) {
+      d.hpRegenMinutes = 0;
+      hp += Math.trunc(maxHp / 100);
+    }
+  } else d.hpRegenMinutes = 0;
+  for (const e of facilityHpEffects(cage.no)) if (ctx.clock % e.every === 0) hp += e.amount;
+  d.hpNow = Math.min(maxHp, Math.max(0, hp));
   d.bowel = bowelAt(d, ctx.clock);
   if (sleeping) {
     // 밤과 종별 낮잠: 배고픔·똥·훈련 없이 피로만 풀린다. 병·부상은 계속 진행된다
@@ -407,8 +439,13 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
     d.dyingMinutes = 0;
     events.push({ type: 'dying', uid: d.uid, name: sp.name, cause: 'hunger' });
   }
+  if (!d.dying && lowHp(d)) {
+    d.dying = true;
+    d.dyingMinutes = 0;
+    events.push({ type: 'dying', uid: d.uid, name: sp.name, cause: 'hp' });
+  }
   if (d.dying) {
-    if (!d.sick && !d.injured && d.hunger > 0) {
+    if (!d.sick && !d.injured && d.hunger > 0 && !lowHp(d)) {
       // 원인을 모두 고치면 빈사에서 벗어난다 (원작 메일 #97~99: 약·상처약·먹이로 치료)
       d.dying = false;
       d.dyingMinutes = 0;
@@ -437,6 +474,12 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
         d.trainMinutes = 0;
         d.trainDone = true;
         const changes = applyTraining(d, cage, ctx.season ?? 0, ctx.rng);
+        // 훈련 부가 명령1: 현재 HP 감소 (원본 최소 1)
+        const cost = trainingHpCost(cage.no);
+        if (cost) {
+          d.hpNow = Math.min(d.stats.hp, Math.max(1, hpOf(d) + cost));
+          changes.push(`현재 HP ${cost}`);
+        }
         events.push({ type: 'trained', uid: d.uid, name: sp.name, changes: changes.join(', ') });
         d.fatigue = Math.min(100, d.fatigue + 5);
         addStress(d, STRESS.training);

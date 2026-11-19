@@ -192,7 +192,7 @@
       log(`${e.name}이(가) 훈련하다 다쳤습니다. 상처약을 선택하고 디지몬을 터치하세요.`);
       toast(`${e.name} 부상!`);
     } else if (e.type === 'dying') {
-      const fix = e.cause === 'sick' ? '약(주사기)으로 병을' : e.cause === 'injured' ? '상처약으로 부상을' : '먹이로 배고픔을';
+      const fix = e.cause === 'sick' ? '약(주사기)으로 병을' : e.cause === 'injured' ? '상처약으로 부상을' : e.cause === 'hp' ? '양호실에서 쉬게 해 HP를' : '먹이로 배고픔을';
       log(`${e.name}이(가) 빈사 상태가 되었습니다! 움직이지 못합니다. ${fix} 고치세요. 계속 내버려두면 로스트됩니다.`);
       toast(`${e.name} 빈사!`);
       tipMail('dying', '디지몬이 빈사 상태가 되었습니다.\n병·부상·배고픔을 치료하지 않으면 빈사 상태가 되고, 빈사 상태를 내버려두면 로스트되어 사라질 수도 있습니다.\n원인을 치료하면 다시 움직일 수 있어요.');
@@ -305,13 +305,15 @@
     setHtml(
       '#vitals',
       [
-        ['포만감', d.hunger],
-        ['피로', d.fatigue],
-        ['청결', 100 - d.poop * 20],
+        // 현재 HP (원본 +0x50). 배틀·훈련으로 줄고 쉬면 찬다
+        ['HP', d.isEgg ? 0 : C.hpOf(d), d.isEgg ? 0 : d.stats.hp],
+        ['포만감', d.hunger, 100],
+        ['피로', d.fatigue, 100],
+        ['청결', 100 - d.poop * 20, 100],
       ]
         .map(
-          ([n, v]) =>
-            `<div class="vital"><span>${n}</span><div class="track"><i style="width:${clamp(v)}%"></i></div><span>${Math.round(v)} / 100</span></div>`,
+          ([n, v, max]) =>
+            `<div class="vital"><span>${n}</span><div class="track"><i style="width:${clamp(max ? (v / max) * 100 : 0)}%"></i></div><span>${Math.round(v)} / ${max}</span></div>`,
         )
         .join(''),
     );
@@ -1082,7 +1084,7 @@
   }
 
   // ---------- 배틀 ----------
-  const canFight = (d) => !d.isEgg && !d.sick && !d.injured && !d.dying;
+  const canFight = (d) => !d.isEgg && !d.sick && !d.injured && !d.dying && C.hpOf(d) > 0;
   function members(format,selection) {
     if(Array.isArray(selection))return selection.slice(0,format).map(uid=>save.digimon.find(d=>d.uid===uid)).filter(Boolean);
     const first = current();
@@ -1249,7 +1251,9 @@
     const ko = new Set(b.state.units.filter((u) => u.team === 0 && !u.alive).map((u) => u.uid));
     const uids = new Set(b.state.units.filter((u) => u.team === 0).map((u) => u.uid));
     const before = C.tamerRank(save);
-    save = { ...save, digimon: save.digimon.map((d) => (uids.has(d.uid) ? C.applyBattleResult(d, won, ko.has(d.uid), Math.random, C.dateOf(save.clock).season === C.WINTER) : d)) };
+    // 원본: 배틀에서 남은 HP가 그대로 현재 HP가 된다
+    const endHp = new Map(b.state.units.filter((u) => u.team === 0).map((u) => [u.uid, u.alive ? u.hp : 0]));
+    save = { ...save, digimon: save.digimon.map((d) => (uids.has(d.uid) ? C.applyBattleResult(d, won, ko.has(d.uid), Math.random, C.dateOf(save.clock).season === C.WINTER, endHp.get(d.uid)) : d)) };
     const m = b.setup.match;
     const wasQualified = save.qualifiedYear;
     // 타이틀은 이겼을 때만, 챔피언십 예선·본선은 진 것도 기록한다

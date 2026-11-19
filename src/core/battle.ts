@@ -62,6 +62,8 @@ export interface Entrant {
   stats: Stats;
   personality: Personality;
   mode: AttackMode;
+  /** 시작 HP. 원본은 배틀을 현재 HP로 시작한다(overlay19 0x21179DC). 없으면 가득 */
+  hp?: number;
 }
 
 /** 알약(프로틴) 하나당 공격 +15%, 최대 3개분 (임시 값) */
@@ -73,6 +75,7 @@ export const entrantOf = (d: Digimon, mode: AttackMode): Entrant => ({
   stats: d.protein ? { ...d.stats, atk: Math.round(d.stats.atk * (1 + PROTEIN_ATK * Math.min(PROTEIN_SAFE, d.protein))) } : d.stats,
   personality: d.personality,
   mode,
+  hp: d.hpNow,
 });
 
 export function makeEnemies(stage: Stage, count: number, scale: number, rng: Rng): Entrant[] {
@@ -108,7 +111,7 @@ export function createBattle(mine: Entrant[], foes: Entrant[]): BattleState {
         mode: e.mode,
         x: team === 0 ? 70 : ARENA.w - 70,
         y: (ARENA.h / (list.length + 1)) * (i + 1),
-        hp: maxHp,
+        hp: e.hp === undefined ? maxHp : Math.max(0, Math.min(maxHp, e.hp)),
         maxHp,
         tp: maxTp,
         maxTp,
@@ -232,7 +235,8 @@ export function runBattle(mine: Entrant[], foes: Entrant[], rng: Rng): BattleSta
 }
 
 /** 배틀 결과를 디지몬에게 반영: 횟수·승수, 피로, 쓰러진 디지몬의 부상 */
-export function applyBattleResult(d: Digimon, won: boolean, ko: boolean, rng: Rng, winter = false): Digimon {
+/** endHp: 배틀이 끝났을 때 남은 HP. 원본처럼 그대로 현재 HP로 남는다 */
+export function applyBattleResult(d: Digimon, won: boolean, ko: boolean, rng: Rng, winter = false, endHp?: number): Digimon {
   // 원작 문장: 알약(프로틴)을 과식하면 부상 위험이 늘어난다. 3개 넘게 먹으면 1개당 +15% (임시)
   const overeat = Math.max(0, (d.protein ?? 0) - PROTEIN_SAFE) * 0.15;
   // 겨울에는 부상 확률이 오른다 (원작 도움말 help #136, 배수 2는 임시)
@@ -245,5 +249,6 @@ export function applyBattleResult(d: Digimon, won: boolean, ko: boolean, rng: Rn
     fatigue: Math.min(100, d.fatigue + 20),
     hunger: Math.max(0, d.hunger - 10),
     injured: d.injured || rng() < injuryChance,
+    ...(endHp === undefined ? {} : { hpNow: Math.max(0, Math.min(d.stats.hp, Math.round(endHp))) }),
   };
 }
