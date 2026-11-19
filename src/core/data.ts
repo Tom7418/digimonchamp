@@ -58,13 +58,24 @@ for (const line of speciesApiRaw.split(/\r?\n/)) {
   API_ATTR[name] = attr as SpeciesAttr;
 }
 
+/**
+ * 한국어판 게임 안 이름 중 오역을 정식 명칭으로 바꿔 보여 준다 (나무위키 '디지몬 챔피언십/디지몬 진화 목록'의 표, 형규 지시).
+ * 데이터·저장·그림은 원본 게임 이름(종 ID)을 그대로 쓰고, 화면에 보이는 이름(name)만 바꾼다.
+ */
+export const OFFICIAL_NAMES: Record<string, string> = {
+  푸치몬: '쁘띠몬', 산몬: '썬몬', 베비도몬: '베이비드몬', 거북몬: '카메몬', 오로라몬: '알라우몬', 츄카이몬: '츠카이몬',
+  크로아구몬: '아구몬(흑)', 화이트위자몬: '소서리몬', 블랙구미호몬: '요우코몬', 나쁜퍼펫몬: '배드퍼펫몬', 오쿠와몬: '왕쿠가몬',
+  래비드몬: '래피드몬', 블랙래비드몬: '블랙래피드몬', 왕콩알몬: '빅콩알몬', 맘모스몬: '맘몬', 샤잉레이몬: '샤인그레이몬',
+  스컬맘모스몬: '스컬맘몬', 미러지가오몬: '미라쥬가오가몬', 헤라크레스캅테리몬: '헤라클레스캅테리몬', 다이아나몬: '디아나몬',
+};
+
 function build(): Record<string, Species> {
   const out: Record<string, Species> = {};
   const famVotes: Record<string, Partial<Record<Family, number>>> = {};
   const attrVotes: Record<string, Partial<Record<Attr, number>>> = {};
   const parent: Record<string, string> = {};
   const ensure = (name: string, stage: Stage) =>
-    (out[name] ??= { id: name, name, stage, family: '짐승', attr: '데이터', size: 0, evos: [] });
+    (out[name] ??= { id: name, name: OFFICIAL_NAMES[name] ?? name, stage, family: '짐승', attr: '데이터', size: 0, evos: [] });
   const vote = (name: string, cond: Cond, w: number) => {
     for (const [k, v] of Object.entries(cond.ap ?? {}) as [ApKey, number][]) {
       if (isFamily(k)) (famVotes[name] ??= {})[k] = (famVotes[name]![k] ?? 0) + v * w;

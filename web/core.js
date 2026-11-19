@@ -943,6 +943,32 @@ var ChampCore = (function(exports) {
 		const [name, attr] = line.split("|");
 		API_ATTR[name] = attr;
 	}
+	/**
+	* 한국어판 게임 안 이름 중 오역을 정식 명칭으로 바꿔 보여 준다 (나무위키 '디지몬 챔피언십/디지몬 진화 목록'의 표, 형규 지시).
+	* 데이터·저장·그림은 원본 게임 이름(종 ID)을 그대로 쓰고, 화면에 보이는 이름(name)만 바꾼다.
+	*/
+	var OFFICIAL_NAMES = {
+		푸치몬: "쁘띠몬",
+		산몬: "썬몬",
+		베비도몬: "베이비드몬",
+		거북몬: "카메몬",
+		오로라몬: "알라우몬",
+		츄카이몬: "츠카이몬",
+		크로아구몬: "아구몬(흑)",
+		화이트위자몬: "소서리몬",
+		블랙구미호몬: "요우코몬",
+		나쁜퍼펫몬: "배드퍼펫몬",
+		오쿠와몬: "왕쿠가몬",
+		래비드몬: "래피드몬",
+		블랙래비드몬: "블랙래피드몬",
+		왕콩알몬: "빅콩알몬",
+		맘모스몬: "맘몬",
+		샤잉레이몬: "샤인그레이몬",
+		스컬맘모스몬: "스컬맘몬",
+		미러지가오몬: "미라쥬가오가몬",
+		헤라크레스캅테리몬: "헤라클레스캅테리몬",
+		다이아나몬: "디아나몬"
+	};
 	function build() {
 		const out = {};
 		const famVotes = {};
@@ -950,7 +976,7 @@ var ChampCore = (function(exports) {
 		const parent = {};
 		const ensure = (name, stage) => out[name] ??= {
 			id: name,
-			name,
+			name: OFFICIAL_NAMES[name] ?? name,
 			stage,
 			family: "짐승",
 			attr: "데이터",
@@ -7472,7 +7498,7 @@ var ChampCore = (function(exports) {
 	];
 	/** 한글 이름은 원본 도감의 조회 규칙으로 연결한다. 영문 직역으로 대체하지 않는다. */
 	function battleSkills(speciesId) {
-		return (TABLE[getSpecies(speciesId).name]?.skills ?? []).map((skill, index) => ({
+		return (TABLE[getSpecies(speciesId).id]?.skills ?? []).map((skill, index) => ({
 			...skill,
 			slot: index,
 			sequence: skill.sequence,
@@ -8220,7 +8246,7 @@ var ChampCore = (function(exports) {
 	};
 	/** 원본 종 표의 두 성격 조건을 순서대로 비교하고, 불일치하면 기본 두 칸을 사용한다. */
 	function supportSkills(speciesId, personality) {
-		const row = DATA.species[getSpecies(speciesId).name];
+		const row = DATA.species[getSpecies(speciesId).id];
 		if (!row) return [];
 		const match = row.personalities.indexOf(personality), ids = row.pairs[match < 0 ? 2 : match];
 		return [...new Set(ids)].filter((id) => id > 0).map((id) => DATA.skills.find((skill) => skill.id === id)).filter(Boolean);
@@ -9099,6 +9125,7 @@ var ChampCore = (function(exports) {
 	exports.MINUTES_PER_SECOND = MINUTES_PER_SECOND;
 	exports.MIN_PER_DAY = MIN_PER_DAY;
 	exports.NEGLECT_MINUTES = NEGLECT_MINUTES;
+	exports.OFFICIAL_NAMES = OFFICIAL_NAMES;
 	exports.OFFLINE_CAP_MINUTES = OFFLINE_CAP_MINUTES;
 	exports.OLD_TITLE_IDS = OLD_TITLE_IDS;
 	exports.ORIGINAL_ITEMS = ORIGINAL_ITEMS;

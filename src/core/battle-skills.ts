@@ -22,7 +22,7 @@ const ANIMATIONS = ['attack1', 'attack2', 'attack3', 'attack4'] as const;
 
 /** 한글 이름은 원본 도감의 조회 규칙으로 연결한다. 영문 직역으로 대체하지 않는다. */
 export function battleSkills(speciesId: string): BattleSkill[] {
-  return (TABLE[getSpecies(speciesId).name]?.skills ?? []).map((skill, index) => ({
+  return (TABLE[getSpecies(speciesId).id]?.skills ?? []).map((skill, index) => ({
     ...skill, slot: index as 0 | 1 | 2, sequence: skill.sequence as 7 | 8 | 9 | 10,
     animation: ANIMATIONS[skill.sequence - 7],
   }));

@@ -8,7 +8,7 @@ export type BattleBuff = 'atk' | 'def' | 'spd' | 'int' | '열' | '추위' | '천
 const DATA = table as {skills:SupportSkill[];species:Record<string,{personalities:string[];pairs:number[][]}>;elements:Record<string,number>};
 /** 원본 종 표의 두 성격 조건을 순서대로 비교하고, 불일치하면 기본 두 칸을 사용한다. */
 export function supportSkills(speciesId: string, personality: Personality): SupportSkill[] {
-  const row=DATA.species[getSpecies(speciesId).name];
+  const row=DATA.species[getSpecies(speciesId).id];
   if(!row)return [];
   const match=row.personalities.indexOf(personality),ids=row.pairs[match<0?2:match];
   return [...new Set(ids)].filter(id=>id>0).map(id=>DATA.skills.find(skill=>skill.id===id)!).filter(Boolean);

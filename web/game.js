@@ -61,7 +61,7 @@
     valid:uid=>!!digi(uid)&&!digi(uid).isEgg,
     canStart:uid=>!hatching.has(uid), // 오프라인 중 부화→진화했어도 부화부터 보여 준다.
     drawSpecies:(context,id,x,y,scale,white,elapsed)=>{
-      const spriteId=SPRITE_BY_NAME[C.getSpecies(id).name];
+      const spriteId=SPRITE_BY_NAME[C.getSpecies(id).id];
       sprite(context,spriteId,x,y,scale,animations.sample(spriteId,white?'evolving':'idle',elapsed),false);
     },
     onComplete:event=>toast(`${C.getSpecies(event.from).name} → ${C.getSpecies(event.to).name} 진화!`),
@@ -855,7 +855,7 @@
   }
   // 먹는 동안의 예약은 화면에서만 유지한다. 저장 후 재접속하면 바닥 먹이는 남고 다시 접근한다.
   const feeding = new Map();
-  const animationId = (d) => SPRITE_BY_NAME[d.isEgg ? eggName(d) : C.getSpecies(d.speciesId).name];
+  const animationId = (d) => SPRITE_BY_NAME[d.isEgg ? eggName(d) : C.getSpecies(d.speciesId).id];
   /** 부화 연출 중인 디지몬: uid → 지난 초 */
   const hatching = new Map();
   const HATCH = { id: 'e000_digitama', state: 'seq_1' };
@@ -1201,10 +1201,10 @@
           const attacker=b.state.units.find(u=>u.id===e.from),target=b.state.units.find(u=>u.id===e.to);
           // 필살기는원본 표+16에서 확인한7~10.기본 공격10은 사용자 지정 정책을 유지한다.
           const attackState=e.special?(e.skill?.animation??'attack1'):'attack4';
-          const attackId=SPRITE_BY_NAME[C.getSpecies(attacker.speciesId).name];
+          const attackId=SPRITE_BY_NAME[C.getSpecies(attacker.speciesId).id];
           const attackDuration=animations.duration(attackId,attackState);
           if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:attackDuration,duration:attackDuration,state:attackState});
-          const id=SPRITE_BY_NAME[C.getSpecies(target.speciesId).name];
+          const id=SPRITE_BY_NAME[C.getSpecies(target.speciesId).id];
           const state=Math.random()<0.5?'hurt':'hurtAlt';
           const duration=animations.duration(id,state);
           b.actions.set(e.to,{kind:'hit',left:duration,duration,state});
@@ -1309,7 +1309,7 @@
     for (const u of [...s.units].sort((a,b)=>a.y-b.y||a.id-b.id)) {
       if (!u.alive) ctx.globalAlpha = 0.3;
       const m=battle.done?{dx:0,dy:0}:battle.motion.get(u.id)||{dx:u.team===0?0.001:-0.001,dy:0};
-      const spriteId=SPRITE_BY_NAME[C.getSpecies(u.speciesId).name];
+      const spriteId=SPRITE_BY_NAME[C.getSpecies(u.speciesId).id];
       const pose=animations.movement(u,spriteId,m.dx,m.dy,dt,!u.alive);
       const action=battle.actions.get(u.id);
       // 피격 시 해당 종의 원본 셀을 원본 유지 시간으로 재생한다. 인위적 흔들림/점멸 없음.
@@ -1388,9 +1388,10 @@
   // 원본 그림이 아예 없는 종만 종족 색 원과 이름 첫 글자로 표시한다.
   // 그림은 있는데 아직 불러오는 중이면 아무것도 그리지 않는다 (부화·진화 직후 임시 원이 번쩍이지 않게).
   function body(context, speciesId, isEgg, x, y, scale, frame, flip) {
-    const name = isEgg ? (typeof isEgg === 'string' ? isEgg : '디지에그') : C.getSpecies(speciesId).name;
-    if (sprite(context, SPRITE_BY_NAME[name], x, y, scale, frame, flip)) return;
-    if (SPRITE_BY_NAME[name] && asset(SPRITE_BY_NAME[name])) return;
+    const key = isEgg ? (typeof isEgg === 'string' ? isEgg : '디지에그') : C.getSpecies(speciesId).id; // 그림은 종 ID로 찾는다
+    const name = isEgg ? '디지에그' : C.getSpecies(speciesId).name;
+    if (sprite(context, SPRITE_BY_NAME[key], x, y, scale, frame, flip)) return;
+    if (SPRITE_BY_NAME[key] && asset(SPRITE_BY_NAME[key])) return;
     const sp = C.getSpecies(speciesId);
     const r = (6 + sp.stage * 3) * scale * 0.8;
     context.fillStyle = FAMILY_COLOR[sp.family] || '#ccc';
@@ -1410,7 +1411,7 @@
 
   // 그림자(발밑 하이라이트) 가로 반지름: 서 있는 몸 폭에 맞춘다
   function spriteOf(speciesId, isEgg) {
-    return asset(SPRITE_BY_NAME[isEgg ? (typeof isEgg === 'string' ? isEgg : '디지에그') : C.getSpecies(speciesId).name]);
+    return asset(SPRITE_BY_NAME[isEgg ? (typeof isEgg === 'string' ? isEgg : '디지에그') : C.getSpecies(speciesId).id]);
   }
   function footprint(speciesId, isEgg, scale) {
     const a = spriteOf(speciesId, isEgg);
@@ -1474,14 +1475,14 @@
       // 훈련은 원작 시설 행동표의 동작으로 표시. 복합 행동의 첫 동작만 연결.
       const state=board.isBouncing(d.uid) ? 'hurtAlt' : d.dying ? 'ko' : C.isSleeping(d) ? 'seq_13' : p.cageId&&p.motion==='idle'&&trainingSequence!==undefined&&!d.isEgg&&!d.trainDone
         ? 'seq_'+trainingSequence : p.motion||'idle';
-      if (d.isEgg) asset(SPRITE_BY_NAME[C.getSpecies(d.originBaby || d.speciesId).name]); // 부화 전에 미리 불러 둔다
+      if (d.isEgg) asset(SPRITE_BY_NAME[C.getSpecies(d.originBaby || d.speciesId).id]); // 부화 전에 미리 불러 둔다
       // 안내 편지/다른 창 때문에 연출이 대기 중이어도 진화 후 모습을 먼저 보여 주지 않는다.
       const evolutionFrom=window.evolutionScene?.appearance(d.uid);
       if (hatching.has(d.uid)) {
         const hatchDt=!titleOpen&&!battle&&!hunt&&!paused&&!mailOpen&&!dayEnding&&!board.editing&&!window.evolutionScene?.snapshot()?dt:0;
         const elapsed = hatching.get(d.uid) + hatchDt;
         hatching.set(d.uid, elapsed);
-        const born = asset(SPRITE_BY_NAME[C.getSpecies(evolutionFrom||d.speciesId).name]);
+        const born = asset(SPRITE_BY_NAME[C.getSpecies(evolutionFrom||d.speciesId).id]);
         const hatchId = SPRITE_BY_NAME[eggName(d)] || HATCH.id; // 깨어나는 알도 그 디지몬의 알 그림
         if (elapsed < animations.duration(HATCH.id, HATCH.state) || (born && !born.image.complete)) {
           const hatchFrame = animations.sample(HATCH.id, HATCH.state, elapsed);
@@ -1492,7 +1493,7 @@
         hatching.delete(d.uid);
       }
       if(evolutionFrom){
-        const spriteId=SPRITE_BY_NAME[C.getSpecies(evolutionFrom).name],frame=animations.sample(spriteId,'idle',0);
+        const spriteId=SPRITE_BY_NAME[C.getSpecies(evolutionFrom).id],frame=animations.sample(spriteId,'idle',0);
         spriteFrames.set(p,{frame,speciesId:evolutionFrom,isEgg:false});
         body(ctx,evolutionFrom,false,p.x,p.y,scale,frame,p.direction>0);
         continue;
@@ -2372,7 +2373,7 @@
         ctx.stroke();
       }
       if (w.flash > 0 && Math.floor(w.flash * 20) % 2) ctx.globalAlpha = 0.4;
-      const spriteId = SPRITE_BY_NAME[C.getSpecies(w.id).name];
+      const spriteId = SPRITE_BY_NAME[C.getSpecies(w.id).id];
       const motion = w.ko
         ? {frame:animations.pose(w,spriteId,'ko',dt),flip:w.vx>0}
         : w.bound>0 || w.runAway>0
