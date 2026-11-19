@@ -243,7 +243,7 @@ export function evaluateEvolutions(save: SaveData, rng: Rng = defaultRng, uids?:
  * 게임 1시간마다 -1, 쉬는 케이지(온천·미니 양호실·양호실·동물원·미니 동물원)에서는 -5.
  * 임시(Claude가 정함): 100이 되면 병.
  */
-export const STRESS = { crowdedPerDay: 20, rotten: 50, sick: 40, hungerBelow: 20, perHunger: 1.5, show: 70, restPerHour: 1 };
+export const STRESS = { rotten: 50, sick: 40, hungerBelow: 20, perHunger: 1.5, show: 70, restPerHour: 1 };
 /** 훈련 한 번에 걸리는 게임 분 */
 export const TRAINING_MINUTES = 15;
 /** 병·부상을 방치해 로스트되기까지의 게임 분 (임시: 이틀) */
@@ -593,6 +593,10 @@ export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, d
   const socialDay = Math.floor((save.clock + 1) / MIN_PER_DAY);
   const next: Digimon[] = [];
   const seen = new Set(save.seen);
+  // 정원 초과 (원본 overlay18 0x211AE00~0x211AEB0): 1시간마다 정원을 넘긴 케이지의 디지몬은 '그 케이지의 디지몬 수 - 1'만큼 스트레스
+  const crowdHour = (save.clock + 1) % 60 === 0;
+  const headcount = new Map<string, number>();
+  if (crowdHour) for (const d of save.digimon) { const k = group(d); if (!d.isEgg && k) headcount.set(k, (headcount.get(k) ?? 0) + 1); }
   save.digimon.forEach((d, i) => {
     const before = d.isEgg ? 0 : getSpecies(d.speciesId).size;
     const isLast = next.length + (save.digimon.length - i) <= 1;
@@ -603,6 +607,8 @@ export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, d
     social.added = Math.min(10,social.added + extra);
     const candidate = {...d,socialStress:social};
     if(extra>0)addStress(candidate,extra);
+    const inCage = key ? headcount.get(key) ?? 0 : 0;
+    if (crowdHour && !d.isEgg && inCage > getCage(d.cage).capacity) addStress(candidate, inCage - 1);
     const dirty = !!d.cageInstance && dirtyCages.includes(d.cageInstance);
     const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1, dirty, cageLevels: save.cageLevels }, events);
     if (!r) {
@@ -659,7 +665,7 @@ export function advanceOffline(save: SaveData, minutes: number, rng: Rng = defau
 }
 
 /** 하루 마감: 다음 날 아침 7시까지 잠잔다 (수명·병은 흐르고, 배고픔·똥·훈련은 멈춘다) */
-/** crowded = 정원을 넘긴 케이지에 있는 디지몬 uid (케이지 배치는 화면 쪽이 안다) */
+/** crowded는 예전 하루 단위 정원 초과용(지금은 tickFarm에서 1시간마다 처리, 인자는 호환용으로만 남김) */
 export function endDay(save: SaveData, rng: Rng = defaultRng, crowded: number[] = []) {
   const morning = nextMorningClock(save);
   const events: FarmEvent[] = [];
@@ -675,7 +681,6 @@ export function endDay(save: SaveData, rng: Rng = defaultRng, crowded: number[] 
     digimon: cur.digimon.map((x) => {
       const d = { ...x, protein: 0 };
       if (d.isEgg) return d;
-      if (crowded.includes(d.uid)) addStress(d, STRESS.crowdedPerDay);
       // 다음 날 아침에는 HP가 가득 찬다 (형규 지정. 원본 기상 처리 0x2120048은 1/30이지만 이 게임은 하루 마감 뒤 완전 회복)
       d.hpNow = d.stats.hp;
       return d;

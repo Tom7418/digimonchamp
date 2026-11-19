@@ -459,7 +459,6 @@
     $('#close-modal').disabled = true;
   }
   function finishDay() {
-    // 정원을 넘긴 케이지에서 하루를 보낸 디지몬은 스트레스를 받는다
     const r = C.endDay(save, Math.random, L.crowded(view));
     save = r.save;
     r.events.forEach(logEvent);

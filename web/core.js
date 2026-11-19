@@ -3626,7 +3626,6 @@ var ChampCore = (function(exports) {
 	* 임시(Claude가 정함): 100이 되면 병.
 	*/
 	var STRESS = {
-		crowdedPerDay: 20,
 		rotten: 50,
 		sick: 40,
 		hungerBelow: 20,
@@ -4053,6 +4052,12 @@ var ChampCore = (function(exports) {
 		const socialDay = Math.floor((save.clock + 1) / MIN_PER_DAY);
 		const next = [];
 		const seen = new Set(save.seen);
+		const crowdHour = (save.clock + 1) % 60 === 0;
+		const headcount = /* @__PURE__ */ new Map();
+		if (crowdHour) for (const d of save.digimon) {
+			const k = group(d);
+			if (!d.isEgg && k) headcount.set(k, (headcount.get(k) ?? 0) + 1);
+		}
 		save.digimon.forEach((d, i) => {
 			const before = d.isEgg ? 0 : getSpecies(d.speciesId).size;
 			const isLast = next.length + (save.digimon.length - i) <= 1;
@@ -4068,6 +4073,8 @@ var ChampCore = (function(exports) {
 				socialStress: social
 			};
 			if (extra > 0) addStress(candidate, extra);
+			const inCage = key ? headcount.get(key) ?? 0 : 0;
+			if (crowdHour && !d.isEgg && inCage > getCage(d.cage).capacity) addStress(candidate, inCage - 1);
 			const dirty = !!d.cageInstance && dirtyCages.includes(d.cageInstance);
 			const r = tickOne(candidate, {
 				rank,
@@ -4142,7 +4149,7 @@ var ChampCore = (function(exports) {
 		};
 	}
 	/** 하루 마감: 다음 날 아침 7시까지 잠잔다 (수명·병은 흐르고, 배고픔·똥·훈련은 멈춘다) */
-	/** crowded = 정원을 넘긴 케이지에 있는 디지몬 uid (케이지 배치는 화면 쪽이 안다) */
+	/** crowded는 예전 하루 단위 정원 초과용(지금은 tickFarm에서 1시간마다 처리, 인자는 호환용으로만 남김) */
 	function endDay(save, rng = defaultRng, crowded = []) {
 		const morning = nextMorningClock(save);
 		const events = [];
@@ -4160,7 +4167,6 @@ var ChampCore = (function(exports) {
 					protein: 0
 				};
 				if (d.isEgg) return d;
-				if (crowded.includes(d.uid)) addStress(d, STRESS.crowdedPerDay);
 				d.hpNow = d.stats.hp;
 				return d;
 			})

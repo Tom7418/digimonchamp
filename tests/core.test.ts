@@ -1182,11 +1182,15 @@ describe('스트레스 (형규가 정한 값)', () => {
     const r = feedRotten({ ...one({ rottenEaten: 1 }), rotten: 1 }, 1);
     expect(r.save.digimon[0]).toMatchObject({ sick: true, stress: 50 });
   });
-  it('정원 초과로 하루가 지나면 +20, 그냥 지나면 그대로', () => {
-    const night = { ...one({ stress: 50 }), clock: 21 * 60 };
-    // 밤 10시간 동안 시간당 -1
-    expect(endDay(night, seeded(1), [1]).save.digimon[0].stress).toBe(60);
-    expect(endDay(night, seeded(1)).save.digimon[0].stress).toBe(40);
+  it('정원 초과면 1시간마다 그 케이지의 디지몬 수 - 1만큼 오른다 (원본 0x211AE94)', () => {
+    const mon = (uid: number) => ({ ...newDigimon(uid, '아구몬'), hunger: 100, stress: 50, cage: '미니 양호실', cageInstance: 'c1' });
+    const base = { ...freshEggSave(0), clock: 10 * 60 + 59 } as SaveData; // 다음 분이 정각
+    const three = tickFarm({ ...base, digimon: [mon(1), mon(2), mon(3)] }, seeded(1)).save.digimon; // 정원 2에 3마리
+    const two = tickFarm({ ...base, digimon: [mon(1), mon(2)] }, seeded(1)).save.digimon;
+    const relief = two[0].stress!; // 정원 안: 시설 효과·자연 회복만
+    expect(three[0].stress).toBe(relief + 2);
+    const off = tickFarm({ ...base, clock: 10 * 60 + 10, digimon: [mon(1), mon(2), mon(3)] }, seeded(1)).save.digimon;
+    expect(off[0].stress).toBeLessThanOrEqual(50); // 정각이 아니면 오르지 않는다
   });
   it('100이 되면 병에 걸린다 (한 번만)', () => {
     const s = tickFarm(one({ stress: 100 }), seeded(1)).save;

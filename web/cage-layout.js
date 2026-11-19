@@ -75,7 +75,7 @@ window.CageLayout = {
   assign(state,pet,id){
     const cage=state.layout.find(c=>c.id===id);
     if(!cage)return false;
-    // 원작처럼 정원을 넘겨도 넣을 수 있다. 넘긴 채 하루가 지나면 스트레스를 받는다 (crowded 참고)
+    // 원작처럼 정원을 넘겨도 넣을 수 있다. 넘긴 동안 1시간마다 스트레스를 받는다 (엔진 tickFarm)
     pet.cageId=id;pet.cage=cage.kind;pet.cageSeconds=0;return true;
   }
 };
