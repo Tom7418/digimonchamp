@@ -1,9 +1,12 @@
-"""원본 실행 코드(root/ftc/arm9.bin)의 진화표를 읽어 src/data/evolutions.txt의 진화 목록을 원본대로 바꾼다.
+"""원본 실행 코드(root/ftc/arm9.bin)의 진화표를 읽어 src/data/evolutions.txt와의 차이를 보여 준다.
+
+현재 evolutions.txt는 형규 지시로 나무위키 목록을 기준으로 하고 뿔몬→사이케몬만 롬 값이다.
+그래서 기본 동작은 차이 보고만 하고, --write를 주면 롬 진화표로 덮어쓴다.
 
 사용법 (Windows PowerShell):
     pip install capstone
-    python tools/extract_evolutions.py "C:\\Users\\TEST OS\\OneDrive\\Desktop\\root"
-    python tools/extract_evolutions.py "C:\\...\\root" --check   # 파일을 고치지 않고 차이만 확인
+    python tools/extract_evolutions.py "C:\\Users\\TEST OS\\OneDrive\\Desktop\\root"           # 차이만 확인
+    python tools/extract_evolutions.py "C:\\...\\root" --write   # 롬 진화표로 덮어쓰기
 
 원본 구조 (overlay18 0x2115D80 진화 판정에서 확인):
   - 진화표는 RAM 0x020DF528, 종(디지몬 표 번호 - 8)마다 12바이트 {후보 수, 후보 배열 포인터, ?}.
@@ -27,7 +30,7 @@ from capstone import CS_ARCH_ARM, CS_MODE_ARM, Cs
 REPO = Path(__file__).resolve().parents[1]
 args = [a for a in sys.argv[1:] if not a.startswith('--')]
 ROOT = Path(args[0]) if args else REPO.parent / 'root'
-CHECK = '--check' in sys.argv
+WRITE = '--write' in sys.argv
 
 arm9 = (ROOT / 'ftc' / 'arm9.bin').read_bytes()
 BASE = 0x02000000
@@ -89,7 +92,7 @@ lines = path.read_text(encoding='utf-8').splitlines()
 out, changed = [], []
 for line in lines:
     if line.startswith('# 출처'):
-        out.append('# 출처: 원본 실행 코드 arm9.bin의 진화표(tools/extract_evolutions.py). 예전 위키 목록과 다른 곳은 docs/design.md에 적음')
+        out.append('# 출처: 원본 실행 코드 arm9.bin의 진화표(tools/extract_evolutions.py --write)' if WRITE else line)
         continue
     if not line or line.startswith('#'):
         out.append(line)
@@ -101,8 +104,8 @@ for line in lines:
     out.append(f'{stage}|{name}|{new}')
 if evolutions:
     raise SystemExit(f'evolutions.txt에 없는 종: {sorted(evolutions)}')
-print(f'원본 진화표 {len(copies)}칸, 바뀐 종 {len(changed)}')
+print(f'원본 진화표 {len(copies)}칸, evolutions.txt와 다른 종 {len(changed)}')
 for name, old, new in changed:
-    print(f'  {name}\n    이전: {old}\n    원본: {new}')
-if not CHECK:
+    print(f'  {name}\n    현재: {old}\n    롬:   {new}')
+if WRITE:
     path.write_text('\n'.join(out) + '\n', encoding='utf-8', newline='\n')
