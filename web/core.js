@@ -3035,6 +3035,43 @@ var ChampCore = (function(exports) {
 		};
 	}
 	var usedCapacity = (save) => save.digimon.reduce((s, d) => s + (d.isEgg ? 0 : getSpecies(d.speciesId).size), 0);
+	/**
+	* 기억 기록 (원본 ARM9 0x2062E80~0x2062F2C): 진화·디지에그화로 모습이 바뀔 때마다 바뀌기 전 종을
+	* 그 세대 칸에 적는다. 이전 기억(first)은 second로 밀린다.
+	*/
+	function remember(d) {
+		const stage = getSpecies(d.speciesId).stage;
+		const m = d.memory ?? {
+			first: {},
+			second: {}
+		};
+		return {
+			first: {
+				...m.first,
+				[stage]: d.speciesId
+			},
+			second: {
+				...m.second,
+				...m.first[stage] ? { [stage]: m.first[stage] } : {}
+			}
+		};
+	}
+	/**
+	* 기억 진화 (원본 사육 overlay18 0x21165A4~0x21167A0, 0x21167E4). 세대 수명이 다했을 때만 적용한다.
+	*  - 진화할 곳이 정해졌을 때: 다음 세대의 기억이 두 칸이면 1/3씩 둘째 기억·첫째 기억·원래 진화, 첫째만 있으면 1/2로 첫째 기억.
+	*  - 진화 조건을 하나도 못 채웠을 때: 첫째 기억이 있으면 그 모습으로 진화한다.
+	*/
+	function memoryEvolution(d, normal, rng) {
+		const next = getSpecies(d.speciesId).stage + 1;
+		const first = d.memory?.first[next], second = d.memory?.second[next];
+		if (normal === null) return first ?? null;
+		if (first && second) {
+			const r = Math.floor(rng() * 3);
+			return r === 0 ? second : r === 1 ? first : null;
+		}
+		if (first) return rng() < .5 ? first : null;
+		return null;
+	}
 	/** 진화 시 능력치/속성 이월은 사육 틱과 배틀 직후에 같은 규칙을 사용한다. */
 	function evolveDigimon(d, to, rng) {
 		const ap = Object.fromEntries(Object.entries(d.ap).map(([k, v]) => [k, Math.floor(v / 2)]));
@@ -3045,7 +3082,22 @@ var ChampCore = (function(exports) {
 			stats: evolvedStats(d, to, d.eggs, rng),
 			statVersion: 1,
 			ap,
-			rottenEaten: 0
+			rottenEaten: 0,
+			memory: remember(d)
+		};
+	}
+	/** 수명이 다한 뒤의 판정에 기억 진화를 덧씌운다. 기억 진화는 원본처럼 랭크 제한을 다시 보지 않고 용량만 확인한다 */
+	function lifespanEvolution(d, evo, free, rng) {
+		if (d.isEgg) return evo;
+		const sp = getSpecies(d.speciesId);
+		if (d.stageAge < LIFESPAN[sp.stage] || sp.stage >= 6) return evo;
+		const to = memoryEvolution(d, evo?.kind === "evolve" ? evo.to : null, rng);
+		if (!to || evo?.kind === "evolve" && to === evo.to) return evo;
+		if (getSpecies(to).size - sp.size > free) return evo;
+		return {
+			kind: "evolve",
+			to,
+			memory: true
 		};
 	}
 	/** 시간/포만감 등을 진행하지 않고 조건만 평가한다. 한 번에 개체당 한 단계만 진화한다. */
@@ -3059,14 +3111,15 @@ var ChampCore = (function(exports) {
 			changed = false;
 			digimon.forEach((d, i) => {
 				if (uids && !uids.has(d.uid) || evolved.has(d.uid)) return;
-				const evo = findEvolution(d, rank, free);
+				const evo = lifespanEvolution(d, findEvolution(d, rank, free), free, rng);
 				if (evo?.kind !== "evolve") return;
 				free -= getSpecies(evo.to).size - getSpecies(d.speciesId).size;
 				events.push({
 					type: "evolved",
 					uid: d.uid,
 					from: d.speciesId,
-					to: evo.to
+					to: evo.to,
+					...evo.memory ? { memory: true } : {}
 				});
 				seen.add(evo.to);
 				evolved.add(d.uid);
@@ -3187,7 +3240,8 @@ var ChampCore = (function(exports) {
 			fatigue: 0,
 			cage: "기본 케이지",
 			restCycle: void 0,
-			resistance: void 0
+			resistance: void 0,
+			memory: remember(d)
 		};
 	}
 	/** 디지몬 한 마리의 게임 시간 1분. null이면 로스트 */
@@ -3200,18 +3254,20 @@ var ChampCore = (function(exports) {
 		d.stageAge += 1;
 		if (d.isEgg) {
 			if (d.stageAge >= 30) {
+				const first = d.memory?.first[1], second = d.memory?.second[1];
+				const baby = first && second ? ctx.rng() < .5 ? second : first : first ?? d.originBaby;
 				events.push({
 					type: "hatched",
 					uid: d.uid,
 					from: "디지에그",
-					to: d.originBaby
+					to: baby
 				});
 				d = {
 					...d,
 					isEgg: false,
-					speciesId: d.originBaby,
+					speciesId: baby,
 					stageAge: 0,
-					stats: evolvedStats(null, d.originBaby, d.eggs, ctx.rng),
+					stats: evolvedStats(null, baby, d.eggs, ctx.rng),
 					statVersion: 1
 				};
 			}
@@ -3357,13 +3413,14 @@ var ChampCore = (function(exports) {
 			d.trainMinutes = 0;
 		}
 		if (d.stageAge % 60 === 0) addStress(d, -(STRESS_RELIEF_CAGES.includes(cage.id) ? STRESS.reliefPerHour : cage.autoCare ? STRESS.autoCarePerHour : STRESS.restPerHour));
-		const evo = findEvolution(d, ctx.rank, ctx.free);
+		const evo = lifespanEvolution(d, findEvolution(d, ctx.rank, ctx.free), ctx.free, ctx.rng);
 		if (evo?.kind === "evolve") {
 			events.push({
 				type: "evolved",
 				uid: d.uid,
 				from: sp.id,
-				to: evo.to
+				to: evo.to,
+				...evo.memory ? { memory: true } : {}
 			});
 			return evolveDigimon(d, evo.to, ctx.rng);
 		}
@@ -9169,6 +9226,7 @@ var ChampCore = (function(exports) {
 	exports.matchEntryNotice = matchEntryNotice;
 	exports.maxStageForRank = maxStageForRank;
 	exports.meets = meets;
+	exports.memoryEvolution = memoryEvolution;
 	exports.migrateTitleIds = migrateTitleIds;
 	exports.moveOnHuntTerrain = moveOnHuntTerrain;
 	exports.newDigimon = newDigimon;
@@ -9187,6 +9245,7 @@ var ChampCore = (function(exports) {
 	exports.rankName = rankName;
 	exports.rebirthPercent = rebirthPercent;
 	exports.release = release;
+	exports.remember = remember;
 	exports.reqScale = reqScale;
 	exports.restoreFloorFood = restoreFloorFood;
 	exports.reviveSupport = reviveSupport;

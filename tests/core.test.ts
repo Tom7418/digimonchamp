@@ -9,7 +9,7 @@ import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
-import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
+import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_BATTLES, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -840,6 +840,38 @@ describe('illness', () => {
     // 배고픔 0이 깨어 있는 시간으로 하루 이어지면 빈사
     const starving = tickFarm(two({ hunger: 0, starvingMinutes: 1199 }), seeded(1));
     expect(starving.events.some((e) => e.type === 'dying' && e.cause === 'hunger')).toBe(true);
+  });
+  it('기억 진화: 바뀌기 전 모습을 세대별로 두 칸 기억하고 수명이 다할 때 그 모습으로 진화할 수 있다 (원본 0x2062E80·0x21165A4)', () => {
+    const agu = newDigimon(1, '아구몬');
+    const m1 = remember(agu)!;
+    expect(m1.first[3]).toBe('아구몬');
+    const m2 = remember({ ...agu, speciesId: '가오몬', memory: m1 })!;
+    expect([m2.first[3], m2.second[3]]).toEqual(['가오몬', '아구몬']);
+    // 코로몬(유년기II)이 다음 세대(성장기) 기억 두 칸을 가지면 1/3씩
+    const koro = { ...newDigimon(2, '코로몬'), memory: m2 };
+    expect(memoryEvolution(koro, '아구몬', () => 0.1)).toBe('아구몬'); // r=0 → 둘째 기억
+    expect(memoryEvolution(koro, '아구몬', () => 0.5)).toBe('가오몬'); // r=1 → 첫째 기억
+    expect(memoryEvolution(koro, '아구몬', () => 0.9)).toBe(null); // r=2 → 원래 진화
+    // 진화 조건을 못 채웠으면 첫째 기억
+    expect(memoryEvolution(koro, null, () => 0.9)).toBe('가오몬');
+    // 첫째만 있으면 1/2
+    const one = { ...koro, memory: m1 };
+    expect(memoryEvolution(one, '가오몬', () => 0.2)).toBe('아구몬');
+    expect(memoryEvolution(one, '가오몬', () => 0.7)).toBe(null);
+  });
+  it('수명이 다한 개체만 기억 진화하고, 디지에그는 유년기I 기억으로 부화한다', () => {
+    const mem = { first: { 3: '가오몬', 1: '푸니몬' }, second: {} };
+    const young = { ...freshSave(0), digimon: [{ ...newDigimon(1, '코로몬'), hunger: 100, memory: mem }, newDigimon(2, '깜몬')] };
+    // 수명 전에는 기억으로 진화하지 않는다
+    expect(tickFarm(young, () => 0.2).events.some((e) => e.type === 'evolved')).toBe(false);
+    const old = { ...young, digimon: young.digimon.map((d) => (d.uid === 1 ? { ...d, stageAge: LIFESPAN[2] } : d)) };
+    const r = tickFarm(old, () => 0.2);
+    const e = r.events.find((x) => x.type === 'evolved' && x.uid === 1);
+    expect(e && e.type === 'evolved' && e.to).toBe('가오몬');
+    expect(e && e.type === 'evolved' && e.memory).toBe(true);
+    // 부화: 기억한 유년기I
+    const egg = { ...young, digimon: [{ ...newDigimon(1, '깜몬'), isEgg: true, stageAge: 29, memory: mem }, newDigimon(2, '깜몬')] };
+    expect(tickFarm(egg, () => 0.2).save.digimon[0].speciesId).toBe('푸니몬');
   });
   it('디지에그 그림은 디지에그화 횟수로 고른다 (원본 0x2119B2C)', () => {
     expect([0, 1, 2, 6, 7, 8, 100].map(eggSpriteIndex)).toEqual([0, 1, 2, 6, 7, 7, 7]);

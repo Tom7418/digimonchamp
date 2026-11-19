@@ -174,7 +174,7 @@
       log(`디지에그가 부화해 ${n(e.to)}이(가) 태어났습니다!`);
     }
     else if (e.type === 'evolved') {
-      log(`✦ ${n(e.from)}이(가) ${n(e.to)}(으)로 진화했습니다!`);
+      log(e.memory ? `✦ 기억 진화! ${n(e.from)}이(가) 예전 생의 모습 ${n(e.to)}(으)로 진화했습니다!` : `✦ ${n(e.from)}이(가) ${n(e.to)}(으)로 진화했습니다!`);
       evolutionScene.enqueue(e);
     } else if (e.type === 'egg' && e.reason === 'sick') {
       log(`${n(e.from)}이(가) 빈사 상태로 방치되어 쓰러졌습니다… 디지에그로 돌아갔습니다.`);

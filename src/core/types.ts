@@ -66,6 +66,11 @@ export interface Digimon {
   injured: boolean;
   /** 빈사 (help #124·#137·#140~142). 원인(병·부상·굶주림)을 고치면 풀리고, 방치하면 로스트. 옛 저장은 없음=false */
   dying?: boolean;
+  /**
+   * 기억 (원본 디지몬 구조체 +0x140~+0x154 / +0x158~+0x16C, 세대별 두 칸). 키는 세대 1~6.
+   * first: 가장 최근 생에서 그 세대였던 종, second: 그 이전. 옛 저장은 없음 = 기억 없음.
+   */
+  memory?: { first: Partial<Record<number, string>>; second: Partial<Record<number, string>> };
   dyingMinutes?: number;
   /** 발병 횟수 (페널티) */
   penalties: number;

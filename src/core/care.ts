@@ -1,7 +1,7 @@
 import { applyTraining } from './training';
 import { evolvedStats, upgradeStats } from './stats';
 import { CAGE_RENAMES, CAGES, dateOf, DAY_END_MINUTE, DAY_START_HOUR, EGG_MINUTES, initialStats, getCage, getSpecies, originalSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK } from './data';
-import { endOfLife, findEvolution } from './evolution';
+import { endOfLife, findEvolution, type EvoResult } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, migrateTitleIds, tamerRank } from './titles';
 import { bestRope, MEMORY_CARDS, ROPES, START_ROPE, WIRE_PACK, BAIT_PACK, BAITS, GEARS, gearCount, itemUnlocked, SHOT_PACK, SHOTS } from './hunt';
@@ -154,7 +154,7 @@ export function freshSave(now = Date.now()): SaveData {
 export const usedCapacity = (save: SaveData) => save.digimon.reduce((s, d) => s + (d.isEgg ? 0 : getSpecies(d.speciesId).size), 0);
 
 export type FarmEvent =
-  | { type: 'hatched' | 'evolved'; uid: number; from: string; to: string }
+  | { type: 'hatched' | 'evolved'; uid: number; from: string; to: string; memory?: boolean }
   | { type: 'egg'; uid: number; from: string; reason?: 'sick' }
   | { type: 'lost'; uid: number; name: string; reason: string }
   | { type: 'sick'; uid: number; name: string }
@@ -166,10 +166,48 @@ export type FarmEvent =
   | { type: 'trained'; uid: number; name: string; changes: string }
   | { type: 'blocked'; uid: number; name: string; reason: 'rank' | 'capacity' };
 
+/**
+ * 기억 기록 (원본 ARM9 0x2062E80~0x2062F2C): 진화·디지에그화로 모습이 바뀔 때마다 바뀌기 전 종을
+ * 그 세대 칸에 적는다. 이전 기억(first)은 second로 밀린다.
+ */
+export function remember(d: Digimon): Digimon['memory'] {
+  const stage = getSpecies(d.speciesId).stage;
+  const m = d.memory ?? { first: {}, second: {} };
+  return { first: { ...m.first, [stage]: d.speciesId }, second: { ...m.second, ...(m.first[stage] ? { [stage]: m.first[stage] } : {}) } };
+}
+
+/**
+ * 기억 진화 (원본 사육 overlay18 0x21165A4~0x21167A0, 0x21167E4). 세대 수명이 다했을 때만 적용한다.
+ *  - 진화할 곳이 정해졌을 때: 다음 세대의 기억이 두 칸이면 1/3씩 둘째 기억·첫째 기억·원래 진화, 첫째만 있으면 1/2로 첫째 기억.
+ *  - 진화 조건을 하나도 못 채웠을 때: 첫째 기억이 있으면 그 모습으로 진화한다.
+ */
+export function memoryEvolution(d: Digimon, normal: string | null, rng: Rng): string | null {
+  const next = getSpecies(d.speciesId).stage + 1;
+  const first = d.memory?.first[next], second = d.memory?.second[next];
+  if (normal === null) return first ?? null;
+  if (first && second) {
+    const r = Math.floor(rng() * 3);
+    return r === 0 ? second : r === 1 ? first : null;
+  }
+  if (first) return rng() < 0.5 ? first : null;
+  return null;
+}
+
 /** 진화 시 능력치/속성 이월은 사육 틱과 배틀 직후에 같은 규칙을 사용한다. */
 function evolveDigimon(d: Digimon, to: string, rng: Rng): Digimon {
   const ap = Object.fromEntries(Object.entries(d.ap).map(([k, v]) => [k, Math.floor(v / 2)])) as Record<ApKey, number>;
-  return { ...d, speciesId: to, stageAge: 0, stats: evolvedStats(d, to, d.eggs, rng), statVersion: 1, ap, rottenEaten: 0 };
+  return { ...d, speciesId: to, stageAge: 0, stats: evolvedStats(d, to, d.eggs, rng), statVersion: 1, ap, rottenEaten: 0, memory: remember(d) };
+}
+
+/** 수명이 다한 뒤의 판정에 기억 진화를 덧씌운다. 기억 진화는 원본처럼 랭크 제한을 다시 보지 않고 용량만 확인한다 */
+function lifespanEvolution(d: Digimon, evo: EvoResult, free: number, rng: Rng): (NonNullable<EvoResult> & { memory?: boolean }) | null {
+  if (d.isEgg) return evo;
+  const sp = getSpecies(d.speciesId);
+  if (d.stageAge < LIFESPAN[sp.stage] || sp.stage >= 6) return evo;
+  const to = memoryEvolution(d, evo?.kind === 'evolve' ? evo.to : null, rng);
+  if (!to || (evo?.kind === 'evolve' && to === evo.to)) return evo;
+  if (getSpecies(to).size - sp.size > free) return evo;
+  return { kind: 'evolve', to, memory: true };
 }
 
 /** 시간/포만감 등을 진행하지 않고 조건만 평가한다. 한 번에 개체당 한 단계만 진화한다. */
@@ -184,10 +222,10 @@ export function evaluateEvolutions(save: SaveData, rng: Rng = defaultRng, uids?:
     changed = false;
     digimon.forEach((d, i) => {
       if ((uids && !uids.has(d.uid)) || evolved.has(d.uid)) return;
-      const evo = findEvolution(d, rank, free);
+      const evo = lifespanEvolution(d, findEvolution(d, rank, free), free, rng);
       if (evo?.kind !== 'evolve') return;
       free -= getSpecies(evo.to).size - getSpecies(d.speciesId).size;
-      events.push({ type: 'evolved', uid: d.uid, from: d.speciesId, to: evo.to });
+      events.push({ type: 'evolved', uid: d.uid, from: d.speciesId, to: evo.to, ...(evo.memory ? { memory: true } : {}) });
       seen.add(evo.to);evolved.add(d.uid);changed = true;
       digimon[i] = evolveDigimon(d, evo.to, rng);
     });
@@ -281,6 +319,8 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
     cage: '기본 케이지',
     restCycle: undefined,
     resistance: undefined,
+    // 원본 0x2062258: 디지에그가 될 때도 마지막 모습을 그 세대 기억에 적는다
+    memory: remember(d),
   };
 }
 
@@ -291,8 +331,11 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
 
   if (d.isEgg) {
     if (d.stageAge >= EGG_MINUTES) {
-      events.push({ type: 'hatched', uid: d.uid, from: '디지에그', to: d.originBaby });
-      d = { ...d, isEgg: false, speciesId: d.originBaby, stageAge: 0, stats: evolvedStats(null, d.originBaby, d.eggs, ctx.rng), statVersion: 1 };
+      // 원본 overlay18 0x211A400: 유년기I 기억이 두 칸이면 1/2씩, 한 칸이면 그 종으로 태어난다
+      const first = d.memory?.first[1], second = d.memory?.second[1];
+      const baby = first && second ? (ctx.rng() < 0.5 ? second : first) : first ?? d.originBaby;
+      events.push({ type: 'hatched', uid: d.uid, from: '디지에그', to: baby });
+      d = { ...d, isEgg: false, speciesId: baby, stageAge: 0, stats: evolvedStats(null, baby, d.eggs, ctx.rng), statVersion: 1 };
     }
     return d;
   }
@@ -414,9 +457,9 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
     addStress(d, -(STRESS_RELIEF_CAGES.includes(cage.id) ? STRESS.reliefPerHour : cage.autoCare ? STRESS.autoCarePerHour : STRESS.restPerHour));
   }
   // 훈련/발병/나이 등 이번 분에 바뀐 조건을 곧바로 평가한다. 한 시간 경계까지 기다리지 않는다.
-  const evo = findEvolution(d, ctx.rank, ctx.free);
+  const evo = lifespanEvolution(d, findEvolution(d, ctx.rank, ctx.free), ctx.free, ctx.rng);
   if (evo?.kind === 'evolve') {
-    events.push({ type: 'evolved', uid: d.uid, from: sp.id, to: evo.to });
+    events.push({ type: 'evolved', uid: d.uid, from: sp.id, to: evo.to, ...(evo.memory ? { memory: true } : {}) });
     return evolveDigimon(d, evo.to, ctx.rng);
   }
   if (d.stageAge % 60 === 0) {
