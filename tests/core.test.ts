@@ -661,6 +661,7 @@ describe('hunting', () => {
     expect(wildRegen('즈루몬', 0.5, 1, 100)).toBe(0.8);
     expect(wildRegen('즈루몬', 0.9, 1, 1)).toBe(0.9);
     expect(faintWakeSeconds('즈루몬')).toBeCloseTo(5 + 220 * 0.8 / 12);
+    expect(faintWakeSeconds('즈루몬', 0.1)).toBeCloseTo(5 + 22 / 12);
   });
   it('rope follows the original rope table (gauge, drain, distance zones)', () => {
     // 원본 0xC8DCC: α 6초 · β 12초 · γ 17초

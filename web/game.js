@@ -1646,6 +1646,10 @@
   const ROPE_BODY_Y = 15;
   /** 로프에 묶인 디지몬이 끌고 도망치는 속도(지도 px/초). 임시 */
   const BOUND_RUN_SPEED = 38;
+  /** 기절에서 깨어나 회복하는 동안의 달아나는 속도 (임시): 10~40% 졸린 걸음, 40~80% 걷기, 80%부터 BOUND_RUN_SPEED로 뜀 */
+  const WAKE_DROWSY_SPEED = 10;
+  const WAKE_WALK_SPEED = 24;
+  const WAKE_RUN_SECONDS = 3;
   /**
    * 로프 색: 디지 파랑·하드 노랑·클론 초록·알테마 빨강(형규 지정), α·β·γ로 갈수록 진하게.
    */
@@ -1875,12 +1879,11 @@
         if (w.koTime >= C.FAINT_RECOVER_DELAY) {
           w.hp = C.wildRegen(w.id, w.hp, w.max, dt);
           if (w.hp >= w.max * C.WILD_WAKE_RATIO - 1e-9) {
+            // 10%: 비틀거리며 일어나 천천히 달아나기 시작한다
             w.ko = false;
             w.koTime = 0;
-            w.flee = 3;
-            w.vx = (w.x - AREA.x0 < AREA.x1 - w.x ? -1 : 1) * 95;
-            w.vy = (Math.random() - 0.5) * 40;
-            huntNote(`${C.getSpecies(w.id).name}이(가) 정신을 차리고 달아났다!`);
+            w.waking = true;
+            huntNote(`${C.getSpecies(w.id).name}이(가) 비틀거리며 일어났다!`);
           }
         }
         continue;
@@ -1955,6 +1958,32 @@
         huntNote(`${C.getSpecies(w.id).name}이(가) ${trap.g.name}에 걸렸다! 로프로 감으세요.`);
         continue;
       }
+      if (w.waking) {
+        // 회복하며 로프 끝(없으면 화면 가운데) 반대쪽으로 달아난다. 체력 비율에 따라 졸린 걸음 → 걷기 → 뛰기
+        w.hp = C.wildRegen(w.id, w.hp, w.max, dt);
+        const from = w.anchor || (hunt.cam ? { x: hunt.cam.x + 480 / hunt.zoom, y: hunt.cam.y + 280 / hunt.zoom } : { x: (AREA.x0 + AREA.x1) / 2, y: (AREA.y0 + AREA.y1) / 2 });
+        // 벽에 막혀 지난 틱에 거의 못 움직였으면 옆으로 비켜 간다
+        if (w.wakeBlocked) w.wakeTurn = ((w.wakeTurn || 0) + 1) % 4;
+        w.wakeBlocked = false;
+        const turn = [0, Math.PI / 2, -Math.PI / 2, Math.PI][w.wakeTurn || 0];
+        const base = Math.atan2(w.y - from.y, w.x - from.x) + turn;
+        const dx = Math.cos(base), dy = Math.sin(base);
+        const ratio = w.hp / w.max;
+        if (ratio >= C.WILD_RUN_RATIO - 1e-9) {
+          w.waking = false;
+          w.runAway = WAKE_RUN_SECONDS;
+          w.flee = WAKE_RUN_SECONDS;
+          w.vx = dx * BOUND_RUN_SPEED;
+          w.vy = dy * BOUND_RUN_SPEED;
+          huntNote(`${C.getSpecies(w.id).name}이(가) 기운을 되찾고 뛰어 달아난다!`);
+        } else {
+          const speed = ratio >= C.WILD_WALK_RATIO ? WAKE_WALK_SPEED : WAKE_DROWSY_SPEED;
+          w.vx = dx * speed;
+          w.vy = dy * speed;
+          w.flee = 0.5;
+        }
+      }
+      if (w.runAway > 0) w.runAway -= dt;
       const lure = !(w.flee > 0) && hunt.baits.find((b) => Math.hypot(b.x - w.x, b.y - w.y) < b.range);
       if (lure) {
         // 고기 냄새를 따라간다. 다 오면 그 자리에 머문다
@@ -1998,6 +2027,7 @@
       if(next.blockedX||edgeX)w.vx=-w.vx;
       if(next.blockedY||edgeY)w.vy=-w.vy;
       if(next.blockedX||next.blockedY)w.turn=Math.min(w.turn,0.3);
+      if((next.blockedX||next.blockedY)&&w.waking)w.wakeBlocked=true;
       w.x = next.x;
       w.y = next.y;
       // 도망치다 사냥 지도 끝(바깥)에 닿으면 놓친다. 테이머가 보고 있는 화면 밖으로 나가는 것은 상관없다
@@ -2049,6 +2079,8 @@
         continue;
       }
       w.bound = w.boundMax = C.ropeHoldSeconds(save);
+      w.waking = false;
+      w.runAway = 0;
       const end = poly[poly.length - 1];
       w.anchor = { x: end.x, y: end.y };
       huntNote(`${name}에게 로프를 감았다! 디지몬을 누른 채 끌어 로프를 팽팽하게 당기세요 (너무 멀면 끊어져요)`);
@@ -2340,8 +2372,10 @@
       const spriteId = SPRITE_BY_NAME[C.getSpecies(w.id).name];
       const motion = w.ko
         ? {frame:animations.pose(w,spriteId,'ko',dt),flip:w.vx>0}
-        : w.bound>0
+        : w.bound>0 || w.runAway>0
         ? {frame:animations.pose(w,spriteId,(w.movedX||w.movedY)?'boundRun':'boundIdle',dt),flip:w.vx>0}
+        : w.waking && w.hp < w.max * C.WILD_WALK_RATIO
+        ? animations.movement(w, spriteId, w.movedX || 0, w.movedY || 0, dt * 0.5) // 졸린 듯 느린 걸음
         : animations.movement(w, spriteId, w.movedX || 0, w.movedY || 0, dt);
       spriteFrames.set(w,{frame:motion.frame,speciesId:w.id,flip:motion.flip});
       body(ctx, w.id, false, w.x, w.y, HUNT_SPRITE_SCALE, motion.frame, motion.flip);
