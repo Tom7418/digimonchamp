@@ -169,16 +169,13 @@ export function tamerRank(save: Pick<SaveData, 'titles' | 'champion'>): number {
 export const ENTRY_OPEN_HOUR = 7;
 export const ENTRY_CLOSE_HOUR = 15;
 
-const dayKey = (clock: number) => { const d = dateOf(clock); return `${d.year}:${d.season}:${d.day}`; };
-/** 오늘 이미 이긴 타이틀인지. 타이틀 매치는 한 번 따도 다음 해(같은 날짜)에 다시 도전해 상금을 받을 수 있다(형규 지정) */
-export const wonToday = (save: Pick<SaveData, 'clock' | 'titleWinsToday'>, id: string) => save.titleWinsToday?.key === dayKey(save.clock) && save.titleWinsToday.ids.includes(id);
-
+// 타이틀 매치는 딴 뒤에도, 같은 날에도 몇 번이든 다시 도전해 상금을 받을 수 있다(형규 지정)
 /** 오늘 도전할 수 있는 매치 */
 export function todaysMatches(save: SaveData): Match[] {
   const d = dateOf(save.clock);
   if (d.hour < ENTRY_OPEN_HOUR || d.hour >= ENTRY_CLOSE_HOUR) return [];
   const rank = tamerRank(save);
-  const out = TITLES.filter((t) => t.season === d.season && t.day === d.day && rank >= t.minRank && !wonToday(save, t.id));
+  const out = TITLES.filter((t) => t.season === d.season && t.day === d.day && rank >= t.minRank);
   if (d.season === CHAMP_SEASON && !save.champion) {
     const qualifiedBefore = save.qualifiedYear !== null && d.year > save.qualifiedYear;
     if (qualifiedBefore && d.day === CHAMP_DAY) {
@@ -241,9 +238,7 @@ export function applyMatch(save: SaveData, m: Match, won: boolean): SaveData {
     return { ...save, finalRound: champion ? 0 : round, champion: save.champion || champion, bits: save.bits + (champion ? CHAMP_PRIZE : 0) };
   }
   if (!won) return save;
-  const key = dayKey(save.clock);
-  const today = save.titleWinsToday?.key === key ? save.titleWinsToday.ids : [];
-  return { ...save, titles: save.titles.includes(m.id) ? save.titles : [...save.titles, m.id], titleWinsToday: { key, ids: [...today, m.id] }, bits: save.bits + m.prize };
+  return { ...save, titles: save.titles.includes(m.id) ? save.titles : [...save.titles, m.id], bits: save.bits + m.prize };
 }
 
 export function applyWin(save: SaveData, m: Match): SaveData {
