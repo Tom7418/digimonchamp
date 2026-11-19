@@ -2433,29 +2433,29 @@ var ChampCore = (function(exports) {
 		64,
 		74,
 		96,
-		112,
+		128,
 		160,
-		168,
-		180,
+		172,
 		192,
-		200,
-		200
+		216,
+		240,
+		300
 	];
 	var CAGE_SPACE_BY_RANK = [
 		0,
 		14,
-		14,
-		16,
 		16,
 		18,
-		18,
 		20,
-		20,
-		20,
-		20
+		22,
+		24,
+		26,
+		28,
+		30,
+		30
 	];
-	var capacityOf = (save) => CAPACITY_BY_RANK[tamerRank(save)] ?? 200;
-	var cageSpaceOf = (save) => CAGE_SPACE_BY_RANK[tamerRank(save)] ?? 20;
+	var capacityOf = (save) => CAPACITY_BY_RANK[tamerRank(save)] ?? 300;
+	var cageSpaceOf = (save) => CAGE_SPACE_BY_RANK[tamerRank(save)] ?? 30;
 	var CHAMP_SEASON = 2;
 	var PRELIM_DAYS = [
 		1,

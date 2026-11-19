@@ -1504,7 +1504,7 @@ describe('legacy title migration follows current rank rules',()=>{
     const copy=JSON.stringify(before),after=upgradeSave(before),rank=tamerRank(after);
     expect(after.titles).toEqual(['m8','m4','m55','m25','m30','m38']);
     expect(rankName(rank)).toBe('화이트 테이머');expect(rank).toBe(4);
-    expect(capacityOf(after)).toBe(112);expect(cageSpaceOf(after)).toBe(16);expect(maxStageForRank(rank)).toBe(4);
+    expect(capacityOf(after)).toBe(128);expect(cageSpaceOf(after)).toBe(20);expect(maxStageForRank(rank)).toBe(4);
     expect(after.digimon.length).toBe(before.digimon.length);expect(JSON.stringify(before)).toBe(copy);
   });
   it('옛/새 ID 혼합·중복 기록은 한 번만 집계하고 여러 번 불러와도 승리가 추가되지 않는다',()=>{
