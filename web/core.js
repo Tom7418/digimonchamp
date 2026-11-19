@@ -2536,12 +2536,18 @@ var ChampCore = (function(exports) {
 	/** 타이틀 매치 엔트리 시간 (원작 텍스트 txt_list #634: 7:00~15:00) */
 	var ENTRY_OPEN_HOUR = 7;
 	var ENTRY_CLOSE_HOUR = 15;
+	var dayKey = (clock) => {
+		const d = dateOf(clock);
+		return `${d.year}:${d.season}:${d.day}`;
+	};
+	/** 오늘 이미 이긴 타이틀인지. 타이틀 매치는 한 번 따도 다음 해(같은 날짜)에 다시 도전해 상금을 받을 수 있다(형규 지정) */
+	var wonToday = (save, id) => save.titleWinsToday?.key === dayKey(save.clock) && save.titleWinsToday.ids.includes(id);
 	/** 오늘 도전할 수 있는 매치 */
 	function todaysMatches(save) {
 		const d = dateOf(save.clock);
 		if (d.hour < 7 || d.hour >= 15) return [];
 		const rank = tamerRank(save);
-		const out = TITLES.filter((t) => t.season === d.season && t.day === d.day && rank >= t.minRank && !save.titles.includes(t.id));
+		const out = TITLES.filter((t) => t.season === d.season && t.day === d.day && rank >= t.minRank && !wonToday(save, t.id));
 		if (d.season === 2 && !save.champion) {
 			if (save.qualifiedYear !== null && d.year > save.qualifiedYear && d.day === 5) {
 				const round = save.finalRound ?? 0;
@@ -2562,7 +2568,7 @@ var ChampCore = (function(exports) {
 		const rank = tamerRank(save);
 		const today = dateOf(save.clock);
 		const ahead = (t) => (t.season - today.season + 4) % 4 * 8 + (t.day - today.day) + (t.season === today.season && t.day < today.day ? 32 : 0);
-		const lines = TITLES.filter((t) => rank >= t.minRank && !save.titles.includes(t.id)).sort((a, b) => ahead(a) - ahead(b)).slice(0, 6).map((t) => `${t.name}: ${[
+		const lines = TITLES.filter((t) => rank >= t.minRank).sort((a, b) => ahead(a) - ahead(b)).slice(0, 6).map((t) => `${t.name}: ${[
 			"봄",
 			"여름",
 			"가을",
@@ -2625,11 +2631,18 @@ var ChampCore = (function(exports) {
 				bits: save.bits + (champion ? CHAMP_PRIZE : 0)
 			};
 		}
-		return won ? {
+		if (!won) return save;
+		const key = dayKey(save.clock);
+		const today = save.titleWinsToday?.key === key ? save.titleWinsToday.ids : [];
+		return {
 			...save,
-			titles: [...save.titles, m.id],
+			titles: save.titles.includes(m.id) ? save.titles : [...save.titles, m.id],
+			titleWinsToday: {
+				key,
+				ids: [...today, m.id]
+			},
 			bits: save.bits + m.prize
-		} : save;
+		};
 	}
 	function applyWin(save, m) {
 		return applyMatch(save, m, true);
@@ -10023,5 +10036,6 @@ var ChampCore = (function(exports) {
 	exports.usedCapacity = usedCapacity;
 	exports.wildHp = wildHp;
 	exports.wildRegen = wildRegen;
+	exports.wonToday = wonToday;
 	return exports;
 })({});

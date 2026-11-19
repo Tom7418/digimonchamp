@@ -433,7 +433,7 @@
     // 이번 계절 달력에 표시할 경기 날짜
     const rank = C.tamerRank(save);
     const marks = {};
-    for (const t of C.TITLES) if (t.season === season && rank >= t.minRank && !save.titles.includes(t.id)) (marks[t.day] ??= []).push(t.name);
+    for (const t of C.TITLES) if (t.season === season && rank >= t.minRank) (marks[t.day] ??= []).push(t.name + (save.titles.includes(t.id) ? ' ✓' : ''));
     if (season === C.CHAMP_SEASON && !save.champion) {
       if (save.qualifiedYear !== null && year > save.qualifiedYear) (marks[C.CHAMP_DAY] ??= []).push('챔피언십 본선');
       else if (save.qualifiedYear === null && rank >= C.PRELIM_MIN_RANK) for (const d of C.PRELIM_DAYS) (marks[d] ??= []).push('예선');

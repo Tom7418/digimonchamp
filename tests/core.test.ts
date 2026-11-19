@@ -1010,7 +1010,15 @@ describe('day flow', () => {
     }
     expect(matchEntryNotice(at(15 * 60))).toBeNull();
     expect(matchEntryNotice(at(21 * 60))).toBeNull();
-    expect(matchEntryNotice({ ...at(10 * 60), titles: won(1) })).toBeNull();
+    // 이미 딴 타이틀도 다시 도전할 수 있다. 같은 날 이긴 뒤에만 사라진다
+    expect(matchEntryNotice({ ...at(10 * 60), titles: won(1) })?.names).toEqual(['봄의 시작']);
+    const m = todaysMatches(at(10 * 60))[0];
+    const after = applyMatch(at(10 * 60), m, true);
+    expect(after.bits).toBe(at(0).bits + m.prize);
+    expect(matchEntryNotice(after)).toBeNull();
+    const again = applyMatch({ ...after, clock: after.clock + 32 * 1440 }, m, true); // 다음 해 같은 날
+    expect(again.bits).toBe(at(0).bits + m.prize * 2);
+    expect(again.titles.filter((x) => x === m.id)).toHaveLength(1);
   });
   it('read notices are suppressed that day, but can recur next year', () => {
     const s = { ...freshSave(0), clock: 2 * 1440 + 9 * 60 };

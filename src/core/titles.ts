@@ -169,12 +169,16 @@ export function tamerRank(save: Pick<SaveData, 'titles' | 'champion'>): number {
 export const ENTRY_OPEN_HOUR = 7;
 export const ENTRY_CLOSE_HOUR = 15;
 
+const dayKey = (clock: number) => { const d = dateOf(clock); return `${d.year}:${d.season}:${d.day}`; };
+/** 오늘 이미 이긴 타이틀인지. 타이틀 매치는 한 번 따도 다음 해(같은 날짜)에 다시 도전해 상금을 받을 수 있다(형규 지정) */
+export const wonToday = (save: Pick<SaveData, 'clock' | 'titleWinsToday'>, id: string) => save.titleWinsToday?.key === dayKey(save.clock) && save.titleWinsToday.ids.includes(id);
+
 /** 오늘 도전할 수 있는 매치 */
 export function todaysMatches(save: SaveData): Match[] {
   const d = dateOf(save.clock);
   if (d.hour < ENTRY_OPEN_HOUR || d.hour >= ENTRY_CLOSE_HOUR) return [];
   const rank = tamerRank(save);
-  const out = TITLES.filter((t) => t.season === d.season && t.day === d.day && rank >= t.minRank && !save.titles.includes(t.id));
+  const out = TITLES.filter((t) => t.season === d.season && t.day === d.day && rank >= t.minRank && !wonToday(save, t.id));
   if (d.season === CHAMP_SEASON && !save.champion) {
     const qualifiedBefore = save.qualifiedYear !== null && d.year > save.qualifiedYear;
     if (qualifiedBefore && d.day === CHAMP_DAY) {
@@ -195,7 +199,7 @@ export function upcoming(save: SaveData): string[] {
   // 61개를 다 늘어놓지 않고, 오늘부터 가까운 순서로 6개만
   const today = dateOf(save.clock);
   const ahead = (t: Match) => ((t.season - today.season + 4) % 4) * 8 + (t.day - today.day) + (t.season === today.season && t.day < today.day ? 32 : 0);
-  const lines = TITLES.filter((t) => rank >= t.minRank && !save.titles.includes(t.id))
+  const lines = TITLES.filter((t) => rank >= t.minRank)
     .sort((a, b) => ahead(a) - ahead(b))
     .slice(0, 6)
     .map((t) => `${t.name}: ${['봄', '여름', '가을', '겨울'][t.season]} ${t.day}일 (${t.format} VS ${t.foes ?? t.format}${entryLimits(t) ? ` · ${entryLimits(t)}` : ''})`);
@@ -236,7 +240,10 @@ export function applyMatch(save: SaveData, m: Match, won: boolean): SaveData {
     const champion = round >= FINAL_ROUNDS.length;
     return { ...save, finalRound: champion ? 0 : round, champion: save.champion || champion, bits: save.bits + (champion ? CHAMP_PRIZE : 0) };
   }
-  return won ? { ...save, titles: [...save.titles, m.id], bits: save.bits + m.prize } : save;
+  if (!won) return save;
+  const key = dayKey(save.clock);
+  const today = save.titleWinsToday?.key === key ? save.titleWinsToday.ids : [];
+  return { ...save, titles: save.titles.includes(m.id) ? save.titles : [...save.titles, m.id], titleWinsToday: { key, ids: [...today, m.id] }, bits: save.bits + m.prize };
 }
 
 export function applyWin(save: SaveData, m: Match): SaveData {
