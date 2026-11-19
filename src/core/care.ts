@@ -195,7 +195,8 @@ export function memoryEvolution(d: Digimon, normal: string | null, rng: Rng): st
 
 /** 진화 시 능력치/속성 이월은 사육 틱과 배틀 직후에 같은 규칙을 사용한다. */
 function evolveDigimon(d: Digimon, to: string, rng: Rng): Digimon {
-  const ap = Object.fromEntries(Object.entries(d.ap).map(([k, v]) => [k, Math.floor(v / 2)])) as Record<ApKey, number>;
+  // 원본 ARM9 0x2062258: 새 종 구조체(속성·종족 수치 0)를 만들고 능력치만 이월한다 → 진화하면 속성·종족 수치는 0부터
+  const ap = Object.fromEntries(Object.keys(d.ap).map((k) => [k, 0])) as Record<ApKey, number>;
   return { ...d, speciesId: to, stageAge: 0, stats: evolvedStats(d, to, d.eggs, rng), statVersion: 1, ap, rottenEaten: 0, memory: remember(d) };
 }
 

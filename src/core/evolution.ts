@@ -6,8 +6,11 @@ export interface Check {
   met: boolean;
 }
 
-/** 디지에그화를 거칠수록 요구 수치가 조금씩 줄어든다 */
-export const reqScale = (d: Digimon) => Math.max(0.7, 1 - 0.05 * d.eggs);
+/**
+ * 요구 수치 배율. 예전에는 위키 설명대로 디지에그화마다 5%씩 줄였지만, 원본 진화 판정(overlay18 0x2115E70~)은
+ * 속성·종족 수치를 진화표 값과 그대로 비교한다. 디지에그화 횟수는 능력치 재탄생 보정(ARM9 0x2062684)에만 쓰인다.
+ */
+export const reqScale = (_d: Digimon) => 1;
 
 export function explain(d: Digimon, cond: Cond): Check[] {
   const out: Check[] = [];

@@ -452,7 +452,7 @@ describe('evolution', () => {
     expect(findEvolution(d, 1, 100)).toEqual({ kind: 'evolve', to: '아구몬' });
     d.ap.용 = 20;
     const r = evaluateEvolutions({ ...freshSave(0), digimon: [d] }, () => 0.5);
-    expect(only(r.save).speciesId).toBe('브이몬');expect(only(r.save).ap.용).toBe(10);
+    expect(only(r.save).speciesId).toBe('브이몬');expect(only(r.save).ap.용).toBe(0); // 원본: 진화하면 속성·종족 수치는 0부터
     expect(findEvolution({ ...d, battles: 2 }, 1, 100)).toBeNull();
     expect(findEvolution({ ...newDigimon(1, '코로몬'), stageAge: 0 }, 1, 100)).toBeNull();
     expect(findEvolution({ ...newDigimon(1, '아구몬'), battles: 6 }, 1, 100)?.kind).toBe('blocked');

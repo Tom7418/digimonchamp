@@ -1728,8 +1728,11 @@ var ChampCore = (function(exports) {
 		};
 	}
 	// src/core/evolution.ts
-	/** 디지에그화를 거칠수록 요구 수치가 조금씩 줄어든다 */
-	var reqScale = (d) => Math.max(.7, 1 - .05 * d.eggs);
+	/**
+	* 요구 수치 배율. 예전에는 위키 설명대로 디지에그화마다 5%씩 줄였지만, 원본 진화 판정(overlay18 0x2115E70~)은
+	* 속성·종족 수치를 진화표 값과 그대로 비교한다. 디지에그화 횟수는 능력치 재탄생 보정(ARM9 0x2062684)에만 쓰인다.
+	*/
+	var reqScale = (_d) => 1;
 	function explain(d, cond) {
 		const out = [];
 		const k = reqScale(d);
@@ -3100,7 +3103,7 @@ var ChampCore = (function(exports) {
 	}
 	/** 진화 시 능력치/속성 이월은 사육 틱과 배틀 직후에 같은 규칙을 사용한다. */
 	function evolveDigimon(d, to, rng) {
-		const ap = Object.fromEntries(Object.entries(d.ap).map(([k, v]) => [k, Math.floor(v / 2)]));
+		const ap = Object.fromEntries(Object.keys(d.ap).map((k) => [k, 0]));
 		return {
 			...d,
 			speciesId: to,
