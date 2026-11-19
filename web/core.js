@@ -8205,6 +8205,8 @@ var ChampCore = (function(exports) {
 			animation: ANIMATIONS[skill.sequence - 7]
 		}));
 	}
+	/** 종의 일반 공격 기록 번호 (공격 기록 표 arm9 0x020D02CC) */
+	var basicRecordOf = (speciesId) => TABLE[getSpecies(speciesId).id]?.basicRecord ?? null;
 	/** 사용 가능한 기술을 동일 확률로 선택하는 빈도/AI는 웹판 정책. TP 소비는 원본 값. */
 	function pickBattleSkill(speciesId, rng, tp = Infinity, personality) {
 		const skills = battleSkills(speciesId).filter((skill) => skill.tpCost <= tp);
@@ -8221,6 +8223,392 @@ var ChampCore = (function(exports) {
 		}
 		return pick(rng, skills);
 	}
+	var battle_formula_default = {
+		records: /* @__PURE__ */ JSON.parse("{\"1\":{\"power\":0,\"kind\":2,\"element\":0},\"2\":{\"power\":0,\"kind\":2,\"element\":0},\"3\":{\"power\":0,\"kind\":2,\"element\":0},\"4\":{\"power\":0,\"kind\":2,\"element\":0},\"5\":{\"power\":0,\"kind\":2,\"element\":0},\"6\":{\"power\":0,\"kind\":2,\"element\":0},\"7\":{\"power\":0,\"kind\":2,\"element\":0},\"8\":{\"power\":0,\"kind\":2,\"element\":0},\"9\":{\"power\":0,\"kind\":2,\"element\":0},\"10\":{\"power\":15,\"kind\":2,\"element\":0},\"11\":{\"power\":15,\"kind\":2,\"element\":0},\"12\":{\"power\":15,\"kind\":2,\"element\":0},\"13\":{\"power\":15,\"kind\":2,\"element\":0},\"14\":{\"power\":15,\"kind\":2,\"element\":0},\"15\":{\"power\":15,\"kind\":2,\"element\":0},\"16\":{\"power\":15,\"kind\":2,\"element\":0},\"17\":{\"power\":15,\"kind\":2,\"element\":0},\"18\":{\"power\":15,\"kind\":2,\"element\":0},\"19\":{\"power\":15,\"kind\":2,\"element\":0},\"20\":{\"power\":15,\"kind\":2,\"element\":0},\"21\":{\"power\":15,\"kind\":2,\"element\":0},\"22\":{\"power\":15,\"kind\":2,\"element\":0},\"23\":{\"power\":15,\"kind\":2,\"element\":0},\"24\":{\"power\":15,\"kind\":2,\"element\":0},\"25\":{\"power\":15,\"kind\":2,\"element\":0},\"26\":{\"power\":15,\"kind\":2,\"element\":0},\"27\":{\"power\":15,\"kind\":2,\"element\":0},\"28\":{\"power\":0,\"kind\":3,\"element\":0},\"29\":{\"power\":0,\"kind\":3,\"element\":0},\"30\":{\"power\":0,\"kind\":3,\"element\":0},\"31\":{\"power\":100,\"kind\":0,\"element\":0},\"32\":{\"power\":400,\"kind\":1,\"element\":0},\"33\":{\"power\":100,\"kind\":0,\"element\":0},\"34\":{\"power\":400,\"kind\":1,\"element\":0},\"35\":{\"power\":100,\"kind\":0,\"element\":0},\"36\":{\"power\":400,\"kind\":1,\"element\":0},\"37\":{\"power\":100,\"kind\":0,\"element\":0},\"38\":{\"power\":400,\"kind\":1,\"element\":0},\"39\":{\"power\":100,\"kind\":0,\"element\":0},\"40\":{\"power\":400,\"kind\":1,\"element\":0},\"41\":{\"power\":100,\"kind\":0,\"element\":0},\"42\":{\"power\":400,\"kind\":1,\"element\":0},\"43\":{\"power\":100,\"kind\":0,\"element\":0},\"44\":{\"power\":400,\"kind\":1,\"element\":0},\"45\":{\"power\":100,\"kind\":0,\"element\":0},\"46\":{\"power\":400,\"kind\":1,\"element\":2},\"47\":{\"power\":100,\"kind\":0,\"element\":0},\"48\":{\"power\":400,\"kind\":1,\"element\":2},\"49\":{\"power\":100,\"kind\":0,\"element\":0},\"50\":{\"power\":400,\"kind\":1,\"element\":1},\"51\":{\"power\":100,\"kind\":0,\"element\":0},\"52\":{\"power\":300,\"kind\":1,\"element\":2},\"53\":{\"power\":100,\"kind\":0,\"element\":0},\"54\":{\"power\":500,\"kind\":1,\"element\":1},\"55\":{\"power\":100,\"kind\":0,\"element\":0},\"56\":{\"power\":500,\"kind\":1,\"element\":3},\"57\":{\"power\":100,\"kind\":0,\"element\":0},\"58\":{\"power\":500,\"kind\":1,\"element\":4},\"59\":{\"power\":100,\"kind\":0,\"element\":0},\"60\":{\"power\":300,\"kind\":1,\"element\":1},\"61\":{\"power\":400,\"kind\":1,\"element\":1},\"62\":{\"power\":100,\"kind\":0,\"element\":0},\"63\":{\"power\":400,\"kind\":1,\"element\":0},\"64\":{\"power\":500,\"kind\":1,\"element\":0},\"65\":{\"power\":100,\"kind\":0,\"element\":0},\"66\":{\"power\":400,\"kind\":1,\"element\":5},\"67\":{\"power\":100,\"kind\":0,\"element\":0},\"68\":{\"power\":300,\"kind\":1,\"element\":2},\"69\":{\"power\":100,\"kind\":0,\"element\":0},\"70\":{\"power\":500,\"kind\":1,\"element\":0},\"71\":{\"power\":400,\"kind\":1,\"element\":0},\"72\":{\"power\":100,\"kind\":1,\"element\":0},\"73\":{\"power\":100,\"kind\":0,\"element\":0},\"74\":{\"power\":300,\"kind\":1,\"element\":4},\"75\":{\"power\":100,\"kind\":0,\"element\":0},\"76\":{\"power\":300,\"kind\":1,\"element\":1},\"77\":{\"power\":400,\"kind\":1,\"element\":1},\"78\":{\"power\":100,\"kind\":0,\"element\":0},\"79\":{\"power\":300,\"kind\":1,\"element\":0},\"80\":{\"power\":400,\"kind\":1,\"element\":0},\"81\":{\"power\":100,\"kind\":0,\"element\":0},\"82\":{\"power\":400,\"kind\":1,\"element\":0},\"83\":{\"power\":100,\"kind\":0,\"element\":0},\"84\":{\"power\":300,\"kind\":1,\"element\":1},\"85\":{\"power\":100,\"kind\":0,\"element\":0},\"86\":{\"power\":300,\"kind\":1,\"element\":5},\"87\":{\"power\":100,\"kind\":0,\"element\":0},\"88\":{\"power\":300,\"kind\":1,\"element\":0},\"89\":{\"power\":100,\"kind\":0,\"element\":0},\"90\":{\"power\":300,\"kind\":1,\"element\":1},\"91\":{\"power\":100,\"kind\":0,\"element\":0},\"92\":{\"power\":400,\"kind\":1,\"element\":2},\"93\":{\"power\":100,\"kind\":0,\"element\":0},\"94\":{\"power\":400,\"kind\":1,\"element\":0},\"95\":{\"power\":300,\"kind\":1,\"element\":1},\"96\":{\"power\":100,\"kind\":0,\"element\":0},\"97\":{\"power\":400,\"kind\":1,\"element\":5},\"98\":{\"power\":100,\"kind\":0,\"element\":0},\"99\":{\"power\":300,\"kind\":1,\"element\":1},\"100\":{\"power\":100,\"kind\":0,\"element\":0},\"101\":{\"power\":300,\"kind\":1,\"element\":1},\"102\":{\"power\":500,\"kind\":1,\"element\":0},\"103\":{\"power\":600,\"kind\":1,\"element\":1},\"104\":{\"power\":100,\"kind\":0,\"element\":0},\"105\":{\"power\":400,\"kind\":1,\"element\":4},\"106\":{\"power\":100,\"kind\":0,\"element\":0},\"107\":{\"power\":400,\"kind\":1,\"element\":4},\"108\":{\"power\":100,\"kind\":0,\"element\":0},\"109\":{\"power\":300,\"kind\":1,\"element\":0},\"110\":{\"power\":400,\"kind\":1,\"element\":2},\"111\":{\"power\":100,\"kind\":0,\"element\":0},\"112\":{\"power\":400,\"kind\":1,\"element\":5},\"113\":{\"power\":100,\"kind\":0,\"element\":0},\"114\":{\"power\":300,\"kind\":1,\"element\":4},\"115\":{\"power\":100,\"kind\":0,\"element\":0},\"116\":{\"power\":400,\"kind\":1,\"element\":1},\"117\":{\"power\":100,\"kind\":0,\"element\":0},\"118\":{\"power\":400,\"kind\":1,\"element\":0},\"119\":{\"power\":500,\"kind\":1,\"element\":0},\"120\":{\"power\":300,\"kind\":1,\"element\":0},\"121\":{\"power\":100,\"kind\":0,\"element\":0},\"122\":{\"power\":400,\"kind\":1,\"element\":3},\"123\":{\"power\":100,\"kind\":0,\"element\":0},\"124\":{\"power\":400,\"kind\":1,\"element\":4},\"125\":{\"power\":100,\"kind\":0,\"element\":0},\"126\":{\"power\":150,\"kind\":1,\"element\":4},\"127\":{\"power\":100,\"kind\":0,\"element\":0},\"128\":{\"power\":400,\"kind\":1,\"element\":2},\"129\":{\"power\":100,\"kind\":0,\"element\":0},\"130\":{\"power\":400,\"kind\":1,\"element\":3},\"131\":{\"power\":100,\"kind\":0,\"element\":0},\"132\":{\"power\":400,\"kind\":1,\"element\":1},\"133\":{\"power\":300,\"kind\":1,\"element\":1},\"134\":{\"power\":450,\"kind\":1,\"element\":1},\"135\":{\"power\":100,\"kind\":0,\"element\":0},\"136\":{\"power\":400,\"kind\":1,\"element\":4},\"137\":{\"power\":300,\"kind\":1,\"element\":2},\"138\":{\"power\":450,\"kind\":1,\"element\":2},\"139\":{\"power\":100,\"kind\":0,\"element\":0},\"140\":{\"power\":450,\"kind\":1,\"element\":1},\"141\":{\"power\":400,\"kind\":1,\"element\":1},\"142\":{\"power\":100,\"kind\":0,\"element\":0},\"143\":{\"power\":300,\"kind\":1,\"element\":5},\"144\":{\"power\":400,\"kind\":1,\"element\":1},\"145\":{\"power\":100,\"kind\":0,\"element\":0},\"146\":{\"power\":400,\"kind\":1,\"element\":4},\"147\":{\"power\":100,\"kind\":0,\"element\":0},\"148\":{\"power\":300,\"kind\":1,\"element\":4},\"149\":{\"power\":400,\"kind\":1,\"element\":0},\"150\":{\"power\":100,\"kind\":0,\"element\":0},\"151\":{\"power\":450,\"kind\":1,\"element\":0},\"152\":{\"power\":300,\"kind\":1,\"element\":0},\"153\":{\"power\":100,\"kind\":0,\"element\":0},\"154\":{\"power\":250,\"kind\":1,\"element\":1},\"155\":{\"power\":350,\"kind\":1,\"element\":0},\"156\":{\"power\":450,\"kind\":1,\"element\":1},\"157\":{\"power\":100,\"kind\":0,\"element\":0},\"158\":{\"power\":400,\"kind\":1,\"element\":0},\"159\":{\"power\":500,\"kind\":1,\"element\":0},\"160\":{\"power\":100,\"kind\":0,\"element\":0},\"161\":{\"power\":400,\"kind\":1,\"element\":0},\"162\":{\"power\":100,\"kind\":0,\"element\":0},\"163\":{\"power\":400,\"kind\":1,\"element\":5},\"164\":{\"power\":100,\"kind\":0,\"element\":0},\"165\":{\"power\":400,\"kind\":1,\"element\":0},\"166\":{\"power\":100,\"kind\":0,\"element\":0},\"167\":{\"power\":500,\"kind\":1,\"element\":0},\"168\":{\"power\":400,\"kind\":1,\"element\":0},\"169\":{\"power\":100,\"kind\":0,\"element\":0},\"170\":{\"power\":400,\"kind\":1,\"element\":3},\"171\":{\"power\":100,\"kind\":0,\"element\":0},\"172\":{\"power\":400,\"kind\":1,\"element\":4},\"173\":{\"power\":100,\"kind\":0,\"element\":0},\"174\":{\"power\":150,\"kind\":1,\"element\":0},\"175\":{\"power\":300,\"kind\":1,\"element\":0},\"176\":{\"power\":450,\"kind\":1,\"element\":5},\"177\":{\"power\":100,\"kind\":0,\"element\":0},\"178\":{\"power\":450,\"kind\":1,\"element\":5},\"179\":{\"power\":100,\"kind\":0,\"element\":0},\"180\":{\"power\":60,\"kind\":1,\"element\":1},\"181\":{\"power\":60,\"kind\":1,\"element\":0},\"182\":{\"power\":100,\"kind\":0,\"element\":0},\"183\":{\"power\":400,\"kind\":1,\"element\":1},\"184\":{\"power\":100,\"kind\":0,\"element\":0},\"185\":{\"power\":400,\"kind\":1,\"element\":1},\"186\":{\"power\":100,\"kind\":0,\"element\":0},\"187\":{\"power\":400,\"kind\":1,\"element\":1},\"188\":{\"power\":100,\"kind\":0,\"element\":0},\"189\":{\"power\":80,\"kind\":1,\"element\":1},\"190\":{\"power\":100,\"kind\":0,\"element\":0},\"191\":{\"power\":400,\"kind\":1,\"element\":1},\"192\":{\"power\":170,\"kind\":1,\"element\":1},\"193\":{\"power\":100,\"kind\":0,\"element\":0},\"194\":{\"power\":300,\"kind\":1,\"element\":1},\"195\":{\"power\":400,\"kind\":1,\"element\":0},\"196\":{\"power\":100,\"kind\":0,\"element\":0},\"197\":{\"power\":500,\"kind\":1,\"element\":5},\"198\":{\"power\":100,\"kind\":0,\"element\":0},\"199\":{\"power\":400,\"kind\":1,\"element\":0},\"200\":{\"power\":100,\"kind\":0,\"element\":0},\"201\":{\"power\":350,\"kind\":1,\"element\":0},\"202\":{\"power\":100,\"kind\":0,\"element\":0},\"203\":{\"power\":300,\"kind\":1,\"element\":4},\"204\":{\"power\":100,\"kind\":1,\"element\":0},\"205\":{\"power\":100,\"kind\":0,\"element\":0},\"206\":{\"power\":400,\"kind\":1,\"element\":3},\"207\":{\"power\":100,\"kind\":0,\"element\":0},\"208\":{\"power\":300,\"kind\":1,\"element\":4},\"209\":{\"power\":100,\"kind\":0,\"element\":0},\"210\":{\"power\":400,\"kind\":1,\"element\":5},\"211\":{\"power\":100,\"kind\":0,\"element\":0},\"212\":{\"power\":400,\"kind\":1,\"element\":2},\"213\":{\"power\":100,\"kind\":0,\"element\":0},\"214\":{\"power\":350,\"kind\":1,\"element\":1},\"215\":{\"power\":500,\"kind\":1,\"element\":1},\"216\":{\"power\":400,\"kind\":1,\"element\":0},\"217\":{\"power\":100,\"kind\":0,\"element\":0},\"218\":{\"power\":60,\"kind\":1,\"element\":0},\"219\":{\"power\":350,\"kind\":1,\"element\":2},\"220\":{\"power\":100,\"kind\":0,\"element\":0},\"221\":{\"power\":350,\"kind\":1,\"element\":4},\"222\":{\"power\":100,\"kind\":0,\"element\":0},\"223\":{\"power\":50,\"kind\":1,\"element\":1},\"224\":{\"power\":100,\"kind\":0,\"element\":0},\"225\":{\"power\":400,\"kind\":1,\"element\":3},\"226\":{\"power\":100,\"kind\":0,\"element\":0},\"227\":{\"power\":400,\"kind\":1,\"element\":1},\"228\":{\"power\":100,\"kind\":0,\"element\":0},\"229\":{\"power\":300,\"kind\":1,\"element\":1},\"230\":{\"power\":100,\"kind\":0,\"element\":0},\"231\":{\"power\":500,\"kind\":1,\"element\":0},\"232\":{\"power\":300,\"kind\":1,\"element\":3},\"233\":{\"power\":100,\"kind\":0,\"element\":0},\"234\":{\"power\":500,\"kind\":1,\"element\":4},\"235\":{\"power\":100,\"kind\":0,\"element\":0},\"236\":{\"power\":400,\"kind\":1,\"element\":4},\"237\":{\"power\":100,\"kind\":0,\"element\":0},\"238\":{\"power\":150,\"kind\":1,\"element\":0},\"239\":{\"power\":100,\"kind\":0,\"element\":0},\"240\":{\"power\":60,\"kind\":1,\"element\":0},\"241\":{\"power\":100,\"kind\":0,\"element\":0},\"242\":{\"power\":300,\"kind\":1,\"element\":4},\"243\":{\"power\":100,\"kind\":0,\"element\":0},\"244\":{\"power\":300,\"kind\":1,\"element\":4},\"245\":{\"power\":400,\"kind\":1,\"element\":4},\"246\":{\"power\":100,\"kind\":0,\"element\":0},\"247\":{\"power\":150,\"kind\":1,\"element\":1},\"248\":{\"power\":100,\"kind\":0,\"element\":0},\"249\":{\"power\":300,\"kind\":1,\"element\":4},\"250\":{\"power\":100,\"kind\":0,\"element\":0},\"251\":{\"power\":400,\"kind\":1,\"element\":0},\"252\":{\"power\":100,\"kind\":1,\"element\":0},\"253\":{\"power\":50,\"kind\":1,\"element\":0},\"254\":{\"power\":100,\"kind\":0,\"element\":0},\"255\":{\"power\":400,\"kind\":1,\"element\":1},\"256\":{\"power\":100,\"kind\":0,\"element\":0},\"257\":{\"power\":300,\"kind\":1,\"element\":2},\"258\":{\"power\":400,\"kind\":1,\"element\":0},\"259\":{\"power\":100,\"kind\":0,\"element\":0},\"260\":{\"power\":400,\"kind\":1,\"element\":0},\"261\":{\"power\":300,\"kind\":1,\"element\":1},\"262\":{\"power\":100,\"kind\":0,\"element\":0},\"263\":{\"power\":300,\"kind\":1,\"element\":2},\"264\":{\"power\":100,\"kind\":0,\"element\":0},\"265\":{\"power\":400,\"kind\":1,\"element\":3},\"266\":{\"power\":100,\"kind\":0,\"element\":0},\"267\":{\"power\":300,\"kind\":1,\"element\":1},\"268\":{\"power\":150,\"kind\":1,\"element\":1},\"269\":{\"power\":100,\"kind\":0,\"element\":0},\"270\":{\"power\":350,\"kind\":1,\"element\":1},\"271\":{\"power\":100,\"kind\":0,\"element\":0},\"272\":{\"power\":350,\"kind\":1,\"element\":4},\"273\":{\"power\":100,\"kind\":0,\"element\":0},\"274\":{\"power\":420,\"kind\":1,\"element\":3},\"275\":{\"power\":100,\"kind\":0,\"element\":0},\"276\":{\"power\":350,\"kind\":1,\"element\":4},\"277\":{\"power\":100,\"kind\":0,\"element\":0},\"278\":{\"power\":300,\"kind\":1,\"element\":1},\"279\":{\"power\":450,\"kind\":1,\"element\":0},\"280\":{\"power\":550,\"kind\":1,\"element\":3},\"281\":{\"power\":100,\"kind\":0,\"element\":0},\"282\":{\"power\":300,\"kind\":1,\"element\":1},\"283\":{\"power\":450,\"kind\":1,\"element\":0},\"284\":{\"power\":550,\"kind\":1,\"element\":3},\"285\":{\"power\":100,\"kind\":0,\"element\":0},\"286\":{\"power\":500,\"kind\":1,\"element\":1},\"287\":{\"power\":400,\"kind\":1,\"element\":1},\"288\":{\"power\":300,\"kind\":1,\"element\":1},\"289\":{\"power\":100,\"kind\":0,\"element\":0},\"290\":{\"power\":300,\"kind\":1,\"element\":2},\"291\":{\"power\":400,\"kind\":1,\"element\":2},\"292\":{\"power\":500,\"kind\":1,\"element\":4},\"293\":{\"power\":100,\"kind\":0,\"element\":0},\"294\":{\"power\":500,\"kind\":1,\"element\":2},\"295\":{\"power\":300,\"kind\":1,\"element\":2},\"296\":{\"power\":100,\"kind\":0,\"element\":0},\"297\":{\"power\":350,\"kind\":1,\"element\":1},\"298\":{\"power\":450,\"kind\":1,\"element\":0},\"299\":{\"power\":100,\"kind\":0,\"element\":0},\"300\":{\"power\":400,\"kind\":1,\"element\":4},\"301\":{\"power\":100,\"kind\":0,\"element\":0},\"302\":{\"power\":500,\"kind\":1,\"element\":2},\"303\":{\"power\":400,\"kind\":1,\"element\":2},\"304\":{\"power\":100,\"kind\":0,\"element\":0},\"305\":{\"power\":400,\"kind\":1,\"element\":4},\"306\":{\"power\":100,\"kind\":0,\"element\":0},\"307\":{\"power\":500,\"kind\":1,\"element\":4},\"308\":{\"power\":150,\"kind\":1,\"element\":1},\"309\":{\"power\":100,\"kind\":0,\"element\":0},\"310\":{\"power\":400,\"kind\":1,\"element\":2},\"311\":{\"power\":100,\"kind\":0,\"element\":0},\"312\":{\"power\":300,\"kind\":0,\"element\":1},\"313\":{\"power\":90,\"kind\":1,\"element\":0},\"314\":{\"power\":100,\"kind\":0,\"element\":0},\"315\":{\"power\":300,\"kind\":0,\"element\":5},\"316\":{\"power\":400,\"kind\":1,\"element\":1},\"317\":{\"power\":500,\"kind\":1,\"element\":5},\"318\":{\"power\":100,\"kind\":0,\"element\":0},\"319\":{\"power\":400,\"kind\":1,\"element\":0},\"320\":{\"power\":300,\"kind\":1,\"element\":5},\"321\":{\"power\":100,\"kind\":0,\"element\":0},\"322\":{\"power\":300,\"kind\":1,\"element\":0},\"323\":{\"power\":400,\"kind\":1,\"element\":0},\"324\":{\"power\":100,\"kind\":0,\"element\":0},\"325\":{\"power\":300,\"kind\":1,\"element\":1},\"326\":{\"power\":420,\"kind\":1,\"element\":3},\"327\":{\"power\":100,\"kind\":0,\"element\":0},\"328\":{\"power\":300,\"kind\":1,\"element\":4},\"329\":{\"power\":420,\"kind\":1,\"element\":4},\"330\":{\"power\":100,\"kind\":0,\"element\":0},\"331\":{\"power\":300,\"kind\":1,\"element\":3},\"332\":{\"power\":420,\"kind\":1,\"element\":3},\"333\":{\"power\":100,\"kind\":0,\"element\":0},\"334\":{\"power\":300,\"kind\":1,\"element\":0},\"335\":{\"power\":90,\"kind\":1,\"element\":0},\"336\":{\"power\":100,\"kind\":0,\"element\":0},\"337\":{\"power\":420,\"kind\":1,\"element\":3},\"338\":{\"power\":300,\"kind\":1,\"element\":1},\"339\":{\"power\":100,\"kind\":0,\"element\":0},\"340\":{\"power\":300,\"kind\":1,\"element\":4},\"341\":{\"power\":420,\"kind\":1,\"element\":0},\"342\":{\"power\":100,\"kind\":0,\"element\":0},\"343\":{\"power\":420,\"kind\":1,\"element\":0},\"344\":{\"power\":300,\"kind\":1,\"element\":4},\"345\":{\"power\":100,\"kind\":0,\"element\":0},\"346\":{\"power\":420,\"kind\":1,\"element\":1},\"347\":{\"power\":300,\"kind\":1,\"element\":0},\"348\":{\"power\":100,\"kind\":0,\"element\":0},\"349\":{\"power\":420,\"kind\":1,\"element\":1},\"350\":{\"power\":300,\"kind\":1,\"element\":4},\"351\":{\"power\":100,\"kind\":0,\"element\":0},\"352\":{\"power\":300,\"kind\":1,\"element\":5},\"353\":{\"power\":420,\"kind\":1,\"element\":0},\"354\":{\"power\":100,\"kind\":0,\"element\":0},\"355\":{\"power\":300,\"kind\":1,\"element\":0},\"356\":{\"power\":50,\"kind\":1,\"element\":4},\"357\":{\"power\":100,\"kind\":0,\"element\":0},\"358\":{\"power\":300,\"kind\":1,\"element\":1},\"359\":{\"power\":420,\"kind\":1,\"element\":1},\"360\":{\"power\":100,\"kind\":0,\"element\":0},\"361\":{\"power\":140,\"kind\":1,\"element\":0},\"362\":{\"power\":420,\"kind\":1,\"element\":0},\"363\":{\"power\":100,\"kind\":0,\"element\":0},\"364\":{\"power\":300,\"kind\":1,\"element\":5},\"365\":{\"power\":420,\"kind\":1,\"element\":0},\"366\":{\"power\":100,\"kind\":0,\"element\":0},\"367\":{\"power\":300,\"kind\":1,\"element\":0},\"368\":{\"power\":420,\"kind\":1,\"element\":5},\"369\":{\"power\":100,\"kind\":0,\"element\":0},\"370\":{\"power\":420,\"kind\":1,\"element\":0},\"371\":{\"power\":350,\"kind\":1,\"element\":0},\"372\":{\"power\":100,\"kind\":0,\"element\":0},\"373\":{\"power\":300,\"kind\":1,\"element\":0},\"374\":{\"power\":420,\"kind\":1,\"element\":5},\"375\":{\"power\":100,\"kind\":0,\"element\":0},\"376\":{\"power\":300,\"kind\":1,\"element\":0},\"377\":{\"power\":420,\"kind\":1,\"element\":0},\"378\":{\"power\":100,\"kind\":0,\"element\":0},\"379\":{\"power\":300,\"kind\":1,\"element\":0},\"380\":{\"power\":420,\"kind\":1,\"element\":0},\"381\":{\"power\":100,\"kind\":0,\"element\":0},\"382\":{\"power\":100,\"kind\":1,\"element\":1},\"383\":{\"power\":420,\"kind\":1,\"element\":0},\"384\":{\"power\":100,\"kind\":0,\"element\":0},\"385\":{\"power\":420,\"kind\":1,\"element\":1},\"386\":{\"power\":300,\"kind\":1,\"element\":0},\"387\":{\"power\":100,\"kind\":0,\"element\":0},\"388\":{\"power\":70,\"kind\":1,\"element\":4},\"389\":{\"power\":200,\"kind\":1,\"element\":4},\"390\":{\"power\":100,\"kind\":0,\"element\":0},\"391\":{\"power\":300,\"kind\":1,\"element\":4},\"392\":{\"power\":420,\"kind\":1,\"element\":0},\"393\":{\"power\":100,\"kind\":0,\"element\":0},\"394\":{\"power\":300,\"kind\":1,\"element\":2},\"395\":{\"power\":70,\"kind\":1,\"element\":2},\"396\":{\"power\":100,\"kind\":0,\"element\":0},\"397\":{\"power\":300,\"kind\":1,\"element\":3},\"398\":{\"power\":420,\"kind\":1,\"element\":3},\"399\":{\"power\":100,\"kind\":0,\"element\":0},\"400\":{\"power\":40,\"kind\":1,\"element\":0},\"401\":{\"power\":200,\"kind\":1,\"element\":0},\"402\":{\"power\":400,\"kind\":1,\"element\":5},\"403\":{\"power\":100,\"kind\":0,\"element\":0},\"404\":{\"power\":300,\"kind\":1,\"element\":1},\"405\":{\"power\":400,\"kind\":1,\"element\":0},\"406\":{\"power\":100,\"kind\":0,\"element\":0},\"407\":{\"power\":400,\"kind\":1,\"element\":0},\"408\":{\"power\":50,\"kind\":1,\"element\":2},\"409\":{\"power\":100,\"kind\":0,\"element\":0},\"410\":{\"power\":420,\"kind\":1,\"element\":5},\"411\":{\"power\":300,\"kind\":1,\"element\":2},\"412\":{\"power\":100,\"kind\":0,\"element\":0},\"413\":{\"power\":420,\"kind\":1,\"element\":1},\"414\":{\"power\":300,\"kind\":1,\"element\":0},\"415\":{\"power\":100,\"kind\":0,\"element\":0},\"416\":{\"power\":420,\"kind\":1,\"element\":1},\"417\":{\"power\":300,\"kind\":1,\"element\":0},\"418\":{\"power\":100,\"kind\":0,\"element\":0},\"419\":{\"power\":420,\"kind\":1,\"element\":1},\"420\":{\"power\":300,\"kind\":1,\"element\":0},\"421\":{\"power\":100,\"kind\":0,\"element\":0},\"422\":{\"power\":420,\"kind\":1,\"element\":1},\"423\":{\"power\":300,\"kind\":1,\"element\":5},\"424\":{\"power\":100,\"kind\":0,\"element\":0},\"425\":{\"power\":300,\"kind\":1,\"element\":4},\"426\":{\"power\":420,\"kind\":1,\"element\":0},\"427\":{\"power\":100,\"kind\":0,\"element\":0},\"428\":{\"power\":420,\"kind\":1,\"element\":0},\"429\":{\"power\":100,\"kind\":1,\"element\":4},\"430\":{\"power\":100,\"kind\":0,\"element\":0},\"431\":{\"power\":100,\"kind\":1,\"element\":5},\"432\":{\"power\":420,\"kind\":1,\"element\":3},\"433\":{\"power\":400,\"kind\":1,\"element\":0},\"434\":{\"power\":100,\"kind\":0,\"element\":0},\"435\":{\"power\":60,\"kind\":1,\"element\":1},\"436\":{\"power\":420,\"kind\":1,\"element\":5},\"437\":{\"power\":100,\"kind\":0,\"element\":0},\"438\":{\"power\":300,\"kind\":1,\"element\":5},\"439\":{\"power\":420,\"kind\":1,\"element\":3},\"440\":{\"power\":100,\"kind\":0,\"element\":0},\"441\":{\"power\":150,\"kind\":1,\"element\":4},\"442\":{\"power\":300,\"kind\":1,\"element\":4},\"443\":{\"power\":100,\"kind\":0,\"element\":0},\"444\":{\"power\":300,\"kind\":1,\"element\":4},\"445\":{\"power\":420,\"kind\":1,\"element\":0},\"446\":{\"power\":100,\"kind\":0,\"element\":0},\"447\":{\"power\":300,\"kind\":1,\"element\":0},\"448\":{\"power\":300,\"kind\":1,\"element\":1},\"449\":{\"power\":100,\"kind\":0,\"element\":0},\"450\":{\"power\":300,\"kind\":1,\"element\":0},\"451\":{\"power\":420,\"kind\":1,\"element\":0},\"452\":{\"power\":100,\"kind\":0,\"element\":0},\"453\":{\"power\":300,\"kind\":1,\"element\":1},\"454\":{\"power\":400,\"kind\":1,\"element\":0},\"455\":{\"power\":450,\"kind\":1,\"element\":0},\"456\":{\"power\":100,\"kind\":0,\"element\":0},\"457\":{\"power\":300,\"kind\":1,\"element\":0},\"458\":{\"power\":400,\"kind\":1,\"element\":0},\"459\":{\"power\":450,\"kind\":1,\"element\":0},\"460\":{\"power\":100,\"kind\":0,\"element\":0},\"461\":{\"power\":300,\"kind\":1,\"element\":3},\"462\":{\"power\":30,\"kind\":1,\"element\":1},\"463\":{\"power\":400,\"kind\":1,\"element\":1},\"464\":{\"power\":100,\"kind\":0,\"element\":0},\"465\":{\"power\":80,\"kind\":1,\"element\":4},\"466\":{\"power\":300,\"kind\":1,\"element\":2},\"467\":{\"power\":400,\"kind\":1,\"element\":4},\"468\":{\"power\":100,\"kind\":0,\"element\":0},\"469\":{\"power\":40,\"kind\":1,\"element\":1},\"470\":{\"power\":300,\"kind\":1,\"element\":0},\"471\":{\"power\":100,\"kind\":0,\"element\":0},\"472\":{\"power\":60,\"kind\":1,\"element\":1},\"473\":{\"power\":420,\"kind\":1,\"element\":5},\"474\":{\"power\":100,\"kind\":0,\"element\":0},\"475\":{\"power\":420,\"kind\":1,\"element\":4},\"476\":{\"power\":330,\"kind\":1,\"element\":2},\"477\":{\"power\":100,\"kind\":0,\"element\":0},\"478\":{\"power\":280,\"kind\":1,\"element\":2},\"479\":{\"power\":380,\"kind\":1,\"element\":5},\"480\":{\"power\":100,\"kind\":0,\"element\":0},\"481\":{\"power\":380,\"kind\":1,\"element\":2},\"482\":{\"power\":280,\"kind\":1,\"element\":3},\"483\":{\"power\":100,\"kind\":0,\"element\":0},\"484\":{\"power\":400,\"kind\":1,\"element\":3},\"485\":{\"power\":280,\"kind\":1,\"element\":2},\"486\":{\"power\":100,\"kind\":0,\"element\":0},\"487\":{\"power\":280,\"kind\":1,\"element\":1},\"488\":{\"power\":70,\"kind\":1,\"element\":5},\"489\":{\"power\":100,\"kind\":0,\"element\":0},\"490\":{\"power\":280,\"kind\":1,\"element\":0},\"491\":{\"power\":80,\"kind\":1,\"element\":0},\"492\":{\"power\":100,\"kind\":0,\"element\":0},\"493\":{\"power\":280,\"kind\":1,\"element\":0},\"494\":{\"power\":70,\"kind\":1,\"element\":0},\"495\":{\"power\":100,\"kind\":0,\"element\":0},\"496\":{\"power\":380,\"kind\":1,\"element\":1},\"497\":{\"power\":280,\"kind\":1,\"element\":3},\"498\":{\"power\":100,\"kind\":0,\"element\":0},\"499\":{\"power\":400,\"kind\":1,\"element\":0},\"500\":{\"power\":280,\"kind\":1,\"element\":0},\"501\":{\"power\":100,\"kind\":0,\"element\":0},\"502\":{\"power\":350,\"kind\":1,\"element\":3},\"503\":{\"power\":400,\"kind\":1,\"element\":3},\"504\":{\"power\":380,\"kind\":1,\"element\":3},\"505\":{\"power\":100,\"kind\":0,\"element\":0},\"506\":{\"power\":280,\"kind\":1,\"element\":0},\"507\":{\"power\":380,\"kind\":1,\"element\":0},\"508\":{\"power\":100,\"kind\":0,\"element\":0},\"509\":{\"power\":70,\"kind\":1,\"element\":1},\"510\":{\"power\":280,\"kind\":1,\"element\":1},\"511\":{\"power\":100,\"kind\":0,\"element\":0},\"512\":{\"power\":400,\"kind\":1,\"element\":3},\"513\":{\"power\":320,\"kind\":1,\"element\":3},\"514\":{\"power\":100,\"kind\":0,\"element\":0},\"515\":{\"power\":400,\"kind\":1,\"element\":1},\"516\":{\"power\":280,\"kind\":1,\"element\":3},\"517\":{\"power\":100,\"kind\":0,\"element\":0},\"518\":{\"power\":350,\"kind\":1,\"element\":4},\"519\":{\"power\":300,\"kind\":1,\"element\":5},\"520\":{\"power\":100,\"kind\":0,\"element\":0},\"521\":{\"power\":50,\"kind\":1,\"element\":1},\"522\":{\"power\":280,\"kind\":1,\"element\":4},\"523\":{\"power\":100,\"kind\":0,\"element\":0},\"524\":{\"power\":130,\"kind\":1,\"element\":4},\"525\":{\"power\":100,\"kind\":1,\"element\":4},\"526\":{\"power\":100,\"kind\":0,\"element\":0},\"527\":{\"power\":50,\"kind\":1,\"element\":0},\"528\":{\"power\":380,\"kind\":1,\"element\":0},\"529\":{\"power\":100,\"kind\":0,\"element\":0},\"530\":{\"power\":380,\"kind\":1,\"element\":4},\"531\":{\"power\":350,\"kind\":1,\"element\":2},\"532\":{\"power\":100,\"kind\":0,\"element\":0},\"533\":{\"power\":280,\"kind\":1,\"element\":0},\"534\":{\"power\":40,\"kind\":1,\"element\":3},\"535\":{\"power\":100,\"kind\":0,\"element\":0},\"536\":{\"power\":280,\"kind\":1,\"element\":4},\"537\":{\"power\":400,\"kind\":1,\"element\":0},\"538\":{\"power\":100,\"kind\":0,\"element\":0},\"539\":{\"power\":420,\"kind\":1,\"element\":5},\"540\":{\"power\":280,\"kind\":1,\"element\":5},\"541\":{\"power\":100,\"kind\":0,\"element\":0},\"542\":{\"power\":60,\"kind\":1,\"element\":3},\"543\":{\"power\":250,\"kind\":1,\"element\":1},\"544\":{\"power\":100,\"kind\":0,\"element\":0},\"545\":{\"power\":280,\"kind\":1,\"element\":0},\"546\":{\"power\":350,\"kind\":1,\"element\":5},\"547\":{\"power\":420,\"kind\":1,\"element\":0},\"548\":{\"power\":100,\"kind\":0,\"element\":0},\"549\":{\"power\":420,\"kind\":1,\"element\":5},\"550\":{\"power\":80,\"kind\":1,\"element\":4},\"551\":{\"power\":100,\"kind\":0,\"element\":0},\"552\":{\"power\":250,\"kind\":1,\"element\":0},\"553\":{\"power\":400,\"kind\":1,\"element\":4},\"554\":{\"power\":100,\"kind\":0,\"element\":0},\"555\":{\"power\":350,\"kind\":1,\"element\":2},\"556\":{\"power\":70,\"kind\":1,\"element\":1},\"557\":{\"power\":100,\"kind\":0,\"element\":0},\"558\":{\"power\":280,\"kind\":1,\"element\":2},\"559\":{\"power\":70,\"kind\":1,\"element\":1},\"560\":{\"power\":100,\"kind\":0,\"element\":0},\"561\":{\"power\":400,\"kind\":1,\"element\":5},\"562\":{\"power\":300,\"kind\":1,\"element\":2},\"563\":{\"power\":100,\"kind\":0,\"element\":0},\"564\":{\"power\":60,\"kind\":1,\"element\":5},\"565\":{\"power\":160,\"kind\":1,\"element\":3},\"566\":{\"power\":100,\"kind\":0,\"element\":0},\"567\":{\"power\":450,\"kind\":1,\"element\":1},\"568\":{\"power\":60,\"kind\":1,\"element\":1},\"569\":{\"power\":250,\"kind\":1,\"element\":5},\"570\":{\"power\":100,\"kind\":0,\"element\":0},\"571\":{\"power\":380,\"kind\":1,\"element\":0},\"572\":{\"power\":400,\"kind\":1,\"element\":1},\"573\":{\"power\":250,\"kind\":1,\"element\":0},\"574\":{\"power\":100,\"kind\":0,\"element\":0},\"575\":{\"power\":420,\"kind\":1,\"element\":0},\"576\":{\"power\":320,\"kind\":1,\"element\":3},\"577\":{\"power\":70,\"kind\":1,\"element\":0},\"578\":{\"power\":100,\"kind\":0,\"element\":0},\"579\":{\"power\":80,\"kind\":1,\"element\":0},\"580\":{\"power\":400,\"kind\":1,\"element\":0},\"581\":{\"power\":280,\"kind\":1,\"element\":0},\"582\":{\"power\":100,\"kind\":0,\"element\":0},\"583\":{\"power\":280,\"kind\":1,\"element\":1},\"584\":{\"power\":380,\"kind\":1,\"element\":3},\"585\":{\"power\":150,\"kind\":1,\"element\":1},\"586\":{\"power\":100,\"kind\":0,\"element\":0},\"587\":{\"power\":450,\"kind\":1,\"element\":4},\"588\":{\"power\":250,\"kind\":1,\"element\":2},\"589\":{\"power\":380,\"kind\":1,\"element\":4},\"590\":{\"power\":100,\"kind\":1,\"element\":0},\"591\":{\"power\":300,\"kind\":1,\"element\":1},\"592\":{\"power\":380,\"kind\":1,\"element\":1},\"593\":{\"power\":100,\"kind\":1,\"element\":0},\"594\":{\"power\":280,\"kind\":1,\"element\":0},\"595\":{\"power\":380,\"kind\":1,\"element\":3}}"),
+		terrain: [
+			[
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			[
+				0,
+				1,
+				-1,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			[
+				0,
+				0,
+				1,
+				0,
+				-1,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			[
+				0,
+				0,
+				-1,
+				1,
+				0,
+				-1,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			[
+				0,
+				0,
+				-1,
+				0,
+				1,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			[
+				0,
+				0,
+				0,
+				-1,
+				-1,
+				1,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			[
+				0,
+				-1,
+				0,
+				0,
+				0,
+				0,
+				1,
+				0,
+				0,
+				0,
+				0
+			],
+			[
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				1,
+				0,
+				0,
+				0
+			],
+			[
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			[
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			[
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			[
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				1,
+				0,
+				0,
+				0
+			]
+		],
+		critTable: [
+			2,
+			3,
+			5,
+			7
+		],
+		critRoll: 216,
+		habitat: {
+			"즈루몬": 6,
+			"뽈뽈몬": 6,
+			"새싹몬": 0,
+			"뽀글몬": 3,
+			"피치몬": 3,
+			"푸니몬": 0,
+			"깜몬": 2,
+			"포요몬": 3,
+			"모크몬": 2,
+			"하얀몬": 4,
+			"유라몬": 0,
+			"푸치몬": 2,
+			"카프리몬": 2,
+			"코로몬": 2,
+			"시드몬": 1,
+			"뿔몬": 1,
+			"토코몬": 0,
+			"야옹몬": 1,
+			"퍼그몬": 7,
+			"어니몬": 1,
+			"둥실몬": 3,
+			"쁘띠메라몬": 3,
+			"모티몬": 6,
+			"베비도몬": 0,
+			"산몬": 3,
+			"문몬": 7,
+			"아구몬": 2,
+			"아르마몬": 1,
+			"에렉몬": 1,
+			"올챙몬": 3,
+			"가오몬": 1,
+			"가지몬": 7,
+			"파피몬": 4,
+			"거북몬": 3,
+			"기자몬": 3,
+			"캔들몬": 2,
+			"쿠네몬": 1,
+			"울퉁몬": 5,
+			"고부리몬": 7,
+			"쉬라몬": 4,
+			"테리어몬": 1,
+			"텐타몬": 1,
+			"토이아구몬": 6,
+			"테이파몬": 0,
+			"톱니몬": 6,
+			"파닥몬": 0,
+			"팔몬": 1,
+			"피코데블몬": 7,
+			"피요몬": 0,
+			"팔코몬": 0,
+			"플롯트몬": 0,
+			"플로라몬": 1,
+			"머슈몬": 1,
+			"스노우아구몬": 4,
+			"레나몬": 0,
+			"드라코몬": 0,
+			"코로나몬": 2,
+			"루나몬": 7,
+			"크로아구몬": 2,
+			"사이케몬": 4,
+			"오로라몬": 1,
+			"츄카이몬": 7,
+			"브이몬": 7,
+			"길몬": 7,
+			"황금아르마몬": 5,
+			"원뿔몬": 4,
+			"위자몬": 0,
+			"우드몬": 1,
+			"에어드라몬": 0,
+			"엔젤몬": 0,
+			"우가몬": 7,
+			"가오가몬": 1,
+			"캅테리몬": 1,
+			"가르고몬": 1,
+			"가루몬": 4,
+			"가루몬(흑)": 4,
+			"가드로몬": 6,
+			"키위몬": 0,
+			"구미호몬": 0,
+			"그레이몬": 2,
+			"타임몬": 6,
+			"쿠가몬": 1,
+			"개굴몬": 3,
+			"연체몬": 3,
+			"켄터스몬": 0,
+			"꼬끼몬": 0,
+			"번개콩알몬": 6,
+			"쉘몬": 3,
+			"지오그레이몬": 2,
+			"시드라몬": 3,
+			"스카몬": 7,
+			"스타몬": 2,
+			"다르크몬": 0,
+			"다크티라노몬": 2,
+			"티라노몬": 2,
+			"가트몬": 0,
+			"데블드라몬": 7,
+			"데블몬": 7,
+			"니드몬": 1,
+			"토타몬": 5,
+			"워매몬": 7,
+			"고스몬": 7,
+			"버드라몬": 0,
+			"베지몬": 1,
+			"페크몬": 1,
+			"메라몬": 2,
+			"모털몬": 4,
+			"모노크로몬": 5,
+			"프리지몬": 4,
+			"유니몬": 0,
+			"블랙구미호몬": 7,
+			"링스몬": 2,
+			"레어몬": 7,
+			"레오몬": 0,
+			"레드베지몬": 1,
+			"코어드라몬(청)": 2,
+			"코어드라몬(녹)": 2,
+			"파이라몬": 2,
+			"레키스몬": 7,
+			"아이스데블몬": 7,
+			"구루몬": 4,
+			"옐로우워매몬": 7,
+			"화이트위자몬": 0,
+			"레드꼬끼몬": 0,
+			"블랙버드라몬": 7,
+			"아이스몬": 4,
+			"브이드라몬": 4,
+			"그라우몬": 4,
+			"아트라캅테리몬": 1,
+			"스콜피온몬": 3,
+			"안드로몬": 6,
+			"에테몬": 0,
+			"엔젤우몬": 0,
+			"오쿠와몬": 1,
+			"가루다몬": 0,
+			"가비지몬": 7,
+			"사이버드라몬": 2,
+			"쥬레이몬": 1,
+			"스컬그레이몬": 7,
+			"쥬드몬": 4,
+			"드라고몬": 3,
+			"데드메라몬": 2,
+			"뿌띠몬": 1,
+			"왕개굴몬": 3,
+			"트리세라몬": 1,
+			"나이트몬": 0,
+			"패롯몬": 0,
+			"다이버몬": 3,
+			"팬더몬": 0,
+			"왕콩알몬": 0,
+			"피콜몬": 1,
+			"팬텀몬": 7,
+			"베이더몬": 0,
+			"고래몬": 3,
+			"홀리엔젤몬": 0,
+			"마하가오가몬": 1,
+			"콩알몬": 0,
+			"맘모스몬": 4,
+			"메가시드라몬": 3,
+			"메가드라몬": 6,
+			"메탈그레이몬(청)": 2,
+			"메탈그레이몬": 2,
+			"메탈티라노몬": 2,
+			"퍼펫몬": 0,
+			"야타가라몬": 0,
+			"라이즈그레이몬": 2,
+			"래비드몬": 1,
+			"릴리몬": 1,
+			"레이디데블몬": 7,
+			"나쁜퍼펫몬": 7,
+			"워가루몬": 1,
+			"워가루몬(흑)": 1,
+			"윙드라몬": 2,
+			"그라운드라몬": 2,
+			"플레어몬": 2,
+			"크레세몬": 7,
+			"슈퍼스타몬": 2,
+			"블랙래비드몬": 7,
+			"블루메라몬": 4,
+			"바이킹몬": 4,
+			"발키리몬": 0,
+			"워그레이몬": 2,
+			"기가시드라몬": 3,
+			"그랜쿠가몬": 1,
+			"그리폰몬": 0,
+			"이글몬": 0,
+			"샤벨레오몬": 1,
+			"샤잉레이몬": 2,
+			"스컬맘모스몬": 7,
+			"세인트가르고몬": 6,
+			"하이안드로몬": 6,
+			"반쵸레오몬": 0,
+			"피에몬": 7,
+			"피노키몬": 7,
+			"파라오몬": 5,
+			"푸쿠몬": 3,
+			"블랙워그레이몬": 6,
+			"프린스콩알몬": 0,
+			"프레시오몬": 3,
+			"헤라크레스캅테리몬": 1,
+			"페닉스몬": 2,
+			"미러지가오몬": 1,
+			"파워드라몬": 6,
+			"메탈에테몬": 6,
+			"메탈가루몬": 6,
+			"메탈가루몬(흑)": 6,
+			"메탈시드라몬": 3,
+			"로제몬": 1,
+			"지드가루몬": 1,
+			"빅토리그레이몬": 2,
+			"슬레이어드라몬": 2,
+			"브레이크드라몬": 2,
+			"아폴로몬": 2,
+			"다이아나몬": 7,
+			"황제드라몬": 7,
+			"듀크몬": 7
+		}
+	};
 	// src/core/support-skills.ts
 	var DATA = {
 		skills: [
@@ -9178,7 +9566,7 @@ var ChampCore = (function(exports) {
 	/** 알약(프로틴) 하나당 공격 +15%, 최대 3개분 (임시 값) */
 	var PROTEIN_ATK = .15;
 	var PROTEIN_SAFE = 3;
-	var entrantOf = (d, mode) => ({
+	var entrantOf = (d, mode = d.tactic ?? "일반") => ({
 		uid: d.uid,
 		speciesId: d.speciesId,
 		stats: d.protein ? {
@@ -9252,7 +9640,7 @@ var ChampCore = (function(exports) {
 			};
 		});
 	}
-	function createBattle(mine, foes) {
+	function createBattle(mine, foes, field = 0) {
 		const units = [];
 		const place = (list, team) => list.forEach((e, i) => {
 			const sp = getSpecies(e.speciesId);
@@ -9288,15 +9676,45 @@ var ChampCore = (function(exports) {
 			t: 0,
 			over: false,
 			winner: null,
-			reason: null
+			reason: null,
+			field
 		};
 	}
 	/** 백신 > 바이러스 > 데이터 > 백신 */
-	function attrMult(a, b) {
-		if (a === "프리" || a === "없음" || b === "프리" || b === "없음") return 1;
-		if (a === "백신" && b === "바이러스" || a === "바이러스" && b === "데이터" || a === "데이터" && b === "백신") return 1.2;
-		if (a === b) return 1;
-		return .9;
+	var FORMULA = battle_formula_default;
+	/** 공격 기록의 위력(+0x4A). 일반 공격 100, 필살기 280~500 등 */
+	var attackPower = (record) => record == null ? 100 : FORMULA.records[String(record)]?.power ?? 100;
+	/** 강화 기술은 곡선 번호를 한 칸 올린다(원본 +1). 웹판 능력치는 값이라, 지금 값이 놓인 곡선 칸의 다음 칸과의 차이만큼 더한다 */
+	function curveStep(value, column) {
+		const curve = column === "resist" ? RESIST_CURVE : STAT_CURVES.map((row) => row[column]);
+		let i = 0;
+		while (i + 1 < curve.length && curve[i + 1] <= value) i++;
+		return Math.max(1, (curve[Math.min(curve.length - 1, i + 1)] ?? value) - (curve[i] ?? value));
+	}
+	/** 지형 상성: 종의 지형 번호(종 표 +72) × 배틀 맵 번호 → +1 유리, -1 불리 */
+	var terrainOf = (speciesId, field) => FORMULA.terrain[FORMULA.habitat[getSpecies(speciesId).id] ?? 0]?.[field] ?? 0;
+	/**
+	* 원본 피해 = ⌊(⌊공격×5/2⌋ − 방어) × 위력 / 100⌋. 속성 공격은 방어 대신 그 속성 내성.
+	* 공격 쪽이 유리한 지형이면 ×1.2, 맞는 쪽이 불리한 지형이면 ×1.2. 0 이하이면 튕겨 낸다(피해 0).
+	* 크리티컬 216분의 2(크리티컬업이면 3) → ×1.5. 마지막에 (0~215 난수 % 100)/1000만큼 더한다(최대 +9.9%).
+	* 원본의 크리티컬 단계(디지몬 +0x3B)는 미해석이라 0으로 둔다.
+	*/
+	function originalDamage(attack, guard, power, rng, opts = {}) {
+		let dmg = Math.trunc((Math.trunc(attack * 5 / 2) - guard) * power / 100);
+		if (dmg <= 0) return {
+			damage: 0,
+			critical: false
+		};
+		if ((opts.attackerTerrain ?? 0) > 0) dmg = Math.trunc(dmg * 120 / 100);
+		if ((opts.targetTerrain ?? 0) < 0) dmg = Math.trunc(dmg * 120 / 100);
+		const critical = Math.floor(rng() * FORMULA.critRoll) < FORMULA.critTable[opts.critUp ? 1 : 0];
+		if (critical) dmg = Math.trunc(dmg * 15 / 10);
+		const roll = Math.floor(rng() * 216) % 100;
+		dmg += Math.trunc(dmg * roll / 1e3);
+		return {
+			damage: dmg,
+			critical
+		};
 	}
 	var dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 	function move(u, tx, ty, speed, away = false) {
@@ -9344,17 +9762,17 @@ var ChampCore = (function(exports) {
 			if (u.cd > 0) continue;
 			const special = wantsSpecial;
 			const skill = special ? pickBattleSkill(u.speciesId, rng, u.tp, u.personality) : null;
-			const attack = u.stats.atk * buffMultiplier(u, "atk", s.t), intelligence = u.stats.int * buffMultiplier(u, "int", s.t);
-			const power = special ? (attack + intelligence) / 2 : attack;
 			const element = skill ? battleElement(skill.record) : void 0;
-			const guard = element ? near.resist[element] ?? near.stats.def : near.stats.def * buffMultiplier(near, "def", s.t);
-			let dmg = (8 + power * .9) * (100 / (100 + guard)) * range(rng, .85, 1.15) * attrMult(u.attr, near.attr);
-			if (special) dmg *= 2.2;
-			if (u.personality === "열혈") dmg *= 1.2;
-			if (u.personality === "제멋대로") dmg *= 1.1;
-			if (element && (near.buffs?.[element] ?? 0) > s.t) dmg *= .85;
-			if (u.mode === "지원") dmg *= .6;
-			const damage = Math.max(1, Math.round(dmg));
+			const attack = u.stats.atk + (buffMultiplier(u, "atk", s.t) > 1 ? curveStep(u.stats.atk, 2) : 0);
+			const resistKey = element;
+			const guardBase = resistKey ? near.resist[resistKey] ?? near.stats.def : near.stats.def;
+			const hit = originalDamage(attack, guardBase + ((resistKey ? (near.buffs?.[element] ?? 0) > s.t : buffMultiplier(near, "def", s.t) > 1) ? curveStep(guardBase, resistKey ? "resist" : 3) : 0), attackPower(skill ? skill.record : basicRecordOf(u.speciesId)), rng, {
+				attackerTerrain: terrainOf(u.speciesId, s.field ?? 0),
+				targetTerrain: terrainOf(near.speciesId, s.field ?? 0),
+				critUp: buffMultiplier(u, "int", s.t) > 1
+			});
+			const dmg = hit.damage * (u.personality === "열혈" ? 1.2 : 1) * (u.personality === "제멋대로" ? 1.1 : 1);
+			const damage = Math.max(0, Math.round(dmg));
 			near.hp = Math.max(0, near.hp - damage);
 			near.wasHit = true;
 			if (skill) u.tp -= skill.tpCost;
@@ -9366,6 +9784,7 @@ var ChampCore = (function(exports) {
 				to: near.id,
 				damage,
 				special,
+				...hit.critical ? { critical: true } : {},
 				...skill ? { skill } : {}
 			});
 			if (near.hp <= 0) {
@@ -10047,9 +10466,11 @@ var ChampCore = (function(exports) {
 	exports.applyMatch = applyMatch;
 	exports.applyTraining = applyTraining;
 	exports.applyWin = applyWin;
+	exports.attackPower = attackPower;
 	exports.availableFood = availableFood;
 	exports.baitOf = baitOf;
 	exports.baseResist = baseResist;
+	exports.basicRecordOf = basicRecordOf;
 	exports.battleElement = battleElement;
 	exports.battleMapFor = battleMapFor;
 	exports.battleSkills = battleSkills;
@@ -10068,6 +10489,7 @@ var ChampCore = (function(exports) {
 	exports.cleanOne = cleanOne;
 	exports.createBattle = createBattle;
 	exports.cure = cure;
+	exports.curveStep = curveStep;
 	exports.dateOf = dateOf;
 	exports.defaultRng = defaultRng;
 	exports.digimonResist = digimonResist;
@@ -10124,6 +10546,7 @@ var ChampCore = (function(exports) {
 	exports.moveOnHuntTerrain = moveOnHuntTerrain;
 	exports.newDigimon = newDigimon;
 	exports.nextMorningClock = nextMorningClock;
+	exports.originalDamage = originalDamage;
 	exports.originalSpecies = originalSpecies;
 	exports.parseCond = parseCond;
 	exports.parseHabitats = parseHabitats;
@@ -10163,6 +10586,7 @@ var ChampCore = (function(exports) {
 	exports.stepBattle = stepBattle;
 	exports.supportSkills = supportSkills;
 	exports.tamerRank = tamerRank;
+	exports.terrainOf = terrainOf;
 	exports.tickFarm = tickFarm;
 	exports.todaysMatches = todaysMatches;
 	exports.trainingBounds = trainingBounds;

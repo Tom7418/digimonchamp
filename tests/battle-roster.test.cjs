@@ -6,7 +6,7 @@ function setup(){
  vm.runInContext(`const C=ChampCore;globalThis.save=C.freshSave(0);save.digimon=[1,2,3,4].map(uid=>C.newDigimon(uid,'코로몬'));globalThis.current=()=>save.digimon[0];`,ctx);
  const src=fs.readFileSync('web/game.js','utf8'),a=src.indexOf('  const canFight ='),b=src.indexOf('  function battleTick(',a);
  vm.runInContext(src.slice(a,b),ctx);
- const start=(format,selection,match)=>ctx.startBattle({title:'프리 배틀',format,stage:2,scale:1,prize:0,match},'지원',selection);
+ const start=(format,selection,match)=>ctx.startBattle({title:'프리 배틀',format,stage:2,scale:1,prize:0,match},selection);
  return {ctx,messages,start};
 }
 test('직접 선택한 세 개체만 선택 순서대로 출전하고1:1은 첫 개체를 사용한다',()=>{

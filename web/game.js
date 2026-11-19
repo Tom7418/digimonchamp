@@ -1086,7 +1086,6 @@
   function battleMenu() {
     const date=C.dateOf(save.clock),titles=C.todaysMatches(save),free=C.freeBattleLineup(date.year,date.season,date.day);
     const freeOpen=date.hour>=8&&date.hour<21;
-    let mode='일반';
     const first=canFight(current())?current():save.digimon.find(canFight);
     // 선택 순서가 출전 순서다. 1:1은 첫 개체,3:3은 직접 고른 세 개체를 사용한다.
     const roster=first?[first.uid]:[];
@@ -1101,7 +1100,8 @@
       `<p>출전할 디지몬을 선택하세요. <b>1:1은 첫 번째,3:3은 선택한 세 마리</b>가 나갑니다. 다시 누르면 제외됩니다.</p>
        <div id="battle-roster" class="battle-roster">${save.digimon.map(d=>`<button data-entrant="${d.uid}" aria-pressed="false"${canFight(d)?'':' disabled'}><b><span class="roster-order"></span>${esc(nameOf(d))}</b><small>${d.isEgg?'부화 전':d.dying?'빈사 상태로 출전 불가':d.sick?'병으로 출전 불가':d.injured?'부상으로 출전 불가':esc(C.STAGE_LABEL[C.getSpecies(d.speciesId).stage])+' · '+esc(d.personality)+' · 배틀 '+d.battles+'회'}</small>${d.isEgg?'':`<small>SP: ${C.supportSkills(d.speciesId,d.personality).map(sk=>esc(sk.name)+' ('+sk.tpCost+'TP)').join(' · ')||'없음'}</small>`}</button>`).join('')}</div>
        <p id="battle-roster-count" class="hint" role="status"></p>
-       <div class="mode-pick">출전 전 공격 방식 ${['일반','지원','특수'].map(m=>`<button data-mode="${m}" class="${m===mode?'active':''}">${m}</button>`).join('')}</div>
+       <div id="battle-tactics" class="mode-pick-list" aria-label="작전"></div>
+       <p class="hint">작전: 특수공격은 필살기 위주, 지원은 SP를 쓰며 공격, 일반공격은 둘을 균형 있게 씁니다. 디지몬마다 정할 수 있고 다음 배틀에도 기억합니다.</p>
        <h3>타이틀 매치</h3><div class="menu-list">${titles.length?titles.map((m,i)=>`<button data-title="${i}"><b>★ ${esc(m.name)}</b><small>${esc(titleText(m))}</small></button>`).join(''):`<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은07:00~15:00, 일정: ${esc(C.upcoming(save)[0]||'-')}</p>`}</div>
        <h3>프리 배틀 ${freeOpen?'':'(08:00~21:00)'}</h3><div class="menu-list two">${free.map((f,i)=>`<button data-free="${i}"><b>${esc(f.label)} ${f.format}:${f.format}</b><small>${f.foes.map(x=>esc(C.getSpecies(x.speciesId).name)).join(' · ')} · ${f.prize.toLocaleString('ko-KR')} ฿</small></button>`).join('')}</div>`,
       'BATTLE ENTRY','취소');
@@ -1115,6 +1115,9 @@
         b.classList.toggle('active',selected);b.setAttribute('aria-pressed',String(selected));
         b.querySelector('.roster-order').textContent=selected?(order+1)+'. ':'';
       });
+      body.querySelector('#battle-tactics').innerHTML=roster.map(uid=>{const d=save.digimon.find(x=>x.uid===uid),t=d.tactic??'일반';
+        return `<div class="mode-pick"><b>${esc(nameOf(d))}</b> ${['일반','지원','특수'].map(m=>`<button data-tactic="${uid}" data-mode="${m}" class="${m===t?'active':''}">${m}</button>`).join('')}</div>`;}).join('');
+      body.querySelectorAll('[data-tactic]').forEach(b=>b.onclick=()=>{const d=save.digimon.find(x=>x.uid===+b.dataset.tactic);if(!d)return;d.tactic=b.dataset.mode;persist();updateRoster();});
       body.querySelector('#battle-roster-count').textContent=`선택 ${roster.length}/3 · ${roster.map(uid=>nameOf(save.digimon.find(d=>d.uid===uid))).join(' → ')||'출전할 디지몬을 골라 주세요'}`;
       body.querySelectorAll('[data-title]').forEach(b=>{
         const m=titles[+b.dataset.title];b.disabled=teamFor(m.format).length<m.format||C.entryProblems(m,teamFor(m.format)).length>0;b.querySelector('small').textContent=titleText(m);
@@ -1127,30 +1130,28 @@
       else if(roster.length<3)roster.push(uid);else return toast('최대3마리까지 선택할 수 있어요.');
       updateRoster();
     });
-    body.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
-      mode=b.dataset.mode;body.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('active',x===b));
-    });
     body.querySelectorAll('[data-title]').forEach(b=>b.onclick=()=>{
-      const m=titles[+b.dataset.title];startBattle({title:m.name,match:m,format:m.format,foes:m.foes,stage:m.stage,scale:m.scale,prize:m.prize},mode,[...roster]);
+      const m=titles[+b.dataset.title];startBattle({title:m.name,match:m,format:m.format,foes:m.foes,stage:m.stage,scale:m.scale,prize:m.prize},[...roster]);
     });
     body.querySelectorAll('[data-free]').forEach(b=>b.onclick=()=>{
-      const f=free[+b.dataset.free];startBattle({title:`프리 배틀 ${f.label}`,format:f.format,stage:f.stage,scale:1,prize:f.prize,free:f},mode,[...roster]);
+      const f=free[+b.dataset.free];startBattle({title:`프리 배틀 ${f.label}`,format:f.format,stage:f.stage,scale:1,prize:f.prize,free:f},[...roster]);
     });
     updateRoster();
   }
-  function startBattle(setup, mode, selection) {
+  function startBattle(setup, selection) {
     const team = members(setup.format,selection);
     if (!team.length || team.some(d=>!canFight(d))) return toast('출전할 수 있는 디지몬이 없어요. (알·병·부상은 출전 불가)');
     if (team.length < setup.format) return toast(`${setup.format}:${setup.format}에는 건강한 디지몬 ${setup.format}마리가 필요해요.`);
     if(new Set(team.map(d=>d.uid)).size!==team.length)return toast('같은 디지몬을 중복 출전시킬 수 없어요.');
     if(setup.match){const problems=C.entryProblems(setup.match,team);if(problems.length)return toast(problems.join(', '));}
     const foes = setup.free ? C.freeBattleFoes(setup.free, Math.random) : C.makeEnemies(setup.stage, setup.foes ?? setup.format, setup.scale, Math.random);
-    const state = C.createBattle(
-      team.map((d) => C.entrantOf(d, mode)),
-      foes,
-    );
-    // 맵은 시작 시 한 번 선택한다. 타이틀의 원본 지정값이 있으면 무작위보다 우선한다.
+    // 맵은 시작 시 한 번 선택한다. 타이틀의 원본 지정값이 있으면 무작위보다 우선한다. 맵 번호는 지형 상성에 쓴다.
     const map=C.battleMapFor(setup.match?.id,Math.random);
+    const state = C.createBattle(
+      team.map((d) => C.entrantOf(d)),
+      foes,
+      map?.id ?? 0,
+    );
     battleBackdrop.preload(map);
     for(const u of state.units)spriteOf(u.speciesId,false); // 배경과 출전 그림을 함께 미리 읽는다.
     battle = { setup, state, map, assetWait:0, acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
@@ -1209,8 +1210,13 @@
             battleLog(`${attacker.name} · ${e.skill.name} → ${target.name} (${e.damage}${cost})`);
           }
         }
-        if (e.type === 'hit')
-          b.flashes.push({ id: e.to, text: `-${e.damage}${e.special ? '!' : ''}`, until: performance.now() + 700, color: e.special ? '#ffd36a' : '#fff' });
+        if (e.type === 'hit') {
+          // 피해 0은 원작처럼 공격을 막아 낸 것으로 표시(txt_list #1847), 크리티컬은 따로 표시한다
+          const text = e.damage === 0 ? '막음' : `-${e.damage}${e.critical ? ' 크리티컬!' : e.special ? '!' : ''}`;
+          b.flashes.push({ id: e.to, text, until: performance.now() + 700, color: e.critical ? '#ff9a6a' : e.special ? '#ffd36a' : '#fff' });
+          if (e.damage === 0) battleLog(`${b.state.units[e.to].name}: 공격을 막아 냄 (피해 0)`);
+          else if (e.critical) battleLog(`크리티컬! ${b.state.units[e.to].name}에게 ${e.damage}`);
+        }
         if (e.type === 'heal') {
           b.flashes.push({ id: e.to, text: `+${e.amount}`, until: performance.now() + 700, color: '#8ef0a0' });
           if(e.support)battleLog(`${b.state.units[e.from].name} · ${e.support.name} → ${b.state.units[e.to].name} +${e.amount}`);

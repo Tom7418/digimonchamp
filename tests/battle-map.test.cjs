@@ -34,7 +34,7 @@ test('실제 출전은 맵을 한 번 고르고 결과 화면까지 같은 맵�
  c.$=selector=>elements[selector]??(elements[selector]={});
  vm.runInContext(source.slice(source.indexOf('  function startBattle('),source.indexOf('  function battleTick(')),c);
  vm.runInContext(source.slice(source.indexOf('  function drawArena('),source.indexOf('  // ---------- 그리기 (캔버스) ----------')),c);
- c.startBattle({title:'물을 조정하는 자',match:{id:'m35'},format:1,stage:3,scale:1,prize:0},'일반');
+ c.startBattle({title:'물을 조정하는 자',match:{id:'m35'},format:1,stage:3,scale:1,prize:0});
  const battle=c.current(),positions=battle.state.units.map(u=>[u.x,u.y]);
  assert.match(c.modal[1],/width="416" height="272"/);assert.equal(battle.map.id,3);
  c.drawArena(0);battle.done=true;c.drawArena(0);

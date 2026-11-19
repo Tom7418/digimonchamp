@@ -1,5 +1,6 @@
 import { baseResist, getSpecies, originalSpecies, RESIST_CURVE, RESIST_ORDER, speciesByStage, STAT_CURVES, typicalStats, type ResistKey } from './data';
-import { battleSkills, pickBattleSkill, type BattleSkill } from './battle-skills';
+import { basicRecordOf, battleSkills, pickBattleSkill, type BattleSkill } from './battle-skills';
+import formula from '../data/battle-formula.json';
 import { supportSkills, useSupport, reviveSupport, buffMultiplier, battleElement, type BattleBuff, type SupportSkill } from './support-skills';
 import { pick, range, seeded, type Rng } from './rng';
 import freeRaw from '../data/free-battles.txt?raw';
@@ -107,7 +108,7 @@ export interface Unit {
 }
 
 export type BattleEvent =
-  | { type: 'hit'; from: number; to: number; damage: number; special: boolean; skill?: BattleSkill }
+  | { type: 'hit'; from: number; to: number; damage: number; special: boolean; critical?: boolean; skill?: BattleSkill }
   | { type: 'heal'; from: number; to: number; amount: number; support?: SupportSkill }
   | { type: 'support'; from:number; targets:number[]; skill:SupportSkill }
   | { type: 'ko'; id: number };
@@ -118,6 +119,8 @@ export interface BattleState {
   over: boolean;
   winner: 0 | 1 | null;
   reason: 'ko' | 'timeout' | null;
+  /** 배틀 맵 번호 (지형 상성 표의 열). 없으면 일반 경기장 0 */
+  field?: number;
 }
 
 export interface Entrant {
@@ -135,7 +138,7 @@ export interface Entrant {
 /** 알약(프로틴) 하나당 공격 +15%, 최대 3개분 (임시 값) */
 export const PROTEIN_ATK = 0.15;
 export const PROTEIN_SAFE = 3;
-export const entrantOf = (d: Digimon, mode: AttackMode): Entrant => ({
+export const entrantOf = (d: Digimon, mode: AttackMode = d.tactic ?? '일반'): Entrant => ({
   uid: d.uid,
   speciesId: d.speciesId,
   stats: d.protein ? { ...d.stats, atk: Math.round(d.stats.atk * (1 + PROTEIN_ATK * Math.min(PROTEIN_SAFE, d.protein))) } : d.stats,
@@ -180,7 +183,7 @@ export function makeEnemies(stage: Stage, count: number, scale: number, rng: Rng
   });
 }
 
-export function createBattle(mine: Entrant[], foes: Entrant[]): BattleState {
+export function createBattle(mine: Entrant[], foes: Entrant[], field = 0): BattleState {
   const units: Unit[] = [];
   const place = (list: Entrant[], team: 0 | 1) =>
     list.forEach((e, i) => {
@@ -213,16 +216,39 @@ export function createBattle(mine: Entrant[], foes: Entrant[]): BattleState {
     });
   place(mine, 0);
   place(foes, 1);
-  return { units, t: 0, over: false, winner: null, reason: null };
+  return { units, t: 0, over: false, winner: null, reason: null, field };
 }
 
 /** 백신 > 바이러스 > 데이터 > 백신 */
-function attrMult(a: SpeciesAttr, b: SpeciesAttr) {
-  // 프리·없음은 상성이 없다 (임시)
-  if (a === '프리' || a === '없음' || b === '프리' || b === '없음') return 1;
-  if ((a === '백신' && b === '바이러스') || (a === '바이러스' && b === '데이터') || (a === '데이터' && b === '백신')) return 1.2;
-  if (a === b) return 1;
-  return 0.9;
+// ---------- 원본 피해 계산 (overlay19 0x2118218~0x21184EC, 표는 tools/extract_battle_formula.py) ----------
+const FORMULA = formula as { records: Record<string, { power: number; kind: number; element: number }>; terrain: number[][]; critTable: number[]; critRoll: number; habitat: Record<string, number> };
+/** 공격 기록의 위력(+0x4A). 일반 공격 100, 필살기 280~500 등 */
+export const attackPower = (record: number | null | undefined) => (record == null ? 100 : FORMULA.records[String(record)]?.power ?? 100);
+/** 강화 기술은 곡선 번호를 한 칸 올린다(원본 +1). 웹판 능력치는 값이라, 지금 값이 놓인 곡선 칸의 다음 칸과의 차이만큼 더한다 */
+export function curveStep(value: number, column: number | 'resist'): number {
+  const curve = column === 'resist' ? RESIST_CURVE : STAT_CURVES.map((row) => row[column]);
+  let i = 0;
+  while (i + 1 < curve.length && curve[i + 1] <= value) i++;
+  return Math.max(1, (curve[Math.min(curve.length - 1, i + 1)] ?? value) - (curve[i] ?? value));
+}
+/** 지형 상성: 종의 지형 번호(종 표 +72) × 배틀 맵 번호 → +1 유리, -1 불리 */
+export const terrainOf = (speciesId: string, field: number) => FORMULA.terrain[FORMULA.habitat[getSpecies(speciesId).id] ?? 0]?.[field] ?? 0;
+/**
+ * 원본 피해 = ⌊(⌊공격×5/2⌋ − 방어) × 위력 / 100⌋. 속성 공격은 방어 대신 그 속성 내성.
+ * 공격 쪽이 유리한 지형이면 ×1.2, 맞는 쪽이 불리한 지형이면 ×1.2. 0 이하이면 튕겨 낸다(피해 0).
+ * 크리티컬 216분의 2(크리티컬업이면 3) → ×1.5. 마지막에 (0~215 난수 % 100)/1000만큼 더한다(최대 +9.9%).
+ * 원본의 크리티컬 단계(디지몬 +0x3B)는 미해석이라 0으로 둔다.
+ */
+export function originalDamage(attack: number, guard: number, power: number, rng: Rng, opts: { attackerTerrain?: number; targetTerrain?: number; critUp?: boolean } = {}) {
+  let dmg = Math.trunc(((Math.trunc((attack * 5) / 2) - guard) * power) / 100);
+  if (dmg <= 0) return { damage: 0, critical: false };
+  if ((opts.attackerTerrain ?? 0) > 0) dmg = Math.trunc((dmg * 120) / 100);
+  if ((opts.targetTerrain ?? 0) < 0) dmg = Math.trunc((dmg * 120) / 100);
+  const critical = Math.floor(rng() * FORMULA.critRoll) < FORMULA.critTable[opts.critUp ? 1 : 0];
+  if (critical) dmg = Math.trunc((dmg * 15) / 10);
+  const roll = Math.floor(rng() * 216) % 100;
+  dmg += Math.trunc((dmg * roll) / 1000);
+  return { damage: dmg, critical };
 }
 
 const dist = (a: Unit, b: Unit) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -281,25 +307,25 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
 
     const special = wantsSpecial;
     const skill = special ? pickBattleSkill(u.speciesId, rng, u.tp, u.personality) : null;
-    const attack = u.stats.atk * buffMultiplier(u,'atk',s.t), intelligence=u.stats.int*buffMultiplier(u,'int',s.t);
-    const power = special ? (attack + intelligence) / 2 : attack;
-    // 속성 공격은 방어 대신 그 속성의 내성으로 막는다 (원본 overlay19 0x2118254: 공격 표 +0x58 속성 1~5 → 내성 칸)
-    const element=skill?battleElement(skill.record):undefined;
-    const guard = element ? near.resist[element as ResistKey] ?? near.stats.def : near.stats.def * buffMultiplier(near,'def',s.t);
-    let dmg = (8 + power * 0.9) * (100 / (100 + guard)) * range(rng, 0.85, 1.15) * attrMult(u.attr, near.attr);
-    if (special) dmg *= 2.2;
-    if (u.personality === '열혈') dmg *= 1.2;
-    // 기존 제멋대로 전투 장점은 유지하고, 동거 스트레스는 별도로 추가한다.
-    if (u.personality === '제멋대로') dmg *= 1.1;
-    if(element&&(near.buffs?.[element]??0)>s.t)dmg*=.85; // 내성SP 피해 경감15%는 웹판 정책
-    if (u.mode === '지원') dmg *= 0.6;
-    const damage = Math.max(1, Math.round(dmg));
+    // 원본 피해 계산: 공격 곡선 값(공격업이면 한 칸 위), 방어 또는 속성 내성(방어업·내성업이면 한 칸 위), 기술 위력
+    const element = skill ? battleElement(skill.record) : undefined;
+    const attack = u.stats.atk + (buffMultiplier(u, 'atk', s.t) > 1 ? curveStep(u.stats.atk, 2) : 0);
+    const resistKey = element as ResistKey | undefined;
+    const guardBase = resistKey ? near.resist[resistKey] ?? near.stats.def : near.stats.def;
+    const guardUp = resistKey ? (near.buffs?.[element!] ?? 0) > s.t : buffMultiplier(near, 'def', s.t) > 1;
+    const guard = guardBase + (guardUp ? curveStep(guardBase, resistKey ? 'resist' : 3) : 0);
+    const hit = originalDamage(attack, guard, attackPower(skill ? skill.record : basicRecordOf(u.speciesId)), rng, {
+      attackerTerrain: terrainOf(u.speciesId, s.field ?? 0), targetTerrain: terrainOf(near.speciesId, s.field ?? 0), critUp: buffMultiplier(u, 'int', s.t) > 1,
+    });
+    // 형규가 정한 성격 효과는 원본 피해 위에 그대로 곱한다: 열혈 ×1.2, 제멋대로 ×1.1
+    const dmg = hit.damage * (u.personality === '열혈' ? 1.2 : 1) * (u.personality === '제멋대로' ? 1.1 : 1);
+    const damage = Math.max(0, Math.round(dmg));
     near.hp = Math.max(0, near.hp - damage);
     near.wasHit = true;
     if (skill) u.tp -= skill.tpCost;
     u.cd = (1.3 - Math.min(0.6, u.stats.spd * buffMultiplier(u,'spd',s.t) / 400)) * (['대담','제멋대로'].includes(u.personality) ? 0.9 : 1);
     if (u.personality === '성급한') u.retreat = 0.8;
-    events.push({ type: 'hit', from: u.id, to: near.id, damage, special, ...(skill ? { skill } : {}) });
+    events.push({ type: 'hit', from: u.id, to: near.id, damage, special, ...(hit.critical ? { critical: true } : {}), ...(skill ? { skill } : {}) });
     if (near.hp <= 0) {
       near.alive = false;
       events.push({ type: 'ko', id: near.id });

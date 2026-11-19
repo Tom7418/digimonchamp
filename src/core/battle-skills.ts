@@ -28,6 +28,9 @@ export function battleSkills(speciesId: string): BattleSkill[] {
   }));
 }
 
+/** 종의 일반 공격 기록 번호 (공격 기록 표 arm9 0x020D02CC) */
+export const basicRecordOf = (speciesId: string): number | null => TABLE[getSpecies(speciesId).id]?.basicRecord ?? null;
+
 /** 사용 가능한 기술을 동일 확률로 선택하는 빈도/AI는 웹판 정책. TP 소비는 원본 값. */
 export function pickBattleSkill(speciesId: string, rng: Rng, tp = Infinity, personality?: import('./types').Personality): BattleSkill | null {
   const skills = battleSkills(speciesId).filter(skill => skill.tpCost <= tp);

@@ -12,7 +12,7 @@ import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personal
 import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
-import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
+import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
@@ -1482,6 +1482,23 @@ describe('프리 배틀 (원본 대진·상금)',()=>{
   expect(count('대담')).toBe(1);
   expect(count('쿨')).toBe(4);
   expect(count('솔직')).toBeGreaterThan(count('겁쟁이'));
+ });
+ it('원본 피해 식: (공격×2.5−방어)×위력/100, 지형 ×1.2, 0 이하는 튕겨 냄 (overlay19 0x2118218)',()=>{
+  const seq=(...xs:number[])=>{let i=0;return()=>xs[i++%xs.length];};
+  const noCrit=()=>0.999; // 크리티컬 없음, 난수 가산 215%100=15 → +1.5%
+  expect(originalDamage(100,50,100,seq(0.999,0)).damage).toBe(200); // ⌊250−50⌋×100/100, 가산 0
+  expect(originalDamage(100,50,100,seq(0,0))).toEqual({damage:300,critical:true}); // 크리티컬 ×1.5
+  expect(originalDamage(100,50,300,noCrit).damage).toBe(600+Math.trunc(600*15/1000));
+  expect(originalDamage(10,40,400,()=>0).damage).toBe(0);
+  expect(originalDamage(100,50,100,seq(0.999,0),{attackerTerrain:1,targetTerrain:-1}).damage).toBe(288);
+  expect(attackPower(59)).toBe(100);expect(attackPower(60)).toBe(300);
+  expect(terrainOf('아구몬',2)).toBe(1); // 불 지형 디지몬은 화산에서 유리
+  expect(curveStep(14,2)).toBe(4);
+ });
+ it('작전은 디지몬마다 저장되고 출전 때 쓰인다',()=>{
+  const d={...newDigimon(1,'아구몬'),tactic:'특수' as const};
+  expect(entrantOf(d).mode).toBe('특수');
+  expect(entrantOf(newDigimon(2,'아구몬')).mode).toBe('일반');
  });
  it('프리 배틀 상대로 실제 배틀이 끝난다',()=>{
   for(const entry of freeBattleLineup(1,1,2).slice(0,2)){
