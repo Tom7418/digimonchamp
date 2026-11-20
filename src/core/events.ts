@@ -46,7 +46,46 @@ export const RANK_UP_MAIL: Record<number, MailEvent> = {
   7: { id: 0x77, from: '사장', text: '골드 랭크! 요즘 네 배틀은\n정말 볼만하더군. 승리 기념으로\n고기를 넉넉히 보냈다.', foods: ['big', 'big', 'big'] },
   9: { id: 0x78, from: '사장', text: '드디어 챔프 랭크까지 왔구나!\n축하의 뜻으로 한 상 차려 보냈다.\n앞으로도 기대하마.', foods: ['big', 'cake', 'big', 'cake', 'big'] },
 };
-export const mailEvent = (id: number): MailEvent | undefined => Object.values(RANK_UP_MAIL).find((e) => e.id === id) ?? battleEvent(id);
+export const mailEvent = (id: number): MailEvent | undefined => Object.values(RANK_UP_MAIL).find((e) => e.id === id) ?? battleEvent(id) ?? morningEvent(id);
+
+// ---------- 아침 메일: 어머니 소식·디지몬이 찾아낸 것 (원본 overlay9_18 0x21120E4 → 0x2129944) ----------
+/**
+ * 새 날 아침, 계절 첫날이 아니면 4%(100면 주사위가 25의 배수 — 0x211215C)로 21가지 중 하나:
+ * 0~9 어머니 소식 0xAF~0xB8(글만), 10~20 '디지몬이 무언가를 찾아냄' 0xB9~0xC3
+ * (5·10·100·500·5,000비트, 프로틴·약·상처약 1개씩 두 벌). 나머지 날은 원작이 차례대로 보내는 도움말 메일(3~0x41)과
+ * 계절 첫날 메일(0x42~0x51)인데, 웹판은 자체 안내가 있어 옮기지 않는다.
+ * 확인했지만 미적용: '찾아냄' 때 무작위 디지몬 +0x2C 칸 변화(0x207DAAC 인자 1·5), 생일 메일 0xC5~0xC7(생일 설정이 없음).
+ */
+const MOTHER_TEXT = [
+  '요즘 날씨가 계속 맑구나.\n혹시 산몬 덕분일까?',
+  '끼니는 거르지 말고 챙겨 먹으렴.\n안 먹다간 워매몬처럼 될라.',
+  '쿠네몬을 정글 케이지에 두었더니\n커다란 투구벌레가 되었다더라!\n신기하지?',
+  '키우기 벅차면 놓아줘도 괜찮단다.\n언젠가 또 만나게 될 거야.',
+  '에테몬을 바이러스 기운에 잔뜩 쐬었더니\n은빛으로 바뀌었다는구나!',
+  '다르크몬에게 배틀을 시켜 어둠 기운을 키웠더니\n심술궂은 아가씨가 되었대.',
+  '플로라몬은 예쁘고 향기도 좋아서\n곁에 있으면 마음이 편해지더라.',
+  '가오가몬, 가루몬, 구루몬…\n이름이 비슷해서 헷갈린다니까.',
+  '고래몬은 덩치가 정말 크지?\n어쩐지 멋있더구나.',
+  '쉬라몬이 원뿔몬이 되는 건 다 아는 얘기지.\n배틀만 시키면 된다잖니!',
+];
+export type MailItem = 'pills' | 'medicine' | 'salve';
+/** 선물 종류 3의 아이템 번호 → 웹판 재고 (1 프로틴, 3 약, 2 상처약 — 받을 때 글 202·203·204) */
+const GIFT_ITEM: Record<number, { key: MailItem; name: string }> = { 1: { key: 'pills', name: '알약(프로틴)' }, 3: { key: 'medicine', name: '약' }, 2: { key: 'salve', name: '상처약' } };
+export interface MorningGift { bits?: number; item?: { key: MailItem; name: string; count: number } }
+function morningEvent(id: number): (MailEvent & { gift?: MorningGift }) | undefined {
+  if (id >= 0xaf && id <= 0xb8) return { id, from: '어머니', text: MOTHER_TEXT[id - 0xaf], foods: [] };
+  if (id < 0xb9 || id > 0xc3) return undefined;
+  const e = EVENT_ROWS.get(id), g = e && GIFT_ROWS.get(e.gift);
+  if (!g) return undefined;
+  const gift: MorningGift = g.kind === 4 ? { bits: g.value } : g.kind === 3 && GIFT_ITEM[g.value] ? { item: { ...GIFT_ITEM[g.value], count: g.value2 || 1 } } : {};
+  const what = gift.bits ? `${gift.bits.toLocaleString('ko-KR')}bit` : gift.item ? `${gift.item.name} ${gift.item.count}개` : '무언가';
+  return { id, from: '안내', text: `디지몬이 케이지에서 무언가를 찾아낸 모양이야!\n${what}를 손에 넣었다.`, foods: [], gift };
+}
+/** 새 날 아침에 부른다. dayOfSeason은 1부터 */
+export function rollMorningMail(save: SaveData, dayOfSeason: number, rng: () => number): SaveData {
+  if (dayOfSeason === 1 || Math.floor(rng() * 100) % 25 !== 0) return save;
+  return queueMails(save, [0xaf + Math.floor(rng() * 21)]);
+}
 
 /** 랭크가 before → after로 올랐을 때 새로 예약할 이벤트 번호 */
 export function rankUpMails(before: number, after: number): number[] {
@@ -71,7 +110,11 @@ export function openMail(save: SaveData, id: number): { save: SaveData; event?: 
   const rest = queue.filter((_, i) => i !== at);
   if (!event) return { save: { ...save, pendingMails: rest } };
   const units = event.foods.reduce((n, f) => n + (f === 'big' ? 2 : 1), 0);
-  return { save: { ...save, pendingMails: rest, meat: save.meat + units }, event };
+  let next: SaveData = { ...save, pendingMails: rest, meat: save.meat + units };
+  const gift = (event as MailEvent & { gift?: MorningGift }).gift;
+  if (gift?.bits) next = { ...next, bits: Math.min(MONEY_MAX, next.bits + gift.bits) };
+  if (gift?.item) next = { ...next, [gift.item.key]: next[gift.item.key] + gift.item.count };
+  return { save: next, event };
 }
 
 // ---------- 라이벌 배틀 신청 (원본 overlay9_18 0x2129450) ----------

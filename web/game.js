@@ -468,7 +468,10 @@
       board.attachFloorItem(item);
       view.foods.push(item);
     });
-    log(`${r.event.from}의 선물: ${r.event.foods.map((f) => (f === 'big' ? '큰 고기' : '케이크')).join(', ')}`);
+    if (r.event.foods.length) log(`${r.event.from}의 선물: ${r.event.foods.map((f) => (f === 'big' ? '큰 고기' : '케이크')).join(', ')}`);
+    const g = r.event.gift;
+    if (g?.bits) log(`디지몬이 ${g.bits.toLocaleString('ko-KR')} ฿를 찾아냈습니다.`);
+    if (g?.item) log(`디지몬이 ${g.item.name} ${g.item.count}개를 찾아냈습니다.`);
     renderTray();
     persist();
   }
@@ -539,6 +542,8 @@
     r.events.forEach(logEvent);
     dayEnding = false;
     const d = C.dateOf(save.clock);
+    // 원본 아침 메일: 계절 첫날이 아니면 4%로 어머니 소식이나 '디지몬이 무언가를 찾아냄' (overlay9_18 0x21120E4)
+    save = C.rollMorningMail(save, d.day, Math.random);
     log(`${d.seasonName} ${d.day}일 아침이 밝았습니다.`);
     toast(`${d.seasonName} ${d.day}일`);
     render();

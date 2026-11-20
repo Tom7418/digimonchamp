@@ -15,7 +15,7 @@ import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evol
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, npcTeamFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
-import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent } from '../src/core/events';
+import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent, rollMorningMail } from '../src/core/events';
 import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
@@ -2068,5 +2068,25 @@ describe('라이벌 배틀 신청 (원본 0x2129450)', () => {
     expect(e.battle).toEqual({ team: 111, prize: 4500, name: '트리오 더 케이코 A' });
     expect(npcTeamFoes(111, () => 0)!.map((f) => f.speciesId)).toEqual(['둥실몬', '모티몬', '모티몬']);
     expect(mailEvent(0xae)!.battle?.team).toBe(151);
+  });
+});
+
+describe('아침 메일 (원본 0x21120E4·0x2129944)', () => {
+  const seq = (...v: number[]) => () => v.shift()!;
+  it('계절 첫날이 아니고 4%일 때 21가지 중 하나', () => {
+    const s = freshEggSave(0);
+    expect(rollMorningMail(s, 1, seq(0, 0)).pendingMails).toBeUndefined();
+    expect(rollMorningMail(s, 2, seq(0.01, 0)).pendingMails).toBeUndefined();
+    expect(rollMorningMail(s, 2, seq(0.25, 0)).pendingMails).toEqual([0xaf]);
+    expect(rollMorningMail(s, 2, seq(0, 0.999)).pendingMails).toEqual([0xc3]);
+  });
+  it('어머니 소식은 글만, 찾아낸 것은 비트·아이템을 준다', () => {
+    const s = { ...freshEggSave(0), bits: 0, pills: 0, medicine: 0, salve: 0 };
+    expect(openMail(queueMails(s, [0xb0]), 0xb0).event?.from).toBe('어머니');
+    expect(openMail(queueMails(s, [0xbc]), 0xbc).save.bits).toBe(500);
+    expect(openMail(queueMails(s, [0xbd]), 0xbd).save.bits).toBe(5000);
+    expect(openMail(queueMails(s, [0xbe]), 0xbe).save.pills).toBe(1);
+    expect(openMail(queueMails(s, [0xbf]), 0xbf).save.medicine).toBe(1);
+    expect(openMail(queueMails(s, [0xc0]), 0xc0).save.salve).toBe(1);
   });
 });
