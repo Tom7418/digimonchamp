@@ -610,7 +610,11 @@ describe('titles and hunting', () => {
     expect(entryProblems(by('에메랄드 바다'), [mon('아구몬')])).toEqual(['식물 한정']);
     expect(entryProblems(by('고독한 하늘'), [mon('아구몬', { personality: '겁쟁이' })])).toEqual([]);
     expect(entryProblems(by('무한의 영혼'), [mon('아구몬', { eggs: 9 })])).toEqual(['디지에그화 10회 이상']);
-    expect(by('그라비티 나이츠').needEggs).toBe(24);
+    // 그라비티 나이츠는 디지에그화가 아니라 체중 24G 이상 (형규 확인, 원본 조건 +20 둘째 바이트)
+    expect(by('그라비티 나이츠').needEggs).toBeUndefined();
+    expect(by('그라비티 나이츠').minWeight).toBe(24);
+    expect(entryProblems(by('그라비티 나이츠'), [mon('워그레이몬'), mon('워그레이몬'), mon('워그레이몬', { eggs: 0 })])).toEqual([]);
+    expect(entryProblems(by('그라비티 나이츠'), [mon('워그레이몬'), mon('워그레이몬'), mon('그레이몬', { eggs: 30 })])).toEqual(['체중 24G 이상']);
     expect(TITLES.filter((t) => t.grade === 4)).toHaveLength(8);
     // 예전 임시 타이틀 기록을 옮긴 뒤 현재 승급 기준으로 재계산한다
     const old = upgradeSave({ ...freshSave(0), titles: ['t1', 't2', 't3', 't9'] });
@@ -1929,7 +1933,8 @@ describe('타이틀 참가비·시대 한정·소지금 상한 (원본)', () => 
     expect(entryProblems(pendulum, [mk('토이아구몬'), mk('아구몬'), mk('토이아구몬')])).toEqual([]);
     expect(entryProblems(pendulum, [mk('에어드라몬'), mk('아구몬'), mk('아구몬')])).toContain('펜듀럼 디지몬 한정');
   });
-  it('상금은 소지금 9,999,999에서 멈춘다', () => {
+  it('상금은 소지금 999,999,999에서 멈춘다 (형규 지정, 원본 9,999,999)', () => {
+    expect(MONEY_MAX).toBe(999_999_999);
     const m = TITLES.find((t) => t.id === 'm0')!;
     expect(applyMatch({ ...save0(), bits: MONEY_MAX - 10 }, m, true).bits).toBe(MONEY_MAX);
   });

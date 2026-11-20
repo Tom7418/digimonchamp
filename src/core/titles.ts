@@ -29,6 +29,8 @@ export interface Match {
   limitKind?: number;
   /** 한정 내용 표시 (원작 설명 글의 낱말) */
   limitNote?: string;
+  /** 체중(G) 이상 한정 (원본 조건 표 +20의 둘째 바이트, 디지몬 +0x10과 비교). 웹판 체중 = 종 용량 G (형규 지정) */
+  minWeight?: number;
   /** 시대 한정 (원본 조건 표 +36): 1 초기에 발견된 디지몬, 2 펜듀럼 시절. 종의 시대가 같거나 3(둘 다)이면 통과 */
   limitEra?: 1 | 2;
   /** 참가비 (원본 타이틀 표 +36). 소지금이 모자라면 출전할 수 없고, 출전할 때 낸다 */
@@ -53,7 +55,7 @@ export const TITLES: Match[] = titlesRaw
   .split(/\r?\n/)
   .filter((l) => l.trim() && !l.startsWith('#'))
   .map((l) => {
-    const [no, name, season, day, rank, grade, prize, fee, mine, foes, limit, eggs, holder, other, families, attr, person, kind, flag] = l.split('|');
+    const [no, name, season, day, rank, grade, prize, fee, mine, foes, limit, eggs, holder, other, families, attr, person, kind, flag, weight] = l.split('|');
     const m: Match = {
       id: `m${no}`,
       name,
@@ -76,13 +78,14 @@ export const TITLES: Match[] = titlesRaw
     // 성격 번호 7만 쓰인다. 설명 글에서 겁쟁이로 확인
     if (person) m.limitPersonality = other || '겁쟁이';
     if (kind) m.limitKind = Number(kind);
+    if (weight) m.minWeight = Number(weight);
     if (flag === '1' || flag === '2') m.limitEra = Number(flag) as 1 | 2;
     return m;
   })
   .sort((a, b) => a.minRank - b.minRank || a.season - b.season || a.day - b.day);
 const ERA_NAME = { 1: '초기 디지몬 한정', 2: '펜듀럼 디지몬 한정' } as const;
-/** 소지금 상한 (원본 결과 화면 overlay9_8 0x2112058) */
-export const MONEY_MAX = 9_999_999;
+/** 소지금 상한. 원본은 9,999,999(결과 화면 overlay9_8 0x2112058)지만 웹판은 999,999,999 (형규 지정) */
+export const MONEY_MAX = 999_999_999;
 export const addBits = (save: SaveData, n: number): SaveData => ({ ...save, bits: Math.min(MONEY_MAX, save.bits + n) });
 /** 타이틀 참가비를 낸다. 모자라면 ok=false (원본 문구: 소지금이 부족합니다) */
 export function payEntryFee(save: SaveData, m: Match): { ok: boolean; save: SaveData } {
@@ -102,6 +105,7 @@ export function entryProblems(m: Match, team: Digimon[]): string[] {
   if (m.limitKind && !all((d) => originalSpecies(d.speciesId)?.kind === m.limitKind)) out.push(m.limitNote ?? '타입 한정');
   if (m.limitEra && !all((d) => [m.limitEra, 3].includes(originalSpecies(d.speciesId)?.era ?? 0))) out.push(ERA_NAME[m.limitEra]);
   if (m.needEggs && !all((d) => d.eggs >= m.needEggs!)) out.push(`디지에그화 ${m.needEggs}회 이상`);
+  if (m.minWeight && !all((d) => sp(d).size >= m.minWeight!)) out.push(`체중 ${m.minWeight}G 이상`);
   return out;
 }
 /** 참가 조건 한 줄 요약 (표시용) */
@@ -114,6 +118,7 @@ export function entryLimits(m: Match): string {
     m.limitKind ? (m.limitNote ?? '') : '',
     m.limitEra ? ERA_NAME[m.limitEra] : '',
     m.needEggs ? `디지에그화 ${m.needEggs}회 이상` : '',
+    m.minWeight ? `체중 ${m.minWeight}G 이상` : '',
   ].filter(Boolean).join(' · ');
 }
 

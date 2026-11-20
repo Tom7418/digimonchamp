@@ -8,7 +8,7 @@
   - +0 이름 글 번호, +4 설명 글 번호 (root/ui/txt/txt_list_txt.dat), +8 홀더 팀 번호 (tools/extract_title_holders.py)
   - +12 참가 조건 번호 (-1 없음). 조건 표는 타이틀 표 바로 앞 0xCBDF4부터 40바이트(i32 10개)씩 46개:
       +0 내 인원(1·3), +4 종족 비트(디지몬 표와 같은 비트, 여러 개면 그중 하나), +8 세대(7이면 제한 없음, 3 성장기~6 궁극체),
-      +12 속성(1 백신, 2 바이러스, 3 데이터), +16 배틀 환경(화산·사막 등, 참가 제한 아님), +20 디지에그화 횟수(24회는 24<<8로 들어 있다),
+      +12 속성(1 백신, 2 바이러스, 3 데이터), +16 배틀 환경(화산·사막 등, 참가 제한 아님), +20 바이트0 디지에그화 횟수(디지몬 +0x3C와 비교), 바이트1 체중 G(디지몬 +0x10과 비교, 그라비티 나이츠 24 — 형규 확인),
       +24 성격 번호, +28 타입 번호(디지몬 표 +24와 같은 값), +32 조건 미달 안내 글 번호,
       +36 시대 한정(1 초기·2 펜듀럼. 디지몬 표 +108과 비교, 3은 둘 다 통과 — arm9 0x02091A2C)
     뜻의 근거: 설명 글의 '성숙기 한정'·'용 종족 한정'·'디지에그화가 10이상' 등과 값이 맞는다.
@@ -36,7 +36,7 @@ parts = (ROOT / 'ui/txt/txt_list_txt.dat').read_bytes().split(b'<>\n')
 text = [p.decode('utf-16-le', 'replace').rstrip('\0') for p in parts[2:]]
 
 lines = ['# 원본 실행 코드의 타이틀 매치 표 (tools/extract_titles.py). 손으로 고치지 말 것',
-         '# 번호|이름|계절(0봄)|날짜|필요 랭크|등급|상금|참가비|내 인원|상대 인원|참가 세대 제한|디지에그화 조건|홀더 세대|한정 표시(설명 글)|종족 한정|속성 한정|성격 번호|타입 번호|시대 한정(1 초기, 2 펜듀럼)']
+         '# 번호|이름|계절(0봄)|날짜|필요 랭크|등급|상금|참가비|내 인원|상대 인원|참가 세대 제한|디지에그화 조건|홀더 세대|한정 표시(설명 글)|종족 한정|속성 한정|성격 번호|타입 번호|시대 한정(1 초기, 2 펜듀럼)|체중 조건(G 이상)']
 for i in range(COUNT):
     name, desc, number, ref, grade, season, day, rank, prize, extra = struct.unpack_from('<2I8i', arm9, TABLE + i*SIZE)
     d = re.sub(r'[^0-9A-Za-z가-힣 \n]', ' ', text[desc].replace('\\n', ' '))
@@ -49,20 +49,22 @@ for i in range(COUNT):
     rest = re.sub(r'\S+\s+한정', '', d)
     holder = next((s for s in STAGES if s in rest), '')
     eggs = eggs.group(1) if eggs else ''
-    families = attr = person = kind = flag = ''
+    families = attr = person = kind = flag = weight = ''
     if ref >= 0:  # 참가 조건은 설명 글이 아니라 조건 표 값을 쓴다
         team, mask, stage, a, _, egg, p, k, _, f = struct.unpack_from('<10i', arm9, CONDS + ref*40)
         mine = str(team)
         stage_limit = STAGES[stage - 2] if stage < 7 else ''
         families = ','.join(n for bit, n in FAMILY.items() if mask & bit)
         attr = ATTR[a]
-        egg = egg >> 8 if egg > 255 else egg
+        # arm9 0x02091A54가 +20을 바이트로 나눠 담고, 0x020919B0/0x020919D0에서 각각 디지에그화 횟수·체중과 비교한다
+        weight = str((egg >> 8) & 0xFF) if (egg >> 8) & 0xFF else ''
+        egg &= 0xFF
         eggs = str(egg) if egg else ''
         person = str(p) if p >= 0 else ''
         kind = str(k) if k else ''
         flag = str(f) if f else ''
     lines.append('|'.join(map(str, [number, text[name].strip(), season, day + 1, rank + 1, grade, prize, extra,
-                                    mine, foes, stage_limit, eggs, holder, other, families, attr, person, kind, flag])))
+                                    mine, foes, stage_limit, eggs, holder, other, families, attr, person, kind, flag, weight])))
 out = REPO / 'src/data/titles.txt'
 out.write_text('\n'.join(lines) + '\n', encoding='utf-8', newline='\n')
 print(COUNT, '개 →', out)
