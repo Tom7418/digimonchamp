@@ -7,7 +7,8 @@ import freeRaw from '../data/free-battles.txt?raw';
 import { PERSONALITIES, type AttackMode, type SpeciesAttr, type Digimon, type Personality, type Stage, type Stats } from './types';
 
 export const ARENA = { w: 480, h: 250 };
-export const TIME_LIMIT = 90;
+/** 배틀 제한 시간(초): 원본은 7200프레임(120초)을 넘으면 시간 종료 (overlay19 0x2113FB4) */
+export const TIME_LIMIT = 120;
 const DT = 0.1;
 
 // ---------- 프리 배틀 (원본 대진·상금, tools/extract_free_battles.py → free-battles.txt) ----------
@@ -104,6 +105,10 @@ export interface Unit {
   buffs?: Partial<Record<BattleBuff,number>>;
   resist: Record<ResistKey, number>;
   taunt?: {from:number;until:number};
+  /** 노리는 상대 (성격별 규칙으로 행동을 정할 때 고른다) */
+  target?: number;
+  /** 원본 배우 +0x1C: 시작 1, 일반 공격 +60·필살기 +120. 솔직·쿨의 대상 고르기에 쓴다 */
+  aggro?: number;
   /** 정해 둔 다음 행동 (사거리에 들어가면 실행) */
   intent?: { kind: 'basic' } | { kind: 'special'; skill: BattleSkill };
   revived?: boolean;
@@ -268,6 +273,24 @@ export function tpBudget(mode: AttackMode, maxTp: number, tp: number, t: number)
   const phase = Math.min(7, Math.floor(t / 15));
   return Math.min(tp, Math.trunc((maxTp * FORMULA.tpBudget[TACTIC_ROW[mode]][phase]) / 100));
 }
+/**
+ * 성격별 대상 고르기 (overlay19 0x21156EC, 성격→규칙 표 0x0213384C = 0·12·8·12·1·5·2·8).
+ *  솔직: 활동량(+0x1C, 도발 중 +3000) 최대 · 쿨: 활동량 최소 · 열혈: 공격 최고 · 대담: 방어 최고
+ *  성급한·겁쟁이: 현재 HP 최저 · 제멋대로·게으름: 무작위. 같은 값이면 앞쪽.
+ */
+export function chooseTarget(u: Unit, foes: Unit[], t: number, rng: Rng): Unit {
+  const score = (f: Unit) => (f.aggro ?? 1) + (u.taunt && u.taunt.until > t && u.taunt.from === f.id ? 3000 : 0);
+  const best = (value: (f: Unit) => number, most: boolean) => foes.reduce((a, b) => (most ? value(b) > value(a) : value(b) < value(a)) ? b : a);
+  switch (u.personality) {
+    case '솔직': return best(score, true);
+    case '쿨': return best(score, false);
+    case '열혈': return best((f) => f.stats.atk, true);
+    case '대담': return best((f) => f.stats.def, true);
+    case '성급한': case '겁쟁이': return best((f) => f.hp, false);
+    default: return foes[Math.floor(rng() * 216) % foes.length];
+  }
+}
+
 /** 216 난수 하나로 행동을 고른다 (0x2119224~): 필살기 → 일반 공격 → 지원 기술 → 그 밖은 이동 */
 export function chooseAction(mode: AttackMode, roll: number, specialScale = 1): 'special' | 'basic' | 'support' | 'move' {
   const [, b, c, , e] = FORMULA.tactics[TACTIC_ROW[mode]];
@@ -312,10 +335,12 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     const foes = s.units.filter((o) => o.alive && o.team !== u.team);
     const allies = s.units.filter((o) => o.alive && o.team === u.team);
     if (!foes.length) break;
-    const near = ((u.taunt?.until??0)>s.t && foes.find(f=>f.id===u.taunt?.from)) || foes.reduce((a, b) => (dist(u, a) <= dist(u, b) ? a : b));
+    // 도발에 걸리면 시전자, 아니면 성격 규칙으로 고른 상대(쓰러졌거나 아직 없으면 가장 가까운 상대)
+    const chosen = foes.find((f) => f.id === u.target);
+    let near = ((u.taunt?.until??0)>s.t && foes.find(f=>f.id===u.taunt?.from)) || chosen || foes.reduce((a, b) => (dist(u, a) <= dist(u, b) ? a : b));
     // 사용자 지정: 게으름은 항상0.85배, 대담은 항상1.1배. 피격 여부로 행동을 막지 않는다.
     const speed = (40 + Math.min(80, u.stats.spd * buffMultiplier(u,'spd',s.t) * 0.4)) * (u.personality === '게으름' ? 0.85 : u.personality === '대담' ? 1.1 : 1);
-    const d = dist(u, near);
+    let d = dist(u, near);
 
     // 겁쟁이도70px 안의 적에게 맞선다. 성급한은 대기 중에만 치고 빠진다.
     // 용기는 도주를 막는 소유형 SP로 처리한다(효과 해석은 웹판 정책).
@@ -327,6 +352,7 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     // 원본 AI (overlay19 0x2118F84·0x211919C): 기다림이 끝나면 216 난수와 작전 표로 행동을 정한다.
     if (u.cd <= 0 && !u.intent) {
       const action = chooseAction(u.mode, Math.floor(rng() * 216), u.personality === '쿨' ? 1.6 : u.personality === '솔직' ? 1.2 : 1);
+      if (!((u.taunt?.until ?? 0) > s.t)) { near = chooseTarget(u, foes, s.t, rng); u.target = near.id; d = dist(u, near); }
       const wait = thinkSeconds(u.stats.int, buffMultiplier(u, 'spd', s.t) > 1) * (['대담','제멋대로'].includes(u.personality) ? 0.9 : 1);
       if (action === 'special') {
         // 예산 안에서 고를 기술이 없으면 원본처럼 일반 공격으로 넘어간다 (cost < 예산)
@@ -361,6 +387,7 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     // 형규가 정한 성격 효과는 원본 피해 위에 그대로 곱한다: 열혈 ×1.2, 제멋대로 ×1.1
     const dmg = hit.damage * (u.personality === '열혈' ? 1.2 : 1) * (u.personality === '제멋대로' ? 1.1 : 1);
     const damage = Math.max(0, Math.round(dmg));
+    u.aggro = (u.aggro ?? 1) + (special ? 120 : 60); // 원본 +0x1C 가산 (0x211A3DC +60, 0x211A5B8 +120 — 어느 쪽이 필살기인지는 추정)
     near.hp = Math.max(0, near.hp - damage);
     near.wasHit = true;
     if (skill) u.tp -= skill.tpCost;

@@ -9736,7 +9736,8 @@ var ChampCore = (function(exports) {
 		w: 480,
 		h: 250
 	};
-	var TIME_LIMIT = 90;
+	/** 배틀 제한 시간(초): 원본은 7200프레임(120초)을 넘으면 시간 종료 (overlay19 0x2113FB4) */
+	var TIME_LIMIT = 120;
 	var DT = .1;
 	var FREE_FOES = /* @__PURE__ */ new Map();
 	/** 후보표 [레벨 0~9][계절 0~3, 4=공통] (원본 0x020C7E24) */
@@ -10006,6 +10007,24 @@ var ChampCore = (function(exports) {
 		const phase = Math.min(7, Math.floor(t / 15));
 		return Math.min(tp, Math.trunc(maxTp * FORMULA.tpBudget[TACTIC_ROW[mode]][phase] / 100));
 	}
+	/**
+	* 성격별 대상 고르기 (overlay19 0x21156EC, 성격→규칙 표 0x0213384C = 0·12·8·12·1·5·2·8).
+	*  솔직: 활동량(+0x1C, 도발 중 +3000) 최대 · 쿨: 활동량 최소 · 열혈: 공격 최고 · 대담: 방어 최고
+	*  성급한·겁쟁이: 현재 HP 최저 · 제멋대로·게으름: 무작위. 같은 값이면 앞쪽.
+	*/
+	function chooseTarget(u, foes, t, rng) {
+		const score = (f) => (f.aggro ?? 1) + (u.taunt && u.taunt.until > t && u.taunt.from === f.id ? 3e3 : 0);
+		const best = (value, most) => foes.reduce((a, b) => (most ? value(b) > value(a) : value(b) < value(a)) ? b : a);
+		switch (u.personality) {
+			case "솔직": return best(score, true);
+			case "쿨": return best(score, false);
+			case "열혈": return best((f) => f.stats.atk, true);
+			case "대담": return best((f) => f.stats.def, true);
+			case "성급한":
+			case "겁쟁이": return best((f) => f.hp, false);
+			default: return foes[Math.floor(rng() * 216) % foes.length];
+		}
+	}
 	/** 216 난수 하나로 행동을 고른다 (0x2119224~): 필살기 → 일반 공격 → 지원 기술 → 그 밖은 이동 */
 	function chooseAction(mode, roll, specialScale = 1) {
 		const [, b, c, , e] = FORMULA.tactics[TACTIC_ROW[mode]];
@@ -10052,9 +10071,10 @@ var ChampCore = (function(exports) {
 			const foes = s.units.filter((o) => o.alive && o.team !== u.team);
 			const allies = s.units.filter((o) => o.alive && o.team === u.team);
 			if (!foes.length) break;
-			const near = (u.taunt?.until ?? 0) > s.t && foes.find((f) => f.id === u.taunt?.from) || foes.reduce((a, b) => dist(u, a) <= dist(u, b) ? a : b);
+			const chosen = foes.find((f) => f.id === u.target);
+			let near = (u.taunt?.until ?? 0) > s.t && foes.find((f) => f.id === u.taunt?.from) || chosen || foes.reduce((a, b) => dist(u, a) <= dist(u, b) ? a : b);
 			const speed = (40 + Math.min(80, u.stats.spd * buffMultiplier(u, "spd", s.t) * .4)) * (u.personality === "게으름" ? .85 : u.personality === "대담" ? 1.1 : 1);
-			const d = dist(u, near);
+			let d = dist(u, near);
 			const courage = supportSkills(u.speciesId, u.personality).some((sk) => sk.id === 30);
 			const coward = !courage && u.personality === "겁쟁이" && foes.length > allies.length;
 			if (coward && d > 70 || !courage && u.retreat > 0 && u.cd > 0 && d < 110) {
@@ -10063,6 +10083,11 @@ var ChampCore = (function(exports) {
 			}
 			if (u.cd <= 0 && !u.intent) {
 				const action = chooseAction(u.mode, Math.floor(rng() * 216), u.personality === "쿨" ? 1.6 : u.personality === "솔직" ? 1.2 : 1);
+				if (!((u.taunt?.until ?? 0) > s.t)) {
+					near = chooseTarget(u, foes, s.t, rng);
+					u.target = near.id;
+					d = dist(u, near);
+				}
 				const wait = thinkSeconds(u.stats.int, buffMultiplier(u, "spd", s.t) > 1) * (["대담", "제멋대로"].includes(u.personality) ? .9 : 1);
 				if (action === "special") {
 					const budget = tpBudget(u.mode, u.maxTp, u.tp, s.t);
@@ -10104,6 +10129,7 @@ var ChampCore = (function(exports) {
 			});
 			const dmg = hit.damage * (u.personality === "열혈" ? 1.2 : 1) * (u.personality === "제멋대로" ? 1.1 : 1);
 			const damage = Math.max(0, Math.round(dmg));
+			u.aggro = (u.aggro ?? 1) + (special ? 120 : 60);
 			near.hp = Math.max(0, near.hp - damage);
 			near.wasHit = true;
 			if (skill) u.tp -= skill.tpCost;
@@ -10132,7 +10158,7 @@ var ChampCore = (function(exports) {
 			s.over = true;
 			s.winner = alive[0] ? 0 : 1;
 			s.reason = "ko";
-		} else if (s.t >= 90) {
+		} else if (s.t >= 120) {
 			const ratio = (t) => s.units.filter((u) => u.team === t).reduce((a, u) => a + u.hp / u.maxHp, 0);
 			s.over = true;
 			s.winner = ratio(0) >= ratio(1) ? 0 : 1;
@@ -10818,6 +10844,7 @@ var ChampCore = (function(exports) {
 	exports.capacityOf = capacityOf;
 	exports.capture = capture;
 	exports.chooseAction = chooseAction;
+	exports.chooseTarget = chooseTarget;
 	exports.clean = clean;
 	exports.cleanOne = cleanOne;
 	exports.createBattle = createBattle;

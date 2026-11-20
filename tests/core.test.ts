@@ -12,7 +12,7 @@ import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personal
 import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
-import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, tpBudget, critLevelOf, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
+import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
@@ -1515,6 +1515,15 @@ describe('프리 배틀 (원본 대진·상금)',()=>{
   expect(tpBudget('특수',100,100,0)).toBe(0);expect(tpBudget('특수',100,100,16)).toBe(40);
   expect(tpBudget('지원',100,100,0)).toBe(10);expect(tpBudget('일반',100,30,89)).toBe(30);
   expect(critLevelOf('코로몬')).toBe(0);
+ });
+ it('성격별 대상 고르기 (overlay19 0x21156EC)',()=>{
+  const e=(sp:string,atk:number,def:number)=>({speciesId:sp,stats:{hp:500,tp:10,atk,def,int:10,spd:10},personality:'솔직' as const,mode:'일반' as const});
+  const s=createBattle([e('아구몬',10,10)],[e('아구몬',50,10),e('코로몬',10,60),e('파닥몬',20,20)]);
+  const [me,a,b,c]=s.units;a.hp=400;b.hp=100;c.hp=300;a.aggro=200;b.aggro=1;c.aggro=50;
+  const pick=(p:Digimon['personality'])=>chooseTarget({...me,personality:p},[a,b,c],0,()=>0.5).id;
+  expect(pick('열혈')).toBe(a.id);expect(pick('대담')).toBe(b.id);expect(pick('성급한')).toBe(b.id);expect(pick('겁쟁이')).toBe(b.id);
+  expect(pick('솔직')).toBe(a.id);expect(pick('쿨')).toBe(b.id);
+  expect(pick('제멋대로')).toBe([a,b,c][108%3].id);
  });
  it('작전은 디지몬마다 저장되고 출전 때 쓰인다',()=>{
   const d={...newDigimon(1,'아구몬'),tactic:'특수' as const};
