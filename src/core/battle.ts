@@ -81,19 +81,28 @@ for (const line of holderRaw.split('\n')) {
   if (f[0] === 'team') HOLDER_TEAM.set(+f[1], { name: f[2], members: f[3].split(',').filter(Boolean).map(Number) });
   else if (f[0] === 'npc') HOLDER_NPC.set(+f[1], { no: +f[1], nick: f[2], speciesId: f[3], level: +f[4], prize: +f[5], curves: f[6].split(',').map(Number), resist: f[7].split(',').map(Number), personalityNo: +f[8] });
 }
-/** 타이틀 매치(id m번호)의 원본 홀더 팀. 없으면 null */
-export function titleHolder(matchId: string): { name: string; members: HolderFoe[] } | null {
-  const no = /^m(\d+)$/.exec(matchId)?.[1];
-  // 타이틀 id의 번호가 곧 원본 타이틀 표 +8(홀더 팀 번호)이다 (tools/extract_titles.py)
-  const team = no === undefined ? undefined : HOLDER_TEAM.get(+no);
+/** 원본 팀 표의 팀 하나 (타이틀 홀더 0~60, 배틀 신청 상대 101~151) */
+export function npcTeam(no: number): { name: string; members: HolderFoe[] } | null {
+  const team = HOLDER_TEAM.get(no);
   return team ? { name: team.name, members: team.members.flatMap((m) => {
     const f = HOLDER_NPC.get(m);
     return f ? [{ ...f, personality: ORIGINAL_PERSONALITY[f.personalityNo] ?? '솔직' }] : [];
   }) } : null;
 }
+/** 타이틀 매치(id m번호)의 원본 홀더 팀. 없으면 null */
+export function titleHolder(matchId: string): { name: string; members: HolderFoe[] } | null {
+  const no = /^m(\d+)$/.exec(matchId)?.[1];
+  // 타이틀 id의 번호가 곧 원본 타이틀 표 +8(홀더 팀 번호)이다 (tools/extract_titles.py)
+  return no === undefined ? null : npcTeam(+no);
+}
 /** 홀더 팀을 배틀 참가자로: 능력치·내성은 NPC 표 곡선, 성격은 NPC 표 +0x3C 그대로(원본 0x2113BDC). 작전은 웹판 무작위 */
 export function titleHolderFoes(matchId: string, rng: Rng): Entrant[] | null {
-  const holder = titleHolder(matchId);
+  const no = /^m(\d+)$/.exec(matchId)?.[1];
+  return no === undefined ? null : npcTeamFoes(+no, rng);
+}
+/** 팀 표의 팀을 배틀 참가자로 (타이틀 홀더·배틀 신청 공용) */
+export function npcTeamFoes(teamNo: number, rng: Rng): Entrant[] | null {
+  const holder = npcTeam(teamNo);
   if (!holder) return null;
   return holder.members.map((f) => ({
     speciesId: f.speciesId,

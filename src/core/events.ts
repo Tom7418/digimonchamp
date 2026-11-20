@@ -7,8 +7,11 @@
  *   3 큰 고기·케이크·큰 고기·케이크·큰 고기, 4 케이크1 (먹이 종류 2 = 큰 고기, 3 = 케이크)
  * 메일 본문은 원작 글을 옮기지 않고 뜻만 살려 새로 썼다.
  */
+import eventsRaw from '../data/events.txt?raw';
+import { npcTeam } from './battle';
 import { originalSpecies } from './data';
-import { MONEY_MAX } from './titles';
+import { maxStageForRank } from './evolution';
+import { MONEY_MAX, tamerRank } from './titles';
 import type { SaveData } from './types';
 
 export type GiftFood = 'big' | 'cake';
@@ -17,6 +20,24 @@ export interface MailEvent {
   from: string;
   text: string;
   foods: GiftFood[];
+  /** 배틀 신청 (선물 종류 1): 상대 팀 번호(팀 표)와 상금 */
+  battle?: { team: number; prize: number; name: string };
+}
+// 원본 이벤트 표·선물 표 (tools/extract_events.py)
+const EVENT_ROWS = new Map<number, { from: string; gift: number }>();
+const GIFT_ROWS = new Map<number, { kind: number; value: number; value2: number }>();
+for (const line of eventsRaw.split('\n')) {
+  const f = line.split('|');
+  if (f[0] === 'event') EVENT_ROWS.set(+f[1], { from: f[2], gift: +f[6] });
+  else if (f[0] === 'gift') GIFT_ROWS.set(+f[1], { kind: +f[2], value: +f[3], value2: +f[4] });
+}
+/** 배틀 신청 메일 (이벤트 0x7B~0xAE, 선물 종류 1). 본문은 새로 썼다 */
+function battleEvent(id: number): MailEvent | undefined {
+  const e = EVENT_ROWS.get(id), g = e && GIFT_ROWS.get(e.gift);
+  const team = g?.kind === 1 ? npcTeam(g.value) : null;
+  if (!e || !g || !team) return undefined;
+  const text = `${team.name} 팀으로 한판 붙자!\n이기면 상금 ${g.value2.toLocaleString('ko-KR')}bit.\n도전을 받겠어?`;
+  return { id, from: e.from, text, foods: [], battle: { team: g.value, prize: g.value2, name: team.name } };
 }
 /** 웹판 랭크 번호(1 그린 ~ 10 마스터) → 이벤트. 원본 랭크 번호는 웹판보다 1 작다 */
 export const RANK_UP_MAIL: Record<number, MailEvent> = {
@@ -25,7 +46,7 @@ export const RANK_UP_MAIL: Record<number, MailEvent> = {
   7: { id: 0x77, from: '사장', text: '골드 랭크! 요즘 네 배틀은\n정말 볼만하더군. 승리 기념으로\n고기를 넉넉히 보냈다.', foods: ['big', 'big', 'big'] },
   9: { id: 0x78, from: '사장', text: '드디어 챔프 랭크까지 왔구나!\n축하의 뜻으로 한 상 차려 보냈다.\n앞으로도 기대하마.', foods: ['big', 'cake', 'big', 'cake', 'big'] },
 };
-export const mailEvent = (id: number) => Object.values(RANK_UP_MAIL).find((e) => e.id === id);
+export const mailEvent = (id: number): MailEvent | undefined => Object.values(RANK_UP_MAIL).find((e) => e.id === id) ?? battleEvent(id);
 
 /** 랭크가 before → after로 올랐을 때 새로 예약할 이벤트 번호 */
 export function rankUpMails(before: number, after: number): number[] {
@@ -53,9 +74,26 @@ export function openMail(save: SaveData, id: number): { save: SaveData; event?: 
   return { save: { ...save, pendingMails: rest, meat: save.meat + units }, event };
 }
 
+// ---------- 라이벌 배틀 신청 (원본 overlay9_18 0x2129450) ----------
+/**
+ * 13~18시 정각마다(쿨타임 +0x1C, 20분마다 1 감소) 메일함이 차 있지 않으면 굴린다.
+ * 라이벌 k = 0~4(철수·영희·오타틱 테이머·배틀왕·부자 누님)를 고르고 100면 주사위가 20의 배수(5%)이며,
+ * 지금 랭크의 진화 한도(랭크 표 +24) 세대 이상인 디지몬이 있으면 이벤트 0x7B + 10k + 랭크 번호(0~9) 메일.
+ * 메일을 열면 '도전을 받겠습니까?' → 상대는 팀 표 101~150, 상금은 선물 표 값2 (arm9 0x0208B8A8).
+ */
+export const RIVAL_HOURS = [13, 14, 15, 16, 17, 18];
+export function rollRivalChallenge(save: SaveData, hour: number, rng: () => number): SaveData {
+  if (!RIVAL_HOURS.includes(hour) || (save.pendingMails ?? []).length >= 4) return save;
+  const k = Math.floor(rng() * 5);
+  if (Math.floor(rng() * 100) % 20 !== 0) return save;
+  const rank = tamerRank(save);
+  if (!save.digimon.some((d) => !d.isEgg && (originalSpecies(d.speciesId)?.stage ?? 0) >= maxStageForRank(rank))) return save;
+  return queueMails(save, [0x7b + 10 * k + (rank - 1)]);
+}
+
 // ---------- NPC 매입 제안 (원본 overlay9_18 0x2129064) ----------
 /**
- * 하루 한 번(10·15·20시 중 처음 맞은 정각, 하루 횟수 +0x18) 100면 주사위를 굴려 5 미만이면
+ * 10·15·20시 정각마다(쿨타임 +0x18: 굴리면 1, 20분마다 1 감소 — 0x2128FBC) 100면 주사위를 굴려 5 미만이면
  * 무작위 세대(0~6)를 하나 골라 그 세대인 첫 디지몬을 사겠다는 메일이 온다.
  * 값 = 종 기본 가격(디지몬 표 +0x80) × (8 + 0~3) / 10, 메일은 이벤트 0x5E~0x62 중 하나.
  * 확인했지만 아직 옮기지 않은 것: 주사위 5~9의 다른 매입(이벤트 0x64, 디지몬 +0x24·+0x3D·+0x08 조건),
@@ -72,10 +110,10 @@ const OFFER_TEXT = [
   '나도 {name} 같은 녀석을 키우고 싶어…\n{price}bit 준비했어!',
 ];
 export const offerText = (o: NpcOffer, name: string) => OFFER_TEXT[(o.id - 0x5e) % OFFER_TEXT.length].replace('{name}', name).replace('{price}', o.price.toLocaleString('ko-KR'));
-/** 정각마다 부른다. 오늘 이미 굴렸으면 null. 굴렸으면 offerDay를 기록한 저장과(있으면) 제안을 돌려준다 */
-export function rollNpcOffer(save: SaveData, day: number, hour: number, rng: () => number): { save: SaveData; offer?: NpcOffer } | null {
-  if (save.offerDay === day || !OFFER_HOURS.includes(hour)) return null;
-  const next = { ...save, offerDay: day };
+/** 정각마다 부른다. 굴릴 시각이 아니거나 답하지 않은 제안이 있으면(웹판: 제안은 하나씩) null */
+export function rollNpcOffer(save: SaveData, hour: number, rng: () => number): { save: SaveData; offer?: NpcOffer } | null {
+  if (!OFFER_HOURS.includes(hour) || save.npcOffer) return null;
+  const next = save;
   if (Math.floor(rng() * 100) >= 5) return { save: next };
   const stage = Math.floor(rng() * 7);
   const d = save.digimon.find((x) => !x.isEgg && originalSpecies(x.speciesId)?.stage === stage);

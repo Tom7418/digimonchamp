@@ -12,10 +12,10 @@ import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personal
 import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy } from '../src/core/care';
 import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
-import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
+import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, npcTeamFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
-import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText } from '../src/core/events';
+import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent } from '../src/core/events';
 import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
@@ -2024,18 +2024,17 @@ describe('랭크 업 사장 메일과 먹이 선물 (원본 이벤트 0x75~0x78)
 
 describe('NPC 매입 제안 (원본 0x2129064)', () => {
   const withMon = (speciesId: string) => ({ ...freshEggSave(0), bits: 100, digimon: [{ ...newDigimon(7, speciesId), isEgg: false }] });
-  it('하루 한 번, 10·15·20시에만 굴린다', () => {
+  it('10·15·20시에만 굴리고, 답하지 않은 제안이 있으면 굴리지 않는다', () => {
     const s = withMon('아구몬');
-    expect(rollNpcOffer(s, 3, 9, () => 0)).toBeNull();
-    const r = rollNpcOffer(s, 3, 10, () => 0.99)!;
-    expect(r.offer).toBeUndefined();
-    expect(r.save.offerDay).toBe(3);
-    expect(rollNpcOffer(r.save, 3, 15, () => 0)).toBeNull();
+    expect(rollNpcOffer(s, 9, () => 0)).toBeNull();
+    expect(rollNpcOffer(s, 10, () => 0.99)!.offer).toBeUndefined();
+    expect(rollNpcOffer(s, 15, () => 0.99)).not.toBeNull();
+    expect(rollNpcOffer({ ...s, npcOffer: { id: 0x5e, uid: 7, price: 1, from: '철수' } }, 20, () => 0)).toBeNull();
   });
   it('주사위 5 미만이고 고른 세대의 디지몬이 있으면 기본 가격의 80~110%로 제안', () => {
     const s = withMon('아구몬'); // 원본 세대 3, 기본 가격 6,480
     const seq = [0.01, 3 / 7 + 0.001, 0.99, 0];
-    const r = rollNpcOffer(s, 1, 10, () => seq.shift()!)!;
+    const r = rollNpcOffer(s, 10, () => seq.shift()!)!;
     expect(r.offer).toEqual({ id: 0x5e, uid: 7, price: 7128, from: '철수' });
     expect(offerText(r.offer!, '아구몬')).toContain('7,128bit');
     const sold = answerNpcOffer(r.save, true);
@@ -2048,6 +2047,26 @@ describe('NPC 매입 제안 (원본 0x2129064)', () => {
   });
   it('고른 세대의 디지몬이 없으면 제안 없음', () => {
     const seq = [0.01, 6 / 7 + 0.001];
-    expect(rollNpcOffer(withMon('아구몬'), 1, 10, () => seq.shift()!)!.offer).toBeUndefined();
+    expect(rollNpcOffer(withMon('아구몬'), 10, () => seq.shift()!)!.offer).toBeUndefined();
+  });
+});
+
+describe('라이벌 배틀 신청 (원본 0x2129450)', () => {
+  const ready = () => ({ ...freshEggSave(0), digimon: [{ ...newDigimon(3, '아구몬'), isEgg: false }] }); // 그린 랭크 한도 = 성장기(3)
+  it('13~18시, 5%, 랭크 진화 한도 세대 이상 디지몬이 있을 때 0x7B + 10×라이벌 + 랭크 번호 메일', () => {
+    const seq = (...v: number[]) => () => v.shift()!;
+    expect(rollRivalChallenge(ready(), 12, seq(0, 0)).pendingMails).toBeUndefined();
+    expect(rollRivalChallenge(ready(), 13, seq(0, 0.01)).pendingMails).toBeUndefined();
+    expect(rollRivalChallenge(ready(), 13, seq(0.2, 0.2)).pendingMails).toEqual([0x7b + 10]);
+    const baby = { ...freshEggSave(0), digimon: [{ ...newDigimon(3, '코로몬'), isEgg: false }] };
+    expect(rollRivalChallenge(baby, 13, seq(0, 0)).pendingMails).toBeUndefined();
+    expect(rollRivalChallenge(queueMails(ready(), [1, 2, 3, 4]), 13, seq(0, 0)).pendingMails).toHaveLength(4);
+  });
+  it('메일 내용은 원본 표: 영희 그린 = 팀 111 「트리오 더 케이코 A」 상금 4,500', () => {
+    const e = mailEvent(0x85)!;
+    expect(e.from).toBe('영희');
+    expect(e.battle).toEqual({ team: 111, prize: 4500, name: '트리오 더 케이코 A' });
+    expect(npcTeamFoes(111, () => 0)!.map((f) => f.speciesId)).toEqual(['둥실몬', '모티몬', '모티몬']);
+    expect(mailEvent(0xae)!.battle?.team).toBe(151);
   });
 });

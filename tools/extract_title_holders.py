@@ -20,10 +20,12 @@ text = [p.decode('utf-16-le', 'replace').rstrip('\0').strip() for p in parts[2:]
 species = [l.split('|')[0] for l in (REPO / 'src/data/species.txt').read_text(encoding='utf-8').splitlines() if l and not l.startswith('#')]
 
 lines = ['# 원본 타이틀 홀더 팀 (tools/extract_title_holders.py). 손으로 고치지 말 것',
-         '# 팀 번호 = 타이틀 표 +8 = src/data/titles.txt 첫 칸 (웹판 타이틀 id m번호)',
+         '# 팀 번호 = 타이틀 표 +8 = src/data/titles.txt 첫 칸 (웹판 타이틀 id m번호). 101~151은 배틀 신청 메일 상대',
          '# team|팀 번호|팀 이름|NPC 번호들',
          '# npc|번호|별명|종|레벨|상금|TP·공격·방어·지능·속도 곡선 번호|내성 곡선 번호(열,추위,빛,어둠,천둥)|성격 번호(0 솔직~7 겁쟁이)']
 teams, npcs = set(), set()
+# 라이벌·사장 배틀 신청 메일의 상대 팀 101~151 (선물 표 종류 1의 값, src/data/events.txt)
+teams.update(range(101, 152))
 for i in range(61):
     team = struct.unpack_from('<i', arm9, 0xCC524 + i * 40 + 8)[0]
     teams.add(team)

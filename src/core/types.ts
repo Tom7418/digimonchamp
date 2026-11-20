@@ -145,8 +145,8 @@ export interface SaveData {
   gear?: Record<string, number>;
   /** 아직 읽지 않은 원본 메일 이벤트 번호 (src/core/events.ts, 4통까지) */
   pendingMails?: number[];
-  /** NPC 매입 제안을 굴린 날 (하루 한 번) */
-  offerDay?: number;
+  /** 받아들인 배틀 신청 (배틀 메뉴에 남는다) */
+  challenge?: { id: number; team: number; prize: number; name: string; from: string };
   /** 답하지 않은 NPC 매입 제안 */
   npcOffer?: { id: number; uid: number; price: number; from: string };
   /** 가진 사냥 플러그인 id (src/core/plugins.ts) */

@@ -414,6 +414,7 @@
   }
 
   // 랭크 업 사장 메일 등 예약된 원본 이벤트를 메일함에 띄운다
+  let lastEventHour = null;
   function deliverEventMails() {
     // NPC 매입 제안 (원본 0x2129064): 답할 때까지 다시 띄운다
     const o = save.npcOffer, od = o && save.digimon.find((d) => d.uid === o.uid);
@@ -442,6 +443,22 @@
     const r = C.openMail(save, id);
     save = r.save;
     if (!r.event) return persist();
+    // 배틀 신청: 원본 '도전을 받겠습니까?' (선물 종류 1, arm9 0x0208B8A8)
+    if (r.event.battle) {
+      persist();
+      const e = r.event;
+      setTimeout(() => {
+        showModal('도전을 받겠습니까?', `<p>${esc(e.from)}의 팀 「${esc(e.battle.name)}」(${C.npcTeam(e.battle.team).members.length}마리)와 배틀합니다. 이기면 ${e.battle.prize.toLocaleString('ko-KR')} ฿.</p><p><button class="primary" data-challenge="yes">받는다</button> <button data-challenge="no">거절한다</button></p>`, 'CHALLENGE', '닫기');
+        $('#modal-body').querySelectorAll('[data-challenge]').forEach((b) => (b.onclick = () => {
+          if (b.dataset.challenge === 'no') { log(`${e.from}의 도전을 거절했습니다.`); $('#modal').close(); return; }
+          save = { ...save, challenge: { id: e.id, ...e.battle, from: e.from } };
+          persist();
+          $('#modal').close();
+          battleMenu();
+        }));
+      }, 0);
+      return;
+    }
     // 원본은 지금 케이지 x=100~300에 50 간격으로 놓는다. 웹판은 선택한 디지몬 근처에 같은 간격으로 놓는다
     const p = view.team[view.selected] ?? view.team[0], ro = board.roam;
     const cx = p ? p.x : (ro.x0 + ro.x1) / 2, cy = p ? p.y + 30 : (ro.y0 + ro.y1) / 2;
@@ -467,11 +484,14 @@
       mail(`배틀에 참가할 수 있습니다.\n오늘은 ${notice.names.join(', ')}이(가) 열립니다.\n엔트리는 15시 전까지. 아래 '배틀'에서 출전하세요.`, '안내', notice.key);
     }
     if (!battle && !hunt) {
-      // 하루 한 번 10·15·20시 정각 중 처음 맞은 때 매입 제안을 굴린다 (원본 0x2129064)
+      // 정각마다 원본 메일 이벤트를 굴린다: 10·15·20시 NPC 매입(0x2129064), 13~18시 라이벌 배틀 신청(0x2129450)
       const minute = ((save.clock % 1440) + 1440) % 1440;
-      if (minute % 60 === 0) {
-        const r = C.rollNpcOffer(save, Math.floor(save.clock / 1440), minute / 60, Math.random);
-        if (r) { save = r.save; persist(); }
+      if (minute % 60 === 0 && lastEventHour !== save.clock) {
+        lastEventHour = save.clock;
+        const r = C.rollNpcOffer(save, minute / 60, Math.random);
+        if (r) save = r.save;
+        save = C.rollRivalChallenge(save, minute / 60, Math.random);
+        persist();
       }
       deliverEventMails();
     }
@@ -1171,6 +1191,7 @@
        <p id="battle-roster-count" class="hint" role="status"></p>
        <div id="battle-tactics" class="mode-pick-list" aria-label="작전"></div>
        <p class="hint">작전: 특수공격은 필살기 위주, 지원은 SP를 쓰며 공격, 일반공격은 둘을 균형 있게 씁니다. 디지몬마다 정할 수 있고 다음 배틀에도 기억합니다.</p>
+       ${save.challenge?`<h3>도전장</h3><div class="menu-list"><button data-challenge-battle><b>⚔ ${esc(save.challenge.from)} 「${esc(save.challenge.name)}」</b><small>${C.npcTeam(save.challenge.team).members.length}:${C.npcTeam(save.challenge.team).members.length} · ${C.npcTeam(save.challenge.team).members.map(f=>esc(f.nick)).join('·')} · 상금 ${save.challenge.prize.toLocaleString('ko-KR')} ฿</small></button></div>`:''}
        <h3>타이틀 매치</h3><div class="menu-list">${titles.length?titles.map((m,i)=>`<button data-title="${i}"><b>★ ${esc(m.name)}</b><small>${esc(titleText(m))}</small></button>`).join(''):`<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은07:00~15:00, 일정: ${esc(C.upcoming(save)[0]||'-')}</p>`}</div>
        <h3>프리 배틀 ${freeOpen?'':'(08:00~21:00)'}</h3><div class="menu-list two">${free.map((f,i)=>`<button data-free="${i}"><b>${esc(f.label)} ${f.format}:${f.format}</b><small>${f.foes.map(x=>esc(C.getSpecies(x.speciesId).name)).join(' · ')} · ${f.prize.toLocaleString('ko-KR')} ฿</small></button>`).join('')}</div>`,
       'BATTLE ENTRY','취소');
@@ -1192,6 +1213,7 @@
         const m=titles[+b.dataset.title];b.disabled=teamFor(m.format).length<m.format||C.entryProblems(m,teamFor(m.format)).length>0||save.bits<(m.fee??0);b.querySelector('small').textContent=titleText(m);
       });
       body.querySelectorAll('[data-free]').forEach(b=>{const f=free[+b.dataset.free];b.disabled=!freeOpen||teamFor(f.format).length<f.format;});
+      body.querySelectorAll('[data-challenge-battle]').forEach(b=>{const n=C.npcTeam(save.challenge.team).members.length;b.disabled=teamFor(n).length<n;});
     }
     body.querySelectorAll('[data-entrant]').forEach(b=>b.onclick=()=>{
       const uid=+b.dataset.entrant,d=save.digimon.find(d=>d.uid===uid);if(!d||!canFight(d))return;
@@ -1201,6 +1223,10 @@
     });
     body.querySelectorAll('[data-title]').forEach(b=>b.onclick=()=>{
       const m=titles[+b.dataset.title];startBattle({title:m.name,match:m,format:m.format,foes:m.foes,stage:m.stage,scale:m.scale,prize:m.prize},[...roster]);
+    });
+    body.querySelectorAll('[data-challenge-battle]').forEach(b=>b.onclick=()=>{
+      const c=save.challenge,n=C.npcTeam(c.team).members.length;
+      startBattle({title:`${c.from}의 도전 「${c.name}」`,format:n,stage:3,scale:1,prize:c.prize,rival:c.team},[...roster]);
     });
     body.querySelectorAll('[data-free]').forEach(b=>b.onclick=()=>{
       const f=free[+b.dataset.free];startBattle({title:`프리 배틀 ${f.label}`,format:f.format,stage:f.stage,scale:1,prize:f.prize,free:f},[...roster]);
@@ -1217,7 +1243,10 @@
     if(setup.match?.fee){const paid=C.payEntryFee(save,setup.match);if(!paid.ok)return toast('소지금이 부족합니다.');save=paid.save;persist();log(`참가비 ${setup.match.fee.toLocaleString('ko-KR')} ฿ 지불`);}
     // 타이틀 매치는 원본 홀더 팀(NPC 표)과 싸운다. 챔피언십처럼 홀더가 없는 경기만 무작위 상대
     const holderFoes = setup.match ? C.titleHolderFoes(setup.match.id, Math.random) : null;
-    const foes = setup.free ? C.freeBattleFoes(setup.free, Math.random) : holderFoes ?? C.makeEnemies(setup.stage, setup.foes ?? setup.format, setup.scale, Math.random);
+    const rivalFoes = setup.rival ? C.npcTeamFoes(setup.rival, Math.random) : null;
+    // 배틀 신청은 시작하면 소모한다 (원본은 받는 즉시 배틀)
+    if (setup.rival) { save = { ...save, challenge: undefined }; delete save.challenge; persist(); }
+    const foes = rivalFoes ?? (setup.free ? C.freeBattleFoes(setup.free, Math.random) : holderFoes ?? C.makeEnemies(setup.stage, setup.foes ?? setup.format, setup.scale, Math.random));
     // 맵은 시작 시 한 번 선택한다. 타이틀의 원본 지정값이 있으면 무작위보다 우선한다. 맵 번호는 지형 상성에 쓴다.
     const map=C.battleMapFor(setup.match?.id,Math.random);
     const state = C.createBattle(

@@ -114,3 +114,34 @@ test('NPC 매입 제안 메일을 닫으면 건넬지 묻고, 건네면 디지�
   assert.equal(api.save().npcOffer, undefined);
   assert.equal(modal.open, false);
 });
+
+test('라이벌 배틀 신청 메일을 닫고 받으면 도전장이 저장되고 배틀 메뉴가 열린다', () => {
+  const source = fs.readFileSync(path.join(__dirname, '../web/game.js'), 'utf8');
+  const start = source.indexOf('  let mailOpen = false;');
+  const end = source.indexOf('  function matchDays(', start);
+  const core = vm.createContext({ window: {} });
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../web/core.js'), 'utf8') + ';this.C=ChampCore', core);
+  const C = core.C;
+  const buttons = {};
+  const modal = { open: false, close() { this.open = false; } };
+  const body = { set innerHTML(v) { this.html = v; }, querySelectorAll: () => ['yes', 'no'].map((k) => (buttons[k] = { dataset: { challenge: k } })) };
+  const box = { hidden: true, querySelector: () => ({ textContent: '' }) };
+  const $ = (q) => (q === '#modal' ? modal : q === '#modal-body' ? body : box);
+  let menu = 0;
+  const context = vm.createContext({ view: { tips: {}, team: [], foods: [] }, save: C.queueMails({ ...C.freshSave(0), digimon: [] }, [0x85]), battle: null, hunt: null, titleOpen: false,
+    $, persist: () => {}, renderTray: () => {}, log: () => {}, esc: (t) => String(t), nameOf: () => '',
+    showModal: (title, html) => { modal.open = true; body.innerHTML = html; }, setTimeout: (f) => f(), battleMenu: () => { menu++; },
+    board: { roam: { x0: 0, x1: 1000, y0: 0, y1: 1000 }, attachFloorItem: (i) => i },
+    C: { ...C, isNight: () => false, matchEntryNotice: () => null },
+  });
+  vm.runInContext(source.slice(start, end) + '\nglobalThis.api = { nextMail, checkSchedule, active: () => activeMail, save: () => save };', context);
+  const api = context.api;
+  api.checkSchedule();
+  assert.equal(api.active()?.eventId, 0x85);
+  api.nextMail();
+  assert.match(body.html, /트리오 더 케이코 A/);
+  buttons.yes.onclick();
+  assert.equal(api.save().challenge.team, 111);
+  assert.equal(api.save().challenge.prize, 4500);
+  assert.equal(menu, 1);
+});
