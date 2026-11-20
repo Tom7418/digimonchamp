@@ -9,7 +9,7 @@ import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
-import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy } from '../src/core/care';
+import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy , relocate, trainingBlocker } from '../src/core/care';
 import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, npcTeamFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -2103,5 +2103,23 @@ describe('도감 (원본 순서 0x020EDE78)', () => {
     expect(agu.stage).toBe('성장기');
     expect(e.filter((x) => x.registered)).toHaveLength(1);
     expect(dexCount({ seen: ['아구몬', '없는종'] })).toBe(1);
+  });
+});
+
+describe('케이지를 옮겨 놓으면 다시 훈련 (형규 제보: 가끔 훈련이 안 됨)', () => {
+  const trained = () => ({ ...newDigimon(1, '아구몬'), cage: '운동장', cageInstance: 'A', trainDone: true, trainMinutes: 0 });
+  it('훈련 케이지끼리 옮겨도 새 훈련', () => {
+    const d = relocate(trained(), '운동장', 'B');
+    expect(d.trainDone).toBe(false);
+    expect(trainingBlocker(d)).toBeNull();
+  });
+  it('같은 케이지 안에서 자리만 바꾸면 그대로', () => {
+    const d0 = trained();
+    expect(relocate(d0, '운동장', 'A')).toBe(d0);
+    expect(trainingBlocker(d0)).toMatch(/이미/);
+  });
+  it('훈련 못 하는 이유를 알려 준다', () => {
+    expect(trainingBlocker({ ...relocate(trained(), '운동장', 'B'), fatigue: 95 })).toMatch(/피로/);
+    expect(trainingBlocker({ ...relocate(trained(), '운동장', 'B'), hunger: 0 })).toMatch(/배가 고파/);
   });
 });

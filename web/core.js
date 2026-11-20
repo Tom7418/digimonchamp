@@ -3641,6 +3641,37 @@ var ChampCore = (function(exports) {
 	/** 원본 표의 각성/수면 범위. 분 단위 진행과 야간 일괄 수면의 병합은 웹판 정책이다. */
 	var cycleMinutes = (range, rng) => range[0] + Math.floor(rng() * Math.max(1, range[1] - range[0]));
 	var isSleeping = (d) => !d.isEgg && d.restCycle?.species === d.speciesId && d.restCycle.sleepLeft > 0;
+	/**
+	* 테이머가 디지몬을 다른 케이지로 옮겨 놓으면 새 훈련으로 본다 (형규 확인: 옮겨 놓으면 훈련해야 한다).
+	* 예전에는 '훈련 케이지가 아닌 곳에서 1분 이상' 있어야 다시 훈련해서, 훈련 케이지끼리 옮기거나
+	* 1분이 지나기 전에 다시 넣으면 훈련하지 않았다. 같은 케이지 안에서 자리만 옮긴 것은 그대로 둔다.
+	*/
+	function relocate(d, cage, instance) {
+		if (d.cage === cage && d.cageInstance === instance) return d;
+		const moved = d.cageInstance !== void 0 && d.cageInstance !== instance;
+		return {
+			...d,
+			cage,
+			cageInstance: instance,
+			...moved ? {
+				trainDone: false,
+				trainMinutes: 0
+			} : {}
+		};
+	}
+	/** 훈련 케이지에 있는데 훈련을 못 하는 이유. 할 수 있으면 null */
+	function trainingBlocker(d) {
+		const cage = getCage(d.cage);
+		if (!(cage.up || cage.apUp || cage.battleUp) || d.isEgg) return null;
+		if (d.trainDone) return "이미 이 케이지에서 훈련을 마쳤습니다. 다른 케이지로 옮겼다 다시 넣으면 또 훈련합니다";
+		if (isSleeping(d)) return "자고 있어서 훈련하지 않습니다";
+		if (d.sick) return "병에 걸려 훈련하지 않습니다";
+		if (d.injured) return "다쳐서 훈련하지 않습니다";
+		if (d.dying) return "빈사 상태라 훈련하지 않습니다";
+		if (d.hunger <= 0) return "배가 고파 훈련하지 않습니다";
+		if (d.fatigue >= 90) return "너무 지쳐서 훈련하지 않습니다 (피로 90 이상)";
+		return null;
+	}
 	/** 훈련 상태 판정은 화면의 성급한 달리기와 실제 훈련이 공유한다. */
 	function isTraining(d) {
 		const cage = getCage(d.cage);
@@ -11768,6 +11799,7 @@ var ChampCore = (function(exports) {
 	exports.rankUpMails = rankUpMails;
 	exports.rebirthPercent = rebirthPercent;
 	exports.release = release;
+	exports.relocate = relocate;
 	exports.remember = remember;
 	exports.reqScale = reqScale;
 	exports.restoreFloorFood = restoreFloorFood;
@@ -11807,6 +11839,7 @@ var ChampCore = (function(exports) {
 	exports.todaysMatches = todaysMatches;
 	exports.togglePlugin = togglePlugin;
 	exports.tpBudget = tpBudget;
+	exports.trainingBlocker = trainingBlocker;
 	exports.trainingBounds = trainingBounds;
 	exports.trainingDelta = trainingDelta;
 	exports.trainingHpCost = trainingHpCost;

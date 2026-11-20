@@ -215,7 +215,15 @@
     if (view.pickedUid != null && !view.team.some((p) => p.uid === view.pickedUid)) view.pickedUid = null;
     const coreCage = new Map(view.team.map((p) => [p.uid, (p.cageId && L.types[p.cage]?.core) || '기본 케이지']));
     const cageInstances=new Map(view.team.map(p=>[p.uid,p.cageId??null]));
-    save = { ...save, digimon: save.digimon.map((d) => (d.cage === coreCage.get(d.uid)&&d.cageInstance===cageInstances.get(d.uid) ? d : { ...d, cage: coreCage.get(d.uid),cageInstance:cageInstances.get(d.uid) })) };
+    // 다른 케이지로 옮겨 놓으면 새 훈련을 시작한다. 훈련 케이지인데 못 하면 이유를 알려 준다.
+    save = { ...save, digimon: save.digimon.map((d) => {
+      const next = C.relocate(d, coreCage.get(d.uid), cageInstances.get(d.uid));
+      if (next !== d && d.cageInstance !== undefined && next.cageInstance !== d.cageInstance) {
+        const why = C.trainingBlocker(next);
+        if (why) toast(`${nameOf(next)}: ${why}`);
+      }
+      return next;
+    }) };
   }
 
   // ---------- 케이지 규칙 연결 ----------
