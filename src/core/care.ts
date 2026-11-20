@@ -90,14 +90,12 @@ export function trainingBlocker(d: Digimon): string | null {
   if (d.sick) return '병에 걸려 훈련하지 않습니다';
   if (d.injured) return '다쳐서 훈련하지 않습니다';
   if (d.dying) return '빈사 상태라 훈련하지 않습니다';
-  if (d.hunger <= 0) return '배가 고파 훈련하지 않습니다';
-  if (d.fatigue >= 90) return '너무 지쳐서 훈련하지 않습니다 (피로 90 이상)';
   return null;
 }
 /** 훈련 상태 판정은 화면의 성급한 달리기와 실제 훈련이 공유한다. */
 export function isTraining(d: Digimon): boolean {
   const cage=getCage(d.cage);
-  return !!(cage.up||cage.apUp||cage.battleUp)&&!d.isEgg&&!d.trainDone&&!isSleeping(d)&&!d.sick&&!d.injured&&!d.dying&&d.hunger>0&&d.fatigue<90;
+  return !!(cage.up||cage.apUp||cage.battleUp)&&!d.isEgg&&!d.trainDone&&!isSleeping(d)&&!d.sick&&!d.injured&&!d.dying;
 }
 function tickRestCycle(d: Digimon, rng: Rng, night: boolean): boolean {
   const real = originalSpecies(d.speciesId);
@@ -351,8 +349,10 @@ function applyTrainingSideEffects(d: Digimon, cageNo: number, season: number, rn
       d.injuryRisk = Math.max(0, Math.min(100, (d.injuryRisk ?? 0) + v));
     }
   }
-  if (d.fatigue >= 90) d.injuryRisk = Math.min(100, (d.injuryRisk ?? 0) + 3);
+  // 원본 훈련 시작(overlay18 0x211D8B8~0x211D914): 배(+0x08)가 0 이하면 +3, 스트레스 90 이상(배우 +0x404, 0x2118738)이면 +3.
+  // 예전에는 +0x404를 피로 90 이상으로 읽었다
   if (d.hunger <= 0) d.injuryRisk = Math.min(100, (d.injuryRisk ?? 0) + 3);
+  if ((d.stress ?? 0) >= 90) d.injuryRisk = Math.min(100, (d.injuryRisk ?? 0) + 3);
   return out;
 }
 
@@ -565,7 +565,9 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   // 훈련: 테이머가 훈련 케이지에 넣으면 15분 훈련을 한 번 한다. 끝나면 훈련 케이지가 아닌 곳에
   // 두었다가 다시 넣기 전에는 훈련하지 않는다 (형규가 정함. 15분은 게임 시간)
   if (cage.up || cage.apUp || cage.battleUp) {
-    if (!d.trainDone && !sleeping && !d.sick && !d.injured && !d.dying && d.hunger > 0 && d.fatigue < 90) {
+    // 배고픔·스트레스로는 막지 않는다. 원본은 훈련을 시작할 때 배가 0이거나 스트레스 90 이상이면
+    // 부상 위험도만 +3씩 올린다(overlay18 0x211D8B8~0x211D914, 아래 applyTrainingSideEffects)
+    if (!d.trainDone && !sleeping && !d.sick && !d.injured && !d.dying) {
       d.trainMinutes = (d.trainMinutes ?? 0) + 1;
       if (d.trainMinutes >= TRAINING_MINUTES) {
         d.trainMinutes = 0;

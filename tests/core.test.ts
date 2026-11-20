@@ -1759,7 +1759,9 @@ describe('사용자 지정 성격 효과와 원본 SP 연결',()=>{
   });
   it('성급한 달리기는 깨어 있고 실제 훈련 중일 때만 판정한다',()=>{
     const d={...mon(1,'성급한'),cage:'체육관'};expect(isTraining(d)).toBe(true);
-    for(const patch of [{trainDone:true},{sick:true},{injured:true},{hunger:0},{isEgg:true},{cage:'기본 케이지'},{restCycle:{species:d.speciesId,awakeLeft:0,sleepLeft:10}}])expect(isTraining({...d,...patch})).toBe(false);
+    // 배고픔은 훈련을 막지 않는다(원본은 부상 위험도 +3)
+    expect(isTraining({...d,hunger:0})).toBe(true);
+    for(const patch of [{trainDone:true},{sick:true},{injured:true},{isEgg:true},{cage:'기본 케이지'},{restCycle:{species:d.speciesId,awakeLeft:0,sleepLeft:10}}])expect(isTraining({...d,...patch})).toBe(false);
   });
   it('일반 성격은 터치로 깨어나고 게으름은20% 성공, 실패하면 수면/쓰다듬기 보상 보존',()=>{
     const d=mon(1,'게으름');d.restCycle!.sleepLeft=100;const s=saveOf(d),before=JSON.stringify(s);
@@ -2118,8 +2120,18 @@ describe('케이지를 옮겨 놓으면 다시 훈련 (형규 제보: 가끔 훈
     expect(relocate(d0, '운동장', 'A')).toBe(d0);
     expect(trainingBlocker(d0)).toMatch(/이미/);
   });
-  it('훈련 못 하는 이유를 알려 준다', () => {
-    expect(trainingBlocker({ ...relocate(trained(), '운동장', 'B'), fatigue: 95 })).toMatch(/피로/);
-    expect(trainingBlocker({ ...relocate(trained(), '운동장', 'B'), hunger: 0 })).toMatch(/배가 고파/);
+  it('훈련 못 하는 이유를 알려 준다. 배고픔·스트레스·피로로는 막지 않는다(원본)', () => {
+    expect(trainingBlocker({ ...relocate(trained(), '운동장', 'B'), sick: true })).toMatch(/병/);
+    expect(trainingBlocker({ ...relocate(trained(), '운동장', 'B'), hunger: 0, fatigue: 95, stress: 95 })).toBeNull();
+  });
+  it('배가 0이거나 스트레스 90 이상으로 훈련하면 부상 위험도 +3씩 (원본 0x211D8B8)', () => {
+    const run = (patch: Partial<Digimon>) => {
+      let s: SaveData = { ...freshEggSave(0), digimon: [{ ...newDigimon(1, '아구몬'), cage: '운동장', cageInstance: 'A', injuryRisk: 0, ...patch }] };
+      for (let i = 0; i < 20; i++) s = tickFarm(s, () => 0.99).save;
+      return s.digimon[0];
+    };
+    const calm = run({ hunger: 80, stress: 0 }).injuryRisk ?? 0;
+    expect((run({ hunger: 80, stress: 95 }).injuryRisk ?? 0) - calm).toBe(3);
+    expect(run({ hunger: 0, stress: 0 }).trainDone).toBe(true);
   });
 });

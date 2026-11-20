@@ -3668,14 +3668,12 @@ var ChampCore = (function(exports) {
 		if (d.sick) return "병에 걸려 훈련하지 않습니다";
 		if (d.injured) return "다쳐서 훈련하지 않습니다";
 		if (d.dying) return "빈사 상태라 훈련하지 않습니다";
-		if (d.hunger <= 0) return "배가 고파 훈련하지 않습니다";
-		if (d.fatigue >= 90) return "너무 지쳐서 훈련하지 않습니다 (피로 90 이상)";
 		return null;
 	}
 	/** 훈련 상태 판정은 화면의 성급한 달리기와 실제 훈련이 공유한다. */
 	function isTraining(d) {
 		const cage = getCage(d.cage);
-		return !!(cage.up || cage.apUp || cage.battleUp) && !d.isEgg && !d.trainDone && !isSleeping(d) && !d.sick && !d.injured && !d.dying && d.hunger > 0 && d.fatigue < 90;
+		return !!(cage.up || cage.apUp || cage.battleUp) && !d.isEgg && !d.trainDone && !isSleeping(d) && !d.sick && !d.injured && !d.dying;
 	}
 	function tickRestCycle(d, rng, night) {
 		const real = originalSpecies(d.speciesId);
@@ -3995,8 +3993,8 @@ var ChampCore = (function(exports) {
 				out.push(`스트레스 ${v > 0 ? "+" : ""}${v}`);
 			} else if (c.command === 5) d.injuryRisk = Math.max(0, Math.min(100, (d.injuryRisk ?? 0) + v));
 		}
-		if (d.fatigue >= 90) d.injuryRisk = Math.min(100, (d.injuryRisk ?? 0) + 3);
 		if (d.hunger <= 0) d.injuryRisk = Math.min(100, (d.injuryRisk ?? 0) + 3);
+		if ((d.stress ?? 0) >= 90) d.injuryRisk = Math.min(100, (d.injuryRisk ?? 0) + 3);
 		return out;
 	}
 	/**
@@ -4245,7 +4243,7 @@ var ChampCore = (function(exports) {
 			}
 		}
 		if (cage.up || cage.apUp || cage.battleUp) {
-			if (!d.trainDone && !sleeping && !d.sick && !d.injured && !d.dying && d.hunger > 0 && d.fatigue < 90) {
+			if (!d.trainDone && !sleeping && !d.sick && !d.injured && !d.dying) {
 				d.trainMinutes = (d.trainMinutes ?? 0) + 1;
 				if (d.trainMinutes >= 15) {
 					d.trainMinutes = 0;
