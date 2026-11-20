@@ -1,7 +1,7 @@
 import { applyTraining } from './training';
 import facilityEffects from '../data/facility-effects.json';
-import { evolvedStats, upgradeStats } from './stats';
-import { CAGE_LEVEL_FACTOR, CAGE_LEVEL_ROWS, CAGE_LEVEL_SIDE_FACTOR, CAGE_SHOP, CAGE_RENAMES, CAGES, dateOf, DAY_END_MINUTE, DAY_START_HOUR, EGG_MINUTES, initialStats, getCage, getSpecies, originalSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK } from './data';
+import { evolvedResistance, evolvedStats, upgradeStats } from './stats';
+import { CAGE_LEVEL_FACTOR, CAGE_LEVEL_ROWS, CAGE_LEVEL_SIDE_FACTOR, CAGE_SHOP, CAGE_RENAMES, CAGES, dateOf, DAY_END_MINUTE, DAY_START_HOUR, EGG_MINUTES, initialResistance, initialStats, getCage, getSpecies, originalSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK } from './data';
 import { endOfLife, findEvolution, type EvoResult } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, migrateTitleIds, tamerRank } from './titles';
@@ -16,7 +16,7 @@ export const OFFLINE_CAP_MINUTES = 12 * 60;
 const zeroAp = () => Object.fromEntries([...FAMILIES, ...ATTRS].map((k) => [k, 0])) as Record<ApKey, number>;
 
 export function newDigimon(uid: number, speciesId: string, rng: Rng = defaultRng, wild = false): Digimon {
-  return {
+  const d: Digimon = {
     uid,
     speciesId,
     isEgg: false,
@@ -44,6 +44,9 @@ export function newDigimon(uid: number, speciesId: string, rng: Rng = defaultRng
     sickMinutes: 0,
     poopTimer: 0,
   };
+  // 첫 내성도 원본 생성 함수(arm9 0x02061A8C~)의 범위와 난수 (다른 난수 순서를 바꾸지 않게 맨 뒤에서 뽑는다)
+  d.resistance = initialResistance(speciesId, rng);
+  return d;
 }
 
 /** 사용자 지정 균형값. 원작 수치가 아니다. 깨어 있는5시간마다 기본 배설, 하루 최대4회. */
@@ -234,7 +237,7 @@ function evolveDigimon(d: Digimon, to: string, rng: Rng): Digimon {
   // 원본 ARM9 0x2062258: 새 종 구조체(속성·종족 수치 0)를 만들고 능력치만 이월한다 → 진화하면 속성·종족 수치는 0부터
   const ap = Object.fromEntries(Object.keys(d.ap).map((k) => [k, 0])) as Record<ApKey, number>;
   // 부상 위험도(원본 +0x40)는 이월하지 않아 진화하면 0 (ARM9 0x2062258)
-  return { ...d, speciesId: to, stageAge: 0, stats: evolvedStats(d, to, d.eggs, rng), statVersion: 1, ap, rottenEaten: 0, memory: remember(d), injuryRisk: 0 };
+  return { ...d, speciesId: to, stageAge: 0, stats: evolvedStats(d, to, d.eggs, rng), resistance: evolvedResistance(d, to, d.eggs, rng), statVersion: 1, ap, rottenEaten: 0, memory: remember(d), injuryRisk: 0 };
 }
 
 /** 수명이 다한 뒤의 판정에 기억 진화를 덧씌운다. 기억 진화는 원본처럼 랭크 제한을 다시 보지 않고 용량만 확인한다 */
@@ -447,7 +450,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
       const first = d.memory?.first[1], second = d.memory?.second[1];
       const baby = first && second ? (ctx.rng() < 0.5 ? second : first) : first ?? d.originBaby;
       events.push({ type: 'hatched', uid: d.uid, from: '디지에그', to: baby });
-      d = { ...d, isEgg: false, speciesId: baby, stageAge: 0, stats: evolvedStats(null, baby, d.eggs, ctx.rng), statVersion: 1 };
+      d = { ...d, isEgg: false, speciesId: baby, stageAge: 0, stats: evolvedStats(null, baby, d.eggs, ctx.rng), resistance: evolvedResistance(null, baby, d.eggs, ctx.rng), statVersion: 1 };
     }
     return d;
   }

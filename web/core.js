@@ -1091,6 +1091,27 @@ var ChampCore = (function(exports) {
 		];
 		return Object.fromEntries(RESIST_ORDER.map((k, i) => [k, RESIST_CURVE[Math.min(24, idx[i] ?? 0)] ?? 0]));
 	}
+	/**
+	* 내 디지몬의 내성 범위 (원본 arm9 0x02061A8C~0x02061D00, 디지몬 +0xD8~+0xFC):
+	* 최저 = 곡선[번호-3], 최고 = 곡선[번호+3]-1 (번호는 0~24로 자른다). 능력치(최저 = 곡선[번호])와 달리 아래로도 3칸 넓다.
+	*/
+	function resistBounds(id, key) {
+		const i = ORIGINAL[id]?.resist?.[RESIST_ORDER.indexOf(key)] ?? 0;
+		return {
+			min: RESIST_CURVE[Math.max(0, i - 3)] ?? 0,
+			max: (RESIST_CURVE[Math.min(24, i + 3)] ?? 1) - 1
+		};
+	}
+	/** 원본 첫 내성 값: 최저 + (곡선[번호+1] - 최저)/2 안의 난수 (같은 함수). 웹판은 종 기본값(곡선[번호])에서의 차이로 저장한다 */
+	function initialResistance(id, rng = Math.random) {
+		const base = baseResist(id);
+		return Object.fromEntries(RESIST_ORDER.map((k, n) => {
+			const i = ORIGINAL[id]?.resist?.[n] ?? 0, { min } = resistBounds(id, k);
+			const slots = Math.trunc(((RESIST_CURVE[Math.min(24, i + 1)] ?? min) - min) / 2);
+			const roll = Math.min(.999999999, Math.max(0, rng()));
+			return [k, min + (slots > 0 ? Math.floor(roll * slots) : 0) - base[k]];
+		}));
+	}
 	/** 원본 종별 곡선 인덱스가 가리키는 기본 훈련 범위. */
 	function statBounds(id, key) {
 		const column = STAT_KEYS.indexOf(key), index = ORIGINAL[id]?.stats[column] ?? 0;
@@ -1765,8 +1786,10 @@ var ChampCore = (function(exports) {
 			} else if (key < 16) {
 				const k = RESIST_KEYS[key - 11];
 				d.resistance = { ...d.resistance };
+				const b = resistBounds(d.speciesId, k), base = baseResist(d.speciesId)[k];
+				const lo = b.min - base, hi = b.max - base;
 				before = d.resistance[k] ?? 0;
-				after = Math.max(0, Math.min(310, before + amount));
+				after = Math.max(Math.min(before, lo), Math.min(Math.max(before, hi), before + amount));
 				d.resistance[k] = after;
 				label = `${k} 내성`;
 			} else {
@@ -2209,6 +2232,26 @@ var ChampCore = (function(exports) {
 			stats[key] = Math.max(bounds.min, Math.min(bounds.max, stats[key] + rebirth + carried));
 		}
 		return stats;
+	}
+	/**
+	* 내성도 능력치와 같은 계산을 거친다: 원본 이월 함수(arm9 0x02062258)는 능력치 5개와 내성 5개(+0x70~+0x80)를
+	* 같은 줄로 처리한다 — 새 종 첫 값 + 재탄생 보정(범위의 10% × 보정%/10) + 이전 종 훈련 몫(범위 × 진행%의 1/4) → 새 범위로 자름.
+	* 웹판 저장은 종 기본값에서의 차이(resistance)이다.
+	*/
+	function evolvedResistance(from, to, eggs, rng) {
+		const start = initialResistance(to, rng), base = baseResist(to), percent = rebirthPercent(eggs);
+		const fromBase = from && !from.isEgg ? baseResist(from.speciesId) : null;
+		return Object.fromEntries(RESIST_ORDER.map((k) => {
+			const bounds = resistBounds(to, k), span = bounds.max - bounds.min;
+			let value = base[k] + start[k] + Math.trunc(Math.trunc(span * 10 / 100) * percent / 10);
+			if (from && fromBase) {
+				const old = resistBounds(from.speciesId, k), width = old.max - old.min;
+				const now = fromBase[k] + (from.resistance?.[k] ?? 0);
+				const trained = width > 0 ? Math.trunc(100 * (now - old.min) / width) : 0;
+				value += Math.trunc(width * Math.trunc(trained / 4) / 100);
+			}
+			return [k, Math.max(bounds.min, Math.min(bounds.max, value)) - base[k]];
+		}));
 	}
 	/** 구버전의 단위·진화 경로를 복원할 수 없으므로 결정적으로 이전한다(웹판 정책).
 	* 원래 수치는 별도 보존하고, 새 초기 중앙값보다 낮으면 올리며 새 상한을 넘으면 제한한다.
@@ -3580,7 +3623,7 @@ var ChampCore = (function(exports) {
 	var OFFLINE_CAP_MINUTES = 720;
 	var zeroAp = () => Object.fromEntries([...FAMILIES, ...ATTRS].map((k) => [k, 0]));
 	function newDigimon(uid, speciesId, rng = defaultRng, wild = false) {
-		return {
+		const d = {
 			uid,
 			speciesId,
 			isEgg: false,
@@ -3607,6 +3650,8 @@ var ChampCore = (function(exports) {
 			sickMinutes: 0,
 			poopTimer: 0
 		};
+		d.resistance = initialResistance(speciesId, rng);
+		return d;
 	}
 	/** 사용자 지정 균형값. 원작 수치가 아니다. 깨어 있는5시간마다 기본 배설, 하루 최대4회. */
 	var POOP_INTERVAL = {
@@ -3836,6 +3881,7 @@ var ChampCore = (function(exports) {
 			speciesId: to,
 			stageAge: 0,
 			stats: evolvedStats(d, to, d.eggs, rng),
+			resistance: evolvedResistance(d, to, d.eggs, rng),
 			statVersion: 1,
 			ap,
 			rottenEaten: 0,
@@ -4104,6 +4150,7 @@ var ChampCore = (function(exports) {
 					speciesId: baby,
 					stageAge: 0,
 					stats: evolvedStats(null, baby, d.eggs, ctx.rng),
+					resistance: evolvedResistance(null, baby, d.eggs, ctx.rng),
 					statVersion: 1
 				};
 			}
@@ -11723,6 +11770,7 @@ var ChampCore = (function(exports) {
 	exports.equippedPlugins = equippedPlugins;
 	exports.eraLabel = eraLabel;
 	exports.evaluateEvolutions = evaluateEvolutions;
+	exports.evolvedResistance = evolvedResistance;
 	exports.evolvedStats = evolvedStats;
 	exports.explain = explain;
 	exports.facilityHpEffects = facilityHpEffects;
@@ -11755,6 +11803,7 @@ var ChampCore = (function(exports) {
 	exports.huntTerrainAt = huntTerrainAt;
 	exports.huntTerrainLineClear = huntTerrainLineClear;
 	exports.inflictStatus = inflictStatus;
+	exports.initialResistance = initialResistance;
 	exports.initialStats = initialStats;
 	exports.isNight = isNight;
 	exports.isSleeping = isSleeping;
@@ -11800,6 +11849,7 @@ var ChampCore = (function(exports) {
 	exports.relocate = relocate;
 	exports.remember = remember;
 	exports.reqScale = reqScale;
+	exports.resistBounds = resistBounds;
 	exports.restoreFloorFood = restoreFloorFood;
 	exports.reviveSupport = reviveSupport;
 	exports.rollMorningMail = rollMorningMail;

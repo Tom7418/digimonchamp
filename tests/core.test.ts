@@ -9,6 +9,8 @@ import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
+import { initialResistance, resistBounds, RESIST_ORDER } from '../src/core/data';
+import { evolvedResistance } from '../src/core/stats';
 import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy , relocate, trainingBlocker } from '../src/core/care';
 import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
@@ -1317,11 +1319,13 @@ describe('원본 훈련 결과와 실제 변화량', () => {
     expect(d.stats.atk).toBe(200);expect(d.stats.def).toBe(2);
   });
   it('AP·내성의 실제 증감과 한계, 저장 재개를 보존한다', () => {
-    const d = newDigimon(1, '아구몬',()=>.5);d.ap['용'] = 98;d.ap['짐승'] = 2;
+    // 예전 저장처럼 내성 차이가 없는 개체(= 종 기본값)
+    const d = { ...newDigimon(1, '아구몬',()=>.5), resistance: undefined };d.ap['용'] = 98;d.ap['짐승'] = 2;
     expect(applyTraining(d, getCage('화산'), 0, rolls(0, 0.5, 0.5))).toEqual(['용 수치 +1', '짐승 수치 -2']);
     const before = JSON.stringify(d);
-    expect(applyTraining(d, getCage('화산'), 0, rolls(0.7, 0.5, 0.5))).toEqual(['열 내성 +9', '추위 내성 +0 (하한)']);
-    expect(JSON.parse(JSON.stringify(d)).resistance).toEqual({ 열: 9, 추위: 0 });
+    // 내성 하한은 곡선[번호-3](원본)이라 종 기본값 아래로도 내려간다
+    expect(applyTraining(d, getCage('화산'), 0, rolls(0.7, 0.5, 0.5))).toEqual(['열 내성 +9', '추위 내성 -11']);
+    expect(JSON.parse(JSON.stringify(d)).resistance).toEqual({ 열: 9, 추위: -11 });
     expect(JSON.parse(before).resistance).toBeUndefined();
   });
 });
@@ -2133,5 +2137,29 @@ describe('케이지를 옮겨 놓으면 다시 훈련 (형규 제보: 가끔 훈
     const calm = run({ hunger: 80, stress: 0 }).injuryRisk ?? 0;
     expect((run({ hunger: 80, stress: 95 }).injuryRisk ?? 0) - calm).toBe(3);
     expect(run({ hunger: 0, stress: 0 }).trainDone).toBe(true);
+  });
+});
+
+describe('내 디지몬 내성 범위·첫 값·진화 이월 (원본 arm9 0x02061A8C·0x02062258)', () => {
+  it('범위는 곡선[번호-3] ~ 곡선[번호+3]-1, 첫 값은 최저 + (곡선[번호+1]-최저)/2 안', () => {
+    for (const id of Object.keys(SPECIES).slice(0, 60)) for (const roll of [0, 0.999999]) {
+      const base = baseResist(id), r = initialResistance(id, () => roll);
+      for (const k of RESIST_ORDER) {
+        const b = resistBounds(id, k), v = base[k] + r[k];
+        expect(v).toBeGreaterThanOrEqual(b.min);
+        expect(v).toBeLessThanOrEqual(b.max);
+      }
+    }
+    expect(newDigimon(1, '아구몬', () => 0).resistance).toEqual(Object.fromEntries(RESIST_ORDER.map((k) => [k, resistBounds('아구몬', k).min - baseResist('아구몬')[k]])));
+  });
+  it('진화하면 새 종 첫 값 + 이전 종 훈련 몫, 새 범위로 자른다', () => {
+    const top = { ...newDigimon(1, '아구몬', () => 0), resistance: Object.fromEntries(RESIST_ORDER.map((k) => [k, resistBounds('아구몬', k).max - baseResist('아구몬')[k]])) };
+    const low = evolvedResistance({ ...top, resistance: Object.fromEntries(RESIST_ORDER.map((k) => [k, resistBounds('아구몬', k).min - baseResist('아구몬')[k]])) }, '그레이몬', 0, () => 0);
+    const high = evolvedResistance(top, '그레이몬', 0, () => 0);
+    for (const k of RESIST_ORDER) {
+      const b = resistBounds('그레이몬', k), base = baseResist('그레이몬')[k];
+      expect(base + high[k]).toBeLessThanOrEqual(b.max);
+      expect(high[k]).toBeGreaterThanOrEqual(low[k]);
+    }
   });
 });

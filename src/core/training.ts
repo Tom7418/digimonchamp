@@ -1,5 +1,5 @@
 import table from '../data/training.json';
-import { statBounds, type Cage } from './data';
+import { baseResist, resistBounds, statBounds, type Cage } from './data';
 import type { Rng } from './rng';
 import { STAT_KEYS, STAT_LABEL, type Digimon, type ApKey, type Personality } from './types';
 
@@ -81,8 +81,11 @@ export function applyTraining(d: Digimon, cage: Cage, season: number, rng: Rng, 
     } else if (key < 16) {
       const k = RESIST_KEYS[key - 11];
       d.resistance = { ...d.resistance };
+      // 원본 범위(곡선[번호-3] ~ 곡선[번호+3]-1)를 종 기본값과의 차이로 바꿔 자른다. 범위 밖 저장은 보존
+      const b = resistBounds(d.speciesId, k), base = baseResist(d.speciesId)[k];
+      const lo = b.min - base, hi = b.max - base;
       before = d.resistance[k] ?? 0;
-      after = Math.max(0, Math.min(310, before + amount)); // 내성 상한은 후속 검증
+      after = Math.max(Math.min(before, lo), Math.min(Math.max(before, hi), before + amount));
       d.resistance[k] = after; label = `${k} 내성`;
     } else {
       const k = STAT_KEYS[key - 16], bounds = trainingBounds(d.speciesId, k);

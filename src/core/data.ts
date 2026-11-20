@@ -145,6 +145,24 @@ export function baseResist(id: string): Record<ResistKey, number> {
   const idx = ORIGINAL[id]?.resist ?? [0, 0, 0, 0, 0];
   return Object.fromEntries(RESIST_ORDER.map((k, i) => [k, RESIST_CURVE[Math.min(24, idx[i] ?? 0)] ?? 0])) as Record<ResistKey, number>;
 }
+/**
+ * 내 디지몬의 내성 범위 (원본 arm9 0x02061A8C~0x02061D00, 디지몬 +0xD8~+0xFC):
+ * 최저 = 곡선[번호-3], 최고 = 곡선[번호+3]-1 (번호는 0~24로 자른다). 능력치(최저 = 곡선[번호])와 달리 아래로도 3칸 넓다.
+ */
+export function resistBounds(id: string, key: ResistKey): { min: number; max: number } {
+  const i = ORIGINAL[id]?.resist?.[RESIST_ORDER.indexOf(key)] ?? 0;
+  return { min: RESIST_CURVE[Math.max(0, i - 3)] ?? 0, max: (RESIST_CURVE[Math.min(24, i + 3)] ?? 1) - 1 };
+}
+/** 원본 첫 내성 값: 최저 + (곡선[번호+1] - 최저)/2 안의 난수 (같은 함수). 웹판은 종 기본값(곡선[번호])에서의 차이로 저장한다 */
+export function initialResistance(id: string, rng: Rng = Math.random): Record<ResistKey, number> {
+  const base = baseResist(id);
+  return Object.fromEntries(RESIST_ORDER.map((k, n) => {
+    const i = ORIGINAL[id]?.resist?.[n] ?? 0, { min } = resistBounds(id, k);
+    const slots = Math.trunc(((RESIST_CURVE[Math.min(24, i + 1)] ?? min) - min) / 2);
+    const roll = Math.min(0.999999999, Math.max(0, rng()));
+    return [k, min + (slots > 0 ? Math.floor(roll * slots) : 0) - base[k]];
+  })) as Record<ResistKey, number>;
+}
 /** 원본 종별 곡선 인덱스가 가리키는 기본 훈련 범위. */
 export function statBounds(id: string, key: StatKey): { min: number; max: number } {
   const column = STAT_KEYS.indexOf(key), index = ORIGINAL[id]?.stats[column] ?? 0;

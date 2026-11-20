@@ -1,5 +1,5 @@
 import table from '../data/training.json';
-import { initialStats, statBounds } from './data';
+import { baseResist, initialResistance, initialStats, resistBounds, RESIST_ORDER, statBounds, type ResistKey } from './data';
 import { STAT_KEYS, type Digimon, type Stats } from './types';
 import type { Rng } from './rng';
 
@@ -32,6 +32,27 @@ export function evolvedStats(from: Digimon | null, to: string, eggs: number, rng
     stats[key] = Math.max(bounds.min, Math.min(bounds.max, stats[key] + rebirth + carried));
   }
   return stats;
+}
+
+/**
+ * 내성도 능력치와 같은 계산을 거친다: 원본 이월 함수(arm9 0x02062258)는 능력치 5개와 내성 5개(+0x70~+0x80)를
+ * 같은 줄로 처리한다 — 새 종 첫 값 + 재탄생 보정(범위의 10% × 보정%/10) + 이전 종 훈련 몫(범위 × 진행%의 1/4) → 새 범위로 자름.
+ * 웹판 저장은 종 기본값에서의 차이(resistance)이다.
+ */
+export function evolvedResistance(from: Digimon | null, to: string, eggs: number, rng: Rng): Record<ResistKey, number> {
+  const start = initialResistance(to, rng), base = baseResist(to), percent = rebirthPercent(eggs);
+  const fromBase = from && !from.isEgg ? baseResist(from.speciesId) : null;
+  return Object.fromEntries(RESIST_ORDER.map((k) => {
+    const bounds = resistBounds(to, k), span = bounds.max - bounds.min;
+    let value = base[k] + start[k] + Math.trunc(Math.trunc(span * 10 / 100) * percent / 10);
+    if (from && fromBase) {
+      const old = resistBounds(from.speciesId, k), width = old.max - old.min;
+      const now = fromBase[k] + (from.resistance?.[k] ?? 0);
+      const trained = width > 0 ? Math.trunc(100 * (now - old.min) / width) : 0;
+      value += Math.trunc(width * Math.trunc(trained / 4) / 100);
+    }
+    return [k, Math.max(bounds.min, Math.min(bounds.max, value)) - base[k]];
+  })) as Record<ResistKey, number>;
 }
 
 /** 구버전의 단위·진화 경로를 복원할 수 없으므로 결정적으로 이전한다(웹판 정책).
