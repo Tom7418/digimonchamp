@@ -12,7 +12,7 @@ import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personal
 import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
-import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
+import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
@@ -1875,4 +1875,26 @@ it('열혈은 기존 피해1.2배와 새 포만감 감소1.3배를 함께 유지
     const event=stepBattle(s,firstThen(.3)).find(e=>e.type==='hit'&&e.from===0);return event?.type==='hit'?event.damage:0;
   };
   expect(damage('열혈')).toBeGreaterThan(damage('쿨'));expect(Math.abs(damage('열혈')-damage('쿨')*1.2)).toBeLessThanOrEqual(1);
+});
+
+describe('타이틀 홀더 (원본 팀 표 0x020EC0B4)', () => {
+  it('61개 타이틀 모두 홀더 팀이 있고 상대 인원과 맞는다', () => {
+    for (const m of TITLES) {
+      const h = titleHolder(m.id);
+      expect(h, m.name).not.toBeNull();
+      expect(h!.members.length, m.name).toBe(m.foes ?? m.format);
+    }
+  });
+  it('첫 타이틀 「최고의 용사」 홀더는 금속 벽돌의 미니아구(토이아구몬, 대담)', () => {
+    const h = titleHolder('m0')!;
+    expect(h.name).toBe('금속 벽돌');
+    expect(h.members.map((f) => [f.nick, f.speciesId, f.personality])).toEqual([['미니아구', '토이아구몬', '대담']]);
+    const [e] = titleHolderFoes('m0', seeded(1))!;
+    expect(e.personality).toBe('대담');
+    expect(e.stats).toEqual(freeFoeStats(h.members[0]));
+  });
+  it('챔피언십처럼 홀더가 없는 경기는 null', () => {
+    expect(titleHolder('prelim')).toBeNull();
+    expect(titleHolderFoes('final', seeded(1))).toBeNull();
+  });
 });

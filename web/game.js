@@ -1094,7 +1094,8 @@
       const team=teamFor(m.format),problems=C.entryProblems(m,team),limits=C.entryLimits(m);
       if(team.length<m.format)problems.unshift(m.format+'마리를 선택해 주세요');
       const prizeText=m.id==='prelim'?`예선 통과 시 ${C.PRELIM_PRIZE.toLocaleString('ko-KR')}`:m.id==='final'?`우승 시 ${C.CHAMP_PRIZE.toLocaleString('ko-KR')}`:m.prize.toLocaleString('ko-KR');
-      return `${m.format} VS ${m.foes??m.format} · 상대 ${C.STAGE_LABEL[m.stage]} · 상금 ${prizeText} ฿${limits?' · '+limits:''}${problems.length?' (조건 미충족: '+problems.join(', ')+')':''}`;
+      const holder=C.titleHolder(m.id),foeText=holder?`홀더 「${holder.name}」 ${holder.members.map(f=>f.nick).join('·')}`:`상대 ${C.STAGE_LABEL[m.stage]}`;
+      return `${m.format} VS ${m.foes??m.format} · ${foeText} · 상금 ${prizeText} ฿${limits?' · '+limits:''}${problems.length?' (조건 미충족: '+problems.join(', ')+')':''}`;
     };
     showModal('배틀',
       `<p>출전할 디지몬을 선택하세요. <b>1:1은 첫 번째,3:3은 선택한 세 마리</b>가 나갑니다. 다시 누르면 제외됩니다.</p>
@@ -1144,7 +1145,9 @@
     if (team.length < setup.format) return toast(`${setup.format}:${setup.format}에는 건강한 디지몬 ${setup.format}마리가 필요해요.`);
     if(new Set(team.map(d=>d.uid)).size!==team.length)return toast('같은 디지몬을 중복 출전시킬 수 없어요.');
     if(setup.match){const problems=C.entryProblems(setup.match,team);if(problems.length)return toast(problems.join(', '));}
-    const foes = setup.free ? C.freeBattleFoes(setup.free, Math.random) : C.makeEnemies(setup.stage, setup.foes ?? setup.format, setup.scale, Math.random);
+    // 타이틀 매치는 원본 홀더 팀(NPC 표)과 싸운다. 챔피언십처럼 홀더가 없는 경기만 무작위 상대
+    const holderFoes = setup.match ? C.titleHolderFoes(setup.match.id, Math.random) : null;
+    const foes = setup.free ? C.freeBattleFoes(setup.free, Math.random) : holderFoes ?? C.makeEnemies(setup.stage, setup.foes ?? setup.format, setup.scale, Math.random);
     // 맵은 시작 시 한 번 선택한다. 타이틀의 원본 지정값이 있으면 무작위보다 우선한다. 맵 번호는 지형 상성에 쓴다.
     const map=C.battleMapFor(setup.match?.id,Math.random);
     const state = C.createBattle(
@@ -1155,6 +1158,7 @@
     battleBackdrop.preload(map);
     for(const u of state.units)spriteOf(u.speciesId,false); // 배경과 출전 그림을 함께 미리 읽는다.
     battle = { setup, state, map, assetWait:0, acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
+    if(holderFoes)log(`${setup.title} 홀더 「${C.titleHolder(setup.match.id).name}」 등장`);
     log(`${setup.title} 출전: ${team.map(nameOf).join(', ')}`);
     showModal(
       setup.title,

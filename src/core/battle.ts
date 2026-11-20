@@ -4,6 +4,7 @@ import formula from '../data/battle-formula.json';
 import { supportSkills, useSupport, reviveSupport, buffMultiplier, battleElement, type BattleBuff, type SupportSkill } from './support-skills';
 import { pick, range, seeded, type Rng } from './rng';
 import freeRaw from '../data/free-battles.txt?raw';
+import holderRaw from '../data/title-holders.txt?raw';
 import { PERSONALITIES, type AttackMode, type SpeciesAttr, type Digimon, type Personality, type Stage, type Stats } from './types';
 
 export const ARENA = { w: 480, h: 250 };
@@ -71,6 +72,39 @@ export function freeFoeStats(f: FreeFoe): Stats {
 /** 프리 배틀 상대의 내성 (NPC 표 +0x28~+0x38 곡선 번호 → 내성 곡선 값) */
 export const freeFoeResist = (f: FreeFoe): Record<ResistKey, number> =>
   f.resist.length === 5 ? Object.fromEntries(RESIST_ORDER.map((k, i) => [k, RESIST_CURVE[Math.min(24, f.resist[i])]])) as Record<ResistKey, number> : baseResist(f.speciesId);
+// ---------- 타이틀 홀더 팀 (원본 팀 표 0x020EC0B4, tools/extract_title_holders.py) ----------
+export interface HolderFoe extends FreeFoe { personality: Personality }
+const HOLDER_NPC = new Map<number, FreeFoe & { personalityNo: number }>();
+const HOLDER_TEAM = new Map<number, { name: string; members: number[] }>();
+const TITLE_TEAM = new Map<number, number>();
+for (const line of holderRaw.split('\n')) {
+  const f = line.split('|');
+  if (f[0] === 'title') TITLE_TEAM.set(+f[1], +f[2]);
+  else if (f[0] === 'team') HOLDER_TEAM.set(+f[1], { name: f[2], members: f[3].split(',').filter(Boolean).map(Number) });
+  else if (f[0] === 'npc') HOLDER_NPC.set(+f[1], { no: +f[1], nick: f[2], speciesId: f[3], level: +f[4], prize: +f[5], curves: f[6].split(',').map(Number), resist: f[7].split(',').map(Number), personalityNo: +f[8] });
+}
+/** 타이틀 매치(id m번호)의 원본 홀더 팀. 없으면 null */
+export function titleHolder(matchId: string): { name: string; members: HolderFoe[] } | null {
+  const no = /^m(\d+)$/.exec(matchId)?.[1];
+  const team = no === undefined ? undefined : HOLDER_TEAM.get(TITLE_TEAM.get(+no) ?? -1);
+  return team ? { name: team.name, members: team.members.flatMap((m) => {
+    const f = HOLDER_NPC.get(m);
+    return f ? [{ ...f, personality: ORIGINAL_PERSONALITY[f.personalityNo] ?? '솔직' }] : [];
+  }) } : null;
+}
+/** 홀더 팀을 배틀 참가자로: 능력치·내성은 NPC 표 곡선, 성격은 NPC 표 +0x3C 그대로(원본 0x2113BDC). 작전은 웹판 무작위 */
+export function titleHolderFoes(matchId: string, rng: Rng): Entrant[] | null {
+  const holder = titleHolder(matchId);
+  if (!holder) return null;
+  return holder.members.map((f) => ({
+    speciesId: f.speciesId,
+    stats: f.curves.length === 5 ? freeFoeStats(f) : typicalStats(f.speciesId),
+    resist: freeFoeResist(f),
+    personality: f.personality,
+    mode: pick(rng, ['일반', '일반', '특수', '지원'] as AttackMode[]),
+  }));
+}
+
 /** 프리 배틀 상대를 배틀 참가자로 만든다. 성격은 원본 규칙(foePersonality), 공격 방식은 웹판 임시 */
 export function freeBattleFoes(b: FreeBattle, rng: Rng): Entrant[] {
   return b.foes.map((f) => ({
