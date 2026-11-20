@@ -15,7 +15,7 @@ import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evol
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
-import { RANK_UP_MAIL, rankUpMails, queueMails, openMail } from '../src/core/events';
+import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText } from '../src/core/events';
 import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
@@ -2019,5 +2019,35 @@ describe('랭크 업 사장 메일과 먹이 선물 (원본 이벤트 0x75~0x78)
     // 저장 복원도 큰 고기 표시와 양을 지킨다
     expect(restoreFloorFood({ ...freshEggSave(0), meat: 2 }, [{ kind: 'meat', gift: 'big', x: 100, y: 200, remaining: 150 }])).toEqual([{ gift: 'big', remaining: 150, kind: 'meat', x: 100, y: 200 }]);
     expect(restoreFloorFood({ ...freshEggSave(0), meat: 1 }, [{ kind: 'meat', gift: 'big', x: 100, y: 200 }])).toEqual([]);
+  });
+});
+
+describe('NPC 매입 제안 (원본 0x2129064)', () => {
+  const withMon = (speciesId: string) => ({ ...freshEggSave(0), bits: 100, digimon: [{ ...newDigimon(7, speciesId), isEgg: false }] });
+  it('하루 한 번, 10·15·20시에만 굴린다', () => {
+    const s = withMon('아구몬');
+    expect(rollNpcOffer(s, 3, 9, () => 0)).toBeNull();
+    const r = rollNpcOffer(s, 3, 10, () => 0.99)!;
+    expect(r.offer).toBeUndefined();
+    expect(r.save.offerDay).toBe(3);
+    expect(rollNpcOffer(r.save, 3, 15, () => 0)).toBeNull();
+  });
+  it('주사위 5 미만이고 고른 세대의 디지몬이 있으면 기본 가격의 80~110%로 제안', () => {
+    const s = withMon('아구몬'); // 원본 세대 3, 기본 가격 6,480
+    const seq = [0.01, 3 / 7 + 0.001, 0.99, 0];
+    const r = rollNpcOffer(s, 1, 10, () => seq.shift()!)!;
+    expect(r.offer).toEqual({ id: 0x5e, uid: 7, price: 7128, from: '철수' });
+    expect(offerText(r.offer!, '아구몬')).toContain('7,128bit');
+    const sold = answerNpcOffer(r.save, true);
+    expect(sold.digimon).toHaveLength(0);
+    expect(sold.bits).toBe(7228);
+    expect(sold.npcOffer).toBeUndefined();
+    const kept = answerNpcOffer(r.save, false);
+    expect(kept.digimon).toHaveLength(1);
+    expect(kept.npcOffer).toBeUndefined();
+  });
+  it('고른 세대의 디지몬이 없으면 제안 없음', () => {
+    const seq = [0.01, 6 / 7 + 0.001];
+    expect(rollNpcOffer(withMon('아구몬'), 1, 10, () => seq.shift()!)!.offer).toBeUndefined();
   });
 });

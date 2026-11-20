@@ -381,8 +381,8 @@
   let mailOpen = false;
   let activeMail = null;
   const mailQueue = [];
-  function mail(text, from = '안내', entryKey = null, eventId = null) {
-    mailQueue.push({ text, from, entryKey, eventId });
+  function mail(text, from = '안내', entryKey = null, eventId = null, offer = false) {
+    mailQueue.push({ text, from, entryKey, eventId, offer });
     if (!mailOpen) nextMail();
   }
   function tipMail(key, text) {
@@ -398,6 +398,7 @@
     }
     // 원본 이벤트 메일은 읽어야 선물을 받는다 (메일을 열 때 선물 처리, arm9 0x0208C2D8)
     if (activeMail?.eventId != null) giveEventMail(activeMail.eventId);
+    if (activeMail?.offer) setTimeout(offerPrompt, 0);
     const m = mailQueue.shift();
     activeMail = m || null;
     const box = $('#mail');
@@ -414,11 +415,28 @@
 
   // 랭크 업 사장 메일 등 예약된 원본 이벤트를 메일함에 띄운다
   function deliverEventMails() {
+    // NPC 매입 제안 (원본 0x2129064): 답할 때까지 다시 띄운다
+    const o = save.npcOffer, od = o && save.digimon.find((d) => d.uid === o.uid);
+    if (o && !od) { save = C.answerNpcOffer(save, false); persist(); }
+    else if (o && !activeMail?.offer && !mailQueue.some((m) => m.offer) && !$('#modal').open) mail(C.offerText(o, nameOf(od)), o.from, null, null, true);
     for (const id of save.pendingMails ?? []) {
       const e = C.mailEvent(id);
       if (!e || activeMail?.eventId === id || mailQueue.some((m) => m.eventId === id)) continue;
       mail(e.text, e.from, null, id);
     }
+  }
+  function offerPrompt() {
+    const o = save.npcOffer, d = o && save.digimon.find((x) => x.uid === o.uid);
+    if (!d) return;
+    showModal('디지몬을 건네겠습니까?', `<p>${esc(o.from)}에게 <b>${esc(nameOf(d))}</b>(을)를 ${o.price.toLocaleString('ko-KR')} ฿에 건넵니다. 건넨 디지몬은 돌아오지 않습니다.</p><p><button class="primary" data-offer="yes">건넨다</button> <button data-offer="no">거절한다</button></p>`, 'MAIL', '나중에 답하기');
+    $('#modal-body').querySelectorAll('[data-offer]').forEach((b) => (b.onclick = () => {
+      const yes = b.dataset.offer === 'yes';
+      save = C.answerNpcOffer(save, yes);
+      log(yes ? `${nameOf(d)}(을)를 ${o.from}에게 건네고 ${o.price.toLocaleString('ko-KR')} ฿를 받았습니다.` : `${o.from}의 매입 제안을 거절했습니다.`);
+      syncTeam();
+      persist();
+      $('#modal').close();
+    }));
   }
   function giveEventMail(id) {
     const r = C.openMail(save, id);
@@ -448,7 +466,15 @@
     if (notice && activeMail?.entryKey !== notice.key && !mailQueue.some((m) => m.entryKey === notice.key)) {
       mail(`배틀에 참가할 수 있습니다.\n오늘은 ${notice.names.join(', ')}이(가) 열립니다.\n엔트리는 15시 전까지. 아래 '배틀'에서 출전하세요.`, '안내', notice.key);
     }
-    if (!battle && !hunt) deliverEventMails();
+    if (!battle && !hunt) {
+      // 하루 한 번 10·15·20시 정각 중 처음 맞은 때 매입 제안을 굴린다 (원본 0x2129064)
+      const minute = ((save.clock % 1440) + 1440) % 1440;
+      if (minute % 60 === 0) {
+        const r = C.rollNpcOffer(save, Math.floor(save.clock / 1440), minute / 60, Math.random);
+        if (r) { save = r.save; persist(); }
+      }
+      deliverEventMails();
+    }
     if (C.isNight(save) && !battle) openDayEnd();
   }
   function matchDays(season, year) {

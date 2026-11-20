@@ -81,3 +81,36 @@ test('랭크 업 사장 메일은 한 번만 띄우고, 닫을 때 선물 먹이
   api.checkSchedule();
   assert.equal(api.active(), null);
 });
+
+test('NPC 매입 제안 메일을 닫으면 건넬지 묻고, 건네면 디지몬과 값이 바뀐다', async () => {
+  const source = fs.readFileSync(path.join(__dirname, '../web/game.js'), 'utf8');
+  const start = source.indexOf('  let mailOpen = false;');
+  const end = source.indexOf('  function matchDays(', start);
+  const core = vm.createContext({ window: {} });
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../web/core.js'), 'utf8') + ';this.C=ChampCore', core);
+  const C = core.C;
+  const buttons = {};
+  const modal = { open: false, close() { this.open = false; } };
+  const body = { set innerHTML(v) { this.html = v; }, querySelectorAll: () => ['yes', 'no'].map((k) => (buttons[k] = { dataset: { offer: k } })) };
+  const box = { hidden: true, querySelector: () => ({ textContent: '' }) };
+  const $ = (q) => (q === '#modal' ? modal : q === '#modal-body' ? body : box);
+  const save0 = { ...C.freshSave(0), bits: 0, digimon: [{ ...C.newDigimon(9, '아구몬'), isEgg: false }], npcOffer: { id: 0x5e, uid: 9, price: 5000, from: '철수' } };
+  const context = vm.createContext({ view: { tips: {}, team: [], foods: [] }, save: save0, battle: null, hunt: null, titleOpen: false,
+    $, persist: () => {}, renderTray: () => {}, log: () => {}, syncTeam: () => {}, esc: (t) => String(t), nameOf: () => '아구몬',
+    showModal: (title, html) => { modal.open = true; body.innerHTML = html; }, setTimeout: (f) => f(),
+    board: { roam: { x0: 0, x1: 1000, y0: 0, y1: 1000 }, attachFloorItem: (i) => i },
+    C: { ...C, isNight: () => false, matchEntryNotice: () => null },
+  });
+  vm.runInContext(source.slice(start, end) + '\nglobalThis.api = { nextMail, checkSchedule, active: () => activeMail, save: () => save };', context);
+  const api = context.api;
+  api.checkSchedule();
+  assert.equal(api.active()?.offer, true);
+  api.nextMail();
+  assert.equal(modal.open, true);
+  assert.match(body.html, /5,000/);
+  buttons.yes.onclick();
+  assert.equal(api.save().digimon.length, 0);
+  assert.equal(api.save().bits, 5000);
+  assert.equal(api.save().npcOffer, undefined);
+  assert.equal(modal.open, false);
+});

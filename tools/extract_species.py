@@ -49,7 +49,7 @@ def cstr(pointer):
 
 
 lines = ['# 원본 실행 코드의 디지몬 표에서 뽑은 속성·종족 (tools/extract_species.py). 손으로 고치지 말 것',
-         '# 이름|속성|종족|세대|원본 영문 이름|용량|세대 지속 분|능력치 곡선 인덱스(HP,TP,공격,방어,지능,민첩)|속도 배율|각성 범위|수면 범위|타입 번호(+24, 타이틀 참가 조건에 쓰임)|로프 크기 등급(+116)|로프 힘 등급(+117)|내성 곡선 인덱스(+64~68: 열,추위,빛,어둠,천둥 — 피해 계산의 속성 1~5 순서)|시대(+108: 0 그 밖, 1 초기, 2 펜듀럼, 3 둘 다 — 타이틀 참가 조건 0x02091A2C)']
+         '# 이름|속성|종족|세대|원본 영문 이름|용량|세대 지속 분|능력치 곡선 인덱스(HP,TP,공격,방어,지능,민첩)|속도 배율|각성 범위|수면 범위|타입 번호(+24, 타이틀 참가 조건에 쓰임)|로프 크기 등급(+116)|로프 힘 등급(+117)|내성 곡선 인덱스(+64~68: 열,추위,빛,어둠,천둥 — 피해 계산의 속성 1~5 순서)|시대(+108: 0 그 밖, 1 초기, 2 펜듀럼, 3 둘 다 — 타이틀 참가 조건 0x02091A2C)|기본 가격(실행 코드 레코드 +0x80 = 이 표의 다음 132바이트 +0. NPC 매입 제안 overlay9_18 0x21290BC)']
 for i in range(COUNT):
     rec = arm9[TABLE + i*SIZE: TABLE + (i+1)*SIZE]
     english = cstr(struct.unpack_from('<I', rec, 4)[0])
@@ -62,7 +62,7 @@ for i in range(COUNT):
     sleep = struct.unpack_from('<2H', rec, 40)
     lines.append('|'.join([RENAME.get(english, names[i]), ATTR[attr], FAMILY[family], str(stage), english,
                            str(rec[32]), str(struct.unpack_from('<I', rec, 44)[0]), ','.join(map(str, stats)), str(speed),
-                           ','.join(map(str, awake)), ','.join(map(str, sleep)), str(kind), str(rec[116]), str(rec[117]), ','.join(map(str, rec[64:69])), str(rec[108])]))
+                           ','.join(map(str, awake)), ','.join(map(str, sleep)), str(kind), str(rec[116]), str(rec[117]), ','.join(map(str, rec[64:69])), str(rec[108]), str(struct.unpack_from('<I', arm9, TABLE + (i + 1) * SIZE)[0])]))
 out = REPO / 'src/data/species.txt'
 out.write_text('\n'.join(lines) + '\n', encoding='utf-8', newline='\n')
 print(len(lines) - 2, '종 →', out)
