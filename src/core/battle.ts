@@ -244,8 +244,8 @@ export const terrainOf = (speciesId: string, field: number) => FORMULA.terrain[F
  * 원본 피해 = ⌊(⌊공격×5/2⌋ − 방어) × 위력 / 100⌋. 속성 공격은 방어 대신 그 속성 내성.
  * 공격 쪽이 유리한 지형이면 ×1.2, 맞는 쪽이 불리한 지형이면 ×1.2. 0 이하이면 튕겨 낸다(피해 0).
  * 크리티컬 216분의 2(크리티컬업이면 3) → ×1.5. 마지막에 (0~215 난수 % 100)/1000만큼 더한다(최대 +9.9%).
- * 크리티컬 단계는 맞는 쪽 종의 값(종 표 +63, 0~2 → 216분의 2·3·5). 맞는 쪽이 강화 4번(크리티컬업·명중업)이면 +1 —
- * 원본 코드(0x211845C)가 맞는 배우의 강화를 읽는다. 자기에게 쓰면 오히려 크리티컬을 더 맞는 셈이지만 원본대로 둔다.
+ * 크리티컬 단계는 맞는 쪽 종의 값(종 표 +63, 0~2 → 216분의 2·3·5). 공격하는 쪽이 크리티컬업이면 +1.
+ * 원본 코드(0x211845C)는 맞는 쪽의 강화를 읽어서 크리티컬업을 쓰면 오히려 더 맞는다 — 원작 실수로 보고 웹판은 공격 쪽으로 고쳤다(형규 결정).
  */
 /** 곡선에서 이 값이 놓인 칸 번호 (원본 배틀은 능력치 대신 곡선 번호를 읽는다) */
 export function curveIndexOf(value: number, column: number): number {
@@ -383,7 +383,7 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     const guardUp = resistKey ? (near.buffs?.[element!] ?? 0) > s.t : buffMultiplier(near, 'def', s.t) > 1;
     const guard = guardBase + (guardUp ? curveStep(guardBase, resistKey ? 'resist' : 3) : 0);
     const hit = originalDamage(attack, guard, attackPower(skill ? skill.record : basicRecordOf(u.speciesId)), rng, {
-      attackerTerrain: terrainOf(u.speciesId, s.field ?? 0), targetTerrain: terrainOf(near.speciesId, s.field ?? 0), critUp: buffMultiplier(near, 'int', s.t) > 1, critLevel: critLevelOf(near.speciesId),
+      attackerTerrain: terrainOf(u.speciesId, s.field ?? 0), targetTerrain: terrainOf(near.speciesId, s.field ?? 0), critUp: buffMultiplier(u, 'int', s.t) > 1, critLevel: critLevelOf(near.speciesId),
     });
     // 형규가 정한 성격 효과는 원본 피해 위에 그대로 곱한다: 열혈 ×1.2, 제멋대로 ×1.1
     const dmg = hit.damage * (u.personality === '열혈' ? 1.2 : 1) * (u.personality === '제멋대로' ? 1.1 : 1);
