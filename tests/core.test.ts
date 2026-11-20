@@ -1787,14 +1787,22 @@ it('원본 단일/전체 치료 SP의 실제 대상 수·상한·TP 차감과 �
     expect(s.units[0].tp).toBe(100-supportTable.skills.find(sk=>sk.id===id)!.tpCost);expect(s.units.every(u=>u.hp<=u.maxHp)).toBe(true);
   }
 });
+it('치료량은 원본 고정값, 강화는 한 칸뿐이라 새 강화가 이전 것을 덮는다 (overlay19 0x2118D54·0x2117FB0)',()=>{
+  const caster={...newDigimon(1,'파닥몬',()=>.5),personality:'열혈' as const};
+  const s=createBattle([entrantOf(caster,'지원')],[entrantOf(newDigimon(3,'아구몬',()=>.5),'일반')]);
+  s.units[0].maxHp=5000;s.units[0].hp=1000;s.units[0].tp=100;s.units[0].cd=0;
+  const ev:Parameters<typeof useSupport>[2]=[];useSupport(s,s.units[0],ev);
+  expect(ev.find(e=>e.type==='heal')).toMatchObject({amount:300});
+});
 it('단일/전체 강화와5종 내성 SP가 실제 소유 쌍으로 발동하고15초 뒤 해제된다',()=>{
   const seen=new Set<number>();
   for(const [species,row] of Object.entries(supportTable.species))for(let index=0;index<2;index++){
     const id=row.pairs[index][0];if(id<10||id>27||seen.has(id))continue;seen.add(id);
     const d={...newDigimon(1,species,()=>.5),personality:row.personalities[index] as Digimon['personality']};
     const s=createBattle([entrantOf(d,'지원'),entrantOf(newDigimon(2,'아구몬',()=>.5),'일반')],[entrantOf(newDigimon(3,'아구몬',()=>.5),'일반')]);
-    s.units[0].tp=100;s.units[0].cd=0;const events:Parameters<typeof useSupport>[2]=[];
+    s.units[0].tp=100;s.units[0].cd=0;s.units[0].buffs={[id<=11?'def':'atk']:99};const events:Parameters<typeof useSupport>[2]=[];
     expect(useSupport(s,s.units[0],events)).toBe(true);expect(events).toEqual([expect.objectContaining({type:'support',targets:id%2?[0,1]:[0],skill:expect.objectContaining({id})})]);
+    expect(Object.keys(s.units[0].buffs!)).toHaveLength(1); // 강화 칸 하나: 이전 강화가 사라진다
     const key=Object.keys(s.units[0].buffs!)[0] as Parameters<typeof buffMultiplier>[1];expect(buffMultiplier(s.units[0],key,0)).toBe(1.15);expect(buffMultiplier(s.units[0],key,15)).toBe(1);
   }
   expect([...seen].sort((a,b)=>a-b)).toEqual(Array.from({length:18},(_,i)=>i+10));

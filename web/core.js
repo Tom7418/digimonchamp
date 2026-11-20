@@ -9615,7 +9615,7 @@ var ChampCore = (function(exports) {
 		const match = row.personalities.indexOf(personality), ids = row.pairs[match < 0 ? 2 : match];
 		return [...new Set(ids)].filter((id) => id > 0).map((id) => DATA.skills.find((skill) => skill.id === id)).filter(Boolean);
 	}
-	/** 공격 표+88의 값과 알려진 기술명을 대조한 속성 대응 추정. 실행 코드의 enum 의미는 미확인. */
+	/** 공격 표 +88 속성 1~5. 피해 계산(overlay19 0x2118254)이 속성 3은 빛 강화(8), 4는 어둠(9), 5는 천둥(7)과 짝지어 확인됨 */
 	var battleElement = (record) => ({
 		1: "열",
 		2: "추위",
@@ -9645,7 +9645,8 @@ var ChampCore = (function(exports) {
 		26: "어둠",
 		27: "어둠"
 	})[id];
-	/** 소유/이름/TP는 원본, 효과량·15초 지속·AI 우선순위는 웹판 임시 정책이다. */
+	/** 소유/이름/TP·회복량·부활량·15초 지속·강화 한 칸은 원본, AI 우선순위는 웹판 임시 정책이다.
+	*  강화 번호(효과 21~29 → 버프 1~9): 1 공격업 2 방어업 3 민첩업 4 크리티컬업·명중업 5 화염 6 물(추위) 7 천둥 8 빛 9 어둠 */
 	function useSupport(s, u, events) {
 		if (u.cd > 0) return false;
 		const allies = s.units.filter((a) => a.team === u.team && a.alive), foes = s.units.filter((a) => a.team !== u.team && a.alive);
@@ -9656,12 +9657,15 @@ var ChampCore = (function(exports) {
 				const weak = allies.filter((a) => a.hp / a.maxHp < .7).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
 				if (!weak.length) continue;
 				targets = skill.id >= 5 ? allies.filter((a) => a.hp < a.maxHp) : [weak[0]];
-				const grade = (skill.id - 2) % 3;
-				amounts = targets.map((a) => Math.min(a.maxHp - a.hp, Math.round(a.maxHp * [
-					.12,
-					.24,
-					.4
-				][grade] + u.stats.int * buffMultiplier(u, "int", s.t) * .5)));
+				const amount = [
+					300,
+					900,
+					2100,
+					200,
+					600,
+					1400
+				][skill.id - 2];
+				amounts = targets.map((a) => Math.min(a.maxHp - a.hp, amount));
 				targets.forEach((a, i) => {
 					a.hp += amounts[i];
 					events.push({
@@ -9694,10 +9698,7 @@ var ChampCore = (function(exports) {
 				targets = allies.filter((a) => !active(a, key, s));
 				if (!targets.length) continue;
 				if (!all) targets = [targets.includes(u) ? u : targets[0]];
-				targets.forEach((a) => a.buffs = {
-					...a.buffs,
-					[key]: s.t + 15
-				});
+				targets.forEach((a) => a.buffs = { [key]: s.t + 15 });
 			}
 			u.tp -= skill.tpCost;
 			u.cd = 2;
@@ -9711,7 +9712,7 @@ var ChampCore = (function(exports) {
 		}
 		return false;
 	}
-	/** 원작 도움말: 부활 SP는 HP0 직후 자신을 한 번 되살린다. 회복 비율은 임시50/75%. */
+	/** 원작 도움말: 부활 SP는 HP0 직후 자신을 한 번 되살린다. 회복은 최대 HP의 부활α 5%, 부활β 30% (overlay19 0x21173A8) */
 	function reviveSupport(s, u, events) {
 		if (u.revived) return false;
 		const skill = supportSkills(u.speciesId, u.personality).find((sk) => [28, 29].includes(sk.id) && sk.tpCost <= u.tp);
@@ -9719,7 +9720,7 @@ var ChampCore = (function(exports) {
 		u.revived = true;
 		u.alive = true;
 		u.tp -= skill.tpCost;
-		u.hp = Math.max(1, Math.round(u.maxHp * (skill.id === 29 ? .75 : .5)));
+		u.hp = Math.max(1, Math.trunc(u.maxHp * (skill.id === 29 ? 30 : 5) / 100));
 		u.cd = 2;
 		events.push({
 			type: "support",
@@ -9974,7 +9975,8 @@ var ChampCore = (function(exports) {
 	* 원본 피해 = ⌊(⌊공격×5/2⌋ − 방어) × 위력 / 100⌋. 속성 공격은 방어 대신 그 속성 내성.
 	* 공격 쪽이 유리한 지형이면 ×1.2, 맞는 쪽이 불리한 지형이면 ×1.2. 0 이하이면 튕겨 낸다(피해 0).
 	* 크리티컬 216분의 2(크리티컬업이면 3) → ×1.5. 마지막에 (0~215 난수 % 100)/1000만큼 더한다(최대 +9.9%).
-	* 크리티컬 단계는 맞는 쪽 종의 값(종 표 +63, 0~2 → 216분의 2·3·5). 크리티컬업은 웹판에서 공격하는 쪽 +1(원본 버프 번호 대응 미확인).
+	* 크리티컬 단계는 맞는 쪽 종의 값(종 표 +63, 0~2 → 216분의 2·3·5). 맞는 쪽이 강화 4번(크리티컬업·명중업)이면 +1 —
+	* 원본 코드(0x211845C)가 맞는 배우의 강화를 읽는다. 자기에게 쓰면 오히려 크리티컬을 더 맞는 셈이지만 원본대로 둔다.
 	*/
 	/** 곡선에서 이 값이 놓인 칸 번호 (원본 배틀은 능력치 대신 곡선 번호를 읽는다) */
 	function curveIndexOf(value, column) {
@@ -10124,7 +10126,7 @@ var ChampCore = (function(exports) {
 			const hit = originalDamage(attack, guardBase + ((resistKey ? (near.buffs?.[element] ?? 0) > s.t : buffMultiplier(near, "def", s.t) > 1) ? curveStep(guardBase, resistKey ? "resist" : 3) : 0), attackPower(skill ? skill.record : basicRecordOf(u.speciesId)), rng, {
 				attackerTerrain: terrainOf(u.speciesId, s.field ?? 0),
 				targetTerrain: terrainOf(near.speciesId, s.field ?? 0),
-				critUp: buffMultiplier(u, "int", s.t) > 1,
+				critUp: buffMultiplier(near, "int", s.t) > 1,
 				critLevel: critLevelOf(near.speciesId)
 			});
 			const dmg = hit.damage * (u.personality === "열혈" ? 1.2 : 1) * (u.personality === "제멋대로" ? 1.1 : 1);
