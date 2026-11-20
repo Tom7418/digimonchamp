@@ -1791,8 +1791,8 @@ describe('사용자 지정 성격 효과와 원본 SP 연결',()=>{
     }
   });
   it('도발은 적의 타겟을 시전자에게 바꾸고 방어 SP는 지속 중 재사용/TP 낭비를 막는다',()=>{
-    // 원본: 도발은 전원 강화와 같은 분류라, 자기가 무언가 강화 중일 때 쓴다 (0x2119548, 표 0x2133A34)
-    const s=createBattle([entrantOf(mon(1,'열혈'),'지원'),entrantOf(mon(2),'일반')],[entrantOf(mon(3),'일반')]);s.t=20;s.units[0].cd=0;s.units[0].buffs={atk:99};
+    // 웹판(형규 결정): 도발은 강화 중이 아니어도 쓴다 (원본은 강화 중일 때만)
+    const s=createBattle([entrantOf(mon(1,'열혈'),'지원'),entrantOf(mon(2),'일반')],[entrantOf(mon(3),'일반')]);s.t=20;s.units[0].cd=0;
     const events=stepBattle(s,firstThen(.3));expect(events).toEqual(expect.arrayContaining([expect.objectContaining({type:'support',skill:expect.objectContaining({id:1})})]));expect(s.units[2].taunt?.from).toBe(0);
     const b=duel('대담','지원');b.t=50;b.units[0].cd=0;const tp=b.units[0].tp;stepBattle(b,firstThen(.3));expect(b.units[0].tp).toBe(tp-10);expect(buffMultiplier(b.units[0],'def',b.t)).toBe(1.15);
     b.units[0].cd=0;const out:Parameters<typeof useSupport>[2]=[];expect(useSupport(b,b.units[0],out)).toBe(false);expect(b.units[0].tp).toBe(tp-10);expect(buffMultiplier(b.units[0],'def',b.t+16)).toBe(1);
@@ -1828,6 +1828,13 @@ it('지원 기술 분류와 시도 조건 (overlay19 0x2117748·0x211932C)',()=>
   s.units[0].tp=100;s.units[0].cd=0;s.units[0].hp=Math.ceil(s.units[0].maxHp*.45); // 45%: 단일 치료 조건(40% 미만) 아님
   expect(useSupport(s,s.units[0],[])).toBe(false);
   s.units[0].hp=Math.floor(s.units[0].maxHp*.35);expect(useSupport(s,s.units[0],[])).toBe(true);
+  // 단일 강화는 자기가 비어 있으면 자기 먼저 (형규 결정)
+  const [species,row]=Object.entries(supportTable.species).find(([,r])=>r.pairs[0].some(id=>supportCategory(id)===5)&&!r.pairs[0].some(id=>supportCategory(id)===6))!;
+  const g={...newDigimon(4,species,()=>.5),personality:row.personalities[0] as Digimon['personality']};
+  const t2=createBattle([entrantOf(newDigimon(5,'아구몬',()=>.5),'일반'),entrantOf(g,'지원')],[entrantOf(newDigimon(6,'아구몬',()=>.5),'일반')]);
+  const caster2=t2.units[1];caster2.tp=100;caster2.cd=0;const ev2:Parameters<typeof useSupport>[2]=[];
+  expect(useSupport(t2,caster2,ev2,101,()=>0)).toBe(true);
+  expect(ev2).toEqual([expect.objectContaining({type:'support',targets:[caster2.id]})]);
 });
 it('단일/전체 강화와5종 내성 SP가 실제 소유 쌍으로 발동하고15초 뒤 해제된다',()=>{
   const seen=new Set<number>();
@@ -1836,7 +1843,7 @@ it('단일/전체 강화와5종 내성 SP가 실제 소유 쌍으로 발동하�
     const d={...newDigimon(1,species,()=>.5),personality:row.personalities[index] as Digimon['personality']};
     const s=createBattle([entrantOf(d,'지원'),entrantOf(newDigimon(2,'아구몬',()=>.5),'일반')],[entrantOf(newDigimon(3,'아구몬',()=>.5),'일반')]);
     s.units[0].tp=100;s.units[0].cd=0;s.units[0].buffs={[id<=11?'def':'atk']:99};const events:Parameters<typeof useSupport>[2]=[];
-    // 전원 강화는 편 모두, 단일 강화는 강화가 없는 편 하나(여기서는 시전자가 이미 강화 중이라 1번)에게 (0x2119584)
+    // 전원 강화는 편 모두, 단일 강화는 강화가 없는 편 하나(시전자가 비어 있으면 시전자, 여기서는 이미 강화 중이라 1번)에게
     expect(useSupport(s,s.units[0],events)).toBe(true);expect(events).toEqual([expect.objectContaining({type:'support',targets:id%2?[0,1]:[1],skill:expect.objectContaining({id})})]);
     const who=s.units[id%2?0:1];
     expect(Object.keys(who.buffs!)).toHaveLength(1); // 강화 칸 하나: 이전 강화가 사라진다

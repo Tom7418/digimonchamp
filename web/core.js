@@ -9773,7 +9773,6 @@ var ChampCore = (function(exports) {
 					a.taunt = void 0;
 				});
 			} else if (skill.id === 1) {
-				if (!myBuff) continue;
 				targets = foes.filter((a) => a.taunt?.from !== u.id || (a.taunt?.until ?? 0) <= s.t);
 				if (!targets.length) continue;
 				targets.forEach((a) => a.taunt = {
@@ -9789,7 +9788,7 @@ var ChampCore = (function(exports) {
 				} else {
 					const free = allies.filter((a) => !Object.values(a.buffs ?? {}).some((until) => until > s.t));
 					if (!free.length) continue;
-					targets = [free[Math.floor(rng() * 216) % free.length]];
+					targets = [free.includes(u) ? u : free[Math.floor(rng() * 216) % free.length]];
 				}
 				targets.forEach((a) => a.buffs = { [key]: s.t + 15 });
 			}

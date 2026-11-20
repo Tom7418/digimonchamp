@@ -59,8 +59,7 @@ export function useSupport(s: BattleState,u:Unit,events:BattleEvent[],budget=u.t
       targets=cat===4?ill:[ill.reduce((x,a)=>statusWeight(a,s.t)>statusWeight(x,s.t)?a:x)];
       targets.forEach(a=>{a.status=undefined;a.taunt=undefined;});
     }else if(skill.id===1){
-      // 도발: 원본은 전원 강화와 같은 분류라, 자기 강화 번호가 도발의 번호(0)와 다를 때 = 무언가 강화 중일 때 쓴다 (표 0x2133A34)
-      if(!myBuff)continue;
+      // 도발: 원본은 전원 강화와 같은 분류라 자기가 무언가 강화 중일 때만 쓴다(표 0x2133A34). 원작 실수로 보고 웹판은 강화와 상관없이 쓴다(형규 결정)
       targets=foes.filter(a=>a.taunt?.from!==u.id||(a.taunt?.until??0)<=s.t);
       if(!targets.length)continue;
       targets.forEach(a=>a.taunt={from:u.id,until:s.t+15});
@@ -71,10 +70,10 @@ export function useSupport(s: BattleState,u:Unit,events:BattleEvent[],budget=u.t
         if(myBuff===key)continue;
         targets=allies;
       }else{
-        // 단일 강화: 강화가 하나도 없는 편 중 무작위 하나 (0x2119584~)
+        // 단일 강화: 강화가 하나도 없는 편에게. 원본은 그중 무작위(0x2119584~), 웹판은 자기가 비어 있으면 자기 먼저(형규 결정)
         const free=allies.filter(a=>!Object.values(a.buffs??{}).some(until=>until>s.t));
         if(!free.length)continue;
-        targets=[free[Math.floor(rng()*216)%free.length]];
+        targets=[free.includes(u)?u:free[Math.floor(rng()*216)%free.length]];
       }
       // 배우마다 강화 칸이 하나(+0x160)라 새 강화가 이전 강화를 덮는다. 지속 900프레임=15초 (0x2117FB0)
       targets.forEach(a=>a.buffs={[key]:s.t+15});
