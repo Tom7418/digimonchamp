@@ -15,7 +15,7 @@ import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evol
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage, HUNT_GEAR_SLOTS, huntGearSlots, huntLoadout, toggleLoadout } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
 import { discardFloorFood, ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -1937,5 +1937,24 @@ describe('타이틀 참가비·시대 한정·소지금 상한 (원본)', () => 
     expect(MONEY_MAX).toBe(999_999_999);
     const m = TITLES.find((t) => t.id === 'm0')!;
     expect(applyMatch({ ...save0(), bits: MONEY_MAX - 10 }, m, true).bits).toBe(MONEY_MAX);
+  });
+});
+
+describe('사냥 장비 칸 (원본 랭크 표 +20)', () => {
+  const base = () => ({ ...freshEggSave(0), gear: { hand1: 5, bait1: 3, wire_n1: 2, bomb1: 1 } as Record<string, number> });
+  it('그린 2칸, 레드 3칸, 브론즈부터 4칸', () => {
+    expect(HUNT_GEAR_SLOTS.slice(1)).toEqual([2, 2, 3, 3, 4, 4, 4, 4, 4, 4]);
+    expect(huntGearSlots(base())).toBe(2);
+    expect(huntGearSlots({ ...base(), titles: rankUp(3) })).toBe(3);
+  });
+  it('칸이 차면 더 넣지 못하고, 가진 것만 남는다', () => {
+    let s = toggleLoadout(base(), 'hand1');
+    s = toggleLoadout(s, 'bait1');
+    s = toggleLoadout(s, 'bomb1');
+    expect(huntLoadout(s)).toEqual(['hand1', 'bait1']);
+    s = toggleLoadout(s, 'hand1');
+    expect(huntLoadout(s)).toEqual(['bait1']);
+    expect(huntLoadout({ ...s, gear: { ...s.gear, bait1: 0 } })).toEqual([]);
+    expect(huntLoadout(toggleLoadout(s, 'nothing'))).toEqual(['bait1']);
   });
 });

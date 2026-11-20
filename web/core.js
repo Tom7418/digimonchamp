@@ -3179,6 +3179,45 @@ var ChampCore = (function(exports) {
 	var BAIT_PACK = 5;
 	/** 장비 수량 */
 	var gearCount = (save, id) => save.gear?.[id] ?? 0;
+	/**
+	* 사냥에 가져갈 수 있는 장비 칸 수. 원본 랭크 표(arm9 0x020E213C, 36바이트) +20:
+	* 그린·블루 2, 레드·화이트 3, 브론즈부터 4. 사냥 준비 화면(overlay9_12 0x2115E04·0x2115F28)이 이 수만큼
+	* 장비 칸(테이머 +0xA8C, 8바이트: 분류·번호)을 돈다. 분류 1(9종)·2(5종)·3(15종)은 테이머 +0xAAC/+0xABE/+0xAC8의 보유 수
+	*/
+	var HUNT_GEAR_SLOTS = [
+		0,
+		2,
+		2,
+		3,
+		3,
+		4,
+		4,
+		4,
+		4,
+		4,
+		4
+	];
+	var huntGearSlots = (save) => HUNT_GEAR_SLOTS[Math.max(1, Math.min(10, tamerRank(save)))];
+	/** 실제로 가져갈 장비: 가진 것만, 중복 없이, 칸 수까지 */
+	function huntLoadout(save) {
+		return [...new Set(save.huntLoadout ?? [])].filter((id) => gearCount(save, id) > 0).slice(0, huntGearSlots(save));
+	}
+	/** 장비 칸에 넣거나 뺀다. 칸이 차 있으면 그대로 */
+	function toggleLoadout(save, id) {
+		const now = huntLoadout(save);
+		if (now.includes(id)) return {
+			...save,
+			huntLoadout: now.filter((x) => x !== id)
+		};
+		if (now.length >= huntGearSlots(save) || gearCount(save, id) <= 0) return {
+			...save,
+			huntLoadout: now
+		};
+		return {
+			...save,
+			huntLoadout: [...now, id]
+		};
+	}
 	/** 장비 하나 쓰기. 없으면 null */
 	function useGear(save, id) {
 		const n = gearCount(save, id);
@@ -11087,6 +11126,7 @@ var ChampCore = (function(exports) {
 	exports.FREE_POOLS = FREE_POOLS;
 	exports.GEARS = GEARS;
 	exports.HUNT_CLOSE_HOUR = HUNT_CLOSE_HOUR;
+	exports.HUNT_GEAR_SLOTS = HUNT_GEAR_SLOTS;
 	exports.HUNT_MAP = HUNT_MAP;
 	exports.HUNT_NIGHT_HOUR = HUNT_NIGHT_HOUR;
 	exports.HUNT_OPEN_HOUR = HUNT_OPEN_HOUR;
@@ -11238,6 +11278,8 @@ var ChampCore = (function(exports) {
 	exports.hints = hints;
 	exports.hpOf = hpOf;
 	exports.huntFields = huntFields;
+	exports.huntGearSlots = huntGearSlots;
+	exports.huntLoadout = huntLoadout;
 	exports.huntPool = huntPool;
 	exports.huntSpawnPoints = huntSpawnPoints;
 	exports.huntTerrain = huntTerrain;
@@ -11308,6 +11350,7 @@ var ChampCore = (function(exports) {
 	exports.titleHolder = titleHolder;
 	exports.titleHolderFoes = titleHolderFoes;
 	exports.todaysMatches = todaysMatches;
+	exports.toggleLoadout = toggleLoadout;
 	exports.tpBudget = tpBudget;
 	exports.trainingBounds = trainingBounds;
 	exports.trainingDelta = trainingDelta;

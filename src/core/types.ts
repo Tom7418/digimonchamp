@@ -143,6 +143,8 @@ export interface SaveData {
   wires: number;
   /** 사냥 장비(샷·고기) 수량. 키는 hunt.ts의 SHOTS·BAITS id */
   gear?: Record<string, number>;
+  /** 사냥에 가져갈 장비 id (랭크별 칸 수까지). 없으면 빈 목록 */
+  huntLoadout?: string[];
   cages: string[];
   /** 케이지 레벨(0~2, 시설 종류별). 원본 세이브 +0x70 칸. 옛 저장은 없음 = 모두 0 */
   cageLevels?: Record<string, number>;

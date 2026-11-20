@@ -322,3 +322,5 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .battle-roster button:focus-visible{outline:2px solid #ffd36a;outline-offset:2px}
 .battle-roster button:disabled{opacity:.45;cursor:not-allowed}
 .battle-roster small{font-size:11px;color:#adc4dc}.roster-order{color:#ffd36a}
+
+.load-list{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}.load-list button{padding:4px 8px;font-size:12px}.load-list button.active{background:#4f7d4f;color:#fff}
