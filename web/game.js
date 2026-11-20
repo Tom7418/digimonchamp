@@ -1208,7 +1208,8 @@
           const attackDuration=animations.duration(attackId,attackState);
           if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:attackDuration,duration:attackDuration,state:attackState});
           const id=SPRITE_BY_NAME[C.getSpecies(target.speciesId).id];
-          const state=Math.random()<0.5?'hurt':'hurtAlt';
+          // 원본: 피해0 → 반응13(0x21189fc) → NANR34(0x2116b90).
+          const state=e.damage===0?'guard2':Math.random()<0.5?'hurt':'hurtAlt';
           const duration=animations.duration(id,state);
           b.actions.set(e.to,{kind:'hit',left:duration,duration,state});
           if(e.special&&e.skill){
@@ -1236,9 +1237,19 @@
         if(e.type==='support'){
           b.flashes.push({id:e.from,text:e.skill.name,until:performance.now()+700,color:'#a3efdf',skill:true});
           battleLog(`${b.state.units[e.from].name} · ${e.skill.name} (${e.skill.tpCost}TP)`);
-          const actor=b.state.units[e.from];
-          if(e.skill.id>=28)b.actions.delete(e.from);
-          else if(actor.alive)b.actions.set(e.from,{kind:'attack',left:.6,duration:.6,state:'shout'});
+
+        }
+        // 치료도 지원 시전자 동작을 재생한다. 전원 치료의 대상별 이벤트는 같은 틱에 시작한다.
+        // 원본 지원 행동0x211a6c0 → 배우12 → NANR35. 부활 배우20 → NANR33.
+        const support=e.type==='heal'?e.support:e.type==='support'?e.skill:null;
+        if(support){
+          const actor=b.state.units.find(u=>u.id===e.from);
+          if(actor?.alive&&([28,29].includes(support.id)||b.actions.get(e.from)?.kind!=='hit')){
+            const state=[28,29].includes(support.id)?'shout':'shoutFrame2';
+            const id=SPRITE_BY_NAME[C.getSpecies(actor.speciesId).id];
+            const duration=animations.duration(id,state);
+            b.actions.set(e.from,{kind:'attack',left:duration,duration,state});
+          }
         }
         if (e.type === 'ko') battleLog(`${b.state.units[e.id].name} 쓰러짐!`);
       }
@@ -1327,10 +1338,14 @@
       if (!u.alive) ctx.globalAlpha = 0.3;
       const m=battle.done?{dx:0,dy:0}:battle.motion.get(u.id)||{dx:u.team===0?0.001:-0.001,dy:0};
       const spriteId=SPRITE_BY_NAME[C.getSpecies(u.speciesId).id];
-      const pose=animations.movement(u,spriteId,m.dx,m.dy,dt,!u.alive);
+      // 원본 반응12의 착지 후 자세(0x2116e38..0x2116e78).
+      // 웹판은 원작의 공중 낙하 물리 대신 지속 자세를 바로 표시한다.
+      const status=u.status?.until>s.t?u.status.id:0;
+      const statusPose=({8:'sleep2',9:'sleep',10:'eyesClosed',12:'sleep2'})[status];
+      const pose=animations.movement(u,spriteId,m.dx,m.dy,dt,!u.alive||!!statusPose,statusPose);
       const action=battle.actions.get(u.id);
       // 피격 시 해당 종의 원본 셀을 원본 유지 시간으로 재생한다. 인위적 흔들림/점멸 없음.
-      const frame=!u.alive?animations.sample(spriteId,'ko',0):action?animations.sample(spriteId,action.state,action.duration-action.left):pose.frame;
+      const frame=!u.alive?animations.sample(spriteId,'ko',0):statusPose?pose.frame:action?animations.sample(spriteId,action.state,action.duration-action.left):pose.frame;
       const art=spriteOf(u.speciesId,false),scale=battleBackdrop.spriteScale(art);
       ctx.fillStyle='#081c3044';ctx.beginPath();ctx.ellipse(u.x,u.y+14,Math.max(10,(art?.body||24)*scale*.4),5,0,0,Math.PI*2);ctx.fill();
       body(ctx,u.speciesId,false,u.x,u.y+14,scale,frame,pose.flip);
@@ -1490,7 +1505,7 @@
       const facilityNo=({field:'cm30',gym:'cm34',clinic:'cm16'})[p.cage] || facility?.img?.match(/cm[0-9]+/)?.[0];
       const trainingSequence=window.DIGIMON_ANIMATIONS.training[facilityNo];
       // 훈련은 원작 시설 행동표의 동작으로 표시. 복합 행동의 첫 동작만 연결.
-      const state=board.isBouncing(d.uid) ? 'hurtAlt' : d.dying ? 'ko' : C.isSleeping(d) ? 'seq_13' : p.cageId&&p.motion==='idle'&&trainingSequence!==undefined&&!d.isEgg&&!d.trainDone
+      const state=board.isBouncing(d.uid) ? 'hurtAlt' : d.dying ? (d.hunger<=0&&['walk','eat'].includes(p.motion)?p.motion:'ko') : C.isSleeping(d) ? 'seq_13' : p.cageId&&p.motion==='idle'&&trainingSequence!==undefined&&!d.isEgg&&!d.trainDone
         ? 'seq_'+trainingSequence : p.motion||'idle';
       if (d.isEgg) asset(SPRITE_BY_NAME[C.getSpecies(d.originBaby || d.speciesId).id]); // 부화 전에 미리 불러 둔다
       // 안내 편지/다른 창 때문에 연출이 대기 중이어도 진화 후 모습을 먼저 보여 주지 않는다.
@@ -1620,7 +1635,10 @@
     portrait.beginPath();
     portrait.ellipse(120, 119, rx, Math.max(5, rx * 0.28), 0, 0, 7);
     portrait.fill();
-    const frame = animations.pose(portraitActor, animationId(d), C.isSleeping(d) ? 'seq_13' : 'idle', dt);
+    // 빈사/식사 회복 중 자세는 사육장과 일치시킨다. 정상 초상화는 기존 대기/수면 유지.
+    const pet=view.team.find(p=>p.uid===d.uid);
+    const state=d.dying?(d.hunger<=0&&['walk','eat'].includes(pet?.motion)?pet.motion:'ko'):C.isSleeping(d)?'seq_13':'idle';
+    const frame = animations.pose(portraitActor, animationId(d), state, dt);
     body(portrait, d.speciesId, d.isEgg && eggName(d), 120, 120, scale, frame, false);
   }
 

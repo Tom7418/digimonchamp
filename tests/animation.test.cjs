@@ -123,3 +123,44 @@ test('실제 기술 레코드의7~10 동작·한글 이름·소비TP를 화면�
   assert.deepEqual(logs,[`${speciesId} · ${name} → 토이아구몬 (12 · TP ${cost})`]);
  }
 });
+
+
+test('피해0은 방어34, 치료/강화는35, 부활은33을 종별 원본 길이로 재생한다',()=>{
+ const source=fs.readFileSync('web/game.js','utf8'),a=source.indexOf('  function battleTick('),b=source.indexOf('  function battleLog(',a);
+ for(const [events,actor,state] of [
+  [[{type:'hit',from:0,to:1,damage:0}],1,'guard2'],
+  [[{type:'heal',from:0,to:1,amount:300,support:{id:1,name:'치료α'}}],0,'shoutFrame2'],
+  [[{type:'support',from:0,targets:[0],skill:{id:9,name:'공격업'}}],0,'shoutFrame2'],
+  [[{type:'hit',from:1,to:0,damage:10},{type:'support',from:0,targets:[0],skill:{id:28,name:'부활α'}}],0,'shout'],
+ ]){
+  const c=vm.createContext({window:{},events,performance:{now:()=>0},drawArena(){},finishBattle(){},battleLog(){}});
+  for(const f of ['core.js','assets/sprites.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),c);
+  vm.runInContext(`const animations=window.createAnimationPlayer(window.DIGIMON_ANIMATIONS),SPRITE_BY_NAME=Object.fromEntries(window.SPRITES.map(s=>[s.name,s.id]));
+   const C={getSpecies:ChampCore.getSpecies,stepBattle:()=>events};
+   const battle={done:false,acc:.1,state:{over:false,units:[{id:0,speciesId:'아구몬',alive:true,x:0,y:0},{id:1,speciesId:'토이아구몬',alive:true,x:50,y:0}]},actions:new Map(),motion:new Map(),flashes:[],effects:{tick(){},add(){}}};globalThis.b=battle;`+source.slice(a,b),c);
+  c.battleTick(.001);const action=c.b.actions.get(actor);
+  assert.equal(action.state,state);assert.equal(action.duration,player.duration(actor===0?'m201_agumon':ctx.window.SPRITES.find(s=>s.name==='토이아구몬').id,state));
+ }
+});
+
+test('실제 경기장은 상태이상 지속·해제·KO·정지에서 올바른 원본 자세를 그린다',()=>{
+ const source=fs.readFileSync('web/game.js','utf8'),frames=[],els={};
+ const paint={save(){},restore(){},translate(){},scale(){},beginPath(){},ellipse(){},fill(){},fillRect(){},fillText(){},strokeText(){}};
+ els['#arena']={width:416,height:272,getContext:()=>paint};
+ const c=vm.createContext({window:{},performance:{now:()=>0},body:(...args)=>frames.push(args[6]),$:sel=>els[sel]??(els[sel]={}),esc:String,clamp:n=>Math.max(0,Math.min(100,n))});
+ for(const f of ['core.js','assets/sprites.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),c);
+ vm.runInContext(`const C=ChampCore,animations=window.createAnimationPlayer(window.DIGIMON_ANIMATIONS),SPRITE_BY_NAME=Object.fromEntries(window.SPRITES.map(s=>[s.name,s.id]));
+ const battleBackdrop={draw:()=>true,viewport:{x:0,y:0,scale:1},spriteScale:()=>1},spriteOf=()=>({body:24});
+ const d=C.newDigimon(1,'아구몬',()=>.5);let battle={state:C.createBattle([C.entrantOf(d,'일반')],[C.entrantOf({...d,uid:2},'일반')]),map:{name:'검사'},motion:new Map(),actions:new Map(),effects:{draw(){}},flashes:[],done:false};battle.state.t=1;
+ battle.state.units.forEach(u=>battle.motion.set(u.id,{dx:0,dy:0}));globalThis.b=battle;`,c);
+ vm.runInContext(source.slice(source.indexOf('  function drawArena('),source.indexOf('  // ---------- 그리기 (캔버스) ----------')),c);
+ const u=c.b.state.units[0],id='m201_agumon';
+ for(const [status,state] of [[8,'sleep2'],[9,'sleep'],[10,'eyesClosed'],[12,'sleep2']]){
+  u.status={id:status,until:10};c.b.actions.set(0,{state:'attack4',duration:1,left:1});
+  frames.length=0;c.drawArena(.1);assert.equal(frames[0],player.sample(id,state,0));
+  c.drawArena(0);assert.equal(frames[2],frames[0]);
+  c.b.actions.clear();u.status.until=1;frames.length=0;c.drawArena(.1);assert.equal(frames[0],player.sample(id,'idle',0));
+ }
+ u.status={id:9,until:10};u.alive=false;frames.length=0;c.drawArena(.1);assert.equal(frames[0],player.sample(id,'ko',0));
+ u.alive=true;u.status=undefined;c.b.motion.set(0,{dx:2,dy:0});frames.length=0;c.drawArena(.1);assert.equal(frames[0],player.sample(id,'walk',0));
+});

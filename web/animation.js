@@ -29,7 +29,7 @@
     }
     // 속도 예정값 대신 실제 변위를 사용한다. 로프·벽에 막혔거나 수직으로만
     // 움직일 때 방향이 튀지 않도록 마지막 수평 방향을 기억한다(원본은 왼쪽).
-    function movement(actor, id, dx, dy, dt, stopped = false) {
+    function movement(actor, id, dx, dy, dt, stopped = false, stateOverride = null) {
       let m = movementActors.get(actor);
       if (!m || m.id !== id) {
         m = {id, state: 'idle', flip: false};
@@ -37,7 +37,7 @@
       }
       // 정지 중에는 상태와 프레임 모두 유지한다.
       if (dt > 0) {
-        m.state = !stopped && Math.hypot(dx, dy) > 0.0001 ? 'walk' : 'idle';
+        m.state = stateOverride || (!stopped && Math.hypot(dx, dy) > 0.0001 ? 'walk' : 'idle');
         if (!stopped && Math.abs(dx) > 0.0001) m.flip = dx > 0;
       }
       return {state: m.state, flip: m.flip, frame: pose(actor, id, m.state, dt)};
