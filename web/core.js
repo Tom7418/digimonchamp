@@ -10196,6 +10196,21 @@ var ChampCore = (function(exports) {
 			default: return foes[Math.floor(rng() * 216) % foes.length];
 		}
 	}
+	/** 이동 행동의 거리 고르기 (작전별 표 0x021337E4, 공포 0x02133798): 216 난수 < 첫 값이면 50, < 둘째 값이면 80, 그 밖 110 */
+	var MOVE_TABLE = {
+		특수: [68, 89],
+		일반: [48, 96],
+		지원: [7, 48],
+		공포: [0, 20]
+	};
+	var ARENA_SCALE = 480 / 256;
+	function keepDistance(mode, roll) {
+		const [a, b] = MOVE_TABLE[mode];
+		return {
+			dist: (roll < a ? 50 : roll < b ? 80 : 110) * ARENA_SCALE,
+			tol: 30 * ARENA_SCALE
+		};
+	}
 	/** 216 난수 하나로 행동을 고른다 (0x2119224~): 필살기 → 일반 공격 → 지원 기술 → 그 밖은 이동 */
 	function chooseAction(mode, roll, specialScale = 1) {
 		const [, b, c, , e] = FORMULA.tactics[TACTIC_ROW[mode]];
@@ -10247,17 +10262,24 @@ var ChampCore = (function(exports) {
 			if (!foes.length) break;
 			const chosen = foes.find((f) => f.id === u.target);
 			let near = (u.taunt?.until ?? 0) > s.t && foes.find((f) => f.id === u.taunt?.from) || chosen || foes.reduce((a, b) => dist(u, a) <= dist(u, b) ? a : b);
+			let d = dist(u, near);
 			const speed = (40 + Math.min(80, u.stats.spd * .4)) * (u.personality === "게으름" ? .85 : u.personality === "대담" ? 1.1 : 1) * (buffMultiplier(u, "spd", s.t) > 1 ? 1.25 : 1) * (hasStatus(u, s.t, 6, 13) ? .5 : 1);
 			if (hasStatus(u, s.t, 5)) {
-				if (u.cd <= 0) {
-					u.cd = 1;
-					u.intent = void 0;
-				}
-				const a = rng() * Math.PI * 2;
-				move(u, u.x + Math.cos(a) * 40, u.y + Math.sin(a) * 40, speed);
+				near = s.units.filter((o) => o.alive && o.id !== u.id).reduce((a, b) => dist(u, a) <= dist(u, b) ? a : b);
+				d = dist(u, near);
+				if (u.cd <= 0 && !u.intent) u.intent = { kind: "basic" };
+			} else if (hasStatus(u, s.t, 4)) {
+				u.intent = void 0;
+				move(u, near.x, near.y, speed, true);
 				continue;
+			} else if (hasStatus(u, s.t, 1) && u.cd <= 0 && !u.intent) {
+				if (!((u.taunt?.until ?? 0) > s.t)) {
+					near = chooseTarget(u, foes, s.t, rng);
+					u.target = near.id;
+					d = dist(u, near);
+				}
+				u.intent = { kind: "basic" };
 			}
-			let d = dist(u, near);
 			const courage = supportSkills(u.speciesId, u.personality).some((sk) => sk.id === 30);
 			const coward = !courage && u.personality === "겁쟁이" && foes.length > allies.length;
 			if (coward && d > 70 || !courage && u.retreat > 0 && u.cd > 0 && d < 110) {
@@ -10266,7 +10288,7 @@ var ChampCore = (function(exports) {
 			}
 			if (u.cd <= 0 && !u.intent) {
 				const roll = Math.floor(rng() * 216);
-				const action = hasStatus(u, s.t, 2) ? roll < FORMULA.fearAction[1] ? "special" : roll < FORMULA.fearAction[4] ? "support" : "move" : hasStatus(u, s.t, 4) ? "move" : chooseAction(u.mode, roll, u.personality === "쿨" ? 1.6 : u.personality === "솔직" ? 1.2 : 1);
+				const action = hasStatus(u, s.t, 2) ? roll < FORMULA.fearAction[1] ? "special" : roll < FORMULA.fearAction[4] ? "support" : "move" : chooseAction(u.mode, roll, u.personality === "쿨" ? 1.6 : u.personality === "솔직" ? 1.2 : 1);
 				if (!((u.taunt?.until ?? 0) > s.t)) {
 					near = chooseTarget(u, foes, s.t, rng);
 					u.target = near.id;
@@ -10284,15 +10306,15 @@ var ChampCore = (function(exports) {
 				else if (action === "support" && !(coward && d <= 70) && useSupport(s, u, events)) {
 					u.cd = actionSeconds(null, u.stats.spd) + wait;
 					continue;
-				} else u.cd = wait;
+				} else {
+					u.cd = wait;
+					u.keep = keepDistance(hasStatus(u, s.t, 2) ? "공포" : u.mode, Math.floor(rng() * 216));
+				}
 			}
 			if (!u.intent) {
-				if (hasStatus(u, s.t, 2, 4)) {
-					if (d < 160) move(u, near.x, near.y, speed, true);
-				} else if (u.mode === "지원") {
-					if (d < 110) move(u, near.x, near.y, speed, true);
-					else if (d > 145) move(u, near.x, near.y, speed);
-				} else if (d > 42) move(u, near.x, near.y, speed);
+				const keep = u.keep ?? keepDistance(u.mode, 108);
+				if (d < keep.dist - keep.tol) move(u, near.x, near.y, speed, true);
+				else if (d > keep.dist + keep.tol) move(u, near.x, near.y, speed);
 				continue;
 			}
 			const wantsSpecial = u.intent.kind === "special";
@@ -11104,6 +11126,7 @@ var ChampCore = (function(exports) {
 	exports.isSleeping = isSleeping;
 	exports.isTraining = isTraining;
 	exports.itemUnlocked = itemUnlocked;
+	exports.keepDistance = keepDistance;
 	exports.makeEnemies = makeEnemies;
 	exports.matchEntryNotice = matchEntryNotice;
 	exports.maxStageForRank = maxStageForRank;

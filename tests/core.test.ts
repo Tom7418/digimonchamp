@@ -12,7 +12,7 @@ import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personal
 import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
 import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
-import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
+import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
@@ -1408,7 +1408,7 @@ describe('배틀 접근 AI 회귀',()=>{
       const foe={...newDigimon(2,'아구몬',()=>.5),personality:'솔직' as const};
       const state=createBattle([entrantOf(d,mode)],[entrantOf(foe,'일반')]);
       for(let i=0;i<20;i++)stepBattle(state,()=>.99);
-      expect(state.units[0].wasHit).toBe(false);expect(state.units[0].x).toBeGreaterThan(110);
+      expect(state.units[0].wasHit).toBe(false);expect(state.units[0].x).toBeGreaterThan(95); // 원본 이동 행동은 고른 거리(최대 110×1.875px)까지만 다가간다
       expect(Number.isFinite(state.units[0].y)).toBe(true);
     }
   });
@@ -1541,6 +1541,15 @@ describe('프리 배틀 (원본 대진·상금)',()=>{
   stepBattle(s2,()=>0.3);expect(b.x).toBe(x); // 수면 중에는 움직이지 않는다
   const s3=createBattle([e('열혈')],[e('솔직')]);const [c]=s3.units;c.rage=51;c.cd=5;
   const ev3=stepBattle(s3,()=>.99);expect(ev3).toEqual(expect.arrayContaining([{type:'status',id:c.id,status:'분노'}])); // 열혈 한도 50
+ });
+ it('혼란은 편을 가리지 않고 가장 가까운 디지몬을, 분노는 일반 공격만 (상태 동작 10·8)',()=>{
+  const e=(p:Digimon['personality'])=>({speciesId:'아구몬',stats:{hp:1000,tp:100,atk:10,def:10,int:10,spd:10},personality:p,mode:'특수' as const});
+  const s=createBattle([e('솔직'),e('솔직')],[e('솔직')]);const [a,b,foe]=s.units;
+  b.x=a.x+10;b.y=a.y;foe.x=a.x+200;a.cd=0;b.cd=9;foe.cd=9;inflictStatus(a,5,s.t,[]);
+  const ev=stepBattle(s,()=>.99);expect(ev.find(x=>x.type==='hit'&&x.from===a.id)).toMatchObject({to:b.id});
+  const r=createBattle([e('열혈')],[e('솔직')]);const [c,f2]=r.units;c.x=f2.x;c.cd=0;f2.cd=9;r.t=60;inflictStatus(c,1,r.t,[]);
+  expect(stepBattle(r,()=>0).find(x=>x.type==='hit'&&x.from===c.id)).toMatchObject({special:false});
+  expect(keepDistance('특수',0).dist).toBeCloseTo(50*480/256);expect(keepDistance('지원',100).dist).toBeCloseTo(110*480/256);
  });
  it('작전은 디지몬마다 저장되고 출전 때 쓰인다',()=>{
   const d={...newDigimon(1,'아구몬'),tactic:'특수' as const};

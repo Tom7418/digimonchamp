@@ -113,6 +113,8 @@ export interface Unit {
   target?: number;
   /** 원본 배우 +0x1C: 시작 1, 일반 공격 +60·필살기 +120. 솔직·쿨의 대상 고르기에 쓴다 */
   aggro?: number;
+  /** 이동 행동 때 유지할 상대와의 거리(px)와 허용 폭 (원본 0x2119654: 50·80·110, 폭 30 — DS 화면 256 → 웹 480으로 ×1.875) */
+  keep?: { dist: number; tol: number };
   /** 정해 둔 다음 행동 (사거리에 들어가면 실행) */
   intent?: { kind: 'basic' } | { kind: 'special'; skill: BattleSkill };
   revived?: boolean;
@@ -344,6 +346,14 @@ export function chooseTarget(u: Unit, foes: Unit[], t: number, rng: Rng): Unit {
   }
 }
 
+/** 이동 행동의 거리 고르기 (작전별 표 0x021337E4, 공포 0x02133798): 216 난수 < 첫 값이면 50, < 둘째 값이면 80, 그 밖 110 */
+const MOVE_TABLE: Record<AttackMode | '공포', [number, number]> = { 특수: [68, 89], 일반: [48, 96], 지원: [7, 48], 공포: [0, 20] };
+const ARENA_SCALE = 480 / 256;
+export function keepDistance(mode: AttackMode | '공포', roll: number) {
+  const [a, b] = MOVE_TABLE[mode];
+  return { dist: (roll < a ? 50 : roll < b ? 80 : 110) * ARENA_SCALE, tol: 30 * ARENA_SCALE };
+}
+
 /** 216 난수 하나로 행동을 고른다 (0x2119224~): 필살기 → 일반 공격 → 지원 기술 → 그 밖은 이동 */
 export function chooseAction(mode: AttackMode, roll: number, specialScale = 1): 'special' | 'basic' | 'support' | 'move' {
   const [, b, c, , e] = FORMULA.tactics[TACTIC_ROW[mode]];
@@ -395,13 +405,25 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     // 도발에 걸리면 시전자, 아니면 성격 규칙으로 고른 상대(쓰러졌거나 아직 없으면 가장 가까운 상대)
     const chosen = foes.find((f) => f.id === u.target);
     let near = ((u.taunt?.until??0)>s.t && foes.find(f=>f.id===u.taunt?.from)) || chosen || foes.reduce((a, b) => (dist(u, a) <= dist(u, b) ? a : b));
+    let d = dist(u, near);
     // 사용자 지정: 게으름은 항상0.85배, 대담은 항상1.1배. 피격 여부로 행동을 막지 않는다.
     // 원본: 슬로우·저주면 이동 속도 절반, 민첩업이면 ×1.25 (0x2116210). 기본 속도 식은 웹판
     const speed = (40 + Math.min(80, u.stats.spd * 0.4)) * (u.personality === '게으름' ? 0.85 : u.personality === '대담' ? 1.1 : 1)
       * (buffMultiplier(u,'spd',s.t) > 1 ? 1.25 : 1) * (hasStatus(u, s.t, 6, 13) ? 0.5 : 1);
-    // 혼란은 아무 데로나 걷고, 공포·소극적은 상대에게서 떨어진다 (행동 결정 0x2118F8C — 동작 세부는 추정)
-    if (hasStatus(u, s.t, 5)) { if (u.cd <= 0) { u.cd = 1; u.intent = undefined; } const a = rng() * Math.PI * 2; move(u, u.x + Math.cos(a) * 40, u.y + Math.sin(a) * 40, speed); continue; }
-    let d = dist(u, near);
+    // 혼란(상태 동작 10, 0x2119E18): 편을 가리지 않고 가장 가까운 디지몬을 일반 공격으로 노린다
+    if (hasStatus(u, s.t, 5)) {
+      const others = s.units.filter((o) => o.alive && o.id !== u.id);
+      near = others.reduce((a, b) => (dist(u, a) <= dist(u, b) ? a : b));
+      d = dist(u, near);
+      if (u.cd <= 0 && !u.intent) u.intent = { kind: 'basic' };
+    }
+    // 소극적(상태 동작 12, 0x211A044): 상대 반대쪽으로 15~30프레임씩 달아나고 공격하지 않는다
+    else if (hasStatus(u, s.t, 4)) { u.intent = undefined; move(u, near.x, near.y, speed, true); continue; }
+    // 분노(상태 동작 8, 0x2119C90): 필살기·지원 없이 일반 공격으로만 쫓아간다
+    else if (hasStatus(u, s.t, 1) && u.cd <= 0 && !u.intent) {
+      if (!((u.taunt?.until ?? 0) > s.t)) { near = chooseTarget(u, foes, s.t, rng); u.target = near.id; d = dist(u, near); }
+      u.intent = { kind: 'basic' };
+    }
 
     // 겁쟁이도70px 안의 적에게 맞선다. 성급한은 대기 중에만 치고 빠진다.
     // 용기는 도주를 막는 소유형 SP로 처리한다(효과 해석은 웹판 정책).
@@ -413,9 +435,8 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     // 원본 AI (overlay19 0x2118F84·0x211919C): 기다림이 끝나면 216 난수와 작전 표로 행동을 정한다.
     if (u.cd <= 0 && !u.intent) {
       const roll = Math.floor(rng() * 216);
-      // 공포 중에는 공포용 행동 표(0x21337A0: 필살기 10·지원 ~30, 나머지 이동), 소극적은 공격하지 않는다(추정)
+      // 공포 중에는 공포용 행동 표(0x21337A0: 필살기 10·지원 ~30, 나머지 이동)
       const action = hasStatus(u, s.t, 2) ? (roll < FORMULA.fearAction[1] ? 'special' : roll < FORMULA.fearAction[4] ? 'support' : 'move')
-        : hasStatus(u, s.t, 4) ? 'move'
         : chooseAction(u.mode, roll, u.personality === '쿨' ? 1.6 : u.personality === '솔직' ? 1.2 : 1);
       if (!((u.taunt?.until ?? 0) > s.t)) { near = chooseTarget(u, foes, s.t, rng); u.target = near.id; d = dist(u, near); }
       const wait = thinkSeconds(u.stats.int, buffMultiplier(u, 'spd', s.t) > 1) * (['대담','제멋대로'].includes(u.personality) ? 0.9 : 1);
@@ -426,13 +447,13 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
         u.intent = skill ? { kind: 'special', skill } : { kind: 'basic' };
       } else if (action === 'basic') u.intent = { kind: 'basic' };
       else if (action === 'support' && !(coward && d <= 70) && useSupport(s, u, events)) { u.cd = actionSeconds(null, u.stats.spd) + wait; continue; }
-      else u.cd = wait;
+      else { u.cd = wait; u.keep = keepDistance(hasStatus(u, s.t, 2) ? '공포' : u.mode, Math.floor(rng() * 216)); }
     }
     if (!u.intent) {
-      // 기다리는 동안은 움직인다. 지원 작전·공포·소극적은 거리를 둔다.
-      if (hasStatus(u, s.t, 2, 4)) { if (d < 160) move(u, near.x, near.y, speed, true); }
-      else if (u.mode === '지원') { if (d < 110) move(u, near.x, near.y, speed, true); else if (d > 145) move(u, near.x, near.y, speed); }
-      else if (d > 42) move(u, near.x, near.y, speed);
+      // 기다리는 동안은 이동 행동에서 고른 거리를 유지한다 (원본 상태 동작 3)
+      const keep = u.keep ?? keepDistance(u.mode, 108);
+      if (d < keep.dist - keep.tol) move(u, near.x, near.y, speed, true);
+      else if (d > keep.dist + keep.tol) move(u, near.x, near.y, speed);
       continue;
     }
     const wantsSpecial = u.intent.kind === 'special';
