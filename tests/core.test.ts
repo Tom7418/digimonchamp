@@ -15,6 +15,7 @@ import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evol
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, npcTeamFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
+import { DEX_ORDER, dexEntries, dexCount } from '../src/core/dex';
 import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent, rollMorningMail } from '../src/core/events';
 import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
@@ -2088,5 +2089,19 @@ describe('아침 메일 (원본 0x21120E4·0x2129944)', () => {
     expect(openMail(queueMails(s, [0xbe]), 0xbe).save.pills).toBe(1);
     expect(openMail(queueMails(s, [0xbf]), 0xbf).save.medicine).toBe(1);
     expect(openMail(queueMails(s, [0xc0]), 0xc0).save.salve).toBe(1);
+  });
+});
+
+describe('도감 (원본 순서 0x020EDE78)', () => {
+  it('216종, 원본 순서, 등록한 종만 등록 표시', () => {
+    expect(DEX_ORDER).toHaveLength(216);
+    expect(DEX_ORDER.slice(0, 3)).toEqual(['즈루몬', '뽈뽈몬', '새싹몬']);
+    expect(new Set(DEX_ORDER).size).toBe(216);
+    const e = dexEntries({ seen: ['아구몬'] });
+    const agu = e.find((x) => x.id === '아구몬')!;
+    expect(agu.registered).toBe(true);
+    expect(agu.stage).toBe('성장기');
+    expect(e.filter((x) => x.registered)).toHaveLength(1);
+    expect(dexCount({ seen: ['아구몬', '없는종'] })).toBe(1);
   });
 });

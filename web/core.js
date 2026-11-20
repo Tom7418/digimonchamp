@@ -10961,6 +10961,40 @@ var ChampCore = (function(exports) {
 			bits: Math.min(MONEY_MAX, save.bits + o.price)
 		};
 	}
+	// src/core/dex.ts
+	/**
+	* 도감 (원본 도감 화면 overlay9_16, 순서 표 arm9 0x020EDE78 → src/data/dex.txt).
+	* 등록: 원본은 진화하거나 포획한 종의 칸에 1을 쓴다(육성 overlay9_18 0x211A0FC, 사냥 overlay9_14 0x210F63C).
+	* 웹판은 기존 save.seen(손에 넣거나 진화한 종)을 등록으로 쓴다.
+	* 원작 도감 설명 글(db_txt_list)은 저장소에 옮기지 않는다. 이름·세대·속성·종족·용량·필살기 이름만 보여 준다.
+	*/
+	var DEX_ORDER = "# 원본 도감 순서 (tools/extract_dex.py, arm9 0x020EDE78). 한 줄에 한 종, 줄 번호 = 도감 번호\n즈루몬\n뽈뽈몬\n새싹몬\n뽀글몬\n피치몬\n푸치몬\n푸니몬\n깜몬\n포요몬\n모크몬\n하얀몬\n유라몬\n카프리몬\n코로몬\n산몬\n시드몬\n뿔몬\n토코몬\n야옹몬\n퍼그몬\n어니몬\n둥실몬\n쁘띠메라몬\n베비도몬\n문몬\n모티몬\n아구몬\n아르마몬\n오로라몬\n에렉몬\n올챙몬\n가오몬\n가지몬\n파피몬\n거북몬\n기자몬\n캔들몬\n길몬\n쿠네몬\n크로아구몬\n울퉁몬\n고부리몬\n쉬라몬\n코로나몬\n사이케몬\n츄카이몬\n테리어몬\n텐타몬\n토이아구몬\n드라코몬\n테이파몬\n톱니몬\n파닥몬\n팔몬\n피코데블몬\n피요몬\n팔코몬\n브이몬\n플롯트몬\n플로라몬\n머슈몬\n스노우아구몬\n루나몬\n레나몬\n아이스데블몬\n아이스몬\n레드꼬끼몬\n황금아르마몬\n원뿔몬\n위자몬\n우드몬\n에어드라몬\n엔젤몬\n우가몬\n가오가몬\n캅테리몬\n가드로몬\n가르고몬\n가루몬\n가루몬(흑)\n키위몬\n구미호몬\n그라우몬\n구루몬\n그레이몬\n타임몬\n쿠가몬\n개굴몬\n연체몬\n옐로우워매몬\n켄터스몬\n코어드라몬(청)\n코어드라몬(녹)\n꼬끼몬\n번개콩알몬\n쉘몬\n시드라몬\n지오그레이몬\n스카몬\n스타몬\n블랙버드라몬\n화이트위자몬\n다크티라노몬\n다르크몬\n티라노몬\n가트몬\n데블드라몬\n데블몬\n토타몬\n니드몬\n워매몬\n버드라몬\n고스몬\n파이라몬\n브이드라몬\n베지몬\n페크몬\n메라몬\n모털몬\n모노크로몬\n프리지몬\n유니몬\n블랙구미호몬\n링스몬\n레어몬\n레오몬\n레키스몬\n레드베지몬\n아트라캅테리몬\n스콜피온몬\n안드로몬\n윙드라몬\n에테몬\n엔젤우몬\n오쿠와몬\n가비지몬\n가루다몬\n그라운드라몬\n크레세몬\n사이버드라몬\n쥬레이몬\n스컬그레이몬\n쥬드몬\n슈퍼스타몬\n드라고몬\n데드메라몬\n뿌띠몬\n왕개굴몬\n트리세라몬\n나이트몬\n패롯몬\n다이버몬\n팬더몬\n왕콩알몬\n피콜몬\n팬텀몬\n블랙래비드몬\n블루메라몬\n플레어몬\n베이더몬\n홀리엔젤몬\n고래몬\n마하가오가몬\n콩알몬\n맘모스몬\n메가시드라몬\n메가드라몬\n메탈그레이몬(청)\n메탈그레이몬\n메탈티라노몬\n퍼펫몬\n야타가라몬\n라이즈그레이몬\n래비드몬\n릴리몬\n레이디데블몬\n워가루몬\n워가루몬(흑)\n나쁜퍼펫몬\n아폴로몬\n황제드라몬\n바이킹몬\n발키리몬\n워그레이몬\n기가시드라몬\n그랜쿠가몬\n그리폰몬\n이글몬\n샤벨레오몬\n샤잉레이몬\n지드가루몬\n스컬맘모스몬\n슬레이어드라몬\n세인트가르고몬\n다이아나몬\n듀크몬\n하이안드로몬\n반쵸레오몬\n피에몬\n빅토리그레이몬\n피노키몬\n파라오몬\n푸쿠몬\n블랙워그레이몬\n프린스콩알몬\n브레이크드라몬\n프레시오몬\n헤라크레스캅테리몬\n페닉스몬\n미러지가오몬\n파워드라몬\n메탈에테몬\n메탈가루몬\n메탈가루몬(흑)\n메탈시드라몬\n로제몬\n".split("\n").filter((l) => l && !l.startsWith("#"));
+	var ERA = [
+		"",
+		"초기",
+		"펜듀럼",
+		"초기·펜듀럼"
+	];
+	function dexEntries(save) {
+		const seen = new Set(save.seen);
+		return DEX_ORDER.map((id, i) => {
+			const sp = getSpecies(id), o = originalSpecies(id);
+			return {
+				no: i + 1,
+				id,
+				registered: seen.has(id),
+				name: sp.name,
+				stage: STAGE_LABEL[sp.stage],
+				attr: sp.attr,
+				family: o?.family ?? sp.family,
+				size: o?.size ?? sp.size,
+				skills: battleSkills(id).map((s) => s.name)
+			};
+		});
+	}
+	/** 시대 표기 (원본 디지몬 표 +108) */
+	var eraLabel = (id) => ERA[originalSpecies(id)?.era ?? 0] ?? "";
+	var dexCount = (save) => DEX_ORDER.filter((id) => save.seen.includes(id)).length;
 	var battle_maps_default = {
 		maps: [
 			{
@@ -11508,6 +11542,7 @@ var ChampCore = (function(exports) {
 	exports.DAY_END_HOUR = DAY_END_HOUR;
 	exports.DAY_END_MINUTE = DAY_END_MINUTE;
 	exports.DAY_START_HOUR = DAY_START_HOUR;
+	exports.DEX_ORDER = DEX_ORDER;
 	exports.DYING_AFTER_MINUTES = DYING_AFTER_MINUTES;
 	exports.DYING_LOST_MINUTES = DYING_LOST_MINUTES;
 	exports.EFFECT_SECONDS = EFFECT_SECONDS;
@@ -11644,6 +11679,8 @@ var ChampCore = (function(exports) {
 	exports.curveStep = curveStep;
 	exports.dateOf = dateOf;
 	exports.defaultRng = defaultRng;
+	exports.dexCount = dexCount;
+	exports.dexEntries = dexEntries;
 	exports.digimonResist = digimonResist;
 	exports.discardFloorFood = discardFloorFood;
 	exports.eatFloorFood = eatFloorFood;
@@ -11655,6 +11692,7 @@ var ChampCore = (function(exports) {
 	exports.entryLimits = entryLimits;
 	exports.entryProblems = entryProblems;
 	exports.equippedPlugins = equippedPlugins;
+	exports.eraLabel = eraLabel;
 	exports.evaluateEvolutions = evaluateEvolutions;
 	exports.evolvedStats = evolvedStats;
 	exports.explain = explain;

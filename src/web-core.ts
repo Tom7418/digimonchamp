@@ -6,6 +6,7 @@ export * from './core/evolution';
 export * from './core/battle';
 export * from './core/plugins';
 export * from './core/events';
+export * from './core/dex';
 export * from './core/battle-skills';
 export * from './core/battle-maps';
 export * from './core/titles';
