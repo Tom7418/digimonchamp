@@ -13,7 +13,7 @@ import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture,
 import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
-import { RANK_UP, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
+import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
@@ -1893,8 +1893,44 @@ describe('타이틀 홀더 (원본 팀 표 0x020EC0B4)', () => {
     expect(e.personality).toBe('대담');
     expect(e.stats).toEqual(freeFoeStats(h.members[0]));
   });
+  it('타이틀 id 번호가 홀더 팀 번호다: 100 대 1 전쟁(m51)은 마하 아키라 3마리', () => {
+    const m = TITLES.find((t) => t.id === 'm51')!;
+    expect(m.name).toBe('100 대 1 전쟁');
+    expect(titleHolder('m51')!.name).toBe('마하 아키라');
+    expect(titleHolder('m12')!.name).toBe('D인피니트');
+  });
   it('챔피언십처럼 홀더가 없는 경기는 null', () => {
     expect(titleHolder('prelim')).toBeNull();
     expect(titleHolderFoes('final', seeded(1))).toBeNull();
+  });
+});
+
+describe('타이틀 참가비·시대 한정·소지금 상한 (원본)', () => {
+  const save0 = () => freshEggSave(0);
+  it('참가비는 타이틀 표 +36 값: 최고의 용사 150, 100 대 1 전쟁 1,300', () => {
+    expect(TITLES.find((t) => t.id === 'm0')!.fee).toBe(150);
+    expect(TITLES.find((t) => t.id === 'm51')!.fee).toBe(1300);
+  });
+  it('소지금이 모자라면 낼 수 없고, 있으면 그만큼 줄어든다', () => {
+    const m = TITLES.find((t) => t.id === 'm51')!;
+    expect(payEntryFee({ ...save0(), bits: 1299 }, m).ok).toBe(false);
+    const paid = payEntryFee({ ...save0(), bits: 2000 }, m);
+    expect(paid.ok).toBe(true);
+    expect(paid.save.bits).toBe(700);
+  });
+  it('최초의 생존자는 초기 디지몬(시대 1·3)만, 펜듀럼 디스토션은 펜듀럼(2·3)만', () => {
+    const early = TITLES.find((t) => t.name === '최초의 생존자')!;
+    const pendulum = TITLES.find((t) => t.name === '펜듀럼 디스토션')!;
+    expect([early.limitEra, pendulum.limitEra]).toEqual([1, 2]);
+    const mk = (speciesId: string) => newDigimon(1, speciesId);
+    expect(entryProblems(early, [mk('에어드라몬')])).toEqual([]);
+    expect(entryProblems(early, [mk('아구몬')])).toEqual([]);
+    expect(entryProblems(early, [mk('토이아구몬')])).toContain('초기 디지몬 한정');
+    expect(entryProblems(pendulum, [mk('토이아구몬'), mk('아구몬'), mk('토이아구몬')])).toEqual([]);
+    expect(entryProblems(pendulum, [mk('에어드라몬'), mk('아구몬'), mk('아구몬')])).toContain('펜듀럼 디지몬 한정');
+  });
+  it('상금은 소지금 9,999,999에서 멈춘다', () => {
+    const m = TITLES.find((t) => t.id === 'm0')!;
+    expect(applyMatch({ ...save0(), bits: MONEY_MAX - 10 }, m, true).bits).toBe(MONEY_MAX);
   });
 });

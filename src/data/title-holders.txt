@@ -1,68 +1,7 @@
 # 원본 타이틀 홀더 팀 (tools/extract_title_holders.py). 손으로 고치지 말 것
-# title|타이틀 번호|팀 번호
+# 팀 번호 = 타이틀 표 +8 = src/data/titles.txt 첫 칸 (웹판 타이틀 id m번호)
 # team|팀 번호|팀 이름|NPC 번호들
 # npc|번호|별명|종|레벨|상금|TP·공격·방어·지능·속도 곡선 번호|내성 곡선 번호(열,추위,빛,어둠,천둥)|성격 번호(0 솔직~7 겁쟁이)
-title|0|0
-title|1|1
-title|2|2
-title|3|3
-title|4|4
-title|5|5
-title|6|6
-title|7|7
-title|8|8
-title|9|9
-title|10|10
-title|11|11
-title|12|51
-title|13|13
-title|14|14
-title|15|15
-title|16|16
-title|17|17
-title|18|18
-title|19|19
-title|20|20
-title|21|21
-title|22|22
-title|23|23
-title|24|24
-title|25|25
-title|26|26
-title|27|27
-title|28|28
-title|29|29
-title|30|30
-title|31|31
-title|32|32
-title|33|33
-title|34|34
-title|35|35
-title|36|36
-title|37|37
-title|38|38
-title|39|39
-title|40|40
-title|41|41
-title|42|42
-title|43|43
-title|44|44
-title|45|45
-title|46|46
-title|47|47
-title|48|48
-title|49|49
-title|50|50
-title|51|12
-title|52|52
-title|53|53
-title|54|54
-title|55|55
-title|56|56
-title|57|57
-title|58|58
-title|59|59
-title|60|60
 team|0|금속 벽돌|0
 team|1|무적 불꽃|3,4
 team|2|활화산|6,7,8

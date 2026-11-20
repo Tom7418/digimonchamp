@@ -29,8 +29,10 @@ export interface Match {
   limitKind?: number;
   /** 한정 내용 표시 (원작 설명 글의 낱말) */
   limitNote?: string;
-  /** 아직 뜻을 몰라 검사하지 않는 조건이 있음 */
-  unknownLimit?: boolean;
+  /** 시대 한정 (원본 조건 표 +36): 1 초기에 발견된 디지몬, 2 펜듀럼 시절. 종의 시대가 같거나 3(둘 다)이면 통과 */
+  limitEra?: 1 | 2;
+  /** 참가비 (원본 타이틀 표 +36). 소지금이 모자라면 출전할 수 없고, 출전할 때 낸다 */
+  fee?: number;
 }
 
 /**
@@ -39,7 +41,8 @@ export interface Match {
  * 임시 값: 상대 세대(설명에 홀더 세대가 없으면 필요 랭크로 정함), 상대 강도(등급별 배율),
  *   랭크가 오르는 규칙. 상금은 원본 값 그대로다.
  * 참가 조건(인원·세대·종족·속성·성격·타입·디지에그화)은 원본 조건 표 값으로 검사한다 (entryProblems).
- *   조건 표의 미해석 칸(1·2)이 걸린 두 타이틀은 검사하지 않고 표시만 한다.
+ *   조건 표 +36은 시대 한정(1 초기·2 펜듀럼, arm9 0x02091A2C)이다.
+ * 참가비는 타이틀 표 +36 값이다 (overlay9_10 0x2115DE8 소지금 비교, 0x2115A08 차감).
  */
 export const PRIZE_SCALE = 1;
 const STAGE_NAME: Record<number, string> = { 2: '유년기', 3: '성장기', 4: '성숙기', 5: '완전체', 6: '궁극체' };
@@ -50,7 +53,7 @@ export const TITLES: Match[] = titlesRaw
   .split(/\r?\n/)
   .filter((l) => l.trim() && !l.startsWith('#'))
   .map((l) => {
-    const [no, name, season, day, rank, grade, prize, , mine, foes, limit, eggs, holder, other, families, attr, person, kind, flag] = l.split('|');
+    const [no, name, season, day, rank, grade, prize, fee, mine, foes, limit, eggs, holder, other, families, attr, person, kind, flag] = l.split('|');
     const m: Match = {
       id: `m${no}`,
       name,
@@ -63,6 +66,7 @@ export const TITLES: Match[] = titlesRaw
       scale: SCALE_BY_GRADE[Number(grade)],
       prize: Math.round(Number(prize) * PRIZE_SCALE),
       grade: Number(grade),
+      fee: Number(fee) || 0,
     };
     if (limit) m.limitStage = HOLDER_STAGE[limit];
     if (eggs) m.needEggs = Number(eggs);
@@ -72,10 +76,20 @@ export const TITLES: Match[] = titlesRaw
     // 성격 번호 7만 쓰인다. 설명 글에서 겁쟁이로 확인
     if (person) m.limitPersonality = other || '겁쟁이';
     if (kind) m.limitKind = Number(kind);
-    if (flag) m.unknownLimit = true;
+    if (flag === '1' || flag === '2') m.limitEra = Number(flag) as 1 | 2;
     return m;
   })
   .sort((a, b) => a.minRank - b.minRank || a.season - b.season || a.day - b.day);
+const ERA_NAME = { 1: '초기 디지몬 한정', 2: '펜듀럼 디지몬 한정' } as const;
+/** 소지금 상한 (원본 결과 화면 overlay9_8 0x2112058) */
+export const MONEY_MAX = 9_999_999;
+export const addBits = (save: SaveData, n: number): SaveData => ({ ...save, bits: Math.min(MONEY_MAX, save.bits + n) });
+/** 타이틀 참가비를 낸다. 모자라면 ok=false (원본 문구: 소지금이 부족합니다) */
+export function payEntryFee(save: SaveData, m: Match): { ok: boolean; save: SaveData } {
+  const fee = m.fee ?? 0;
+  if (save.bits < fee) return { ok: false, save };
+  return { ok: true, save: { ...save, bits: save.bits - fee } };
+}
 /** 출전 팀이 타이틀의 참가 조건을 채우지 못한 이유들 (비어 있으면 출전 가능) */
 export function entryProblems(m: Match, team: Digimon[]): string[] {
   const out: string[] = [];
@@ -86,6 +100,7 @@ export function entryProblems(m: Match, team: Digimon[]): string[] {
   if (m.limitAttr && !all((d) => sp(d).attr === m.limitAttr)) out.push(`${m.limitAttr} 속성 한정`);
   if (m.limitPersonality && !all((d) => d.personality === m.limitPersonality)) out.push(`성격 ${m.limitPersonality} 한정`);
   if (m.limitKind && !all((d) => originalSpecies(d.speciesId)?.kind === m.limitKind)) out.push(m.limitNote ?? '타입 한정');
+  if (m.limitEra && !all((d) => [m.limitEra, 3].includes(originalSpecies(d.speciesId)?.era ?? 0))) out.push(ERA_NAME[m.limitEra]);
   if (m.needEggs && !all((d) => d.eggs >= m.needEggs!)) out.push(`디지에그화 ${m.needEggs}회 이상`);
   return out;
 }
@@ -96,7 +111,8 @@ export function entryLimits(m: Match): string {
     m.limitFamilies ? `${m.limitFamilies.join('·')} 종족 한정` : '',
     m.limitAttr ? `${m.limitAttr} 속성 한정` : '',
     m.limitPersonality ? `성격 ${m.limitPersonality} 한정` : '',
-    m.limitKind || m.unknownLimit ? (m.limitNote ?? '') : '',
+    m.limitKind ? (m.limitNote ?? '') : '',
+    m.limitEra ? ERA_NAME[m.limitEra] : '',
     m.needEggs ? `디지에그화 ${m.needEggs}회 이상` : '',
   ].filter(Boolean).join(' · ');
 }
@@ -237,16 +253,16 @@ export function applyMatch(save: SaveData, m: Match, won: boolean): SaveData {
     const p = prelimOf(save, d.year);
     const next = { year: d.year, days: [...p.days, d.day], wins: p.wins + (won ? 1 : 0) };
     const qualified = next.wins >= PRELIM_WINS;
-    return { ...save, prelim: next, qualifiedYear: qualified ? d.year : save.qualifiedYear, bits: save.bits + (next.wins === PRELIM_WINS && p.wins < PRELIM_WINS ? PRELIM_PRIZE : 0) };
+    return { ...save, prelim: next, qualifiedYear: qualified ? d.year : save.qualifiedYear, bits: Math.min(MONEY_MAX, save.bits + (next.wins === PRELIM_WINS && p.wins < PRELIM_WINS ? PRELIM_PRIZE : 0)) };
   }
   if (m.id === 'final') {
     if (!won) return { ...save, qualifiedYear: null, finalRound: 0, prelim: null };
     const round = (save.finalRound ?? 0) + 1;
     const champion = round >= FINAL_ROUNDS.length;
-    return { ...save, finalRound: champion ? 0 : round, champion: save.champion || champion, bits: save.bits + (champion ? CHAMP_PRIZE : 0) };
+    return { ...save, finalRound: champion ? 0 : round, champion: save.champion || champion, bits: Math.min(MONEY_MAX, save.bits + (champion ? CHAMP_PRIZE : 0)) };
   }
   if (!won) return save;
-  return { ...save, titles: save.titles.includes(m.id) ? save.titles : [...save.titles, m.id], bits: save.bits + m.prize };
+  return { ...save, titles: save.titles.includes(m.id) ? save.titles : [...save.titles, m.id], bits: Math.min(MONEY_MAX, save.bits + m.prize) };
 }
 
 export function applyWin(save: SaveData, m: Match): SaveData {

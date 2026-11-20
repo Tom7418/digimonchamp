@@ -1095,7 +1095,8 @@
       if(team.length<m.format)problems.unshift(m.format+'마리를 선택해 주세요');
       const prizeText=m.id==='prelim'?`예선 통과 시 ${C.PRELIM_PRIZE.toLocaleString('ko-KR')}`:m.id==='final'?`우승 시 ${C.CHAMP_PRIZE.toLocaleString('ko-KR')}`:m.prize.toLocaleString('ko-KR');
       const holder=C.titleHolder(m.id),foeText=holder?`홀더 「${holder.name}」 ${holder.members.map(f=>f.nick).join('·')}`:`상대 ${C.STAGE_LABEL[m.stage]}`;
-      return `${m.format} VS ${m.foes??m.format} · ${foeText} · 상금 ${prizeText} ฿${limits?' · '+limits:''}${problems.length?' (조건 미충족: '+problems.join(', ')+')':''}`;
+      if(m.fee&&save.bits<m.fee)problems.push('소지금 부족');
+      return `${m.format} VS ${m.foes??m.format} · ${foeText} · 참가비 ${(m.fee??0).toLocaleString('ko-KR')} ฿ · 상금 ${prizeText} ฿${limits?' · '+limits:''}${problems.length?' (조건 미충족: '+problems.join(', ')+')':''}`;
     };
     showModal('배틀',
       `<p>출전할 디지몬을 선택하세요. <b>1:1은 첫 번째,3:3은 선택한 세 마리</b>가 나갑니다. 다시 누르면 제외됩니다.</p>
@@ -1121,7 +1122,7 @@
       body.querySelectorAll('[data-tactic]').forEach(b=>b.onclick=()=>{const d=save.digimon.find(x=>x.uid===+b.dataset.tactic);if(!d)return;d.tactic=b.dataset.mode;persist();updateRoster();});
       body.querySelector('#battle-roster-count').textContent=`선택 ${roster.length}/3 · ${roster.map(uid=>nameOf(save.digimon.find(d=>d.uid===uid))).join(' → ')||'출전할 디지몬을 골라 주세요'}`;
       body.querySelectorAll('[data-title]').forEach(b=>{
-        const m=titles[+b.dataset.title];b.disabled=teamFor(m.format).length<m.format||C.entryProblems(m,teamFor(m.format)).length>0;b.querySelector('small').textContent=titleText(m);
+        const m=titles[+b.dataset.title];b.disabled=teamFor(m.format).length<m.format||C.entryProblems(m,teamFor(m.format)).length>0||save.bits<(m.fee??0);b.querySelector('small').textContent=titleText(m);
       });
       body.querySelectorAll('[data-free]').forEach(b=>{const f=free[+b.dataset.free];b.disabled=!freeOpen||teamFor(f.format).length<f.format;});
     }
@@ -1145,6 +1146,8 @@
     if (team.length < setup.format) return toast(`${setup.format}:${setup.format}에는 건강한 디지몬 ${setup.format}마리가 필요해요.`);
     if(new Set(team.map(d=>d.uid)).size!==team.length)return toast('같은 디지몬을 중복 출전시킬 수 없어요.');
     if(setup.match){const problems=C.entryProblems(setup.match,team);if(problems.length)return toast(problems.join(', '));}
+    // 원본: 타이틀 참가비는 출전을 정할 때 내고, 모자라면 출전할 수 없다 (overlay9_10 0x2115DE8)
+    if(setup.match?.fee){const paid=C.payEntryFee(save,setup.match);if(!paid.ok)return toast('소지금이 부족합니다.');save=paid.save;persist();log(`참가비 ${setup.match.fee.toLocaleString('ko-KR')} ฿ 지불`);}
     // 타이틀 매치는 원본 홀더 팀(NPC 표)과 싸운다. 챔피언십처럼 홀더가 없는 경기만 무작위 상대
     const holderFoes = setup.match ? C.titleHolderFoes(setup.match.id, Math.random) : null;
     const foes = setup.free ? C.freeBattleFoes(setup.free, Math.random) : holderFoes ?? C.makeEnemies(setup.stage, setup.foes ?? setup.format, setup.scale, Math.random);
@@ -1267,7 +1270,7 @@
     // 타이틀은 이겼을 때만, 챔피언십 예선·본선은 진 것도 기록한다
     const bitsBefore = save.bits;
     if (m) save = C.applyMatch(save, m, won);
-    else if (won) save = { ...save, bits: save.bits + b.setup.prize };
+    else if (won) save = C.addBits(save, b.setup.prize);
     const after = C.tamerRank(save);
     const why = b.state.reason === 'timeout' ? ' (시간 종료 판정)' : '';
     const gained = save.bits - bitsBefore;
