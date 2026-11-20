@@ -1210,6 +1210,11 @@
             battleLog(`${attacker.name} · ${e.skill.name} → ${target.name} (${e.damage}${cost})`);
           }
         }
+        if (e.type === 'status') {
+          b.flashes.push({ id: e.id, text: e.status, until: performance.now() + 900, color: '#c79bff' });
+          battleLog(`${b.state.units[e.id].name}: ${e.status} 상태`);
+        }
+        if (e.type === 'statusDamage') b.flashes.push({ id: e.id, text: `-${e.damage} ${e.status}`, until: performance.now() + 700, color: '#a6e36b' });
         if (e.type === 'hit') {
           // 피해 0은 원작처럼 공격을 막아 낸 것으로 표시(txt_list #1847), 크리티컬은 따로 표시한다
           const text = e.damage === 0 ? '막음' : `-${e.damage}${e.critical ? ' 크리티컬!' : e.special ? '!' : ''}`;

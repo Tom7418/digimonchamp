@@ -28,8 +28,9 @@ for i in range(600):
     kind = struct.unpack_from('<I', rec, 0x50)[0]
     element = struct.unpack_from('<I', rec, 0x58)[0]
     base, var = struct.unpack_from('<HH', rec, 0x4C)
+    effect = struct.unpack_from('<I', rec, 0x5C)[0]  # 공격: 상태이상 1~13, 지원: 효과 번호
     if power or kind or element:
-        records[str(i)] = {'power': power, 'kind': kind, 'element': element, 'time': [base, var]}
+        records[str(i)] = {'power': power, 'kind': kind, 'element': element, 'time': [base, var], 'effect': effect}
 terrain = [list(struct.unpack_from('<11b', ov19, 0x021339DC - OV + r * 11)) for r in range(12)]
 crit = list(struct.unpack_from('<4I', ov19, 0x021337C4 - OV))
 habitat = [struct.unpack_from('<I', arm9, 0xC0CB0 + i * 132 + 72)[0] for i in range(216)]
@@ -40,7 +41,14 @@ names = [l.split('|')[0] for l in (REPO / 'src/data/species.txt').read_text(enco
 tactics = [list(struct.unpack_from('<6H', ov19, 0x021338E8 - OV + r * 12)) for r in range(3)]
 # 작전별 TP 예산 표 overlay19 0x02133954 [작전][단계 0~7] = 최대 TP의 %. 단계 = 배틀 경과 900프레임(15초)마다 +1 (0x2110F90)
 budget = [list(struct.unpack_from('<8H', ov19, 0x02133954 - OV + r * 16)) for r in range(3)]
-out = {'records': records, 'tactics': tactics, 'tpBudget': budget, 'terrain': terrain, 'critTable': crit, 'critRoll': 216,
+# 상태이상 걸릴 확률 (216분의): 일반 0x02133998, 다운(효과 13) 0x02133994, 8바이트 간격 9칸 [공격 곡선 번호 − 막는 번호 −4~+4]
+status_chance = [struct.unpack_from('<i', ov19, 0x02133998 - OV + k * 8)[0] for k in range(9)]
+down_chance = [struct.unpack_from('<i', ov19, 0x02133994 - OV + k * 8)[0] for k in range(9)]
+status_frames = list(struct.unpack_from('<15H', ov19, 0x0213382C - OV))  # 상태 번호별 지속 프레임
+rage_limit = list(struct.unpack_from('<8H', ov19, 0x021337D4 - OV))      # 성격별 분노 게이지 한도
+fear_action = list(struct.unpack_from('<6H', ov19, 0x021337A0 - OV))     # 공포 중 행동 표
+out = {'records': records, 'statusChance': status_chance, 'downChance': down_chance, 'statusFrames': status_frames,
+       'rageLimit': rage_limit, 'fearAction': fear_action, 'tactics': tactics, 'tpBudget': budget, 'terrain': terrain, 'critTable': crit, 'critRoll': 216,
        'habitat': dict(zip(names, habitat)), 'critLevel': dict(zip(names, crit_level))}
 (REPO / 'src/data/battle-formula.json').write_text(json.dumps(out, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
 print(len(records), 'records')

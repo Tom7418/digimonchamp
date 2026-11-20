@@ -40,11 +40,11 @@ export function useSupport(s: BattleState,u:Unit,events:BattleEvent[]): boolean 
       if(!targets.length)continue;
       targets.forEach(a=>a.taunt={from:u.id,until:s.t+15});
     }else if(skill.id===8||skill.id===9){
-      // 전투에 현재 존재하는 후퇴/도발 방해를 해소한다. 없는 상태이상 때문에 TP를 쓰지 않는다.
-      targets=allies.filter(a=>a.retreat>0||(a.taunt?.until??0)>s.t);
+      // 원본 효과 20: 상태이상(+0x158)을 지운다 (0x2117CF4). 웹판은 도발에 걸린 것도 함께 푼다. 지울 것이 없으면 TP를 쓰지 않는다.
+      targets=allies.filter(a=>(a.status&&a.status.until>s.t)||(a.taunt?.until??0)>s.t);
       if(!targets.length)continue;
       if(skill.id===8)targets=targets.slice(0,1);
-      targets.forEach(a=>{a.retreat=0;a.taunt=undefined;});
+      targets.forEach(a=>{a.status=undefined;a.taunt=undefined;});
     }else{
       const key=buffKey(skill.id);if(!key)continue;
       const all=skill.id%2===1;
