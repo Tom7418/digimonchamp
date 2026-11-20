@@ -446,7 +446,7 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
         const skill = budget > 0 ? pickBattleSkill(u.speciesId, rng, budget - 1, u.personality) : null;
         u.intent = skill ? { kind: 'special', skill } : { kind: 'basic' };
       } else if (action === 'basic') u.intent = { kind: 'basic' };
-      else if (action === 'support' && !(coward && d <= 70) && useSupport(s, u, events)) { u.cd = actionSeconds(null, u.stats.spd) + wait; continue; }
+      else if (action === 'support' && !(coward && d <= 70) && useSupport(s, u, events, tpBudget(u.mode, u.maxTp, u.tp, s.t), rng)) { u.cd = actionSeconds(null, u.stats.spd) + wait; continue; }
       else { u.cd = wait; u.keep = keepDistance(hasStatus(u, s.t, 2) ? '공포' : u.mode, Math.floor(rng() * 216)); }
     }
     if (!u.intent) {

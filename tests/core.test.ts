@@ -4,7 +4,7 @@ import skillTable from '../src/data/battle-skills.json';
 import skillAudit from '../docs/battle-skills-audit.json';
 import { BATTLE_MAPS, RANDOM_BATTLE_MAPS, TITLE_BATTLE_MAPS, battleMapFor } from '../src/core/battle-maps';
 import supportTable from '../src/data/support-skills.json';
-import { supportSkills, useSupport, reviveSupport, buffMultiplier, battleElement } from '../src/core/support-skills';
+import { supportSkills, useSupport, reviveSupport, buffMultiplier, battleElement, supportCategory } from '../src/core/support-skills';
 import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
@@ -1430,7 +1430,7 @@ describe('배틀 접근 AI 회귀',()=>{
   it('지원의 체력이 낮은 아군 회복 우선순위는 유지한다',()=>{
     const a={...newDigimon(1,'파닥몬'),personality:'열혈' as const},b={...newDigimon(2,'코로몬'),personality:'솔직' as const};
     const state=createBattle([entrantOf(a,'지원'),entrantOf(b,'일반')],[entrantOf(newDigimon(3,'아구몬'),'일반')]);
-    state.units[0].cd=0;state.units[0].tp=30;state.units[1].hp=state.units[1].maxHp*.3;
+    state.t=20;state.units[0].cd=0;state.units[0].tp=30;state.units[1].hp=state.units[1].maxHp*.3; // 지원 작전 TP 예산: 15초 뒤 30%
     expect(stepBattle(state,firstThen(.3))).toEqual(expect.arrayContaining([expect.objectContaining({type:'heal',from:0,to:1})]));
     expect(state.units[0].tp).toBe(25);
   });
@@ -1791,10 +1791,11 @@ describe('사용자 지정 성격 효과와 원본 SP 연결',()=>{
     }
   });
   it('도발은 적의 타겟을 시전자에게 바꾸고 방어 SP는 지속 중 재사용/TP 낭비를 막는다',()=>{
-    const s=createBattle([entrantOf(mon(1,'열혈'),'지원'),entrantOf(mon(2),'일반')],[entrantOf(mon(3),'일반')]);s.units[0].cd=0;
+    // 원본: 도발은 전원 강화와 같은 분류라, 자기가 무언가 강화 중일 때 쓴다 (0x2119548, 표 0x2133A34)
+    const s=createBattle([entrantOf(mon(1,'열혈'),'지원'),entrantOf(mon(2),'일반')],[entrantOf(mon(3),'일반')]);s.t=20;s.units[0].cd=0;s.units[0].buffs={atk:99};
     const events=stepBattle(s,firstThen(.3));expect(events).toEqual(expect.arrayContaining([expect.objectContaining({type:'support',skill:expect.objectContaining({id:1})})]));expect(s.units[2].taunt?.from).toBe(0);
-    const b=duel('대담','지원');b.units[0].cd=0;const tp=b.units[0].tp;stepBattle(b,firstThen(.3));expect(b.units[0].tp).toBe(tp-10);expect(buffMultiplier(b.units[0],'def',b.t)).toBe(1.15);
-    b.units[0].cd=0;const out:Parameters<typeof useSupport>[2]=[];expect(useSupport(b,b.units[0],out)).toBe(false);expect(b.units[0].tp).toBe(tp-10);expect(buffMultiplier(b.units[0],'def',16)).toBe(1);
+    const b=duel('대담','지원');b.t=50;b.units[0].cd=0;const tp=b.units[0].tp;stepBattle(b,firstThen(.3));expect(b.units[0].tp).toBe(tp-10);expect(buffMultiplier(b.units[0],'def',b.t)).toBe(1.15);
+    b.units[0].cd=0;const out:Parameters<typeof useSupport>[2]=[];expect(useSupport(b,b.units[0],out)).toBe(false);expect(b.units[0].tp).toBe(tp-10);expect(buffMultiplier(b.units[0],'def',b.t+16)).toBe(1);
   });
   it('파닥몬 쿨의 부활은 KO 직후 한 번만 소비하며 승패 판정 전에 복귀한다',()=>{
     const s=createBattle([entrantOf(mon(1,'쿨','파닥몬'),'일반')],[entrantOf(mon(2),'일반')]);s.units[0].hp=1;s.units[1].x=100;s.units[1].cd=0;const tp=s.units[0].tp;
@@ -1820,6 +1821,14 @@ it('치료량은 원본 고정값, 강화는 한 칸뿐이라 새 강화가 이�
   const ev:Parameters<typeof useSupport>[2]=[];useSupport(s,s.units[0],ev);
   expect(ev.find(e=>e.type==='heal')).toMatchObject({amount:300});
 });
+it('지원 기술 분류와 시도 조건 (overlay19 0x2117748·0x211932C)',()=>{
+  expect([1,2,5,8,9,10,11,26,27,28,30].map(supportCategory)).toEqual([6,1,2,3,4,5,6,5,6,7,8]);
+  const caster={...newDigimon(1,'파닥몬',()=>.5),personality:'열혈' as const};
+  const s=createBattle([entrantOf(caster,'지원')],[entrantOf(newDigimon(3,'아구몬',()=>.5),'일반')]);
+  s.units[0].tp=100;s.units[0].cd=0;s.units[0].hp=Math.ceil(s.units[0].maxHp*.45); // 45%: 단일 치료 조건(40% 미만) 아님
+  expect(useSupport(s,s.units[0],[])).toBe(false);
+  s.units[0].hp=Math.floor(s.units[0].maxHp*.35);expect(useSupport(s,s.units[0],[])).toBe(true);
+});
 it('단일/전체 강화와5종 내성 SP가 실제 소유 쌍으로 발동하고15초 뒤 해제된다',()=>{
   const seen=new Set<number>();
   for(const [species,row] of Object.entries(supportTable.species))for(let index=0;index<2;index++){
@@ -1827,9 +1836,11 @@ it('단일/전체 강화와5종 내성 SP가 실제 소유 쌍으로 발동하�
     const d={...newDigimon(1,species,()=>.5),personality:row.personalities[index] as Digimon['personality']};
     const s=createBattle([entrantOf(d,'지원'),entrantOf(newDigimon(2,'아구몬',()=>.5),'일반')],[entrantOf(newDigimon(3,'아구몬',()=>.5),'일반')]);
     s.units[0].tp=100;s.units[0].cd=0;s.units[0].buffs={[id<=11?'def':'atk']:99};const events:Parameters<typeof useSupport>[2]=[];
-    expect(useSupport(s,s.units[0],events)).toBe(true);expect(events).toEqual([expect.objectContaining({type:'support',targets:id%2?[0,1]:[0],skill:expect.objectContaining({id})})]);
-    expect(Object.keys(s.units[0].buffs!)).toHaveLength(1); // 강화 칸 하나: 이전 강화가 사라진다
-    const key=Object.keys(s.units[0].buffs!)[0] as Parameters<typeof buffMultiplier>[1];expect(buffMultiplier(s.units[0],key,0)).toBe(1.15);expect(buffMultiplier(s.units[0],key,15)).toBe(1);
+    // 전원 강화는 편 모두, 단일 강화는 강화가 없는 편 하나(여기서는 시전자가 이미 강화 중이라 1번)에게 (0x2119584)
+    expect(useSupport(s,s.units[0],events)).toBe(true);expect(events).toEqual([expect.objectContaining({type:'support',targets:id%2?[0,1]:[1],skill:expect.objectContaining({id})})]);
+    const who=s.units[id%2?0:1];
+    expect(Object.keys(who.buffs!)).toHaveLength(1); // 강화 칸 하나: 이전 강화가 사라진다
+    const key=Object.keys(who.buffs!)[0] as Parameters<typeof buffMultiplier>[1];expect(buffMultiplier(who,key,0)).toBe(1.15);expect(buffMultiplier(who,key,15)).toBe(1);
   }
   expect([...seen].sort((a,b)=>a-b)).toEqual(Array.from({length:18},(_,i)=>i+10));
   expect(battleElement(battleSkills('아구몬')[0].record)).toBe('열');expect(battleElement(battleSkills('위자몬')[0].record)).toBe('천둥');

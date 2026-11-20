@@ -9681,7 +9681,6 @@ var ChampCore = (function(exports) {
 		5: "천둥"
 	})[DATA.elements[String(record)]];
 	var buffMultiplier = (u, key, time) => (u.buffs?.[key] ?? 0) > time ? 1.15 : 1;
-	var active = (u, key, s) => (u.buffs?.[key] ?? 0) > s.t;
 	var buffKey = (id) => ({
 		10: "atk",
 		11: "atk",
@@ -9702,18 +9701,50 @@ var ChampCore = (function(exports) {
 		26: "어둠",
 		27: "어둠"
 	})[id];
-	/** 소유/이름/TP·회복량·부활량·15초 지속·강화 한 칸은 원본, AI 우선순위는 웹판 임시 정책이다.
+	/** 소유/이름/TP·회복량·부활량·15초 지속·강화 한 칸·시도 순서와 조건은 원본(overlay19 0x211932C~0x2119654).
 	*  강화 번호(효과 21~29 → 버프 1~9): 1 공격업 2 방어업 3 민첩업 4 크리티컬업·명중업 5 화염 6 물(추위) 7 천둥 8 빛 9 어둠 */
-	function useSupport(s, u, events) {
+	/** 지원 기술 분류 (전투 시작 때 나누는 표 0x2117748): 1 단일 치료, 2 전원 치료, 3 회복, 4 전원 회복, 5 단일 강화, 6 전원 강화·도발, 7 부활, 8 용기 */
+	var supportCategory = (id) => id >= 2 && id <= 4 ? 1 : id >= 5 && id <= 7 ? 2 : id === 8 ? 3 : id === 9 ? 4 : id === 1 ? 6 : id >= 10 && id <= 27 ? id % 2 === 0 ? 5 : 6 : id === 28 || id === 29 ? 7 : id === 30 ? 8 : 0;
+	/** 상태이상의 위급도 (0x2115CEC): 분노·공포·슬로우 1, 소극적·독·얼음·수면·마비·눈가림 2, 혼란·석화·저주 3, 다운 0 */
+	var statusWeight = (a, t) => !a.status || a.status.until <= t ? 0 : [
+		1,
+		2,
+		6
+	].includes(a.status.id) ? 1 : [
+		5,
+		12,
+		13
+	].includes(a.status.id) ? 3 : a.status.id === 14 ? 0 : 2;
+	var pct = (a) => Math.trunc(a.hp * 100 / a.maxHp);
+	/** 시도 순서: 전원 치료 → 단일 치료 → 전원 회복 → 회복 → 전원 강화·도발 → 단일 강화. 각 분류의 첫 기술이 소비 TP < 예산일 때만 쓴다 */
+	var ORDER = [
+		2,
+		1,
+		4,
+		3,
+		6,
+		5
+	];
+	function useSupport(s, u, events, budget = u.tp + 1, rng = () => 0) {
 		if (u.cd > 0) return false;
 		const allies = s.units.filter((a) => a.team === u.team && a.alive), foes = s.units.filter((a) => a.team !== u.team && a.alive);
-		for (const skill of supportSkills(u.speciesId, u.personality)) {
-			if (skill.tpCost > u.tp || skill.id >= 28) continue;
+		const owned = supportSkills(u.speciesId, u.personality);
+		const myBuff = Object.entries(u.buffs ?? {}).find(([, until]) => until > s.t)?.[0];
+		for (const cat of ORDER) {
+			const skill = owned.find((sk) => supportCategory(sk.id) === cat && sk.tpCost < Math.min(budget, u.tp + 1));
+			if (!skill) continue;
 			let targets = [], amounts = [];
-			if (skill.id >= 2 && skill.id <= 7) {
-				const weak = allies.filter((a) => a.hp / a.maxHp < .7).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
-				if (!weak.length) continue;
-				targets = skill.id >= 5 ? allies.filter((a) => a.hp < a.maxHp) : [weak[0]];
+			if (cat === 2) {
+				const ps = allies.map(pct);
+				if (!(ps.every((p) => p < 60) || ps.some((p) => p < 40) || ps.some((p) => p < 50) && ps.every((p) => p < 80))) continue;
+				targets = allies;
+			} else if (cat === 1) {
+				const need = (a) => pct(a) < 20 ? 2 : pct(a) < 40 ? 1 : 0;
+				const best = allies.reduce((x, a) => need(a) > (x ? need(x) : 0) ? a : x, void 0);
+				if (!best) continue;
+				targets = [best];
+			}
+			if (cat === 1 || cat === 2) {
 				const amount = [
 					300,
 					900,
@@ -9733,28 +9764,33 @@ var ChampCore = (function(exports) {
 						support: skill
 					});
 				});
+			} else if (cat === 3 || cat === 4) {
+				const ill = allies.filter((a) => statusWeight(a, s.t) > 0 || (a.taunt?.until ?? 0) > s.t);
+				if (!ill.length) continue;
+				targets = cat === 4 ? ill : [ill.reduce((x, a) => statusWeight(a, s.t) > statusWeight(x, s.t) ? a : x)];
+				targets.forEach((a) => {
+					a.status = void 0;
+					a.taunt = void 0;
+				});
 			} else if (skill.id === 1) {
+				if (!myBuff) continue;
 				targets = foes.filter((a) => a.taunt?.from !== u.id || (a.taunt?.until ?? 0) <= s.t);
 				if (!targets.length) continue;
 				targets.forEach((a) => a.taunt = {
 					from: u.id,
 					until: s.t + 15
 				});
-			} else if (skill.id === 8 || skill.id === 9) {
-				targets = allies.filter((a) => a.status && a.status.until > s.t || (a.taunt?.until ?? 0) > s.t);
-				if (!targets.length) continue;
-				if (skill.id === 8) targets = targets.slice(0, 1);
-				targets.forEach((a) => {
-					a.status = void 0;
-					a.taunt = void 0;
-				});
 			} else {
 				const key = buffKey(skill.id);
 				if (!key) continue;
-				const all = skill.id % 2 === 1;
-				targets = allies.filter((a) => !active(a, key, s));
-				if (!targets.length) continue;
-				if (!all) targets = [targets.includes(u) ? u : targets[0]];
+				if (cat === 6) {
+					if (myBuff === key) continue;
+					targets = allies;
+				} else {
+					const free = allies.filter((a) => !Object.values(a.buffs ?? {}).some((until) => until > s.t));
+					if (!free.length) continue;
+					targets = [free[Math.floor(rng() * 216) % free.length]];
+				}
 				targets.forEach((a) => a.buffs = { [key]: s.t + 15 });
 			}
 			u.tp -= skill.tpCost;
@@ -10303,7 +10339,7 @@ var ChampCore = (function(exports) {
 						skill
 					} : { kind: "basic" };
 				} else if (action === "basic") u.intent = { kind: "basic" };
-				else if (action === "support" && !(coward && d <= 70) && useSupport(s, u, events)) {
+				else if (action === "support" && !(coward && d <= 70) && useSupport(s, u, events, tpBudget(u.mode, u.maxTp, u.tp, s.t), rng)) {
 					u.cd = actionSeconds(null, u.stats.spd) + wait;
 					continue;
 				} else {
@@ -11175,6 +11211,7 @@ var ChampCore = (function(exports) {
 	exports.statBounds = statBounds;
 	exports.statusChance = statusChance;
 	exports.stepBattle = stepBattle;
+	exports.supportCategory = supportCategory;
 	exports.supportSkills = supportSkills;
 	exports.tamerRank = tamerRank;
 	exports.terrainOf = terrainOf;
