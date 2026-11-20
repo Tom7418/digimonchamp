@@ -9,13 +9,14 @@ import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
-import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET } from '../src/core/care';
+import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy } from '../src/core/care';
 import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage, HUNT_GEAR_SLOTS, huntGearSlots, huntLoadout, toggleLoadout } from '../src/core/hunt';
+import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
 import { discardFloorFood, ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -1940,21 +1941,45 @@ describe('타이틀 참가비·시대 한정·소지금 상한 (원본)', () => 
   });
 });
 
-describe('사냥 장비 칸 (원본 랭크 표 +20)', () => {
-  const base = () => ({ ...freshEggSave(0), gear: { hand1: 5, bait1: 3, wire_n1: 2, bomb1: 1 } as Record<string, number> });
-  it('그린 2칸, 레드 3칸, 브론즈부터 4칸', () => {
-    expect(HUNT_GEAR_SLOTS.slice(1)).toEqual([2, 2, 3, 3, 4, 4, 4, 4, 4, 4]);
-    expect(huntGearSlots(base())).toBe(2);
-    expect(huntGearSlots({ ...base(), titles: rankUp(3) })).toBe(3);
+describe('사냥 플러그인 (원본 아이템 표·랭크 표 +20)', () => {
+  const base = () => ({ ...freshEggSave(0), bits: 999999, plugins: ['an_stage', 'gen_a', 'ck_shot', 'memory'] });
+  it('30종, 원본 가격·해금, 칸 수는 그린 2 · 레드 3 · 브론즈부터 4', () => {
+    expect(PLUGINS).toHaveLength(30);
+    expect(pluginPrice(pluginOf('an_o')!)).toBe(88000);
+    expect(pluginPrice(pluginOf('gen_a')!)).toBe(2000);
+    expect(PLUGIN_SLOTS.slice(1)).toEqual([2, 2, 3, 3, 4, 4, 4, 4, 4, 4]);
+    expect(pluginSlots(base())).toBe(2);
+    expect(pluginSlots({ ...base(), titles: rankUp(3) })).toBe(3);
+    // 처음 상점에는 해금 조건이 없는 제네 애널라이저·제너레이터α만
+    expect(shopPlugins(freshEggSave(0)).map((p) => p.id)).toEqual(['an_stage', 'gen_a']);
   });
-  it('칸이 차면 더 넣지 못하고, 가진 것만 남는다', () => {
-    let s = toggleLoadout(base(), 'hand1');
-    s = toggleLoadout(s, 'bait1');
-    s = toggleLoadout(s, 'bomb1');
-    expect(huntLoadout(s)).toEqual(['hand1', 'bait1']);
-    s = toggleLoadout(s, 'hand1');
-    expect(huntLoadout(s)).toEqual(['bait1']);
-    expect(huntLoadout({ ...s, gear: { ...s.gear, bait1: 0 } })).toEqual([]);
-    expect(huntLoadout(toggleLoadout(s, 'nothing'))).toEqual(['bait1']);
+  it('칸이 차면 더 넣지 못하고, 가진 것만 장비된다', () => {
+    let s = togglePlugin(base(), 'an_stage');
+    s = togglePlugin(s, 'gen_a');
+    s = togglePlugin(s, 'ck_shot');
+    expect(equippedPlugins(s).map((p) => p.id)).toEqual(['an_stage', 'gen_a']);
+    s = togglePlugin(s, 'an_stage');
+    expect(equippedPlugins(s).map((p) => p.id)).toEqual(['gen_a']);
+    expect(equippedPlugins(togglePlugin(s, 'an_o')).map((p) => p.id)).toEqual(['gen_a']);
+  });
+  it('효과: 애널라이저는 종류+항목, 레이더는 맞는 디지몬만, 체커·메모리 체커', () => {
+    const v = pluginView({ ...base(), titles: rankUp(5), pluginLoadout: ['an_stage', 'gen_a', 'ck_shot', 'memory'] });
+    expect(v.species).toBe(true);
+    expect([...v.analyze]).toEqual(['stage']);
+    expect(v.onRadar({ stage: 2, attr: '없음', family: '없음' })).toBe(true);
+    expect(v.onRadar({ stage: 3, attr: '백신', family: '용' })).toBe(false);
+    expect([...v.check]).toEqual(['shot']);
+    expect(v.memory).toBe(true);
+    const none = pluginView(freshEggSave(0));
+    expect([none.species, none.memory, none.onRadar({ stage: 1, attr: '', family: '' })]).toEqual([false, false, false]);
+  });
+  it('상점에서 사면 빈 칸에 바로 장비된다', () => {
+    const s0 = { ...freshEggSave(0), bits: 5000 };
+    const item = shopItems(s0).find((i) => i.id === 'plugin:gen_a')!;
+    const r = buy(s0, item);
+    expect(r.save.plugins).toEqual(['gen_a']);
+    expect(equippedPlugins(r.save).map((p) => p.id)).toEqual(['gen_a']);
+    expect(r.save.bits).toBe(3000);
+    expect(shopItems(r.save).some((i) => i.id === 'plugin:gen_a')).toBe(false);
   });
 });

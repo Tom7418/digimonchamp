@@ -6,6 +6,7 @@ import { endOfLife, findEvolution, type EvoResult } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, migrateTitleIds, tamerRank } from './titles';
 import { bestRope, MEMORY_CARDS, ROPES, START_ROPE, WIRE_PACK, BAIT_PACK, BAITS, GEARS, gearCount, itemUnlocked, SHOT_PACK, SHOTS } from './hunt';
+import { pluginPrice, shopPlugins, togglePlugin } from './plugins';
 import { ATTRS, FAMILIES, PERSONALITIES, STAT_KEYS, type ApKey, type Digimon, type SaveData, type Stats } from './types';
 
 /** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
@@ -820,11 +821,13 @@ export function release(save: SaveData, uid: number): ActionResult {
 }
 
 /** 사냥에서 잡기. carried = 이번 사냥에서 이미 메모리카드에 넣은 용량(G) */
-export function capture(save: SaveData, speciesId: string, rng: Rng = defaultRng, carried = 0): ActionResult {
+/** personality: 사냥터에서 미리 정해 둔 성격 (정신 애널라이저로 본 값과 같게) */
+export function capture(save: SaveData, speciesId: string, rng: Rng = defaultRng, carried = 0, personality?: Digimon['personality']): ActionResult {
   const size = getSpecies(speciesId).size;
   if (carried + size > save.memoryCard) return fail(save, `메모리카드 용량이 가득 찼습니다. (${carried}/${save.memoryCard}G)`);
   if (usedCapacity(save) + size > capacityOf(save)) return fail(save, '용량이 가득 찼습니다. 디지몬을 줄여 주세요.');
   const d = newDigimon(save.nextUid, speciesId, rng, true);
+  if (personality) d.personality = personality;
   return {
     ok: true,
     message: `${getSpecies(speciesId).name}을(를) 잡았다!`,
@@ -867,6 +870,9 @@ export function shopItems(save: SaveData): ShopItem[] {
         },
         available: (s) => !s.ropes.includes(r.id) && itemUnlocked(s, r.name),
       });
+  // 플러그인 (원본 아이템 표, 하나씩만 가진다). 사면 빈 칸이 있으면 바로 장비한다
+  for (const pl of shopPlugins(save))
+    items.push({ id: `plugin:${pl.id}`, name: `플러그인: ${pl.name}`, price: pluginPrice(pl), apply: (s) => togglePlugin({ ...s, plugins: [...(s.plugins ?? []), pl.id] }, pl.id), available: (s) => !(s.plugins ?? []).includes(pl.id) });
   for (const c of MEMORY_CARDS)
     if (c.price > 0)
       items.push({ id: `card:${c.id}`, name: c.name, price: c.price, apply: (s) => ({ ...s, memoryCard: Math.max(s.memoryCard, c.size) }), available: (s) => s.memoryCard < c.size && itemUnlocked(s, c.name) });

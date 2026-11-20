@@ -1708,17 +1708,17 @@
       '취소',
     );
     $('#modal-body').querySelectorAll('[data-field]').forEach((b) => (b.onclick = () => startHunt(fields[+b.dataset.field])));
-    $('#modal-body').querySelectorAll('[data-load]').forEach((b) => (b.onclick = () => { save = C.toggleLoadout(save, b.dataset.load); persist(); huntMenu(); }));
+    $('#modal-body').querySelectorAll('[data-plugin]').forEach((b) => (b.onclick = () => { save = C.togglePlugin(save, b.dataset.plugin); persist(); huntMenu(); }));
   }
-  // 원작처럼 사냥 전에 가져갈 장비를 고른다. 칸 수는 랭크에 따라 2·3·4칸 (원본 랭크 표 +20)
+  // 원작처럼 사냥 전에 플러그인을 장비한다. 칸 수는 랭크에 따라 2·3·4칸 (원본 랭크 표 +20)
   function loadoutHtml() {
-    const slots = C.huntGearSlots(save), now = C.huntLoadout(save);
-    const owned = GEAR.filter((x) => C.gearCount(save, x.id) > 0);
-    const list = owned.map((x) => {
-      const on = now.includes(x.id);
-      return `<button data-load="${x.id}" class="${on ? 'active' : ''}"${!on && now.length >= slots ? ' disabled' : ''}>${on ? '✔ ' : ''}${esc(x.name)} ×${C.gearCount(save, x.id)}</button>`;
+    const slots = C.pluginSlots(save), now = C.equippedPlugins(save).map((p) => p.id);
+    const owned = C.PLUGINS.filter((p) => (save.plugins ?? []).includes(p.id));
+    const list = owned.map((p) => {
+      const on = now.includes(p.id);
+      return `<button data-plugin="${p.id}" class="${on ? 'active' : ''}"${!on && now.length >= slots ? ' disabled' : ''}>${on ? '✔ ' : ''}${esc(p.name)}</button>`;
     }).join('');
-    return `<h3>가져갈 장비 ${now.length}/${slots}칸</h3><div class="load-list">${list || '<p class="hint">가진 사냥 장비가 없습니다. 상점에서 살 수 있어요. (로프·기본 와이어는 칸과 상관없이 가져갑니다)</p>'}</div>`;
+    return `<h3>플러그인 ${now.length}/${slots}칸</h3><div class="load-list">${list || '<p class="hint">가진 플러그인이 없습니다. 애널라이저(이름·정보), 레이더(미니맵 표시), 체커(장비 수량)는 상점에서 살 수 있어요.</p>'}</div>`;
   }
 
   // 화면의 잘라낸 좌표를 ATR의 원본 지도 좌표로 바꾼다. 사육장 카메라/줌은 쓰지 않는다.
@@ -1749,7 +1749,7 @@
     return {
       id, x:spot.x-hunt.view.x, y:spot.y-hunt.view.y,
       vx: (side < 0.5 ? -1 : 1) * (15 + Math.random() * 20), vy: (Math.random() - 0.5) * 30,
-      hp: C.wildHp(id), max: C.wildHp(id), flee: 0, flash: 0, turn: 1 + Math.random() * 3,
+      hp: C.wildHp(id), max: C.wildHp(id), personality: C.newDigimon(0, id, Math.random, true).personality, flee: 0, flash: 0, turn: 1 + Math.random() * 3,
     };
   }
   function startHunt(field) {
@@ -1763,7 +1763,7 @@
     const spawnPoints=C.huntSpawnPoints(terrain,{x0:AREA.x0+24,y0:AREA.y0+24,x1:AREA.x1-24,y1:AREA.y1-24});
     if(!spawnPoints.length)return toast('이 구역에 출현 가능한 바닥이 없습니다. 다시 선택해 주세요.');
     save = { ...save, bits: save.bits - field.fee };
-    hunt = { field,terrain,view:viewport,spawnPoints, loadout: C.huntLoadout(save), wilds: [], wires: [], baits: [], traps: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0,
+    hunt = { field,terrain,view:viewport,spawnPoints, plug: C.pluginView(save), wilds: [], wires: [], baits: [], traps: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0,
       size:{w:W,h:H}, zoom:HUNT_ZOOM.start, cam:{x:0,y:0}, pan:null };
     // 첫 화면은 출현 가능한 바닥 아무 곳을 가운데에 둔다
     const first=C.pickHuntSpawn(spawnPoints,Math.random)||{x:W/2,y:H/2};
@@ -1831,19 +1831,24 @@
     }
     huntNote(hits.length ? `${g.name} 폭발! ${hits.length}마리에게 명중${g.effect ? ` · ${g.effect}` : ''}` : `${g.name}이(가) 터졌지만 아무도 없었다.`);
   }
+  // 체커 묶음: 샷 / 와이어 / 엔트랩(고기·미끼·라이트·캐치·프리즌) / 대미지 트랩(폭탄·마인). 묶는 방법은 웹판 해석
+  function checkKind(x) {
+    if (C.shotOf(x.id)) return 'shot';
+    if (C.baitOf(x.id)) return 'entrap';
+    return x.kind === 'wire' ? 'wire' : x.kind === 'bomb' || x.kind === 'mine' ? 'damage' : 'entrap';
+  }
   function refreshGear() {
     const sel = $('#gear-select'), keep = sel.value;
-    // 사냥 전에 장비 칸에 넣은 것만 쓸 수 있다
-    const owned = GEAR.filter((x) => C.gearCount(save, x.id) > 0 && (hunt?.loadout ?? []).includes(x.id));
-    const html = owned.map((x) => `<option value="${x.id}">${esc(x.name)} ×${C.gearCount(save, x.id)}</option>`).join('') || '<option value="">가져온 장비 없음 (사냥 전에 장비 칸에 넣으세요)</option>';
+    // 수량은 그 장비 묶음의 체커 플러그인을 장비했을 때만 보인다 (원작 체커 설명)
+    const owned = GEAR.filter((x) => C.gearCount(save, x.id) > 0);
+    const html = owned.map((x) => `<option value="${x.id}">${esc(x.name)}${hunt?.plug?.check.has(checkKind(x)) ? ` ×${C.gearCount(save, x.id)}` : ''}</option>`).join('') || '<option value="">장비 없음 (상점에서 구매)</option>';
     if (sel.innerHTML !== html) sel.innerHTML = html;
     if (owned.some((x) => x.id === keep)) sel.value = keep;
   }
   // 장비 사용: 샷은 맞은 디지몬을 멈추고(위력 20 이상은 HP 1 감소), 고기는 근처 디지몬을 끌어들인다
   function useGearAt(p) {
     const id = $('#gear-select').value, shot = C.shotOf(id), bait = C.baitOf(id), gear = C.gearOf(id);
-    if (!shot && !bait && !gear) return huntNote('쓸 장비가 없습니다. 사냥 전에 장비 칸에 넣으세요.');
-    if (!(hunt.loadout ?? []).includes(id)) return huntNote('가져오지 않은 장비입니다.');
+    if (!shot && !bait && !gear) return huntNote('쓸 장비가 없습니다. 상점에서 사세요.');
     if (gear && gear.nightOnly && !huntIsNight()) return huntNote(`${gear.name}는 밤에만 쓸 수 있습니다.`);
     // 바닥에 놓는 장비는 차단된 칸에 설치하거나 재고를 소비하지 않는다. 샷/투척 폭탄의 범위 판정은 유지한다.
     if((bait||(gear&&gear.kind!=='bomb'))&&!huntGroundClear(p))return huntNote('이곳에는 장비를 놓을 수 없습니다.');
@@ -2135,7 +2140,7 @@
     huntNote(`${C.getSpecies(w.id).name}이(가) 기절했다! 눌러서 포획하세요 (5초가 지나면 회복하기 시작해요)`);
   }
   function captureFainted(w) {
-    const r = C.capture(save, w.id, Math.random, hunt.carried);
+    const r = C.capture(save, w.id, Math.random, hunt.carried, w.personality);
     if (r.ok) {
       save = r.save;
       hunt.carried += C.getSpecies(w.id).size;
@@ -2238,6 +2243,12 @@
   }
 
   // 미니맵: 지도 전체, 지금 보이는 범위, 야생 디지몬 위치
+  function analyzeText(w, sp) {
+    const a = hunt.plug?.analyze;
+    if (!a?.size) return '';
+    return [a.has('stage') ? C.STAGE_LABEL[sp.stage] : '', a.has('family') ? sp.family : '', a.has('attr') ? sp.attr : '',
+      a.has('hp') ? `최대HP ${C.typicalStats(w.id).hp}` : '', a.has('personality') ? w.personality : '', a.has('size') ? `${sp.size}G` : ''].filter(Boolean).join(' · ');
+  }
   function drawHuntMinimap() {
     const mm = huntMinimapBox();
     if (!mm) return;
@@ -2248,7 +2259,8 @@
     if (hunt.map?.complete && hunt.map.naturalWidth) ctx.drawImage(hunt.map, 0, 0, hunt.size.w, hunt.size.h, mm.x, mm.y, mm.w, mm.h);
     ctx.globalAlpha = 1;
     for (const w of hunt.wilds) {
-      if (w.gone) continue;
+      // 레이더 플러그인(제너레이터·서치·레이더)에 맞는 디지몬만 미니맵에 보인다. 로프에 감긴 디지몬은 늘 보인다
+      if (w.gone || !(w.bound > 0 || hunt.plug?.onRadar(C.getSpecies(w.id)))) continue;
       ctx.fillStyle = w.bound > 0 ? '#ffd36a' : '#ff6a5a';
       ctx.fillRect(mm.x + w.x * mm.k - 2, mm.y + w.y * mm.k - 2, 4, 4);
     }
@@ -2420,7 +2432,10 @@
       ctx.font = 'bold 8px "Noto Sans KR",sans-serif';
       ctx.textAlign = 'center';
       ctx.fillStyle = weak ? '#ffd0c0' : '#ffffff';
-      ctx.fillText(sp.name + (w.ko ? ' (기절 · 눌러서 포획)' : weak ? ` (${C.ropeFor(w.id)?.name ?? '포획 불가'} 필요)` : ''), w.x, w.y + 11);
+      // 종 이름과 정보는 애널라이저 플러그인이 있어야 보인다 (원작 설명: 디지몬의 종류와 ○○를 알 수 있다)
+      ctx.fillText((hunt.plug?.species ? sp.name : '???') + (w.ko ? ' (기절 · 눌러서 포획)' : weak ? ` (${C.ropeFor(w.id)?.name ?? '포획 불가'} 필요)` : ''), w.x, w.y + 11);
+      const info = analyzeText(w, sp);
+      if (info) { ctx.font = '7px "Noto Sans KR",sans-serif'; ctx.fillStyle = '#d8eef5'; ctx.fillText(info, w.x, w.y + 26); }
       for (let k = 0; k < w.max; k++) {
         ctx.fillStyle = k < Math.ceil(w.hp) ? '#e0574b' : '#00000055';
         ctx.fillRect(w.x - w.max * 4 + k * 8, w.y + 14, 7, 3);
@@ -2478,7 +2493,7 @@
     ctx.fillText(`사냥 · ${hunt.field.id}`, 16, 32);
     ctx.fillStyle = '#e6f2f5';
     ctx.font = '13px "Noto Sans KR",sans-serif';
-    ctx.fillText(`${d.seasonName} ${d.day}일 ${pad(d.hour)}:${pad(d.minute)} (22:00 종료) · ${C.ropeOf(save.rope).name} · 와이어 ${save.wires}개 · 카드 ${hunt.carried}/${save.memoryCard}G`, 230, 31);
+    ctx.fillText(`${d.seasonName} ${d.day}일 ${pad(d.hour)}:${pad(d.minute)} (22:00 종료) · ${C.ropeOf(save.rope).name}${hunt.plug?.check.has('wire') ? ` · 와이어 ${save.wires}개` : ''}${hunt.plug?.memory ? ` · 카드 ${hunt.carried}/${save.memoryCard}G` : ''}`, 230, 31);
     const now = performance.now();
     hunt.notes = hunt.notes.filter((n) => n.until > now);
     ctx.textAlign = 'left';

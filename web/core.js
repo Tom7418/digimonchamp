@@ -2733,7 +2733,7 @@ var ChampCore = (function(exports) {
 		return applyMatch(save, m, true);
 	}
 	// src/data/shop.txt?raw
-	var shop_default = "# 원본 실행 코드의 아이템 표 (tools/extract_shop.py). 손으로 고치지 말 것\n# 이름|가격|해금 종류(0 처음, 1 랭크, 2 타이틀)|해금 값|처음 가진 수|최대 소지 수\n디지 로프α|1000|0|0|1|1\n디지 로프β|2500|0|0|0|1\n디지 로프γ|5500|2|25|0|1\n하드 로프α|9000|1|1|0|1\n하드 로프β|14000|2|3|0|1\n하드 로프γ|18000|1|2|0|1\n클론 로프α|20000|1|3|0|1\n클론 로프β|25000|2|42|0|1\n클론 로프γ|32000|1|4|0|1\n알테마 로프α|45000|2|7|0|1\n알테마 로프β|60000|1|5|0|1\n알테마 로프γ|90000|2|49|0|1\n핸드 건α|5|0|0|20|99\n핸드 건β|10|1|2|0|99\n래피드 건α|10|1|1|0|99\n래피드 건β|20|1|3|0|99\n슬립 라이플α|30|1|2|0|99\n슬립 라이플β|50|1|4|0|99\n스턴 라이플α|80|1|3|0|99\n스턴 라이플β|100|1|4|0|99\n샷 건α|60|2|17|0|99\n샷 건β|120|1|6|0|99\n스턴 샷α|180|1|5|0|99\n스턴 샷β|260|2|33|0|99\n노멀 와이어α|10|1|1|0|99\n노멀 와이어β|30|1|2|0|99\n마그넷 와이어α|70|1|3|0|99\n마그넷 와이어β|110|1|4|0|99\n스파크 와이어α|200|1|4|0|99\n스파크 와이어β|400|2|54|0|99\n일반 고기|20|0|0|10|99\n큰 고기|80|2|26|0|99\n독 고기|130|1|2|0|99\n마비 고기|200|1|4|0|99\n미끼|330|1|3|0|99\n미끼EV|800|2|59|0|99\n옐로우 라이트|130|1|2|0|99\n블루 라이트|700|2|11|0|99\n일반 폭탄|80|1|1|0|99\n슬립 폭탄|130|1|3|0|99\n스턴 폭탄|350|1|4|0|99\n플래시 폭탄|550|1|6|0|99\n일반 마인|250|1|5|0|99\n휴즈 마인|800|1|7|0|99\n디지 캐치|5200|2|34|0|99\n디지 프리즌|8800|2|60|0|99\n메모리카드 32|2450|0|0|1|1\n메모리카드 64|4850|1|2|0|1\n메모리카드 96|9850|1|4|0|1\n";
+	var shop_default = "# 원본 실행 코드의 아이템 표 (tools/extract_shop.py). 손으로 고치지 말 것\n# 이름|가격|해금 종류(0 처음, 1 랭크, 2 타이틀)|해금 값|처음 가진 수|최대 소지 수\n디지 로프α|1000|0|0|1|1\n디지 로프β|2500|0|0|0|1\n디지 로프γ|5500|2|25|0|1\n하드 로프α|9000|1|1|0|1\n하드 로프β|14000|2|3|0|1\n하드 로프γ|18000|1|2|0|1\n클론 로프α|20000|1|3|0|1\n클론 로프β|25000|2|42|0|1\n클론 로프γ|32000|1|4|0|1\n알테마 로프α|45000|2|7|0|1\n알테마 로프β|60000|1|5|0|1\n알테마 로프γ|90000|2|49|0|1\n핸드 건α|5|0|0|20|99\n핸드 건β|10|1|2|0|99\n래피드 건α|10|1|1|0|99\n래피드 건β|20|1|3|0|99\n슬립 라이플α|30|1|2|0|99\n슬립 라이플β|50|1|4|0|99\n스턴 라이플α|80|1|3|0|99\n스턴 라이플β|100|1|4|0|99\n샷 건α|60|2|17|0|99\n샷 건β|120|1|6|0|99\n스턴 샷α|180|1|5|0|99\n스턴 샷β|260|2|33|0|99\n노멀 와이어α|10|1|1|0|99\n노멀 와이어β|30|1|2|0|99\n마그넷 와이어α|70|1|3|0|99\n마그넷 와이어β|110|1|4|0|99\n스파크 와이어α|200|1|4|0|99\n스파크 와이어β|400|2|54|0|99\n일반 고기|20|0|0|10|99\n큰 고기|80|2|26|0|99\n독 고기|130|1|2|0|99\n마비 고기|200|1|4|0|99\n미끼|330|1|3|0|99\n미끼EV|800|2|59|0|99\n옐로우 라이트|130|1|2|0|99\n블루 라이트|700|2|11|0|99\n일반 폭탄|80|1|1|0|99\n슬립 폭탄|130|1|3|0|99\n스턴 폭탄|350|1|4|0|99\n플래시 폭탄|550|1|6|0|99\n일반 마인|250|1|5|0|99\n휴즈 마인|800|1|7|0|99\n디지 캐치|5200|2|34|0|99\n디지 프리즌|8800|2|60|0|99\n메모리카드 32|2450|0|0|1|1\n메모리카드 64|4850|1|2|0|1\n메모리카드 96|9850|1|4|0|1\n제네 애널라이저|3000|0|0|0|1\n종족 애널라이저|4000|1|1|0|1\n속성 애널라이저|3000|1|2|0|1\nHP 애널라이저|3000|1|3|0|1\n정신 애널라이저|5500|1|4|0|1\n용량 애널라이저|5500|1|3|0|1\n디지 애널라이저α|16000|2|54|0|1\n디지 애널라이저β|43000|2|39|0|1\n디지 애널라이저Ω|88000|2|44|0|1\n샷 체커|1700|1|1|0|1\n와이어 체커|2500|1|2|0|1\n엔트랩 채커|1700|1|3|0|1\n대미지트랩 체커|1700|1|3|0|1\n올 체커|65000|1|6|0|1\n제너레이터α|2000|0|0|0|1\n제너레이터β|5000|1|1|0|1\n제너레이터γ|12000|1|2|0|1\n제너레이터Ω|33000|1|4|0|1\n데이터 서치|8000|1|2|0|1\n백신 서치|8000|1|3|0|1\n바이러스 서치|8000|2|29|0|1\n레이더 드래곤|5200|1|4|0|1\n레이더 애니멀|3800|2|23|0|1\n레이더 스카이|3800|1|3|0|1\n레이더 아쿠아|3800|2|24|0|1\n레이더 세인트|4500|2|40|0|1\n레이더 다크|4500|2|22|0|1\n레이더 네이처|3800|2|17|0|1\n레이더 메탈|4500|1|4|0|1\n메모리 체커|5000|1|3|0|1\n";
 	// src/core/hunt.ts
 	/** 사냥 가능한 시간: 08:00 ~ 22:00 (22시 이후 불가는 원작, 시작 시각은 영상 화면 08:00 기준) */
 	var HUNT_OPEN_HOUR = 8;
@@ -3179,45 +3179,6 @@ var ChampCore = (function(exports) {
 	var BAIT_PACK = 5;
 	/** 장비 수량 */
 	var gearCount = (save, id) => save.gear?.[id] ?? 0;
-	/**
-	* 사냥에 가져갈 수 있는 장비 칸 수. 원본 랭크 표(arm9 0x020E213C, 36바이트) +20:
-	* 그린·블루 2, 레드·화이트 3, 브론즈부터 4. 사냥 준비 화면(overlay9_12 0x2115E04·0x2115F28)이 이 수만큼
-	* 장비 칸(테이머 +0xA8C, 8바이트: 분류·번호)을 돈다. 분류 1(9종)·2(5종)·3(15종)은 테이머 +0xAAC/+0xABE/+0xAC8의 보유 수
-	*/
-	var HUNT_GEAR_SLOTS = [
-		0,
-		2,
-		2,
-		3,
-		3,
-		4,
-		4,
-		4,
-		4,
-		4,
-		4
-	];
-	var huntGearSlots = (save) => HUNT_GEAR_SLOTS[Math.max(1, Math.min(10, tamerRank(save)))];
-	/** 실제로 가져갈 장비: 가진 것만, 중복 없이, 칸 수까지 */
-	function huntLoadout(save) {
-		return [...new Set(save.huntLoadout ?? [])].filter((id) => gearCount(save, id) > 0).slice(0, huntGearSlots(save));
-	}
-	/** 장비 칸에 넣거나 뺀다. 칸이 차 있으면 그대로 */
-	function toggleLoadout(save, id) {
-		const now = huntLoadout(save);
-		if (now.includes(id)) return {
-			...save,
-			huntLoadout: now.filter((x) => x !== id)
-		};
-		if (now.length >= huntGearSlots(save) || gearCount(save, id) <= 0) return {
-			...save,
-			huntLoadout: now
-		};
-		return {
-			...save,
-			huntLoadout: [...now, id]
-		};
-	}
 	/** 장비 하나 쓰기. 없으면 null */
 	function useGear(save, id) {
 		const n = gearCount(save, id);
@@ -3481,6 +3442,137 @@ var ChampCore = (function(exports) {
 		if (o.kind === 1) return `${rankName(o.value + 1)}부터`;
 		return `타이틀 '${TITLES.find((t) => t.id === `m${o.value}`)?.name ?? o.value}' 획득 시`;
 	}
+	// src/core/plugins.ts
+	/**
+	* 사냥 플러그인 30종 (원작 txt_list 278~307번 이름, 308~337번 설명).
+	* 이름·가격·해금 조건·분류는 원본 아이템 표(arm9 0xE067C, src/data/shop.txt)와
+	* 사냥 준비 화면(overlay9_12 0x2117F40 이름 표, 0x2114318 분류별 목록)에서 확인했다.
+	* 장비 칸 수는 원본 랭크 표(arm9 0x020E213C) +20: 그린·블루 2, 레드·화이트 3, 브론즈부터 4.
+	* 각 플러그인이 보여 주는 내용은 원작 설명 글 그대로이고, 화면에 어떻게 보이는지(이름 아래 글, 미니맵 점, 수량 표시)는 웹판 표현이다.
+	*/
+	var A = (id, name, analyze) => ({
+		id,
+		name,
+		category: 1,
+		analyze
+	});
+	var K = (id, name, check) => ({
+		id,
+		name,
+		category: 2,
+		check
+	});
+	var R = (id, name, radar) => ({
+		id,
+		name,
+		category: 3,
+		radar
+	});
+	var PLUGINS = [
+		A("an_stage", "제네 애널라이저", ["stage"]),
+		A("an_family", "종족 애널라이저", ["family"]),
+		A("an_attr", "속성 애널라이저", ["attr"]),
+		A("an_hp", "HP 애널라이저", ["hp"]),
+		A("an_mind", "정신 애널라이저", ["personality"]),
+		A("an_size", "용량 애널라이저", ["size"]),
+		A("an_a", "디지 애널라이저α", ["stage", "family"]),
+		A("an_b", "디지 애널라이저β", [
+			"stage",
+			"family",
+			"attr"
+		]),
+		A("an_o", "디지 애널라이저Ω", [
+			"stage",
+			"family",
+			"attr",
+			"hp",
+			"personality",
+			"size"
+		]),
+		K("ck_shot", "샷 체커", ["shot"]),
+		K("ck_wire", "와이어 체커", ["wire"]),
+		K("ck_entrap", "엔트랩 채커", ["entrap"]),
+		K("ck_damage", "대미지트랩 체커", ["damage"]),
+		K("ck_all", "올 체커", [
+			"shot",
+			"wire",
+			"entrap",
+			"damage"
+		]),
+		R("gen_a", "제너레이터α", { stages: [1, 2] }),
+		R("gen_b", "제너레이터β", { stages: [3] }),
+		R("gen_c", "제너레이터γ", { stages: [4] }),
+		R("gen_o", "제너레이터Ω", { stages: [5] }),
+		R("se_data", "데이터 서치", { attrs: ["데이터", "프리"] }),
+		R("se_vaccine", "백신 서치", { attrs: ["백신"] }),
+		R("se_virus", "바이러스 서치", { attrs: ["바이러스"] }),
+		R("ra_dragon", "레이더 드래곤", { families: ["용"] }),
+		R("ra_animal", "레이더 애니멀", { families: ["짐승"] }),
+		R("ra_sky", "레이더 스카이", { families: ["새"] }),
+		R("ra_aqua", "레이더 아쿠아", { families: ["물"] }),
+		R("ra_saint", "레이더 세인트", { families: ["성"] }),
+		R("ra_dark", "레이더 다크", { families: ["암흑"] }),
+		R("ra_nature", "레이더 네이처", { families: ["벌레풀"] }),
+		R("ra_metal", "레이더 메탈", { families: ["기계"] }),
+		{
+			id: "memory",
+			name: "메모리 체커",
+			category: 4,
+			memory: true
+		}
+	];
+	var pluginOf = (id) => PLUGINS.find((p) => p.id === id);
+	var pluginPrice = (p) => ORIGINAL_ITEMS[p.name]?.price ?? 0;
+	/** 플러그인 장비 칸 수 (원본 랭크 표 +20) */
+	var PLUGIN_SLOTS = [
+		0,
+		2,
+		2,
+		3,
+		3,
+		4,
+		4,
+		4,
+		4,
+		4,
+		4
+	];
+	var pluginSlots = (save) => PLUGIN_SLOTS[Math.max(1, Math.min(10, tamerRank(save)))];
+	/** 지금 장비한 플러그인: 가진 것만, 중복 없이, 칸 수까지 */
+	function equippedPlugins(save) {
+		const owned = new Set(save.plugins ?? []);
+		return [...new Set(save.pluginLoadout ?? [])].filter((id) => owned.has(id)).slice(0, pluginSlots(save)).map((id) => pluginOf(id)).filter(Boolean);
+	}
+	/** 플러그인을 칸에 넣거나 뺀다. 칸이 다 찼거나 없는 플러그인이면 그대로 */
+	function togglePlugin(save, id) {
+		const now = equippedPlugins(save).map((p) => p.id);
+		if (now.includes(id)) return {
+			...save,
+			pluginLoadout: now.filter((x) => x !== id)
+		};
+		if (now.length >= pluginSlots(save) || !(save.plugins ?? []).includes(id)) return {
+			...save,
+			pluginLoadout: now
+		};
+		return {
+			...save,
+			pluginLoadout: [...now, id]
+		};
+	}
+	function pluginView(save) {
+		const list = equippedPlugins(save);
+		const analyze = new Set(list.flatMap((p) => p.analyze ?? []));
+		const radars = list.filter((p) => p.radar).map((p) => p.radar);
+		return {
+			species: list.some((p) => p.category === 1),
+			analyze,
+			check: new Set(list.flatMap((p) => p.check ?? [])),
+			memory: list.some((p) => p.memory),
+			onRadar: (s) => radars.some((r) => !!(r.stages?.includes(s.stage) || r.attrs?.includes(s.attr) || r.families?.includes(s.family)))
+		};
+	}
+	/** 상점에 낼 플러그인 (가지지 않았고 해금된 것). 최대 소지 수는 모두 1 */
+	var shopPlugins = (save) => PLUGINS.filter((p) => !(save.plugins ?? []).includes(p.id) && itemUnlocked(save, p.name));
 	// src/core/care.ts
 	/** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
 	var CAPACITY = 200;
@@ -4555,11 +4647,13 @@ var ChampCore = (function(exports) {
 		};
 	}
 	/** 사냥에서 잡기. carried = 이번 사냥에서 이미 메모리카드에 넣은 용량(G) */
-	function capture(save, speciesId, rng = defaultRng, carried = 0) {
+	/** personality: 사냥터에서 미리 정해 둔 성격 (정신 애널라이저로 본 값과 같게) */
+	function capture(save, speciesId, rng = defaultRng, carried = 0, personality) {
 		const size = getSpecies(speciesId).size;
 		if (carried + size > save.memoryCard) return fail(save, `메모리카드 용량이 가득 찼습니다. (${carried}/${save.memoryCard}G)`);
 		if (usedCapacity(save) + size > capacityOf(save)) return fail(save, "용량이 가득 찼습니다. 디지몬을 줄여 주세요.");
 		const d = newDigimon(save.nextUid, speciesId, rng, true);
+		if (personality) d.personality = personality;
 		return {
 			ok: true,
 			message: `${getSpecies(speciesId).name}을(를) 잡았다!`,
@@ -4676,6 +4770,16 @@ var ChampCore = (function(exports) {
 				};
 			},
 			available: (s) => !s.ropes.includes(r.id) && itemUnlocked(s, r.name)
+		});
+		for (const pl of shopPlugins(save)) items.push({
+			id: `plugin:${pl.id}`,
+			name: `플러그인: ${pl.name}`,
+			price: pluginPrice(pl),
+			apply: (s) => togglePlugin({
+				...s,
+				plugins: [...s.plugins ?? [], pl.id]
+			}, pl.id),
+			available: (s) => !(s.plugins ?? []).includes(pl.id)
 		});
 		for (const c of MEMORY_CARDS) if (c.price > 0) items.push({
 			id: `card:${c.id}`,
@@ -11126,7 +11230,6 @@ var ChampCore = (function(exports) {
 	exports.FREE_POOLS = FREE_POOLS;
 	exports.GEARS = GEARS;
 	exports.HUNT_CLOSE_HOUR = HUNT_CLOSE_HOUR;
-	exports.HUNT_GEAR_SLOTS = HUNT_GEAR_SLOTS;
 	exports.HUNT_MAP = HUNT_MAP;
 	exports.HUNT_NIGHT_HOUR = HUNT_NIGHT_HOUR;
 	exports.HUNT_OPEN_HOUR = HUNT_OPEN_HOUR;
@@ -11144,6 +11247,8 @@ var ChampCore = (function(exports) {
 	exports.ORIGINAL_ITEMS = ORIGINAL_ITEMS;
 	exports.PERSONALITIES = PERSONALITIES;
 	exports.PET = PET;
+	exports.PLUGINS = PLUGINS;
+	exports.PLUGIN_SLOTS = PLUGIN_SLOTS;
 	exports.POISON_TICK = POISON_TICK;
 	exports.POOP_INTERVAL = POOP_INTERVAL;
 	exports.POOP_LIMIT_PER_DAY = POOP_LIMIT_PER_DAY;
@@ -11252,6 +11357,7 @@ var ChampCore = (function(exports) {
 	exports.entrantOf = entrantOf;
 	exports.entryLimits = entryLimits;
 	exports.entryProblems = entryProblems;
+	exports.equippedPlugins = equippedPlugins;
 	exports.evaluateEvolutions = evaluateEvolutions;
 	exports.evolvedStats = evolvedStats;
 	exports.explain = explain;
@@ -11278,8 +11384,6 @@ var ChampCore = (function(exports) {
 	exports.hints = hints;
 	exports.hpOf = hpOf;
 	exports.huntFields = huntFields;
-	exports.huntGearSlots = huntGearSlots;
-	exports.huntLoadout = huntLoadout;
 	exports.huntPool = huntPool;
 	exports.huntSpawnPoints = huntSpawnPoints;
 	exports.huntTerrain = huntTerrain;
@@ -11312,6 +11416,10 @@ var ChampCore = (function(exports) {
 	exports.pickBattleSkill = pickBattleSkill;
 	exports.pickHuntSpawn = pickHuntSpawn;
 	exports.pickWild = pickWild;
+	exports.pluginOf = pluginOf;
+	exports.pluginPrice = pluginPrice;
+	exports.pluginSlots = pluginSlots;
+	exports.pluginView = pluginView;
 	exports.poopInterval = poopInterval;
 	exports.range = range;
 	exports.rankName = rankName;
@@ -11333,6 +11441,7 @@ var ChampCore = (function(exports) {
 	exports.seeded = seeded;
 	exports.setCage = setCage;
 	exports.shopItems = shopItems;
+	exports.shopPlugins = shopPlugins;
 	exports.shotCooldown = shotCooldown;
 	exports.shotDamage = shotDamage;
 	exports.shotOf = shotOf;
@@ -11350,7 +11459,7 @@ var ChampCore = (function(exports) {
 	exports.titleHolder = titleHolder;
 	exports.titleHolderFoes = titleHolderFoes;
 	exports.todaysMatches = todaysMatches;
-	exports.toggleLoadout = toggleLoadout;
+	exports.togglePlugin = togglePlugin;
 	exports.tpBudget = tpBudget;
 	exports.trainingBounds = trainingBounds;
 	exports.trainingDelta = trainingDelta;

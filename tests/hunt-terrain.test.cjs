@@ -5,7 +5,7 @@ function setup(){
   huntMapImage:()=>null,setTool:noop,log:noop,render:noop,persist:noop,toast:x=>messages.push(x),huntNote:x=>messages.push(x),refreshGear:noop,
   huntIsNight:()=>false,wireMode:()=>ctx.hunt.tool==='wire',wireGear:()=>null,canvasPoint:e=>({x:e.clientX,y:e.clientY}),canvas:{setPointerCapture:noop},BIND_SECONDS:4,PULL_DISTANCE:70,
   applyEffect:noop,blast:noop,wrapRope:noop,endHunt:noop,pullRope:noop,wildSpriteHit:()=>true});
- vm.runInContext(fs.readFileSync('web/core.js','utf8'),ctx);vm.runInContext('globalThis.C=ChampCore;globalThis.save=C.freshSave(0);save.clock=480;save.bits=90000;save.wires=2;save.gear.bait1=2;save.huntLoadout=["bait1"];Math.random=C.seeded(38);',ctx);
+ vm.runInContext(fs.readFileSync('web/core.js','utf8'),ctx);vm.runInContext('globalThis.C=ChampCore;globalThis.save=C.freshSave(0);save.clock=480;save.bits=90000;save.wires=2;save.gear.bait1=2;Math.random=C.seeded(38);',ctx);
  const source=fs.readFileSync('web/game.js','utf8');
  function part(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);assert.ok(a>0&&b>a);vm.runInContext(source.slice(a,b),ctx);}
  part('  function huntMapPoint(','  function endHunt(');
