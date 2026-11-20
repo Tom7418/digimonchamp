@@ -13,7 +13,7 @@ function setup(readKey = null) {
   const box = { hidden: true, querySelector: () => ({ textContent: '' }) };
   const view = { tips: {}, entryNoticeRead: readKey };
   const saved = [];
-  const context = vm.createContext({ view, save: {}, battle: null, titleOpen: false,
+  const context = vm.createContext({ view, save: {}, battle: null, hunt: null, titleOpen: false,
     $: () => box, persist: () => saved.push(view.entryNoticeRead),
     C: { isNight: () => false, matchEntryNotice: (_, read) => read === '1:0:3' ? null : { key: '1:0:3', names: ['에이스 오브 링'] } },
   });
@@ -49,4 +49,35 @@ test('다른 편지 뒤에 대기 중인 경기 안내도 한 번만 추가하�
   s.nextMail();
   assert.deepEqual(s.saved, ['1:0:3']);
   assert.equal(s.box.hidden, true);
+});
+
+test('랭크 업 사장 메일은 한 번만 띄우고, 닫을 때 선물 먹이를 케이지에 놓는다', () => {
+  const source = fs.readFileSync(path.join(__dirname, '../web/game.js'), 'utf8');
+  const start = source.indexOf('  let mailOpen = false;');
+  const end = source.indexOf('  function matchDays(', start);
+  const core = vm.createContext({ window: {} });
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../web/core.js'), 'utf8') + ';this.C=ChampCore', core);
+  const C = core.C;
+  const box = { hidden: true, querySelector: () => ({ textContent: '' }) };
+  const view = { tips: {}, entryNoticeRead: null, team: [{ x: 300, y: 300 }], selected: 0, foods: [] };
+  const logs = [];
+  const context = vm.createContext({ view, save: C.queueMails({ ...C.freshSave(0), meat: 0 }, [0x77]), battle: null, hunt: null, titleOpen: false,
+    $: () => box, persist: () => {}, renderTray: () => {}, log: (t) => logs.push(t),
+    board: { roam: { x0: 0, x1: 1000, y0: 0, y1: 1000 }, attachFloorItem: (i) => i },
+    C: { ...C, isNight: () => false, matchEntryNotice: () => null },
+  });
+  vm.runInContext(source.slice(start, end) + '\nglobalThis.api = { nextMail, checkSchedule, pending: () => mailQueue.length, active: () => activeMail, save: () => save };', context);
+  const api = context.api;
+  api.checkSchedule();
+  api.checkSchedule();
+  assert.equal(api.active()?.eventId, 0x77);
+  assert.equal(api.pending(), 0);
+  api.nextMail();
+  assert.equal(view.foods.length, 3);
+  assert.deepEqual(view.foods.map((f) => f.gift), ['big', 'big', 'big']);
+  assert.deepEqual(view.foods.map((f) => f.x), [250, 300, 350]);
+  assert.equal(api.save().meat, 6);
+  assert.equal(api.save().pendingMails.length, 0);
+  api.checkSchedule();
+  assert.equal(api.active(), null);
 });

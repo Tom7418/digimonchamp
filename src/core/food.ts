@@ -10,15 +10,20 @@ export interface FloorFood {
   cageId?: string | null;
   cagePosition?: { id: string; x: number; y: number } | null;
   kind: FoodKind; x: number; y: number; remaining?: number;
+  /** 메일 선물로 받은 먹이 (원본 먹이 종류 2 큰 고기 = 일반의 두 배 양, 3 케이크 = 일반 고기와 같은 양·효과) */
+  gift?: 'big' | 'cake';
   /** 바닥에 놓인 게임 분 */ age?: number;
 }
 /** 바닥에 둔 고기·프로틴이 상하기까지의 게임 분 (원작 도움말 help #138·#141: 남기면 상한다. 이틀은 형규가 정함) */
 export const SPOIL_MINUTES = 2880;
 export interface FoodBounds { x0: number; x1: number; y0: number; y1: number }
 
+/** 바닥 먹이 하나가 차지하는 재고 수. 큰 고기는 2개분 (원본 먹이 물체 0x210EDF0: 종류 2만 양 0x20, 나머지 0x10) */
+export const foodUnits = (f: Pick<FloorFood, 'gift'>) => (f.gift === 'big' ? 2 : 1);
+const fullAmount = (f: Pick<FloorFood, 'gift'>) => 100 * foodUnits(f);
 /** 바닥 먹이는 기존 저장 방식대로 재고 안에서 예약한다. 먹을 때만 재고를 차감한다. */
 export function availableFood(save: SaveData, foods: readonly FloorFood[], kind: FoodKind): number {
-  return Math.max(0, save[STOCK[kind]] - foods.filter((f) => f.kind === kind).length);
+  return Math.max(0, save[STOCK[kind]] - foods.filter((f) => f.kind === kind).reduce((n, f) => n + foodUnits(f), 0));
 }
 
 /** 이전 버전에서 중복 사용한 예약·잘못된 좌표만 정리하며 남은 먹이는 순서대로 보존한다. */
@@ -28,7 +33,8 @@ export function restoreFloorFood(save: SaveData, raw: unknown, bounds: FoodBound
   for (const f of raw) {
     if (!f || !Object.hasOwn(STOCK, f.kind) || !Number.isFinite(f.x) || !Number.isFinite(f.y)) continue;
     if (f.remaining !== undefined && (!Number.isFinite(f.remaining) || f.remaining <= 0)) continue;
-    if (availableFood(save, foods, f.kind) > 0) foods.push({ ...(typeof f.cageId==='string'?{cageId:f.cageId}:{}), ...(f.cagePosition&&typeof f.cagePosition.id==='string'&&Number.isFinite(f.cagePosition.x)&&Number.isFinite(f.cagePosition.y)?{cagePosition:{id:f.cagePosition.id,x:f.cagePosition.x,y:f.cagePosition.y}}:{}), ...(f.remaining === undefined ? {} : {remaining: Math.min(100, f.remaining)}), ...(Number.isFinite(f.age) && f.age > 0 ? {age: f.age} : {}), kind: f.kind, x: Math.min(bounds.x1, Math.max(bounds.x0, f.x)), y: Math.min(bounds.y1, Math.max(bounds.y0, f.y)) });
+    const gift = f.gift === 'big' || f.gift === 'cake' ? f.gift : undefined;
+    if (availableFood(save, foods, f.kind) >= foodUnits({ gift })) foods.push({ ...(gift ? { gift } : {}), ...(typeof f.cageId==='string'?{cageId:f.cageId}:{}), ...(f.cagePosition&&typeof f.cagePosition.id==='string'&&Number.isFinite(f.cagePosition.x)&&Number.isFinite(f.cagePosition.y)?{cagePosition:{id:f.cagePosition.id,x:f.cagePosition.x,y:f.cagePosition.y}}:{}), ...(f.remaining === undefined ? {} : {remaining: Math.min(fullAmount({ gift }), f.remaining)}), ...(Number.isFinite(f.age) && f.age > 0 ? {age: f.age} : {}), kind: f.kind, x: Math.min(bounds.x1, Math.max(bounds.x0, f.x)), y: Math.min(bounds.y1, Math.max(bounds.y0, f.y)) });
   }
   return foods;
 }
@@ -37,7 +43,7 @@ export function restoreFloorFood(save: SaveData, raw: unknown, bounds: FoodBound
 export function discardFloorFood(save: SaveData, foods: readonly FloorFood[], index: number) {
   const food = foods[index];
   if (!food) return { ok: false, save, foods, message: '치울 먹이가 없어요.' };
-  return { ok: true, save: { ...save, [STOCK[food.kind]]: Math.max(0, save[STOCK[food.kind]] - 1) },
+  return { ok: true, save: { ...save, [STOCK[food.kind]]: Math.max(0, save[STOCK[food.kind]] - foodUnits(food)) },
     foods: foods.filter((_, i) => i !== index), message: '남은 먹이를 치웠습니다.' };
 }
 
@@ -72,11 +78,11 @@ export function biteFloorFood(save: SaveData, foods: readonly FloorFood[], uid: 
   }
   if (food.kind === 'rotten') return eatFloorFood(save, foods, uid, index);
   const amount = [0, 5, 5, 10, 20, 25, 50][getSpecies(d.speciesId).stage];
-  const remaining = food.remaining ?? 100;
+  const remaining = food.remaining ?? fullAmount(food);
   // 마지막 조각과 포만감 상한에도 실제 먹은 양에 비례한다.
   const bite = Math.min(amount, remaining, (100 - d.hunger) / 2);
   const rest = remaining - bite;
-  const next = {...save, meat: save.meat - (rest <= 0 ? 1 : 0),
+  const next = {...save, meat: save.meat - (rest <= 0 ? foodUnits(food) : 0),
     digimon: save.digimon.map(p => p.uid === uid ? scheduleMealPoop(eatHp({...p, hunger: p.hunger + bite * 2, starvingMinutes: 0}, bite * 2),save.clock) : p)};
   return {ok: true, save: next,
     foods: rest <= 0 ? foods.filter((_, i) => i !== index) : foods.map((f, i) => i === index ? {...f, remaining: rest} : f),
@@ -91,9 +97,10 @@ export function ageFloorFood(save: SaveData, foods: readonly FloorFood[], minute
     const age = (f.age ?? 0) + minutes;
     if (age < SPOIL_MINUTES || next[STOCK[f.kind]] <= 0) return { ...f, age };
     spoiled += 1;
-    next = { ...next, [STOCK[f.kind]]: next[STOCK[f.kind]] - 1, rotten: next.rotten + 1 };
-    // 종류가 바뀌어도 바닥 위치와 케이지 소속은 보존한다.
-    const { remaining, age: oldAge, ...placed } = f;
+    const units = Math.min(foodUnits(f), next[STOCK[f.kind]]);
+    next = { ...next, [STOCK[f.kind]]: next[STOCK[f.kind]] - units, rotten: next.rotten + 1 };
+    // 종류가 바뀌어도 바닥 위치와 케이지 소속은 보존한다. 선물 표시는 지운다.
+    const { remaining, age: oldAge, gift, ...placed } = f;
     return { ...placed, kind: 'rotten' as const };
   });
   return { save: next, foods: out, spoiled };

@@ -10674,6 +10674,83 @@ var ChampCore = (function(exports) {
 			...endHp === void 0 ? {} : { hpNow: Math.max(0, Math.min(d.stats.hp, Math.round(endHp))) }
 		};
 	}
+	// src/core/events.ts
+	/** 웹판 랭크 번호(1 그린 ~ 10 마스터) → 이벤트. 원본 랭크 번호는 웹판보다 1 작다 */
+	var RANK_UP_MAIL = {
+		3: {
+			id: 117,
+			from: "사장",
+			text: "레드 랭크 축하한다!\n애써 준 디지몬들에게도 선물을 보내마.\n케이지에 고기를 놓아 두었다.",
+			foods: ["big"]
+		},
+		5: {
+			id: 118,
+			from: "사장",
+			text: "브론즈 랭크라니, 대단한걸!\n오늘은 잔치다. 케이크를 보냈으니\n디지몬들과 나눠 먹어라.",
+			foods: ["cake"]
+		},
+		7: {
+			id: 119,
+			from: "사장",
+			text: "골드 랭크! 요즘 네 배틀은\n정말 볼만하더군. 승리 기념으로\n고기를 넉넉히 보냈다.",
+			foods: [
+				"big",
+				"big",
+				"big"
+			]
+		},
+		9: {
+			id: 120,
+			from: "사장",
+			text: "드디어 챔프 랭크까지 왔구나!\n축하의 뜻으로 한 상 차려 보냈다.\n앞으로도 기대하마.",
+			foods: [
+				"big",
+				"cake",
+				"big",
+				"cake",
+				"big"
+			]
+		}
+	};
+	var mailEvent = (id) => Object.values(RANK_UP_MAIL).find((e) => e.id === id);
+	/** 랭크가 before → after로 올랐을 때 새로 예약할 이벤트 번호 */
+	function rankUpMails(before, after) {
+		const out = [];
+		for (let r = before + 1; r <= after; r++) if (RANK_UP_MAIL[r]) out.push(RANK_UP_MAIL[r].id);
+		return out;
+	}
+	/** 이벤트를 메일함에 예약한다 (원작 메일함은 4통까지, 0x0208B43C) */
+	function queueMails(save, ids) {
+		if (!ids.length) return save;
+		return {
+			...save,
+			pendingMails: [...save.pendingMails ?? [], ...ids].slice(0, 4)
+		};
+	}
+	/**
+	* 메일을 읽으면 선물을 받는다. 먹이 선물은 고기 재고에 더하고(큰 고기 2개분, 케이크 1개분),
+	* 화면이 같은 수의 바닥 먹이를 케이지에 놓는다. 케이크는 원본 먹는 코드(overlay9_18 0x211BC04)에 따로 갈래가 없어 고기와 같다.
+	*/
+	function openMail(save, id) {
+		const queue = save.pendingMails ?? [];
+		const at = queue.indexOf(id);
+		if (at < 0) return { save };
+		const event = mailEvent(id);
+		const rest = queue.filter((_, i) => i !== at);
+		if (!event) return { save: {
+			...save,
+			pendingMails: rest
+		} };
+		const units = event.foods.reduce((n, f) => n + (f === "big" ? 2 : 1), 0);
+		return {
+			save: {
+				...save,
+				pendingMails: rest,
+				meat: save.meat + units
+			},
+			event
+		};
+	}
 	var battle_maps_default = {
 		maps: [
 			{
@@ -10869,9 +10946,12 @@ var ChampCore = (function(exports) {
 	};
 	/** 바닥에 둔 고기·프로틴이 상하기까지의 게임 분 (원작 도움말 help #138·#141: 남기면 상한다. 이틀은 형규가 정함) */
 	var SPOIL_MINUTES = 2880;
+	/** 바닥 먹이 하나가 차지하는 재고 수. 큰 고기는 2개분 (원본 먹이 물체 0x210EDF0: 종류 2만 양 0x20, 나머지 0x10) */
+	var foodUnits = (f) => f.gift === "big" ? 2 : 1;
+	var fullAmount = (f) => 100 * foodUnits(f);
 	/** 바닥 먹이는 기존 저장 방식대로 재고 안에서 예약한다. 먹을 때만 재고를 차감한다. */
 	function availableFood(save, foods, kind) {
-		return Math.max(0, save[STOCK[kind]] - foods.filter((f) => f.kind === kind).length);
+		return Math.max(0, save[STOCK[kind]] - foods.filter((f) => f.kind === kind).reduce((n, f) => n + foodUnits(f), 0));
 	}
 	/** 이전 버전에서 중복 사용한 예약·잘못된 좌표만 정리하며 남은 먹이는 순서대로 보존한다. */
 	function restoreFloorFood(save, raw, bounds = {
@@ -10885,14 +10965,16 @@ var ChampCore = (function(exports) {
 		for (const f of raw) {
 			if (!f || !Object.hasOwn(STOCK, f.kind) || !Number.isFinite(f.x) || !Number.isFinite(f.y)) continue;
 			if (f.remaining !== void 0 && (!Number.isFinite(f.remaining) || f.remaining <= 0)) continue;
-			if (availableFood(save, foods, f.kind) > 0) foods.push({
+			const gift = f.gift === "big" || f.gift === "cake" ? f.gift : void 0;
+			if (availableFood(save, foods, f.kind) >= foodUnits({ gift })) foods.push({
+				...gift ? { gift } : {},
 				...typeof f.cageId === "string" ? { cageId: f.cageId } : {},
 				...f.cagePosition && typeof f.cagePosition.id === "string" && Number.isFinite(f.cagePosition.x) && Number.isFinite(f.cagePosition.y) ? { cagePosition: {
 					id: f.cagePosition.id,
 					x: f.cagePosition.x,
 					y: f.cagePosition.y
 				} } : {},
-				...f.remaining === void 0 ? {} : { remaining: Math.min(100, f.remaining) },
+				...f.remaining === void 0 ? {} : { remaining: Math.min(fullAmount({ gift }), f.remaining) },
 				...Number.isFinite(f.age) && f.age > 0 ? { age: f.age } : {},
 				kind: f.kind,
 				x: Math.min(bounds.x1, Math.max(bounds.x0, f.x)),
@@ -10914,7 +10996,7 @@ var ChampCore = (function(exports) {
 			ok: true,
 			save: {
 				...save,
-				[STOCK[food.kind]]: Math.max(0, save[STOCK[food.kind]] - 1)
+				[STOCK[food.kind]]: Math.max(0, save[STOCK[food.kind]] - foodUnits(food))
 			},
 			foods: foods.filter((_, i) => i !== index),
 			message: "남은 먹이를 치웠습니다."
@@ -10989,14 +11071,14 @@ var ChampCore = (function(exports) {
 			25,
 			50
 		][getSpecies(d.speciesId).stage];
-		const remaining = food.remaining ?? 100;
+		const remaining = food.remaining ?? fullAmount(food);
 		const bite = Math.min(amount, remaining, (100 - d.hunger) / 2);
 		const rest = remaining - bite;
 		return {
 			ok: true,
 			save: {
 				...save,
-				meat: save.meat - (rest <= 0 ? 1 : 0),
+				meat: save.meat - (rest <= 0 ? foodUnits(food) : 0),
 				digimon: save.digimon.map((p) => p.uid === uid ? scheduleMealPoop(eatHp({
 					...p,
 					hunger: p.hunger + bite * 2,
@@ -11021,12 +11103,13 @@ var ChampCore = (function(exports) {
 				age
 			};
 			spoiled += 1;
+			const units = Math.min(foodUnits(f), next[STOCK[f.kind]]);
 			next = {
 				...next,
-				[STOCK[f.kind]]: next[STOCK[f.kind]] - 1,
+				[STOCK[f.kind]]: next[STOCK[f.kind]] - units,
 				rotten: next.rotten + 1
 			};
-			const { remaining, age: oldAge, ...placed } = f;
+			const { remaining, age: oldAge, gift, ...placed } = f;
 			return {
 				...placed,
 				kind: "rotten"
@@ -11264,6 +11347,7 @@ var ChampCore = (function(exports) {
 	exports.RANDOM_BATTLE_MAPS = RANDOM_BATTLE_MAPS;
 	exports.RANK_NAMES = RANK_NAMES;
 	exports.RANK_UP = RANK_UP;
+	exports.RANK_UP_MAIL = RANK_UP_MAIL;
 	exports.RARE_WEIGHT = RARE_WEIGHT;
 	exports.RESIST_CURVE = RESIST_CURVE;
 	exports.RESIST_KEYS = RESIST_KEYS;
@@ -11369,6 +11453,7 @@ var ChampCore = (function(exports) {
 	exports.feedRotten = feedRotten;
 	exports.findEvolution = findEvolution;
 	exports.foePersonality = foePersonality;
+	exports.foodUnits = foodUnits;
 	exports.freeBattleFoes = freeBattleFoes;
 	exports.freeBattleLineup = freeBattleLineup;
 	exports.freeFoeResist = freeFoeResist;
@@ -11396,6 +11481,7 @@ var ChampCore = (function(exports) {
 	exports.isTraining = isTraining;
 	exports.itemUnlocked = itemUnlocked;
 	exports.keepDistance = keepDistance;
+	exports.mailEvent = mailEvent;
 	exports.makeEnemies = makeEnemies;
 	exports.matchEntryNotice = matchEntryNotice;
 	exports.maxStageForRank = maxStageForRank;
@@ -11405,6 +11491,7 @@ var ChampCore = (function(exports) {
 	exports.moveOnHuntTerrain = moveOnHuntTerrain;
 	exports.newDigimon = newDigimon;
 	exports.nextMorningClock = nextMorningClock;
+	exports.openMail = openMail;
 	exports.originalDamage = originalDamage;
 	exports.originalSpecies = originalSpecies;
 	exports.parseCond = parseCond;
@@ -11421,8 +11508,10 @@ var ChampCore = (function(exports) {
 	exports.pluginSlots = pluginSlots;
 	exports.pluginView = pluginView;
 	exports.poopInterval = poopInterval;
+	exports.queueMails = queueMails;
 	exports.range = range;
 	exports.rankName = rankName;
+	exports.rankUpMails = rankUpMails;
 	exports.rebirthPercent = rebirthPercent;
 	exports.release = release;
 	exports.remember = remember;

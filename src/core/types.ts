@@ -143,6 +143,8 @@ export interface SaveData {
   wires: number;
   /** 사냥 장비(샷·고기) 수량. 키는 hunt.ts의 SHOTS·BAITS id */
   gear?: Record<string, number>;
+  /** 아직 읽지 않은 원본 메일 이벤트 번호 (src/core/events.ts, 4통까지) */
+  pendingMails?: number[];
   /** 가진 사냥 플러그인 id (src/core/plugins.ts) */
   plugins?: string[];
   /** 장비한 플러그인 id (랭크별 칸 수까지) */

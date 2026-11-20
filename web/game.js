@@ -381,8 +381,8 @@
   let mailOpen = false;
   let activeMail = null;
   const mailQueue = [];
-  function mail(text, from = '안내', entryKey = null) {
-    mailQueue.push({ text, from, entryKey });
+  function mail(text, from = '안내', entryKey = null, eventId = null) {
+    mailQueue.push({ text, from, entryKey, eventId });
     if (!mailOpen) nextMail();
   }
   function tipMail(key, text) {
@@ -396,6 +396,8 @@
       view.entryNoticeRead = activeMail.entryKey;
       persist();
     }
+    // 원본 이벤트 메일은 읽어야 선물을 받는다 (메일을 열 때 선물 처리, arm9 0x0208C2D8)
+    if (activeMail?.eventId != null) giveEventMail(activeMail.eventId);
     const m = mailQueue.shift();
     activeMail = m || null;
     const box = $('#mail');
@@ -410,6 +412,32 @@
     box.querySelector('.mail-text').textContent = m.text;
   }
 
+  // 랭크 업 사장 메일 등 예약된 원본 이벤트를 메일함에 띄운다
+  function deliverEventMails() {
+    for (const id of save.pendingMails ?? []) {
+      const e = C.mailEvent(id);
+      if (!e || activeMail?.eventId === id || mailQueue.some((m) => m.eventId === id)) continue;
+      mail(e.text, e.from, null, id);
+    }
+  }
+  function giveEventMail(id) {
+    const r = C.openMail(save, id);
+    save = r.save;
+    if (!r.event) return persist();
+    // 원본은 지금 케이지 x=100~300에 50 간격으로 놓는다. 웹판은 선택한 디지몬 근처에 같은 간격으로 놓는다
+    const p = view.team[view.selected] ?? view.team[0], ro = board.roam;
+    const cx = p ? p.x : (ro.x0 + ro.x1) / 2, cy = p ? p.y + 30 : (ro.y0 + ro.y1) / 2;
+    r.event.foods.forEach((gift, i) => {
+      const x = cx + (i - (r.event.foods.length - 1) / 2) * 50;
+      const item = { kind: 'meat', gift, x: Math.min(ro.x1, Math.max(ro.x0, x)), y: Math.min(ro.y1, Math.max(ro.y0, cy)) };
+      board.attachFloorItem(item);
+      view.foods.push(item);
+    });
+    log(`${r.event.from}의 선물: ${r.event.foods.map((f) => (f === 'big' ? '큰 고기' : '케이크')).join(', ')}`);
+    renderTray();
+    persist();
+  }
+
   // ---------- 하루 흐름 ----------
   // 23:59가 되면 하루가 끝나고 달력 화면을 거쳐 다음 날 아침 7시로 넘어간다 (밤에는 잔다).
   // 엔트리 시간 내 재접속에도 안내한다. 이미 읽었거나 대기 중인 같은 날 안내는 중복하지 않는다.
@@ -420,6 +448,7 @@
     if (notice && activeMail?.entryKey !== notice.key && !mailQueue.some((m) => m.entryKey === notice.key)) {
       mail(`배틀에 참가할 수 있습니다.\n오늘은 ${notice.names.join(', ')}이(가) 열립니다.\n엔트리는 15시 전까지. 아래 '배틀'에서 출전하세요.`, '안내', notice.key);
     }
+    if (!battle && !hunt) deliverEventMails();
     if (C.isNight(save) && !battle) openDayEnd();
   }
   function matchDays(season, year) {
@@ -512,9 +541,21 @@
     return [kind, image];
   }));
   function drawFood(f) {
-    const stage = Math.min(3, Math.floor((100 - (f.remaining ?? 100)) / 25));
+    const full = 100 * C.foodUnits(f);
+    const stage = Math.min(3, Math.floor((full - (f.remaining ?? full)) / (full / 4)));
+    // 케이크: 원본 그림을 아직 못 찾아 임시 도형으로 그린다 (먹는 양·효과는 고기와 같다)
+    if (f.gift === 'cake' && f.kind === 'meat') {
+      const h = 22 * (1 - stage / 4) + 6;
+      ctx.fillStyle = '#f4e3c8'; ctx.fillRect(f.x - 18, f.y - 8 - h, 36, h);
+      ctx.fillStyle = '#f08aa6'; ctx.fillRect(f.x - 18, f.y - 8 - h, 36, 6);
+      ctx.strokeStyle = '#7a4b3a'; ctx.lineWidth = 2; ctx.strokeRect(f.x - 18, f.y - 8 - h, 36, h);
+      if (stage === 0) { ctx.fillStyle = '#d8283c'; ctx.beginPath(); ctx.arc(f.x, f.y - 13 - h, 4, 0, 7); ctx.fill(); }
+      return;
+    }
     const image = itemImages[(f.kind === 'meat' || f.kind === 'pill') && stage ? `${f.kind}_${stage}` : f.kind];
-    if (image?.complete && image.naturalWidth) ctx.drawImage(image, f.x - 32, f.y - 60, 64, 70);
+    // 큰 고기(원본 먹이 종류 2, 그림 크기 0x20)는 일반 고기의 두 배 양이라 크게 그린다
+    const k = f.gift === 'big' && f.kind === 'meat' ? 1.4 : 1;
+    if (image?.complete && image.naturalWidth) ctx.drawImage(image, f.x - 32 * k, f.y - 60 * k - (k - 1) * -10, 64 * k, 70 * k);
   }
   // 선택형 도구: 고기·알약(프로틴)은 바닥에 놓아 먹이고, 약(주사기)·상처약은 디지몬을 터치해 쓴다.
   let selectedItem = null;
@@ -627,7 +668,7 @@
     save = r.save;
     r.foods.forEach((f, i) => {
       const o = view.foods[i];
-      if (f.kind !== o.kind) delete o.remaining, delete o.age;
+      if (f.kind !== o.kind) delete o.remaining, delete o.age, delete o.gift;
       Object.assign(o, f);
     });
     if (r.spoiled) {
@@ -1283,6 +1324,8 @@
     if (m) save = C.applyMatch(save, m, won);
     else if (won) save = C.addBits(save, b.setup.prize);
     const after = C.tamerRank(save);
+    // 원본 결과 화면: 레드·브론즈·골드·챔프로 오르면 사장 메일 예약 (overlay9_8 0x2111978)
+    save = C.queueMails(save, C.rankUpMails(before, after));
     const why = b.state.reason === 'timeout' ? ' (시간 종료 판정)' : '';
     const gained = save.bits - bitsBefore;
     battleLog(won ? `승리!${why}${gained ? ` 상금 ${gained.toLocaleString('ko-KR')} ฿` : ''}` : `패배…${why}`);

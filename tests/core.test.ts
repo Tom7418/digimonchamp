@@ -15,6 +15,7 @@ import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evol
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
+import { RANK_UP_MAIL, rankUpMails, queueMails, openMail } from '../src/core/events';
 import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
@@ -1981,5 +1982,42 @@ describe('사냥 플러그인 (원본 아이템 표·랭크 표 +20)', () => {
     expect(equippedPlugins(r.save).map((p) => p.id)).toEqual(['gen_a']);
     expect(r.save.bits).toBe(3000);
     expect(shopItems(r.save).some((i) => i.id === 'plugin:gen_a')).toBe(false);
+  });
+});
+
+describe('랭크 업 사장 메일과 먹이 선물 (원본 이벤트 0x75~0x78)', () => {
+  it('레드·브론즈·골드·챔프로 오를 때만 예약, 건너뛴 랭크도 모두', () => {
+    expect(rankUpMails(1, 2)).toEqual([]);
+    expect(rankUpMails(2, 3)).toEqual([0x75]);
+    expect(rankUpMails(4, 7)).toEqual([0x76, 0x77]);
+    expect(RANK_UP_MAIL[9].foods).toEqual(['big', 'cake', 'big', 'cake', 'big']);
+  });
+  it('메일을 읽으면 고기 재고가 늘고(큰 고기 2개분, 케이크 1개분) 예약이 지워진다', () => {
+    const s0 = queueMails({ ...freshEggSave(0), meat: 0 }, [0x78]);
+    expect(s0.pendingMails).toEqual([0x78]);
+    const r = openMail(s0, 0x78);
+    expect(r.event?.foods).toHaveLength(5);
+    expect(r.save.meat).toBe(8);
+    expect(r.save.pendingMails).toEqual([]);
+    expect(openMail(r.save, 0x78).event).toBeUndefined();
+    expect(queueMails(s0, [0x75, 0x76, 0x77, 0x75]).pendingMails).toHaveLength(4);
+  });
+  it('큰 고기는 바닥에서 재고 2개를 예약하고 양도 두 배, 다 먹으면 2개 차감', () => {
+    const d = { ...newDigimon(1, '아구몬'), hunger: 0 };
+    let save = { ...freshEggSave(0), meat: 2, digimon: [d] };
+    let foods: readonly FloorFood[] = [{ kind: 'meat', gift: 'big', x: 100, y: 200 }];
+    expect(availableFood(save, foods, 'meat')).toBe(0);
+    let bites = 0;
+    while (foods.length && bites < 100) {
+      save = { ...save, digimon: save.digimon.map((x) => ({ ...x, hunger: 0 })) };
+      const r = biteFloorFood(save, foods, d.uid, 0);
+      save = r.save; foods = r.foods; bites++;
+    }
+    expect(save.meat).toBe(0);
+    const normal = (() => { let s = { ...freshEggSave(0), meat: 1, digimon: [d] }, f: readonly FloorFood[] = [{ kind: 'meat', x: 1, y: 1 }], n = 0; while (f.length) { s = { ...s, digimon: s.digimon.map((x) => ({ ...x, hunger: 0 })) }; const r = biteFloorFood(s, f, d.uid, 0); s = r.save; f = r.foods; n++; } return n; })();
+    expect(bites).toBe(normal * 2);
+    // 저장 복원도 큰 고기 표시와 양을 지킨다
+    expect(restoreFloorFood({ ...freshEggSave(0), meat: 2 }, [{ kind: 'meat', gift: 'big', x: 100, y: 200, remaining: 150 }])).toEqual([{ gift: 'big', remaining: 150, kind: 'meat', x: 100, y: 200 }]);
+    expect(restoreFloorFood({ ...freshEggSave(0), meat: 1 }, [{ kind: 'meat', gift: 'big', x: 100, y: 200 }])).toEqual([]);
   });
 });
