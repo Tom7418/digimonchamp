@@ -1098,7 +1098,7 @@
     $('#modal-body').querySelectorAll('[data-dex]').forEach(b=>b.onclick=()=>{dexMenu(+b.dataset.dex);$('#modal-body').querySelector(`[data-dex="${b.dataset.dex}"]`)?.focus({preventScroll:true});});
   }
   function showModal(title, body, kicker = 'TAMER GUIDE', ok = '사육장으로 돌아가기') {
-    $('#modal').classList.remove('battle-modal','day-change-modal');
+    $('#modal').classList.remove('battle-modal','day-change-modal','title-result-modal');
     $('#modal-title').textContent = title;
     $('#modal-body').innerHTML = body;
     $('#modal-kicker').textContent = kicker;
@@ -1318,7 +1318,7 @@
     }
     // 강조 중에는 다음 전투 틱을 보류한다. 이미 발생한 피해/TP는 재계산하지 않는다.
     if(b.presentation?.busy){
-      const focus=b.presentation.snapshot(),step=dt*2;
+      const focus=b.presentation.snapshot(),step=dt;
       b.presentation.tick(step);
       const play=Math.max(0,Math.min(focus.age+step,focus.transition+focus.hold)-Math.max(focus.age,focus.transition));
       if(play){
@@ -1328,19 +1328,19 @@
       drawArena(0);return;
     }
     if(b.effects.busy){
-      tickBattleArt(b,dt*2);
-      for(const [id,a] of b.actions){a.left-=dt*2;if(a.left<=0)b.actions.delete(id);}
-      drawArena(dt*2);
+      tickBattleArt(b,dt);
+      for(const [id,a] of b.actions){a.left-=dt;if(a.left<=0)b.actions.delete(id);}
+      drawArena(dt);
       if(b.state.over&&!b.effects.busy)finishBattle();
       return;
     }
     if(b.done){
-      tickBattleArt(b,dt*2);
-      for(const [id,a] of b.actions){a.left-=dt*2;if(a.left<=0)b.actions.delete(id);}
-      drawArena(dt*2);return;
+      tickBattleArt(b,dt);
+      for(const [id,a] of b.actions){a.left-=dt;if(a.left<=0)b.actions.delete(id);}
+      drawArena(dt);return;
     }
-    tickBattleArt(b,dt*2);
-    b.acc += dt * 2; // 화면에서는 2배속으로 진행
+    tickBattleArt(b,dt);
+    b.acc += dt; // 사용자 요청: 이동·공격·피격·기술 연출 모두 실시간 1배속으로 진행
     while (b.acc >= 0.1 && !b.state.over && !b.presentation?.busy && !b.effects.busy) {
       b.acc -= 0.1;
       const before=new Map(b.state.units.map(u=>[u.id,{...u}]));
@@ -1403,8 +1403,8 @@
         if (e.type === 'ko'&&!b.effects.busy) battleLog(`${b.state.units[e.id].name} 쓰러짐!`);
       }
     }
-    for(const [id,a] of b.actions){a.left-=dt*2;if(a.left<=0)b.actions.delete(id);}
-    drawArena(dt * 2);
+    for(const [id,a] of b.actions){a.left-=dt;if(a.left<=0)b.actions.delete(id);}
+    drawArena(dt);
     if (b.state.over&&!b.effects.busy&&!b.presentation?.busy) finishBattle();
   }
   function battleLog(t) {
@@ -1426,6 +1426,7 @@
     const endHp = new Map(b.state.units.filter((u) => u.team === 0).map((u) => [u.uid, u.alive ? u.hp : 0]));
     save = { ...save, digimon: save.digimon.map((d) => (uids.has(d.uid) ? C.applyBattleResult(d, won, ko.has(d.uid), Math.random, C.dateOf(save.clock).season === C.WINTER, endHp.get(d.uid)) : d)) };
     const m = b.setup.match;
+    const firstTitleWin=won && /^m\d+$/.test(m?.id||'') && !save.titles.includes(m.id);
     const wasQualified = save.qualifiedYear;
     // 타이틀은 이겼을 때만, 챔피언십 예선·본선은 진 것도 기록한다
     const bitsBefore = save.bits;
@@ -1461,7 +1462,7 @@
         toast('챔피언십 우승!');
       } else if (won) champLine(`다음 라운드가 열렸습니다: ${C.FINAL_ROUNDS[save.finalRound].name} (배틀에서 이어서 출전)`);
       else champLine('본선 탈락… 다시 예선부터 도전해야 합니다.');
-    } else if (won && m) log(`타이틀 메달 획득: ${m.name}`);
+    } else if (firstTitleWin) log(`타이틀 메달 획득: ${m.name}`);
     if (after > before) {
       const msg = `${C.rankName(after)}(으)로 랭크 업! 최대 용량 ${C.capacityOf(save)}G, 케이지 공간 ${C.cageSpaceOf(save)}칸, ${C.STAGE_LABEL[C.maxStageForRank(after)]}까지 진화 가능`;
       battleLog(msg);
@@ -1470,7 +1471,14 @@
     }
     for (const d of save.digimon) if (uids.has(d.uid) && d.injured) log(`${nameOf(d)}이(가) 다쳤습니다. 양호실에 넣거나 상처약으로 치료하세요.`);
     // mN corresponds to original item_badge(N+1); prelim/final have no title medal.
-    if(won && /^m\d+$/.test(m?.id||'')) $('#modal-body').insertAdjacentHTML('afterbegin',window.titleMedalHtml(m,esc));
+    if(won && /^m\d+$/.test(m?.id||'')){
+      // 경기장 위에 끼워 넣지 않고 NDS 두 화면을 위아래로 쌓은 별도 결과 화면으로 전환한다.
+      $('#modal-body').innerHTML=window.titleMedalHtml(m,esc,{firstWin:firstTitleWin,prize:gained});
+      $('#modal').classList?.remove('battle-modal');
+      $('#modal').classList?.add('title-result-modal');
+      $('#modal-kicker').textContent='TITLE MATCH RESULT';
+      $('#modal').scrollTop=0;
+    }
     $('#modal-title').textContent = won ? 'WIN!' : 'LOSE';
     $('#modal-ok').disabled = false;
     $('#close-modal').disabled = false;
@@ -1484,6 +1492,7 @@
   function drawArena(dt = 0) {
     const el = $('#arena');
     if (!el || !battle) return;
+    if(battle.done && $('#modal').classList?.contains('title-result-modal'))return;
     const ctx = el.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     window.HDText?.begin(ctx);

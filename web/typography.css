@@ -1,5 +1,5 @@
 /* 원본 NFTR 자형을 확장 가능한 윤곽으로 복원했다. 긴 설명은 시스템 한글 글꼴로 가독성을 유지한다. */
-@font-face{font-family:'Championship HD';src:url('assets/fonts/championship-hd.woff2') format('woff2');font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:'Championship HD';src:url('assets/fonts/championship-hd.woff2?v=20261122-wal') format('woff2');font-style:normal;font-weight:400;font-display:swap}
 :root{--game-display-font:'Championship HD','Malgun Gothic',system-ui,sans-serif}
 h1,h2,h3,.brand,.band,#day,.tbtn,.world-top,.info-field,button,select,.tray-item b,.medal-panel,.original-date-card,.cal-counts{font-family:var(--game-display-font);font-kerning:normal;text-rendering:optimizeLegibility}
 #modal-title{letter-spacing:.015em;line-height:1.4;text-shadow:0 1px 0 #fff5}

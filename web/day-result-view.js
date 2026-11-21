@@ -1,9 +1,11 @@
 // 원본 도트만 사용한다. 반응형 배치와 경기 집계 표시는 웹판 정책이다.
 (function(root){
  const art='assets/day-result/';
- root.titleMedalHtml=function(match,esc){
+ root.titleMedalHtml=function(match,esc,{firstWin=true,prize=0}={}){
   const n=/^m(\d+)$/.exec(match?.id||'');if(!n||+n[1]>60)return '';
-  return `<section class="title-medal-result" aria-label="타이틀 메달 획득"><div class="result-win"><img src="${art}win.png" alt="WIN!"></div><div class="medal-panel"><h3>${esc(match.name)}</h3><img class="title-medal" src="${art}medal-${String(+n[1]+1).padStart(2,'0')}.png" alt="${esc(match.name)} 메달"><p>타이틀 메달을 획득!</p></div></section>`;
+  // 첫 우승만 메달을 보여 준다. 재우승은 상금만 받고 같은 세로 결과 화면으로 확인한다.
+  const medal=firstWin?`<img class="title-medal" src="${art}medal-${String(+n[1]+1).padStart(2,'0')}.png" alt="${esc(match.name)} 메달">`:'';
+  return `<section class="title-medal-result" aria-label="${firstWin?'타이틀 메달 획득':'타이틀 매치 승리'}"><div class="result-win"><img src="${art}win.png" alt="WIN!"></div><div class="medal-panel"><h3>${esc(match.name)}</h3>${medal}<p>${firstWin?'타이틀 메달을 획득!':'타이틀 방어 성공!'}</p>${prize>0?`<small>상금 ${prize.toLocaleString('ko-KR')} ฿</small>`:''}</div></section>`;
  };
  root.dayResultCalendarHtml=function(C,morning,marks,esc){
   const seasons=['spring','summer','autumn','winter'],names=['봄','여름','가을','겨울'];

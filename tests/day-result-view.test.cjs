@@ -15,3 +15,9 @@ test('경기 이름을 안전하게 표시하고 표시 중 저장·일정을 �
  const morning={season:0,day:8},marks={8:[{name:'<"경기>',won:false}]},before=JSON.stringify({morning,marks});
  const html=c.window.dayResultCalendarHtml({DAYS_PER_SEASON:8},morning,marks,esc);assert.match(html,/&lt;&quot;경기>/);assert.equal(JSON.stringify({morning,marks}),before);assert.match(html,/day-8.png/);
 });
+
+
+test('재우승 화면은 메달을 다시 획득했다고 표시하지 않는다',()=>{
+ const html=c.window.titleMedalHtml({id:'m0',name:'봄의 시작'},esc,{firstWin:false,prize:5300});
+ assert.doesNotMatch(html,/medal-01.png|메달을 획득/);assert.match(html,/타이틀 방어 성공/);assert.match(html,/5,300/);
+});

@@ -347,3 +347,14 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .medal-panel p{margin:0;font-size:18px}
 .title-medal{width:64px;height:64px;object-fit:contain;image-rendering:pixelated}
 @media(max-width:600px){.original-day-change{grid-template-columns:1fr;gap:16px;padding:16px}.original-date-card{width:80%;justify-self:center;font-size:24px}.original-calendar{width:100%}.title-medal-result{grid-template-columns:1fr}.result-win{width:65%;justify-self:center}.medal-panel{min-height:220px}}
+
+/* 타이틀 승리는 경기장과 분리된 세로 두 화면으로 표시한다. */
+#modal.title-result-modal{width:calc(100% - 24px);max-width:544px;max-height:calc(100dvh - 24px);padding:12px;overflow:auto}
+.title-result-modal .title-medal-result{grid-template-columns:1fr;gap:0;padding:0;margin:0;background:#a20019}
+.title-result-modal .result-win{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:#a20019 url('assets/day-result/result-circuit.png') center/100% 100% no-repeat}
+.title-result-modal .result-win img{width:90%;height:auto}
+.title-result-modal .medal-panel{box-sizing:border-box;aspect-ratio:4/3;min-height:0;padding:24px 16px;gap:12px;background-color:#a20019}
+.title-result-modal .medal-panel small{color:#e8dba5}
+.title-result-modal #modal-title{display:none}
+.title-result-modal #modal-ok{width:100%;margin-top:12px}
+@media(max-width:600px){.title-result-modal .medal-panel{gap:8px}.title-result-modal .medal-panel h3{font-size:18px}.title-result-modal .medal-panel p{font-size:16px}}

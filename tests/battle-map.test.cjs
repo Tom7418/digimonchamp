@@ -74,5 +74,5 @@ test('그림을 읽는 첫 프레임에는 전투를 진행하지 않고4초 대
  let steps=0,draws=0;
  const c=vm.createContext({performance:{now:()=>0},drawArena:()=>draws++,finishBattle(){},battleBackdrop:{status:()=> 'loading'},spriteOf:()=>({image:{complete:false}}),C:{stepBattle:()=>{steps++;return [];}},battle:{done:false,map:{id:0},assetWait:0,acc:0,state:{over:false,units:[]},effects:{tick(){}},actions:new Map(),motion:new Map()}});
  vm.runInContext(source.slice(a,b),c);c.battleTick(.05);assert.equal(steps,0);assert.equal(draws,1);
- c.battle.assetWait=4;c.battleTick(.05);assert.equal(steps,1);
+ c.battle.assetWait=4;c.battleTick(.05);assert.equal(steps,0);c.battleTick(.05);assert.equal(steps,1);
 });

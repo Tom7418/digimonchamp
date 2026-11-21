@@ -32,8 +32,17 @@ for magic,p,n in blocks:
 assert len(maps)==1137 and sum(0xac00<=c<=0xd7a3 for c in maps)==913
 
 def bitmap(gi):
+ if gi==supplemental_id:
+  # '월'의 초성/종성은 그대로 두고 ㅝ의 왼쪽 획만 ㅘ의 오른쪽 획으로 바꾼다.
+  # 원본에 없는 '왈'을 시스템 글꼴과 섞지 않기 위한 웹판 보완 자형이다.
+  pixels=bitmap(maps[ord('월')]);pixels[1][6]=False;pixels[1][8]=True
+  return pixels
  raw=b[cglp+16+gi*size:cglp+16+(gi+1)*size]
  return [[bool((raw[(y*w+x)//4]>>(6-2*((y*w+x)%4)))&3) for x in range(w)] for y in range(h)]
+
+supplemental_id=max(maps.values())+1
+maps[ord('왈')]=supplemental_id
+widths[supplemental_id]=widths[maps[ord('월')]]
 
 def contours(pixels,level):
  # Marching squares, saddle cases join touching diagonal strokes instead of breaking them.
@@ -108,7 +117,7 @@ fb.setupGlyf(glyphs);fb.setupHorizontalMetrics(metrics);fb.setupHorizontalHeader
 fb.setupNameTable({'familyName':'Championship HD','styleName':'Regular','uniqueFontIdentifier':'ChampionshipHD-1','fullName':'Championship HD Regular','psName':'ChampionshipHD-Regular','version':'Version 1.0'})
 fb.setupOS2(sTypoAscender=950,sTypoDescender=-150,sTypoLineGap=0,usWinAscent=1000,usWinDescent=200,fsType=0);fb.setupPost()
 fb.font['head'].created=fb.font['head'].modified=2082844800;fb.font.recalcTimestamp=False;fb.font.flavor='woff2';fb.save(build_path)
-font=TTFont(build_path);assert font.getBestCmap().keys()==maps.keys();assert len(font['glyf'])==1138
+font=TTFont(build_path);assert font.getBestCmap().keys()==maps.keys();assert len(font['glyf'])==1139
 # Original bitmap contact atlas, only for local comparison, never copied into the released site.
 from extract_title import png
 chars='디지몬 챔피언십 헤비 버너 아구몬 배틀 육성 사냥 도감 양호실 다음 날'
@@ -120,7 +129,7 @@ for i,ch in enumerate(chars):
    if on:
     p=((y+2)*12*len(chars)+i*12+x)*4;atlas[p:p+4]=bytes((235,244,251,255))
 png(preview/'original.png',12*len(chars),14,atlas)
-audit={'source':'common/font/digi_font_11_u.NFTR','sourceSha256':hashlib.sha256(b).hexdigest(),'characters':len(maps),'hangul':913,'unitsPerEm':1100,'policy':'Source glyph geometry, Unicode cmap and advances retained; diagonal joins and tiny quadratic corners rebuilt as web art policy. Unsupported characters use system fallback. This is an outline reconstruction, not recovered high-resolution source artwork.','contourLevel':.44,'cornerRadiusPixels':.1}
+audit={'source':'common/font/digi_font_11_u.NFTR','sourceSha256':hashlib.sha256(b).hexdigest(),'characters':len(maps),'hangul':914,'sourceCharacters':1137,'supplementalGlyphs':{'왈':'Derived from 월: vowel side arm moved from left to right; web art policy, not an original glyph.'},'unitsPerEm':1100,'policy':'Source glyph geometry, Unicode cmap and advances retained; diagonal joins and tiny quadratic corners rebuilt as web art policy. Unsupported characters use system fallback. This is an outline reconstruction, not recovered high-resolution source artwork.','contourLevel':.44,'cornerRadiusPixels':.1}
 audit['subpixelGrid']=4
 audit_text=json.dumps(audit,indent=2)+'\n'
 if check:

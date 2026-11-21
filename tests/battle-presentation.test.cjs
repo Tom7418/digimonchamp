@@ -30,3 +30,17 @@ test('사용자 요청으로 필살기 확대 중에도 디지털 띠를 읽거�
  p.draw({drawImage(){draws++;}},416,272);assert.equal(images,0);assert.equal(draws,0);assert.ok(p.snapshot().zoom>1);assert.ok(p.snapshot().dim>0);
  assert.doesNotMatch(fs.readFileSync('web/index.html','utf8'),/src="assets\/battle\/speedlines.js/);
 });
+
+
+test('배틀 이동·효과·피격과 확대는 모두 실시간 1배속으로 진행한다',()=>{
+ const src=fs.readFileSync('web/game.js','utf8'),part=src.slice(src.indexOf('  function battleTick('),src.indexOf('  function battleLog('));
+ for(const mode of ['normal','effect','done','focus']){
+  let elapsed=0,focusTime=0,engine=0;
+  const action={left:1},c=vm.createContext({drawArena:()=>{},finishBattle:()=>{},C:{stepBattle:()=>{engine++;return [];}},
+   battle:{done:mode==='done',acc:0,state:{over:false,units:[]},motion:new Map(),actions:new Map([[0,action]]),effects:{busy:mode==='effect',tick:t=>elapsed+=t},
+    presentation:{busy:mode==='focus',snapshot:()=>({age:1,transition:0,hold:5}),tick:t=>focusTime+=t}}});
+  vm.runInContext(part,c);c.battleTick(.05);
+  assert.ok(Math.abs(elapsed-.05)<1e-9,mode);assert.ok(Math.abs(action.left-.95)<1e-9,mode);assert.equal(engine,0);
+  if(mode==='normal'){c.battleTick(.05);assert.equal(engine,1);}if(mode==='focus')assert.equal(focusTime,.05);
+ }
+});

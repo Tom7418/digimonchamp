@@ -1,8 +1,12 @@
 {
   "source": "common/font/digi_font_11_u.NFTR",
   "sourceSha256": "bb69cad3fb0c9052b9692cc85d9066a68b1c1bbedd15b76c7a8669543c9966fe",
-  "characters": 1137,
-  "hangul": 913,
+  "characters": 1138,
+  "hangul": 914,
+  "sourceCharacters": 1137,
+  "supplementalGlyphs": {
+    "\uc648": "Derived from \uc6d4: vowel side arm moved from left to right; web art policy, not an original glyph."
+  },
   "unitsPerEm": 1100,
   "policy": "Source glyph geometry, Unicode cmap and advances retained; diagonal joins and tiny quadratic corners rebuilt as web art policy. Unsupported characters use system fallback. This is an outline reconstruction, not recovered high-resolution source artwork.",
   "contourLevel": 0.44,

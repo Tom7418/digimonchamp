@@ -31,5 +31,22 @@ test('타이틀로 랭크가 풀리면 출전하지 않은 대기 개체도 결�
  const src=fs.readFileSync('web/game.js','utf8'),a=src.indexOf('  function finishBattle()'),b=src.indexOf('  function drawArena(',a);
  vm.runInContext(src.slice(a,b),ctx);ctx.finishBattle();
  assert.equal(ctx.C.tamerRank(ctx.save),3);assert.equal(ctx.save.digimon[1].speciesId,'그레이몬');assert.equal(ctx.save.clock,time);
- assert.equal(events.length,1);assert.equal(events[0].uid,2);assert.match(nodes.result,/타이틀 메달을 획득/);
+ assert.equal(events.length,1);assert.equal(events[0].uid,2);assert.match(nodes['#modal-body'].innerHTML,/타이틀 메달을 획득/);
+});
+
+
+test('최초 타이틀 승리만 메달을 안내하고 재우승은 상금과 세로 결과만 표시한다',()=>{
+ const src=fs.readFileSync('web/game.js','utf8'),start=src.indexOf('  function finishBattle()'),end=src.indexOf('  function drawArena(',start);
+ for(const repeat of [false,true]){
+  const nodes={},messages=[],classes=new Set(['battle-modal']);
+  const c=vm.createContext({window:{},esc:String,$:key=>nodes[key]??={classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)}},battleLog:()=>{},log:s=>messages.push(s),toast:()=>{},render:()=>{},persist:()=>{},logEvent:()=>{}});
+  for(const file of ['web/core.js','web/day-result-view.js'])vm.runInContext(fs.readFileSync(file,'utf8'),c);
+  vm.runInContext(`globalThis.C=ChampCore;globalThis.save=C.freshSave(0);globalThis.m=C.TITLES[0];save.titles=${repeat?'[m.id]':'[]'};globalThis.oldBits=save.bits;
+   globalThis.battle={done:false,state:{winner:0,reason:'hp',units:[]},setup:{match:m,prize:0,title:m.name}};`+src.slice(start,end),c);
+  c.finishBattle();c.finishBattle();
+  const html=nodes['#modal-body'].innerHTML;
+  assert.equal(c.save.titles.filter(x=>x===c.m.id).length,1);assert.equal(c.save.bits,c.oldBits+c.m.prize);
+  assert.equal(/class="title-medal"/.test(html),!repeat);assert.equal(messages.some(x=>x.startsWith('타이틀 메달 획득:')), !repeat);
+  assert.equal(classes.has('title-result-modal'),true);assert.equal(classes.has('battle-modal'),false);assert.doesNotMatch(html,/<canvas|battle-layout/);
+ }
 });
