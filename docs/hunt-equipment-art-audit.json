@@ -1,6 +1,30 @@
 {
   "source": "common/e002_hunt_*",
   "sha256": {
+    "bom_nomal": {
+      ".ncer": "ea7d025e3ebc6401217f2b189bba4140619b7518dd1653cfba8cabba04dea7c5",
+      ".ncbr": "534f6bc0e617e48a8a9cb010de1d9435cc2b4ee202844b6c59a1bb0a87d54379",
+      ".nclr": "ed55419bbfabc18d055fbe999b90f42a61648b043187337a6a7d20960d61f1dd",
+      ".nanr": "513af033585d95ce66cf7513e7845e5101b3f0c44ef825ff326600cf3251df1a"
+    },
+    "bom_sleep": {
+      ".ncer": "ea7d025e3ebc6401217f2b189bba4140619b7518dd1653cfba8cabba04dea7c5",
+      ".ncbr": "e9c2187cb7f011836a81070a98080b63434e32346968320b4624a53ada00b0b0",
+      ".nclr": "7a0c36d56ed92ec0d139def663508d2e90f092989d167cf66f3e16b44ff9c952",
+      ".nanr": "513af033585d95ce66cf7513e7845e5101b3f0c44ef825ff326600cf3251df1a"
+    },
+    "bom_stun": {
+      ".ncer": "ea7d025e3ebc6401217f2b189bba4140619b7518dd1653cfba8cabba04dea7c5",
+      ".ncbr": "16f1c2a511c7d88442b8b5c26f7fe949a673e4ccbf69b8c117c402b870958607",
+      ".nclr": "d3064530b6a211cbc899f3bbf4fe4a53800027d38d974988359a662de47c98ad",
+      ".nanr": "513af033585d95ce66cf7513e7845e5101b3f0c44ef825ff326600cf3251df1a"
+    },
+    "bom_flash": {
+      ".ncer": "ea7d025e3ebc6401217f2b189bba4140619b7518dd1653cfba8cabba04dea7c5",
+      ".ncbr": "52342748d0d705bd2c62daf6c634ff53a1ba704ba2a9c6e3e3c675040e7a2a3e",
+      ".nclr": "31e571b74fa34af379f1f097c85f28b9440d99827a6fe32a8d03e43dc037ef8d",
+      ".nanr": "513af033585d95ce66cf7513e7845e5101b3f0c44ef825ff326600cf3251df1a"
+    },
     "smallmine": {
       ".ncer": "1a7ce704c4264b8ee35e6c60059bc8778310cafa42f7b6225c7edfdb27d84d48",
       ".ncbr": "c40ea36fb57784af4fd22757cc91823e5ffa32691fcb748276056e66d1d2157d",
@@ -80,5 +104,5 @@
       ".nanr": "665b1e8cb368eeeaf8cc4a7f97c6cdd8e3d7d37f91ebbb06066beab384e595d6"
     }
   },
-  "policy": "Floor display uses sequence0. Item/resource names identify variants. Activation/explosion sequences not wired."
+  "policy": "Floor display uses sequence0. Item/resource names identify variants. Explosion sequences2 smoke/3 flame/4 sparks are composited by web policy; trap sequence1 is also a web event mapping. Original placement/selector remains unverified."
 }

@@ -1987,7 +1987,12 @@
   }
   // 폭발: 범위 안 디지몬에게 대미지와 효과
   function blast(x, y, g) {
-    hunt.fx.push({ x, y, r: g.range, left: 0.35 });
+    // 원본 그림2=연기,3=화염,4=불티를 함께 표시하는 것은 웹판 합성 정책.
+    // 원작에서 각 요소를 배치/선택하는 조건은 아직 미확인이다.
+    for(const artSequence of [2,3,4]){
+      const visual={x,y,g,artSequence};
+      hunt.fx.push({...visual,r:g.range,left:huntEquipmentArt.duration(visual,artSequence)||.6});
+    }
     const hits = hunt.wilds.filter((w) => !w.gone && Math.hypot(x - w.x, y - (w.y - 15)) < g.range);
     for (const w of hits) {
       w.hp -= C.gearDamage(g.power || 0, w.hp);
@@ -2157,6 +2162,8 @@
       }
       if (trap && trap.held < trap.g.holds) {
         trap.held += 1;
+        // 포획 펼침은 원본1번. 웹판 포획 이벤트에 연결하며 판정/지속시간은 그대로 둔다.
+        hunt.fx.push({x:trap.x,y:trap.y,g:trap.g,artSequence:1,left:huntEquipmentArt.duration(trap,1)||.5});
         if (trap.held >= trap.g.holds) trap.left = Math.min(trap.left, trap.g.seconds);
         w.stun = trap.g.seconds;
         w.stunKind = '포획';
@@ -2529,7 +2536,7 @@
     ctx.strokeRect(AREA.x0, AREA.y0, AREA.x1 - AREA.x0, AREA.y1 - AREA.y0);
     ctx.setLineDash([]);
     for (const t of hunt.traps) {
-      huntEquipmentArt.draw(ctx,t,dt);
+      if(!hunt.fx.some(f=>f.artSequence===1&&f.x===t.x&&f.y===t.y))huntEquipmentArt.draw(ctx,t,dt);
     }
     for (const l of hunt.wires) {
       ctx.strokeStyle = !l.g ? '#d8dde0' : l.g.sticky ? '#e58bd8' : l.g.power ? '#ffe36a' : '#d8dde0';
@@ -2591,6 +2598,7 @@
       }
     }
     for (const f of hunt.fx) {
+      if(f.artSequence!==undefined){huntEquipmentArt.draw(ctx,f,dt,f.artSequence);continue;}
       ctx.strokeStyle = '#fff4b0';
       ctx.lineWidth = 3;
       ctx.globalAlpha = Math.max(0, f.left / 0.25);

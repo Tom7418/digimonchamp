@@ -4,7 +4,7 @@ import json,struct,hashlib
 import extract_sprites as sprites
 from extract_animations import decode
 repo=Path(__file__).resolve().parents[1];out=repo/'web/assets/hunt';out.mkdir(exist_ok=True)
-names=['smallmine','hugemine','digicach','digiprison','decoy','decoy2','digilight','digilight2','niku_nomal','niku_big','niku_poison','niku_stun','niku_sleep']
+names=['bom_nomal','bom_sleep','bom_stun','bom_flash','smallmine','hugemine','digicach','digiprison','decoy','decoy2','digilight','digilight2','niku_nomal','niku_big','niku_poison','niku_stun','niku_sleep']
 data={};audit={}
 for name in names:
  stem='e002_hunt_'+name;base=sprites.ROOT/'common'/stem
@@ -23,4 +23,4 @@ for name in names:
  data[name]={'width':meta['width'],'height':meta['height'],'left':min(x for x,y in xy),'top':min(y for x,y in xy),'sequences':decode(base.with_suffix('.nanr'),meta['frames'])}
  audit[name]={ext:hashlib.sha256(base.with_suffix(ext).read_bytes()).hexdigest() for ext in ['.ncer','.ncbr','.nclr','.nanr']}
 (out/'equipment.js').write_text('window.HUNT_EQUIPMENT_ART='+json.dumps(data,separators=(',',':'))+';\n',encoding='utf-8')
-(repo/'docs/hunt-equipment-art-audit.json').write_text(json.dumps({'source':'common/e002_hunt_*','sha256':audit,'policy':'Floor display uses sequence0. Item/resource names identify variants. Activation/explosion sequences not wired.'},indent=2)+'\n',encoding='utf-8')
+(repo/'docs/hunt-equipment-art-audit.json').write_text(json.dumps({'source':'common/e002_hunt_*','sha256':audit,'policy':'Floor display uses sequence0. Item/resource names identify variants. Explosion sequences2 smoke/3 flame/4 sparks are composited by web policy; trap sequence1 is also a web event mapping. Original placement/selector remains unverified.'},indent=2)+'\n',encoding='utf-8')
