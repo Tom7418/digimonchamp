@@ -10950,6 +10950,7 @@ var ChampCore = (function(exports) {
 			}
 			if (near.hp <= 0) {
 				near.alive = false;
+				near.koBy = u.id;
 				near.status = void 0;
 				events.push({
 					type: "ko",
@@ -11243,8 +11244,7 @@ var ChampCore = (function(exports) {
 	* 10·15·20시 정각마다(쿨타임 +0x18: 굴리면 1, 20분마다 1 감소 — 0x2128FBC) 100면 주사위를 굴려 5 미만이면
 	* 무작위 세대(0~6)를 하나 골라 그 세대인 첫 디지몬을 사겠다는 메일이 온다.
 	* 값 = 종 기본 가격(디지몬 표 +0x80) × (8 + 0~3) / 10, 메일은 이벤트 0x5E~0x62 중 하나.
-	* 확인했지만 아직 옮기지 않은 것: 주사위 5~9의 다른 매입(이벤트 0x64, 디지몬 +0x24·+0x3D·+0x08 조건),
-	* 프리 배틀 활약 뒤 다음 날 50%로 오는 매입(값 ×3, 이벤트 0x65~0x69, 후보는 overlay9_19 0x2111B14).
+	* 주사위 5~9의 디지몬 콜렉터(0x64)와 프리 배틀 활약 매입(0x65~0x69)은 아래 함수에서 다룬다.
 	*/
 	var OFFER_HOURS = [
 		10,
@@ -11265,12 +11265,48 @@ var ChampCore = (function(exports) {
 		"{name}(이)랑 꼭 같이 해 보고 싶어.\n{price}bit면 어때?",
 		"나도 {name} 같은 녀석을 키우고 싶어…\n{price}bit 준비했어!"
 	];
-	var offerText = (o, name) => OFFER_TEXT[(o.id - 94) % OFFER_TEXT.length].replace("{name}", name).replace("{price}", o.price.toLocaleString("ko-KR"));
-	/** 정각마다 부른다. 굴릴 시각이 아니거나 답하지 않은 제안이 있으면(웹판: 제안은 하나씩) null */
+	var COLLECTOR_TEXT = "{name}(이)랑 함께라면\n잘 지낼 수 있을 것 같아.\n{price}bit 줄 테니 보내 줄래?";
+	var BATTLE_OFFER_TEXT = [
+		"{name}의 배틀 봤어!\n우리 팀에 꼭 필요해.\n{price}bit 줄게!",
+		"{name}처럼 강한 디지몬이\n있으면 좋겠어요.\n{price}bit에 양보해 주세요.",
+		"그 배틀의 {name}, 대단하던데!\n{price}bit로 거래하자!",
+		"{name}(을)를 우리 팀에 맞이하고 싶다!\n{price}bit 어떤가!",
+		"{name} 정말 강하더라.\n나도 갖고 싶어!\n{price}bit 낼게."
+	];
+	var offerText = (o, name) => {
+		return (o.id === 100 ? COLLECTOR_TEXT : o.id >= 101 ? BATTLE_OFFER_TEXT[(o.id - 101) % 5] : OFFER_TEXT[(o.id - 94) % OFFER_TEXT.length]).replace("{name}", name).replace("{price}", o.price.toLocaleString("ko-KR"));
+	};
+	var COLLECTOR_OFFER = 100;
+	var BATTLE_OFFER = 101;
+	/**
+	* 정각마다 부른다. 굴릴 시각이 아니거나 답하지 않은 제안이 있으면(웹판: 제안은 하나씩) null.
+	* 100면 주사위 0~4: 무작위 세대(rand % 7) 첫 디지몬, 값 = 기본 가격 × (8 + rand % 4)/10, 0x5E~0x62.
+	* 5~9: 배(+0x08)가 0이고 페널티(+0x3D)가 3 이상인 첫 디지몬을 기본 가격에 — 0x64 디지몬 콜렉터(0x2129340).
+	*   원본은 +0x24 = 0도 보는데 그 칸의 뜻을 몰라 웹판은 보지 않는다(임시).
+	*/
 	function rollNpcOffer(save, hour, rng) {
 		if (!OFFER_HOURS.includes(hour) || save.npcOffer) return null;
 		const next = save;
-		if (Math.floor(rng() * 100) >= 5) return { save: next };
+		const dice = Math.floor(rng() * 100);
+		if (dice >= 10) return { save: next };
+		if (dice >= 5) {
+			const d = save.digimon.find((x) => !x.isEgg && x.hunger <= 0 && x.penalties >= 3);
+			const base = d ? originalSpecies(d.speciesId)?.price ?? 0 : 0;
+			if (!d || base <= 0) return { save: next };
+			const offer = {
+				id: 100,
+				uid: d.uid,
+				price: base,
+				from: "디지몬 콜렉터"
+			};
+			return {
+				save: {
+					...next,
+					npcOffer: offer
+				},
+				offer
+			};
+		}
 		const stage = Math.floor(rng() * 7);
 		const d = save.digimon.find((x) => !x.isEgg && originalSpecies(x.speciesId)?.stage === stage);
 		const base = d ? originalSpecies(d.speciesId)?.price ?? 0 : 0;
@@ -11291,7 +11327,46 @@ var ChampCore = (function(exports) {
 			offer
 		};
 	}
-	/** 제안에 답한다. 받아들이면 디지몬을 건네고 값을 받는다 (소지금 상한 적용) */
+	/**
+	* 프리 배틀을 이긴 뒤 매입 후보 정하기 (overlay9_19 0x2111A0C~0x2111B24).
+	* 디지몬이 5마리 이상이면, 상대 첫 디지몬을 쓰러뜨린 것이 내 첫째·둘째 출전 디지몬이면(원본은 두 칸만 본다)
+	* rand % 100이 10보다 클 때(89%) 그 디지몬을 후보로 둔다.
+	*/
+	function pickOfferCandidate(save, units, rng) {
+		if (save.digimon.length < 5) return save;
+		const mine = units.filter((u) => u.team === 0).slice(0, 2);
+		const foe = units.find((u) => u.team === 1);
+		const killer = mine.find((u) => foe?.koBy !== void 0 && u.id === foe.koBy);
+		if (!killer?.uid || Math.floor(rng() * 100) <= 10) return save;
+		return {
+			...save,
+			offerCandidate: killer.uid
+		};
+	}
+	/**
+	* 후보가 있으면 다음 판정 때(육성 화면, 시각과 상관없이 — overlay9_18 0x2129084) 50%로 제안하고, 어느 쪽이든 후보를 지운다.
+	* 값 = 기본 가격 × 3 × (8 + rand % 5)/10, 메일 0x65 + rand % 5.
+	*/
+	function rollBattleOffer(save, rng) {
+		if (save.offerCandidate === void 0 || save.npcOffer) return save;
+		const { offerCandidate, ...rest } = save;
+		if (Math.floor(rng() * 2) === 0) return rest;
+		const d = save.digimon.find((x) => x.uid === offerCandidate);
+		const base = d ? originalSpecies(d.speciesId)?.price ?? 0 : 0;
+		if (!d || base <= 0) return rest;
+		const step = Math.floor(base * 3 / 10);
+		const price = base * 3 - 2 * step + step * Math.floor(rng() * 5);
+		const k = Math.floor(rng() * 5);
+		return {
+			...rest,
+			npcOffer: {
+				id: 101 + k,
+				uid: d.uid,
+				price,
+				from: OFFER_FROM[k]
+			}
+		};
+	}
 	function answerNpcOffer(save, accept) {
 		const o = save.npcOffer;
 		if (!o) return save;
@@ -11861,6 +11936,7 @@ var ChampCore = (function(exports) {
 	exports.BAITS = BAITS;
 	exports.BAIT_PACK = BAIT_PACK;
 	exports.BATTLE_MAPS = BATTLE_MAPS;
+	exports.BATTLE_OFFER = BATTLE_OFFER;
 	exports.BLAST_RADIUS = BLAST_RADIUS;
 	exports.BOMB_FUSE = BOMB_FUSE;
 	exports.BOSS_INTRO_MAIL = BOSS_INTRO_MAIL;
@@ -11884,6 +11960,7 @@ var ChampCore = (function(exports) {
 	exports.CHAMP_PRIZE = CHAMP_PRIZE;
 	exports.CHAMP_SEASON = CHAMP_SEASON;
 	exports.CLOCK_STEP_MINUTES = CLOCK_STEP_MINUTES;
+	exports.COLLECTOR_OFFER = COLLECTOR_OFFER;
 	exports.CURE_CHANCE = CURE_CHANCE;
 	exports.DAYS_PER_SEASON = DAYS_PER_SEASON;
 	exports.DAY_END_HOUR = DAY_END_HOUR;
@@ -12126,6 +12203,7 @@ var ChampCore = (function(exports) {
 	exports.pick = pick;
 	exports.pickBattleSkill = pickBattleSkill;
 	exports.pickHuntSpawn = pickHuntSpawn;
+	exports.pickOfferCandidate = pickOfferCandidate;
 	exports.pickWild = pickWild;
 	exports.pluginOf = pluginOf;
 	exports.pluginPrice = pluginPrice;
@@ -12146,6 +12224,7 @@ var ChampCore = (function(exports) {
 	exports.restoreFloorFood = restoreFloorFood;
 	exports.reviveSupport = reviveSupport;
 	exports.rivalBeaten = rivalBeaten;
+	exports.rollBattleOffer = rollBattleOffer;
 	exports.rollBossMail = rollBossMail;
 	exports.rollMorningMail = rollMorningMail;
 	exports.rollNpcOffer = rollNpcOffer;

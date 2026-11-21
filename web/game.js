@@ -512,6 +512,8 @@
         save = C.rollBossMail(save);
         persist();
       }
+      // 프리 배틀 활약 매입: 후보가 있으면 육성 화면에 돌아와 50%로 제안 (원본 0x2129084)
+      if (save.offerCandidate !== undefined && !save.npcOffer) { save = C.rollBattleOffer(save, Math.random); persist(); }
       deliverEventMails();
     }
     if (C.isNight(save) && !battle) openDayEnd();
@@ -1430,6 +1432,8 @@
     if (m) save = C.applyMatch(save, m, won);
     else if (won) save = C.addBits(save, b.setup.prize);
     if (won && b.setup.rival) save = C.rivalBeaten(save, b.setup.rival);
+    // 원본: 프리 배틀에서 상대 첫 디지몬을 쓰러뜨린 디지몬은 매입 제안 후보가 된다 (overlay9_19 0x2111A0C)
+    if (won && b.setup.free) save = C.pickOfferCandidate(save, b.state.units, Math.random);
     // 원본: 챔피언십 본선 마지막 경기를 이기면 사장 배틀 신청 메일 (overlay9_19 0x21120AC)
     save = C.rollBossMail(save);
     const after = C.tamerRank(save);

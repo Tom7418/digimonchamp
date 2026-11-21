@@ -147,6 +147,8 @@ export interface SaveData {
   pendingMails?: number[];
   /** 받아들인 배틀 신청 (배틀 메뉴에 남는다) */
   challenge?: { id: number; team: number; prize: number; name: string; from: string };
+  /** 프리 배틀에서 활약해 매입 제안 후보가 된 디지몬 uid (원본 상태 +0xCC). 다음 판정 때 50%로 제안 */
+  offerCandidate?: number;
   /** 답하지 않은 NPC 매입 제안 */
   npcOffer?: { id: number; uid: number; price: number; from: string };
   /** 장비한 사냥 아이템 id (원본 5칸). 없으면 가진 것 앞에서 5종 */

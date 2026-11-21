@@ -18,7 +18,7 @@ import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleF
 import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { DEX_ORDER, dexEntries, dexCount } from '../src/core/dex';
-import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent, rollMorningMail, rollBossMail, rivalBeaten } from '../src/core/events';
+import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent, rollMorningMail, rollBossMail, rivalBeaten, pickOfferCandidate, rollBattleOffer } from '../src/core/events';
 import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotCooldown, paralysisSeconds, itemDamage as itemDmg, WIRE_UNIT, BOMB_FUSE, useGear, gearCount, BAITS, GEARS, gearOf, itemResist, itemDamage, effectLands, magnetSticks, attracted, HUNT_ITEM_SLOTS, huntItems, toggleHuntItem } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
@@ -2101,6 +2101,28 @@ describe('NPC 매입 제안 (원본 0x2129064)', () => {
   it('고른 세대의 디지몬이 없으면 제안 없음', () => {
     const seq = [0.01, 6 / 7 + 0.001];
     expect(rollNpcOffer(withMon('아구몬'), 10, () => seq.shift()!)!.offer).toBeUndefined();
+  });
+  it('주사위 5~9: 굶주리고 페널티 3 이상인 디지몬을 기본 가격에 (0x64 디지몬 콜렉터)', () => {
+    const s = withMon('아구몬');
+    expect(rollNpcOffer(s, 10, () => 0.07)!.offer).toBeUndefined(); // 배가 차 있다
+    const poor = { ...s, digimon: [{ ...s.digimon[0], hunger: 0, penalties: 3 }] };
+    expect(rollNpcOffer(poor, 10, () => 0.07)!.offer).toEqual({ id: 0x64, uid: 7, price: 6480, from: '디지몬 콜렉터' });
+    expect(rollNpcOffer(poor, 10, () => 0.1)!.offer).toBeUndefined();
+  });
+  it('프리 배틀 활약 매입: 상대 첫 디지몬을 쓰러뜨린 첫째·둘째 디지몬이 89%로 후보, 다음 판정 50%로 ×3 제안', () => {
+    const five = { ...withMon('아구몬'), digimon: [7, 8, 9, 10, 11].map((uid) => ({ ...newDigimon(uid, '아구몬'), isEgg: false })) };
+    const units = [{ id: 0, team: 0 as const, uid: 7 }, { id: 1, team: 0 as const, uid: 8 }, { id: 2, team: 1 as const, koBy: 1 }];
+    expect(pickOfferCandidate(five, units, () => 0.11).offerCandidate).toBe(8);
+    expect(pickOfferCandidate(five, units, () => 0.1).offerCandidate).toBeUndefined(); // rand%100 ≤ 10
+    expect(pickOfferCandidate({ ...five, digimon: five.digimon.slice(0, 4) }, units, () => 0.5).offerCandidate).toBeUndefined();
+    expect(pickOfferCandidate(five, [...units.slice(0, 2), { id: 2, team: 1 as const }], () => 0.5).offerCandidate).toBeUndefined();
+    const cand = { ...five, offerCandidate: 8 };
+    expect(rollBattleOffer(cand, () => 0.2)).toEqual(five); // 50% 실패해도 후보는 지운다
+    const seq = [0.9, 0.99, 0];
+    const r = rollBattleOffer(cand, () => seq.shift()!);
+    // 6,480 × 3 = 19,440, 한 칸 1,944 → 19,440 − 3,888 + 1,944 × 4 = 23,328
+    expect(r.npcOffer).toEqual({ id: 0x65, uid: 8, price: 23328, from: '철수' });
+    expect(r.offerCandidate).toBeUndefined();
   });
 });
 

@@ -160,6 +160,8 @@ export interface Unit {
   /** 정해 둔 다음 행동 (사거리에 들어가면 실행) */
   intent?: { kind: 'basic' } | { kind: 'special'; skill: BattleSkill };
   revived?: boolean;
+  /** 이 유닛을 쓰러뜨린 상대 유닛 id (원본 배우 +0x68로 보임 — 프리 배틀 매입 후보 판정 overlay9_19 0x2111A88) */
+  koBy?: number;
 }
 
 export type BattleEvent =
@@ -542,6 +544,7 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     }
     if (near.hp <= 0) {
       near.alive = false;
+      near.koBy = u.id;
       near.status = undefined;
       events.push({ type: 'ko', id: near.id });
       // 같은 편이 쓰러지면 남은 편의 분노 게이지 +20 (0x2115E6C)
