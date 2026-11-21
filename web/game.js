@@ -1089,20 +1089,10 @@
   }
   // 도감: 원작 도감 순서(arm9 0x020EDE78). 손에 넣거나 진화한 종만 내용이 보인다. 원작 설명 글은 옮기지 않는다
   function dexMenu(selectedNo = null) {
-    const list = C.dexEntries(save), pick = list.find((e) => e.no === selectedNo && e.registered);
-    const detail = pick
-      ? `<div class="dex-detail"><canvas id="dex-art" width="120" height="110"></canvas><div><h3>No.${String(pick.no).padStart(3, '0')} ${esc(pick.name)}</h3><p>${esc(pick.stage)} · ${esc(pick.attr)} · ${esc(pick.family)} · ${pick.size}G${C.eraLabel(pick.id) ? ' · ' + esc(C.eraLabel(pick.id)) : ''}</p><p>필살기: ${pick.skills.map(esc).join(' · ') || '없음'}</p></div></div>`
-      : `<p class="hint">등록한 디지몬을 누르면 정보를 볼 수 있습니다. 손에 넣거나 진화시키면 등록됩니다.</p>`;
-    showModal('디지몬 도감', `<p>등록 ${C.dexCount(save)} / ${list.length}</p>${detail}<div class="dex-grid">${list.map((e) => `<button data-dex="${e.no}"${e.registered ? '' : ' disabled'} class="${e.no === selectedNo ? 'active' : ''}"><small>${String(e.no).padStart(3, '0')}</small>${e.registered ? esc(e.name) : '???'}</button>`).join('')}</div>`, 'DIGIMON DEX');
-    $('#modal-body').querySelectorAll('[data-dex]').forEach((b) => (b.onclick = () => dexMenu(+b.dataset.dex)));
-    const art = $('#dex-art');
-    if (pick && art) {
-      const cx = art.getContext('2d'), id = SPRITE_BY_NAME[C.getSpecies(pick.id).id];
-      const draw = () => { cx.clearRect(0, 0, 120, 110); body(cx, pick.id, false, 60, 96, 1.6, animations.sample(id, 'idle', 0), false); };
-      draw();
-      const a = spriteOf(pick.id, false);
-      if (a?.image && !a.image.complete) a.image.addEventListener('load', draw, { once: true });
-    }
+    const oldGrid=$('#modal-body').querySelector('.dex-grid'),scroll=oldGrid?.scrollTop||0;
+    showModal('디지몬 도감',window.dexViewHtml(C,save,selectedNo,esc),'DIGIMON DEX');
+    const grid=$('#modal-body').querySelector('.dex-grid');if(grid)grid.scrollTop=scroll;
+    $('#modal-body').querySelectorAll('[data-dex]').forEach(b=>b.onclick=()=>{dexMenu(+b.dataset.dex);$('#modal-body').querySelector(`[data-dex="${b.dataset.dex}"]`)?.focus({preventScroll:true});});
   }
   function showModal(title, body, kicker = 'TAMER GUIDE', ok = '사육장으로 돌아가기') {
     $('#modal').classList.remove('battle-modal');

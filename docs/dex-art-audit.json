@@ -1,0 +1,1087 @@
+{
+  "source": "db_digimon/*_db_main cell0; database/zukan_bg_main",
+  "species": 216,
+  "sha256": {
+    "m001_zurumon": {
+      ".ncer": "6cc3db4eeff95613a52979ef69256e4494f3cafa24b1ec0cc6e71b8dd8b3094f",
+      ".ncbr": "37781cb94cd0a10a7c66264502f1ab93003ab6b5c47519fe4791c0fe241edfda",
+      ".nclr": "92540375141ff0e992d864eb257019ee6aa7808140bfaec72dd75f4354d51953"
+    },
+    "m002_choromon": {
+      ".ncer": "7098729a25554659f9cdb2e29925e67201391340ba3ce78131f20952774f90e0",
+      ".ncbr": "071a5adf8ada275b5e6a2250b21c6b034a03db87d26d961b756159c66564cf25",
+      ".nclr": "eb0fda27dd4448dc25d01539390a80c0e9ee994fa40c7d2bde336db5b244eeef"
+    },
+    "m003_nyokimon": {
+      ".ncer": "a6b33c7b1c1625cd37613e0c77520b3b9ed2a3cf5cfbb739aa71440e539fae4b",
+      ".ncbr": "ea6c5291b583d46865f3f2a419fe391ade42a60b1797bfa9cd4615fec3064aa7",
+      ".nclr": "8382f638685068c5c1b8f255c5589f220a21f025479490bbbe283381c35f838a"
+    },
+    "m004_bubbmon": {
+      ".ncer": "ca94d891b21035f4ac9cd918a6be9d3918be49b167b8401cf16f9d2f112f78c7",
+      ".ncbr": "ac045ae0590894609c7f896c7c8a50e4b44710fc27f596a4e03e4520d2589fd5",
+      ".nclr": "49141561b8e4df2b8771c5cedd3727db63d033a547ca64eb55ad9577e8ea4c8e"
+    },
+    "m005_pitchmon": {
+      ".ncer": "c05fb21418294f0166c467fcca5ce7d5714bca33df212803d610c995c7c8f1d5",
+      ".ncbr": "412e3fa859a57fa1a1de00fe25cb59243df4925510e3f4a5e325a476aeb77dad",
+      ".nclr": "f962ae1933f292baeafa7985097697156990ade061e41da1ce19a790b7c13311"
+    },
+    "m006_punimon": {
+      ".ncer": "e1a4fefd0f83f54596e2d6541723126dde65abd633ae41d08f6d5902d260e387",
+      ".ncbr": "1284a495e6f60e2f5f4634a35186729b231076ffb6df8dc936a9065aa3f35dff",
+      ".nclr": "e6724aac5dad359efb11af09b0438132555cadb21e1fec2af0e69a44a5794087"
+    },
+    "m007_botamon": {
+      ".ncer": "e1a4fefd0f83f54596e2d6541723126dde65abd633ae41d08f6d5902d260e387",
+      ".ncbr": "4ced1ac71a14d59404982ff6c4dae17cfef4e716c205de1873fe00663f7dd941",
+      ".nclr": "a0d48500aba615c244dfb794b8832ef7fd416f172a39ada3425c3497ec3c00ec"
+    },
+    "m008_poyomon": {
+      ".ncer": "7505ee01cbd053fe5c75e82a62f92150c1e39a67ea88d2807cd6068da8b5f81b",
+      ".ncbr": "ecee952aa6a60de67445993d68f41f1427bf86aafcd26198042f29023cfe3a30",
+      ".nclr": "c65840c4c094f32a5525593bd879a43cbe357c947909e5c1f856d31a9553c650"
+    },
+    "m009_mokumon": {
+      ".ncer": "12d15a493e1025d28b142d90c6fcbe889887fa8ed664fe1784e252a553d52ad7",
+      ".ncbr": "4896346423312107324fe696f29c90512942e0cdab994e0983be22f55da41da7",
+      ".nclr": "bfb6b373a99f8b746b73764acfa48ca94fe5ab55b939aa3b1e26c971bf514bc3"
+    },
+    "m010_yukimibotamon": {
+      ".ncer": "e1a4fefd0f83f54596e2d6541723126dde65abd633ae41d08f6d5902d260e387",
+      ".ncbr": "65ad172ffcfcfb6fe677f6b805500c0d485a1a43114bcd0906b9766d0bca0f20",
+      ".nclr": "519938609c15fdb9e43ac8aff88082c75050ad1d80e290cc4e4fec8da26f89b6"
+    },
+    "m011_yuramon": {
+      ".ncer": "d1c25abd72e081d88707478532d5cc71873c4541533104e20121f073040c8a09",
+      ".ncbr": "468a1622301a84df9698b1d3a044acfbccfc998d382144517c23b6cffa54036d",
+      ".nclr": "e8563814727526fde928fe3af07085a7adac0463e21c685a5af78ed1fb11352c"
+    },
+    "m012_petimon": {
+      ".ncer": "2e0f2e48dc7eed0b04ff16431c7380e6f7f9138f9d029b3643d7d8883249083b",
+      ".ncbr": "8a1016ad34844ab4e62f9a6f4d7638e64c19af0612764141605732dbc2f3f4d4",
+      ".nclr": "2063a097dca4d44dda226c8e8cbb662449c6cc6f1cd760af35d00503adbe77e3"
+    },
+    "m101_caprimon": {
+      ".ncer": "d7890590f2fcb72579c6540c3f9253e519e13c702cb9dc080760a47f8636c6af",
+      ".ncbr": "0e01e2a53e7ab5e03d26641211f97c337e5bc56f88cb02736ff5bb20b22e689e",
+      ".nclr": "0a0bd76a5c4b9b83efedd2f48c6c31651df3e7a55be9c8ed178b77f78152961f"
+    },
+    "m102_koromon": {
+      ".ncer": "1080b5baa84b84c7f7c643f4be404266c87fe74e4d9f0d955071b752603c5686",
+      ".ncbr": "2e3c86e394a14d08f59d1d23c8d68275e362e15c3137f5232755be61d8335ef6",
+      ".nclr": "d184147b85e77e7c5f8e772beecd3eb5ff95cb9af4de1e2400fd3c4a7947fb26"
+    },
+    "m103_tanemon": {
+      ".ncer": "9843cb7b69fa9d67f59d2d5c8b0c0085cc626b62924a0795bba9692eb9415b78",
+      ".ncbr": "48c2150b374d5ebc6bf183278fafde94359bf79c888f6ffb4591d614e82bb453",
+      ".nclr": "d5c99b0712ce2f66a8c86c452aecce42396abc6307173bf089cf8cebd262da89"
+    },
+    "m104_tunomon": {
+      ".ncer": "5af1d17ebea18e57d65ec81edec7c78bd63e250b18aa0f6fe8a2551f65feca9c",
+      ".ncbr": "980775a49122f4d0be067261c15b49dd5d31f2ce1d3f3dd4d8d4f0dba1811aa8",
+      ".nclr": "ab6056278b2e615603cf0bcf061c5530eeb17bdf6fe4249e7fdac6da4675481f"
+    },
+    "m105_tokomon": {
+      ".ncer": "29504d7737dff7bb7e07dcb2ab31c0c447210dbcf6df54aa6645116d422a9119",
+      ".ncbr": "dee74b1af2193b85c738c1ba7180f1bb44d66b75f629f8235e9202386f48f43c",
+      ".nclr": "dd46c8e82b167e4444001556f48eeb45d4c0abb6d6bfba7dbeb3a4407af0fec6"
+    },
+    "m106_nyaromon": {
+      ".ncer": "163870185607efc9737c2ef1b4ff019226f42a9900a7582ed2e44e4e63cc73c8",
+      ".ncbr": "98ac6df61ee0e693b81a336170b11299d678c9fd43e5990a210bb894dd83a9a6",
+      ".nclr": "b5325f887f0b0767e98e8a1b333a76451dafe403c3b99dacdec0cbedbcdf04c2"
+    },
+    "m107_pagumon": {
+      ".ncer": "47b4511e60f536638766dc7c9e8323b114ef653a8dfd98dce62b9664614e48a8",
+      ".ncbr": "0c35aa53c06dbfe7a289ca6a555ea2b826892df8cb7d24748c32de307c1a55bc",
+      ".nclr": "5c811527840accb2ed29121b1a9423d0f1a6d7d8063154798104a8bedb5a35ed"
+    },
+    "m108_pyokomon": {
+      ".ncer": "296bc0712ae06ac62f8be426b66cc776384a5d749167079548202e92325f6d20",
+      ".ncbr": "067b8e3580eedc56f87074071907c8a5456a11702ccdea9afb019801ca8b2348",
+      ".nclr": "e15ae255847163da491bbc726586539760aee8b76cd27e9baa37902c1777e151"
+    },
+    "m109_pukamon": {
+      ".ncer": "fab61bc35837da87a39a2e65af46db04f9002269533aa3dbe537a02d6d96a443",
+      ".ncbr": "c91138d7acc49177ebe3ef3ada3c380e21c4f5f782ec99d52e2024deea03ea72",
+      ".nclr": "0be91391dd3a9f564686efcccdd4e8f4bf61f72eb2433ec9226a850947c40f94"
+    },
+    "m110_petimemramon": {
+      ".ncer": "39a951fa7664dc520a41850b76d8ed805d08835c01ae7bb406eac1950d3ffa11",
+      ".ncbr": "de5cfffcfe349e25cf3c51aa47e2a57ae1ec0af6f6d2bbbb163c3a7326bbd293",
+      ".nclr": "a061adc7af51cd35041d6eb5874b76d6fca22cb3f9c13ea32ccd145889514cdf"
+    },
+    "m111_mochimon": {
+      ".ncer": "aa81c4758264bd5eef8b5de68824c16714c542f381105df1cedeb7406132bd61",
+      ".ncbr": "6df6390d9702d6dbee75856d76da4bdb01f3094a87ae1216759b745b0d1ff2eb",
+      ".nclr": "f5df9cc0e293104cfed35201a384f3fb04a707c60a082111c8902772106d0bce"
+    },
+    "m112_bebydomon": {
+      ".ncer": "aa4561b13199e6511210fa4fc85968a8b0eebe83140aa7453e265888ec996df5",
+      ".ncbr": "a5165a9f95f6cdfb2d17eed7017e2232c4ef0a627fe8c2f23243beb80c67762b",
+      ".nclr": "e4a29dde7711a6de9b7be38ac283a3e37541a4617d6820c91081bb64e1340ebd"
+    },
+    "m113_sunmon": {
+      ".ncer": "300d8eb760db58e579bbdb325924b918817de2d4e36dab1b509f2f44e597b56d",
+      ".ncbr": "3963b57a6d1c3bc3935444b3733b9c5585ce23418f1bf6550310dba4f22f4b5c",
+      ".nclr": "7a382bc1356ec2d82d50ee6715768011a64af2f776300f46a4f828f2736bacea"
+    },
+    "m114_moonmon": {
+      ".ncer": "d57655663694975ef974e9bd04f8bc2356040f39ef4d50e54c81d795ee4425d5",
+      ".ncbr": "211d8409911c57460671fd42674eb019d8c94e2b3cdc9b5bfadecb8cf6e94215",
+      ".nclr": "7f8971027ce816d853a05aefe639dd5a9aafc01cf8582cbbbc654a24228a9c47"
+    },
+    "m201_agumon": {
+      ".ncer": "b001cec999c25568327fd0640193b1dc8c4661bebb882f53d953f028dfa6e531",
+      ".ncbr": "eb759f4601981b3ba63adf39c1d9e45432272c5c6787b6e6b5236e096b6c1251",
+      ".nclr": "da365d3318bc99caf26209405b9d7c11658bae44956bd34084f751e880dae387"
+    },
+    "m202_armadimon": {
+      ".ncer": "c3ec3a9de807c705aef5ed5f7316f01b68c862eee0d6b5f143afdeb9ab2a3da5",
+      ".ncbr": "bfa3c70c9c56f7eeafaa42e5e9f92ab947f8373694ef550a2740d329bb31dc81",
+      ".nclr": "667583c477aec84c9a38b2f0350ce160e76c15323162d9b79b62b4419340c055"
+    },
+    "m203_elecmon": {
+      ".ncer": "4c8416d035b79e5d565cd46ec02093bfc56b03fbf35c4b966a9d5ef97c0623d9",
+      ".ncbr": "dabe315cb2a7ece7b8df5bd121c792ace2964e1e97c40452eeccaa8651ed572c",
+      ".nclr": "db4bd3868cca194827d3f00162a84eeeed3283de7766aedc384b6c4b4b1540e3"
+    },
+    "m204_otamamon": {
+      ".ncer": "8ccb9baccbce655951b7955510811a260378ff168962cfbdd31cf6eee04a1074",
+      ".ncbr": "7f0b5ce6b6cce5fb3b8a0a5727d272af2c7576bceb2167f13b424ffc8637693b",
+      ".nclr": "4c9350efa37b3cd2ce215a7c192369ba0eac56ee499ea6c974af63ea99274de7"
+    },
+    "m205_gaomon": {
+      ".ncer": "8cfe2102a0e3112943095a384c97ed1f6d68a1d39d5752aadf10a250afb82c4a",
+      ".ncbr": "adc9b137cf53179a210e428ad2e305188f02471c064218d3748870907af22ecf",
+      ".nclr": "d191aac9b17c73d1b6f21e51db1d83fd10c896bcab4629cd0d6e0db0fa58ca01"
+    },
+    "m206_gazimon": {
+      ".ncer": "b6e9ef36a099b7892ee7c74987d4a633dc204ef23d7095f2f9d6b8e2242de2a3",
+      ".ncbr": "1a16afbb6f2a3ca96401e351112a3889298a3f353dab76f391b68965b472f479",
+      ".nclr": "859acc2e27600e72f84e042816d4d099659917c953ca5b5858505e5697b4e2f9"
+    },
+    "m208_gabumon": {
+      ".ncer": "514d96d8cb6086533d107fe1d08335fd90daf46e015fb3b20aec0ff0e134ca9c",
+      ".ncbr": "631116106e3b4e6b22ad0313d2245f1f691acf9697d6a695bcbcb078f2b486af",
+      ".nclr": "ac6d26a32cfcc3871114d65e665a2bdcf9a667192825fbc06ba257850c770916"
+    },
+    "m209_kamemon": {
+      ".ncer": "22f7dcc623eb145af0aff1e668b15772d0617584f4ebde1b22704553d85dc51b",
+      ".ncbr": "df7dced70f8b8f7ab6f3717de20b32fec31fb45419df9bf680ffe0c2070e25f3",
+      ".nclr": "484016e98a0867e21d57fbe0e1aa4672b8eafa25074a561435f358e0816e9f1b"
+    },
+    "m210_gizamon": {
+      ".ncer": "86ed1f90be0ed356af94cf2de3891e61954011359fb520ee116ce2b581229fb0",
+      ".ncbr": "6abf325cd94c0c545874fab8897298224a606b6845fc9cef1545090f563a69e4",
+      ".nclr": "747c61e475a0559cf772ea12981b9a19b8ae851f30837456c3fe4f698e87d1de"
+    },
+    "m211_candmon": {
+      ".ncer": "85b6cd42b4c3bea532b2b6a40eddf747ac6e25a6a79bdf5353aa0ce99312a32c",
+      ".ncbr": "c33bced65f3fc0aa85d0532b317fc00a313805d43bcc2904fa483f51caa480fd",
+      ".nclr": "50b79518d30d49f55d640b27cd33baaf9b89a67bfc77e3ada26cb7dcac67a5b7"
+    },
+    "m214_kunemon": {
+      ".ncer": "e59eae23a05b836fcb4a11cf2e04460912534d09890b79c31a44ebab1adc4ee6",
+      ".ncbr": "424f4c2143ee82f991eacfc7ed8c4674c895f1a4e91b0d2d8aeae0008bad94e7",
+      ".nclr": "87da3c9103301abeac2958f6d87194307c6660365baa2f088cf108c8b220cf30"
+    },
+    "m217_gottumon": {
+      ".ncer": "bd5279180f933e3ec6488b5c36f65781c6ca3e0c50e3b7ff6862adb2188ad5f6",
+      ".ncbr": "df49515c9f474dd3e17c1b90a4120f30e94b1326dbe9ecc214645aff0a639bba",
+      ".nclr": "506f27e2a24e4995666001fa9dada18a50b77468b4bdb7f8316fe142460d0837"
+    },
+    "m218_goburimon": {
+      ".ncer": "b19df1e16988a959ffe7b568cfa5d49d024c9fb7f783bea5149a59fddc443f59",
+      ".ncbr": "6441e940519bc9fd5b5691ec64563de62aab8ead1b31c0874ff657c598aa3e0c",
+      ".nclr": "c51f303821417357f6c130ee5eaa900e9c0ef0a6839e1019a4f4a8dff4be8650"
+    },
+    "m219_gomamon": {
+      ".ncer": "7caf139403634c762687bab85565516560658b031347a4b5f866c511a74ea95f",
+      ".ncbr": "2fba2caaaf54635c88c90810125b3abe8370c7e3685a2168e3407501830f0758",
+      ".nclr": "7cff3adc3ccc0b09862134e76671890d72f8ff552fd956c0b81dd658b5f13317"
+    },
+    "m221_terriermon": {
+      ".ncer": "336ea34e3aa477f473c4c4562d45ac2eb683284d100a84960c3b82c72bd767e8",
+      ".ncbr": "a62bda20bbd9251fc7461627900b4a6f948af3cfc06d4184e2ee3eb374bf1319",
+      ".nclr": "6248ea5d2bc59f343e5c1ecb030c24b3ad6288c9dd6de45e009c3a97393973ef"
+    },
+    "m222_tentomon": {
+      ".ncer": "019a176c6eaeac9b2e4c453daa3d4dbf705efd1e5aa244e8fa9b750dbf3bffd3",
+      ".ncbr": "978deb7391cb437e2b062209bd7ba4002f65a2616f2d585704fce214554cea80",
+      ".nclr": "7707d1751b8e3b802607d6c6adc3a60af9ad8045114e06adb89f63c09fb499f5"
+    },
+    "m223_toyagumon": {
+      ".ncer": "2cb6bbad5791cbd25884fb0b76b1f865bcaf9620ad8fc49367157c751a8a52a6",
+      ".ncbr": "71d786bdfb839209c9966f10bc22d22690ba18d9860370e48b9d08d0e9a11caf",
+      ".nclr": "6213e1786b1440c3609ee6661953be9fd330e183aab4c106a438eb09fdfce6e6"
+    },
+    "m224_dracomon": {
+      ".ncer": "e53ddec2e580d5bf50b459a19f8f931c10abe463ea38f644f05234b126929e07",
+      ".ncbr": "7c3a0cd4d9c121a444d4aeab04cd99d23ace50580b2c8e10a7328ecbb5a4eb09",
+      ".nclr": "aab6079bbe9974a34e1ae92505a4ca3fba3182009943d34feea9524f4fac2369"
+    },
+    "m225_bakumon": {
+      ".ncer": "941eb5d4a1432f344ce5cc63b7a2ba93a8753faee4598b26a1ef7d8f2950c2ac",
+      ".ncbr": "6060c8eabb1cdee90c6a567e5f72201886a77e351735e1c3c42eeef971160b5d",
+      ".nclr": "acaca3f94d3cb61260052a5501a7d4890601d6dae8aadf10b38b8c705b34e86b"
+    },
+    "m226_hagurumon": {
+      ".ncer": "f545980d54fb574dab7e902ef7be3fd90630c6333f95c35b615970aeca14e673",
+      ".ncbr": "16cf4213cc73f28ffe6841429123bcc248f739ffe0ed43e4a005c85b2284e28e",
+      ".nclr": "963e9c857270b95eeef0982928910c92bc5214ceb6b431531b1b3556cc48575c"
+    },
+    "m227_patamon": {
+      ".ncer": "58bf910e69b6179ff606d451049695f0aa2e270dd74315b6620aefbb85cce691",
+      ".ncbr": "8aedb3707bc5facb0a76724c7496a886270cfdbe762c36f8798850a0c727b07a",
+      ".nclr": "824581435af16baac0b09a9dc9e5644aa600598f6f7a7a41457cf8a85ca55515"
+    },
+    "m228_palmon": {
+      ".ncer": "6fc94823feb60849631d8cd645541e05e9640366a5ba24e7f0c06d09cdbc71ff",
+      ".ncbr": "77d27befcd8f10bd2360b2dfbda1d84b70230fd5f8aa77e3fa181774d4f3faf0",
+      ".nclr": "64743494cc2a4a457b195783dd4f3642bf2ab943dfeb771179733aa9f9c355e7"
+    },
+    "m229_picodevimon": {
+      ".ncer": "c9fff14edefc2b97bc6f3c58047dbd3a05d103c71721368dad3c16a771748aa5",
+      ".ncbr": "603e7f84db979929d9c693887e5dd049d5b53b0c35dac7ae145d5bdc8dbb3e9b",
+      ".nclr": "0dc11f9cf2808b21de8f1fb498eebd96c1b3d88cbdb1c20a31ffdbd18e8cd477"
+    },
+    "m230_piyomon": {
+      ".ncer": "0ec58722e2280206e3ad989a78b0db6c8ed9bde9b950915b1191e0a439be912e",
+      ".ncbr": "c1d36a8c7cee61686f75f2c457dccd6a1e28b9c9754c8f6e7df96a669b6c570b",
+      ".nclr": "35a3a94aade0b099ab90c097b59c1624ddbcde5ee64d19535cb35909308406b4"
+    },
+    "m231_falcomon": {
+      ".ncer": "2a0ceb914b9f86b5c64179ab543da50a87200275e557ae48f8d44573717cf1c0",
+      ".ncbr": "138ebad2ff6cccb01e13f7f62a2ac8196de47c6a72cdc359a8ed853ed2eabe0c",
+      ".nclr": "af20658582961826e9fa49c5109e6114487d10b95804ccd83ba08801a54deeab"
+    },
+    "m232_plotmon": {
+      ".ncer": "840cdc2774fd5865f3b1d6f3a84c839032ff206523f5fe1bac65bf84cfd4a6e3",
+      ".ncbr": "83a2cae5c4bf0cc2684c9858b0c157f578e363d8f4bf5c470f969d0fd91cc7be",
+      ".nclr": "f197e0737c7bbd140f3b63a9b80823519775ba3370cde8b5a38b6775c3af9ff6"
+    },
+    "m233_floramon": {
+      ".ncer": "54cc0edbcd43226464fc3eb6ff2570d221d0ce1de94999fea7026a910cde39e1",
+      ".ncbr": "6aaa08030c3a344528edead93566afe4c36d7032b7c259c709b57c7c4e4292b6",
+      ".nclr": "8256aa45209078bb311df638fabfc7879ce7643c01651dbc2bb7a8c974fa656a"
+    },
+    "m235_mushmon": {
+      ".ncer": "d6bb8d6dbf85083e1c6bddb43be810df90ad2f903d16b9eddc75607eabf19dc5",
+      ".ncbr": "d4db2a7f15146a848807cbaafd2f823dc0a093ed7f6346bec55a09a4b5c7345b",
+      ".nclr": "9c3be7ce8886e98366641489d7a4e081dd8e7c0a3777fb0730fd9ee41ac8bc49"
+    },
+    "m236_yukiagumon": {
+      ".ncer": "b001cec999c25568327fd0640193b1dc8c4661bebb882f53d953f028dfa6e531",
+      ".ncbr": "fc4d2db14fd88f5d79b9f441d007e7cd8197094b7acc95d6df4523f480144a7c",
+      ".nclr": "508c26ab6c1c18ab5368de91949a53a2f801338e946cd2c27df35ca30702481b"
+    },
+    "m237_renamon": {
+      ".ncer": "d9a54461045afd4cb758cf83566ca8e758d7c3f6149ae1cb7c64ce2fdcccc98b",
+      ".ncbr": "62aad6156324401df8e4566e2d484ad2e6790a9c4c5bfa116495cc8b098f5b80",
+      ".nclr": "77f8de05f686f209d0a849cc7ade2b9089ff1313988c55b1984de1d37fc01dee"
+    },
+    "m238_coronamon": {
+      ".ncer": "3e7b6825173163beb746184453af52f5b40ac144cd8bf69d2fa4832827a2eb6c",
+      ".ncbr": "0135bb3027559c66d54eaad86e9dda21fecf692b62223735bcb2e09c54021c65",
+      ".nclr": "cc41f62a72aedabcf5433a0eb296ddd41cea3596aa211b2435f9ae48cd7bece2"
+    },
+    "m239_lunamon": {
+      ".ncer": "e59eae23a05b836fcb4a11cf2e04460912534d09890b79c31a44ebab1adc4ee6",
+      ".ncbr": "391724378b1c8d94a9debacd7a130c0b77f8d6e88bea9251cd13fffa39065764",
+      ".nclr": "6cc4e4e30fe22e731619e1960e56424ea11bd3be1b35bdfac1867fea233914b0"
+    },
+    "m240_kuroagumon": {
+      ".ncer": "b001cec999c25568327fd0640193b1dc8c4661bebb882f53d953f028dfa6e531",
+      ".ncbr": "13c7c6b591296f33521b1e7306dd8f0b72e54b28806c55de7684161504be7c18",
+      ".nclr": "b1d517cd60b2efe28b490317fc268a80976f211745952b67a63e8a3e07da660b"
+    },
+    "m241_psychemon": {
+      ".ncer": "514d96d8cb6086533d107fe1d08335fd90daf46e015fb3b20aec0ff0e134ca9c",
+      ".ncbr": "57afd736e41ef5c79e6e939ff6305da8e598542c60949636f34166b6cc21ac91",
+      ".nclr": "df2472a1a215b434c757baf5ac0f0cabf8216efceaf5bb76be73d23bf5e1788b"
+    },
+    "m242_alraumon": {
+      ".ncer": "6fc94823feb60849631d8cd645541e05e9640366a5ba24e7f0c06d09cdbc71ff",
+      ".ncbr": "567c876371b87ce050b31009a6c249fbd3eb53f40997b6a2451aeca79e13b8e2",
+      ".nclr": "2b69a61a968e63c909e48292700f2e955af14bfe232d5d42e069b6bf660faba5"
+    },
+    "m243_tsukaimon": {
+      ".ncer": "664daed9f31b4edd13e04899afd618203258ef7e6e09a3808932c32b029f7be8",
+      ".ncbr": "1f0fecd9af224811de09c02d07259937426dfdd677aa63a2fc2b5d1b24ee2123",
+      ".nclr": "14194837f71974cfe9e61f8f8efd65f13202a141dadf854075291cd43b7bb358"
+    },
+    "m244_vmon": {
+      ".ncer": "5b35c99e75e893da4b9d8c3c44e2a7c96b723acd53708b8c9a109bd8be8b0c21",
+      ".ncbr": "3b06e528a560fddf33746a58294916f5a247a85fcc6713a40734e780349a08a4",
+      ".nclr": "4c0f0eec8833ad87cb9fa9570a2f60c241d9ce78164e1c042d950169b46370b7"
+    },
+    "m255_guilmon": {
+      ".ncer": "0bce84cfeacef35a8833c1758038402133811bcddb2313f337f9e43b80425902",
+      ".ncbr": "101b48011df616750f1f3227e79d1d393f547ffea240204420c8b96c58edb0fe",
+      ".nclr": "9f35699bb0cc0063e597ae94caf0d7bf6d7b6a5e072c195668c7f000b5b8e4c7"
+    },
+    "m301_ankylomon": {
+      ".ncer": "5ce5717f3a72837d3dee1d4fb26867250bee96dd3986fdf0d64a6e4f4290bb52",
+      ".ncbr": "3125e16be636865c6c89cf6370541c5cc9c0eff36c0094695f0149e925953548",
+      ".nclr": "2b9e421d6b5e44d97d79e68f7a27a6546a57fc2310be433c2ea7a6b2087b4478"
+    },
+    "m303_ikkakumon": {
+      ".ncer": "0621710998a1b6b13bebedd478bb034021288ca3ad4ed24dace88301ff0b4e54",
+      ".ncbr": "86f6e90b2bbf9be7ebc073ae372b31816f1a11a355f32713de9fbb0b76163181",
+      ".nclr": "13674eb5d55526cf4586780844630f06ac615b747f94c3f39449bb9006cd96a2"
+    },
+    "m304_wizarmon": {
+      ".ncer": "b6e9ef36a099b7892ee7c74987d4a633dc204ef23d7095f2f9d6b8e2242de2a3",
+      ".ncbr": "cc0d9380923f31c13a67a75645e0c70e427d65ddddac74d44962dbb4c81bd351",
+      ".nclr": "e36dba4335afbbe4e533a0fe3be05ddd891abbb22a99f1db987cbd2fe85b457c"
+    },
+    "m305_woodmon": {
+      ".ncer": "12e041666ef9d415a624fe8ba0c442fe4267c0cfa05de429a9f8fac396d3058b",
+      ".ncbr": "8721854764ad4f02bbe0140a1bae03f9bd1a948667934e75f53d20fdc5bc93cc",
+      ".nclr": "dc9131d13b6c55c6bb6938f7ebc24d5ebb2f0f81ba98b4cbdff06c168035ea27"
+    },
+    "m306_airdramon": {
+      ".ncer": "19a24302b295b30c0622613846ee467fc33ccf1fe0291e921ceb21345f56d225",
+      ".ncbr": "3a9847b815e665648c2ffc12dd892d243e254159f03e56eaac09d8d4c609e561",
+      ".nclr": "34d8909d5da438136cab834b7bbc4b2d43af71de0997232511302a7fc94da867"
+    },
+    "m308_angemon": {
+      ".ncer": "7d3e618c03f74f673c55bf503a5b4643d23f65a9129152fd50722f8e8be8b0f1",
+      ".ncbr": "8c2c6b2ba0d04f51e840b55a8953b2e51dee6c361958e006afd099c556ffbfb2",
+      ".nclr": "5e5338187a212c101b51e0e0c058518f804ebad75be75e50bf10ae39a619978c"
+    },
+    "m310_orgemon": {
+      ".ncer": "cd46a1499abf8e6cfba51aa27c5be7fbebd69604258951f8b509d2d2eb0a4044",
+      ".ncbr": "129c805639a236ae1383e4e6ad08cd3c79ffa167a6800c2a8ac4e6790e8ae97c",
+      ".nclr": "0b8c144329a3bb9ac946f7fed9aea6c1521df0c9233310ba5f76a46c975a738d"
+    },
+    "m311_gaogamon": {
+      ".ncer": "27c998f5c55bec3efcd787c0f468c6031a026882351c9c3eb52079a41142feaa",
+      ".ncbr": "79762a9fe5056807be7e2ff3c8eb43e22c64d69a651808c8ae140eb9253f1864",
+      ".nclr": "e95c4ef77b913aac3dc44d96bc89ed12362a878f31310c8def8d16c4b7fccf67"
+    },
+    "m312_kabuterimon": {
+      ".ncer": "d9efd2aaf0fc8d9f9f6da36b2241392d1856a36ca0fbe29ae9b0c9b36a790da0",
+      ".ncbr": "dedc2ea16d64145ac16bf940ffc6447262fe91be295036c78704f1334b71019f",
+      ".nclr": "6f218507c24bc4b161c6fba771bf7ae9d96a618aa7a9ce1211b2f068bc2aea53"
+    },
+    "m313_gargomon": {
+      ".ncer": "9ca360495278c10cc3202e5c049e54138998a88096eba2d5a6be5cc93d82b7a3",
+      ".ncbr": "a06ed4b25cd224b3969925e7970c716749bb8183717fe54ace740d3c5d5b9329",
+      ".nclr": "fbad1ad8b365045bd9f0df3a165029891a405fec0d80fe93560307b7a20bef88"
+    },
+    "m314_garurumon_va": {
+      ".ncer": "34c75e120f1acf8298f4075c8e84ba9b70311ad75bf3700c6261f0ba9f1fd81f",
+      ".ncbr": "a4de87a237b79cfe47ba1e1ee07f1a8c68f92f0befa9fd7a7e55c4419b9d4235",
+      ".nclr": "49ebe15964c4140a8a51fc758d476090c52b4b2d1f86b2dd5c384718679acf63"
+    },
+    "m315_garurumon_vi": {
+      ".ncer": "34c75e120f1acf8298f4075c8e84ba9b70311ad75bf3700c6261f0ba9f1fd81f",
+      ".ncbr": "6df33575b4fd3764327c4b67f08ebeb96a57898ebe6dc4cf9c19cb9800bc7db2",
+      ".nclr": "403b6ae168c88f114eab7d21bfeda2da5cf41bed92fd28b0d706037163afe210"
+    },
+    "m316_guardromon": {
+      ".ncer": "979a9925b8ea3e3e32f16850b0f86eab07918f96eaa1037cad62081bf59bcfbd",
+      ".ncbr": "fef438ab1fae5544cfd954e0fe08bdd94bef79f462d90631288de9254028e838",
+      ".nclr": "5b0067d00b92626faaca6bc6f18390a156520742da38ffe29a198eeb2dcb30a0"
+    },
+    "m317_kiwimon": {
+      ".ncer": "61114afc6c11fb385beb45f42ab4dbd655285f76f0bd926c0c06e06b35181cdd",
+      ".ncbr": "e66a7fe2af8b55a875a2d36789d07ed07337ec937ea3b1bf90d3bb4009d3bd8e",
+      ".nclr": "0a605cbfea24ae2af3e542ee9d0573ac2f9927a314efb785077dc20afc6081dd"
+    },
+    "m318_kyubimon": {
+      ".ncer": "7814371e0555a93cd839eb74e53b2a710f7d499963593e642021e5779a8b31c2",
+      ".ncbr": "f9d87cca1225ebe050dbfe01b009736a9340959407cf519a44f0d657536c4f3a",
+      ".nclr": "1173948fd07f845340de6f867e4a298ae34af0f73877be0c4f9e391516a4fb27"
+    },
+    "m320_graymon": {
+      ".ncer": "17b742df17fc452c5c08d6ef92a7f47c5c0e9985666956d38e1a1a3868650459",
+      ".ncbr": "afde70b5a692b2ceb652842a2999224be67f8e4ee5bdc2f1893153ecdd5a3aea",
+      ".nclr": "54ff32fd990a2a7184b46f4e34a83a65f25ca8c9527dab19879597bc27f09b09"
+    },
+    "m321_clockmon": {
+      ".ncer": "5d0b24e27ca4dc0e6b6db195d85059bd769af87946a4b6fe18a342ee05a9ae97",
+      ".ncbr": "4a0bb263478da919394a99394c58e30c9987ef402e95bc2cc48d5fd5f9f783fb",
+      ".nclr": "30f543aea6bd4cad2dab8c5b6efd051237dc746f5e069d0f4b1218d1253c725f"
+    },
+    "m322_kuwagamon": {
+      ".ncer": "c9ea54fb48beb9ebb3b209723ea7f968aa8147bb7537d9eef6edc958e9faa06b",
+      ".ncbr": "4efece0f5eac19dc49ac9e24053af3c7d8f2462f929771f19533d15ce80eb9b9",
+      ".nclr": "7ca9d1dc6ffebe5058d9c67f7a13dbefce12f1be2ca1a8965681a7d17cf449dd"
+    },
+    "m323_gekomon": {
+      ".ncer": "d6630eb0bc4a94cb1ffd0ebf1c83d7a02b320c47f83a80e5446200d04370156b",
+      ".ncbr": "beddb9606a5beb4baca0dafe81e2ed1321f908073fb7b23b890d58f4fac35e86",
+      ".nclr": "ab427713a6f539bbacdef3a759228ed5c47992bf01e28a5cd1a9ca89f562caf3"
+    },
+    "m324_gesomon": {
+      ".ncer": "8d883c73bad0aaf692ab41422e7aacf1cd6fa7192b9bb4a6f4d41cc8d19782a9",
+      ".ncbr": "966620b34b154be8c5cea15b7c294057e195ae3c86baf724cf5c52803ded2e34",
+      ".nclr": "5f752f320bd1986a0fb92cb918c96c28c2460967ccb754b61dc5b804d65d653c"
+    },
+    "m325_centalmon": {
+      ".ncer": "5ad0bacae6e2f1b1d9bcdb152c09bf181df3f9041254164b44c92b84098996ea",
+      ".ncbr": "7bae10a0ec9e8c525716baeb658c68c586c7a12fc6750f8ed8e942d1159dc973",
+      ".nclr": "4ff139d19584b27c7685516b3738857dfdc7d1cefc1b296be1d937f4bbc2ef39"
+    },
+    "m326_cockatrimon": {
+      ".ncer": "0cdb82b77cbb41d90a41c99de8c89d9a5ccee9e2fb84555b23b189d698fecbcf",
+      ".ncbr": "c837fdc6235d72da0aff1500f923ee5fb6e07238e64f23c195e8abf35a925af3",
+      ".nclr": "bfde80f479524cdae2e00eaa760bd78b5d91eceee4feb5cc6fa2881969c58c33"
+    },
+    "m328_thanderballmon": {
+      ".ncer": "c4dd4d80f1a80e610a3060cb9b372114e2e29db92c43e300a96ba18e19e182ab",
+      ".ncbr": "c0376a40151a1e07fbbfd02fec050c30e374706898e39070306c348816a2af4d",
+      ".nclr": "932827a1888df3276eb74225205c3e24b52157760183498fcaf9850431019716"
+    },
+    "m329_shellmon": {
+      ".ncer": "35b471c4024f2ac339d58badbb3ac172a7e4f050df79517eddaf1cbd23757418",
+      ".ncbr": "e2b5f44fcea7bbb1a9c416f4fa14e3c8076274d699d64fa7c2588cfcaf3de4a4",
+      ".nclr": "b2848560e33e25060f6696518a058a0ee7f81e68e51183b523ad4e2bed618b7b"
+    },
+    "m330_geograymon": {
+      ".ncer": "a23e164d703d0012c8603a725fd63e12e068c2c0a0c9682f10f206213f1d3187",
+      ".ncbr": "3da875f734dd2ffe30b8b36f54e6e405ddc1cbc1a9d1fa42f6cb06195bd82542",
+      ".nclr": "9d72992502ffb0035b1f510f6aa8035cad0aefc92770664a2f384c9359153d19"
+    },
+    "m331_seadramon": {
+      ".ncer": "daf667880d4d3a235b3a93bca58fa3933e80b299aa377d05bf8edc6494796986",
+      ".ncbr": "0afbf98c6ad7e683d3383e0071a553af2d18b9fa0afb9f8e7042a6fe05a8f316",
+      ".nclr": "ae38769d00d10e328bc7a4c9a3b7052446086c431e612cf1aecc9cb0ca5ff68e"
+    },
+    "m333_scumon": {
+      ".ncer": "e644ede9a4f28990be8d1495d22473bc6a80d457a0cbc4e83be051223a9c360d",
+      ".ncbr": "107a48a3c33130106304e0e6539239279c67b7a40c45ff52242c97c50c6a306f",
+      ".nclr": "98337d91d2734865733f40f4c2f49d159cc0ed09c4736fe4081759700541acdc"
+    },
+    "m334_starmon": {
+      ".ncer": "ef97d2bd34f27d7d9c633a229c1444a251be7c97b57a19e297a06298052e1b68",
+      ".ncbr": "156f336be4db807f7b476aad6084119c6df4fac572db9db69eedfb0dd7f88d5d",
+      ".nclr": "a69df06de2c114294ca4faaaa783b3213407a21d05481b18270b2770e6997998"
+    },
+    "m337_darcmon": {
+      ".ncer": "48c2fbf1b11593cb7446627fc5639f85a452efc21872cdf2ba766659e6b9c579",
+      ".ncbr": "8b35fb93b7878c3298f8d31144a2f4106f9200d558f7875f9fde62da566dba3c",
+      ".nclr": "8c06a736f5f6568990b29c85ca94eaaee1ef19942745315f5040cda021288aa2"
+    },
+    "m338_darktyranomon": {
+      ".ncer": "e02f7e76d026ce08c895409400953b74ad696c6d3e4045e93773c50553079073",
+      ".ncbr": "16cf7553b5d44f3973b813b7a15d43af2c18155b44d712dd2a1af489838e0dfc",
+      ".nclr": "91628f44eba3fd2cf42fbd2f86406023455b6480a203865c90fb5bd838828add"
+    },
+    "m339_tyranomon": {
+      ".ncer": "e02f7e76d026ce08c895409400953b74ad696c6d3e4045e93773c50553079073",
+      ".ncbr": "86ebc02f1e5beb6821634a4fc4d569e4090efb9b89f1ed98eddf04fd9a645899",
+      ".nclr": "15d1d2b3c8a197a6426ad26802a60a43f47f56a2700556a0759944a1f1f4bbdb"
+    },
+    "m340_tailmon": {
+      ".ncer": "755776c926eb72df83d2259c37b21ad05c25547034ec05d860175188fae4f3e6",
+      ".ncbr": "e9aed21bd4a29dfc3845f434d806e9fcca3160794d1a5f4398457e0f0a154827",
+      ".nclr": "fb0d8bdb9296f79dcb523148c858124cc536086f8b2045fd476332b4e7909f63"
+    },
+    "m341_devidramon": {
+      ".ncer": "d9003cfb95e421af5920ee1db8d9132d62d0e26b14a9a87820a8ec11d2e3dad3",
+      ".ncbr": "e5a7998f5a7977afa59e8c30807af0d6cd57246f250d2a8394890dacaef7e4e1",
+      ".nclr": "d329b95ff850ef98d9fab7ff5354c901b6d8b9ec8eef29bfbc5c3968bb8b4c7c"
+    },
+    "m342_devimon": {
+      ".ncer": "b6e9ef36a099b7892ee7c74987d4a633dc204ef23d7095f2f9d6b8e2242de2a3",
+      ".ncbr": "8134a4bdc8cff23d5c9292caa6c11ef166b7f198eaefaec2ef97da1603203f39",
+      ".nclr": "94cd89e5ca998e3bf2b9afc0b4ee953de18303acc788ce234fe1a86884581163"
+    },
+    "m343_togemon": {
+      ".ncer": "093c567f4af27c1c6edb34973e39de89ef00fe3fbbe304a90450b30a1501d955",
+      ".ncbr": "846408136fbc85579c1dbebf3dc852a5ff430384a20993e2b84585ea2aa68edf",
+      ".nclr": "dfcd914460b6c72542392cb73c0bef1a4450abc6b8fe86ca91f0c6d6d2487917"
+    },
+    "m345_tortamon": {
+      ".ncer": "862e77a6810a6aeab8640c11cc31993c5b71b2a21682c72802877d9fbef1855f",
+      ".ncbr": "5eba8f9acfc22e5d38624a836abc969d74a89c4d7439bdcb66d90a97274b0abb",
+      ".nclr": "0deaed3d2b1185965f2dd642258119159eec015efd54372516058d32198d5e3d"
+    },
+    "m346_numemon": {
+      ".ncer": "dc1cc3d36861903725e321478c5baaa10c31b1461272ebda6a16e6468b2658e5",
+      ".ncbr": "f938b0a90ea23b6eae6adf9d49943c66df40e186e5fd56646e6b4771e2e4e1a1",
+      ".nclr": "dc2a0336c6dfc02ea13803fb3c68bf6be16543ad30dd1ba4842daae1bd66a64f"
+    },
+    "m347_bakemon": {
+      ".ncer": "bff635ed6813f7ac7db5db8c7f6971ab22644377b3190758097bcd3722589c01",
+      ".ncbr": "0ea8a94b973a5b109b5fdfdf246af04cc1e0e9b6840d88fd911fea8a31884d47",
+      ".nclr": "f8e16642d8459febbe798e7b4b344543bc0067ec2fd16d2f79141d08cf413d67"
+    },
+    "m349_bardramon": {
+      ".ncer": "0e497393701fd294bebd297803e5a7efce16b6559625e2c7445fc5f671361ed3",
+      ".ncbr": "0c7465f55f2526fdd2773792c5419929284b5d2d4ef43b6e69d566151a3bfbd1",
+      ".nclr": "224af887126ccd32d94ccbdd8a7eaa9c7574871be6b12504d18329b40c8ec912"
+    },
+    "m351_vagimon": {
+      ".ncer": "4dfb15c8c3a429bd9b7a6b3d3cbc504bef69e14a1b968d96f0179139ba3c78d1",
+      ".ncbr": "9b1bea08e60ec640f2e243d76f2a9843a1a357723b0c3f53fcdcdea1c690b706",
+      ".nclr": "7e2cadc73f1c9cd26a5a6f16bab0150132efd924f2c14642925303d0ff927d0a"
+    },
+    "m352_peckmon": {
+      ".ncer": "664ed38972c10f844bb00b8452ca15e984f44e92a10a4619e885e66ecb284992",
+      ".ncbr": "ca455984ff4f14034e6329aea2202de4f3facab09272b52072c034bc3cd4a88a",
+      ".nclr": "55b6554898eb7b38c9f394023ffa2d873057b04a46b7eb4315a9fa6105c5c778"
+    },
+    "m353_meramon": {
+      ".ncer": "90da6a3a10e958e28c02e84f7e437f154d129d12ed7c1408edb7384e18df696a",
+      ".ncbr": "5b57584a965372608464cf7661929d116daaf19c9827ed0d3c1c0a161f40bf43",
+      ".nclr": "df492ceda3d3060f9a624689e3bd69289dec9764c0d4be87c7028b0d3ac74ae9"
+    },
+    "m354_mojyamon": {
+      ".ncer": "d6630eb0bc4a94cb1ffd0ebf1c83d7a02b320c47f83a80e5446200d04370156b",
+      ".ncbr": "16ce38f2ac9a7a0aaf8732f6ac5090208936cbd8948808bf51e665e4ee559a2b",
+      ".nclr": "e37144f6f11c3cd0ffbcd51bec9f1828e165c362966c5841499c98a2eb6c1ef7"
+    },
+    "m355_monochromon": {
+      ".ncer": "dc4e480a3a1eb3dd60b1e9f71af12409bd1e95948cf6b988fc129e3b9ff38161",
+      ".ncbr": "155d6aa37ec424c7b9e57760a2f24029b1d54e26d069064ab15bc094d6f05138",
+      ".nclr": "db7923d02800ea8a4a950582ea56b3eb251df597ee00d7b81466872fc303e2ce"
+    },
+    "m356_yukidarumon": {
+      ".ncer": "d2e9206ba6ec590243f030c0ac4290255fcfcfd0676a4e2e48cde676e92d9e0f",
+      ".ncbr": "8d5d57290fb29ed40202c1632365f2142482d8ecf68e5563399d4f1cddffda27",
+      ".nclr": "78b0a210a0b59e6d206c8d26de8fba5149460427afc00bfac07c6715e8ff1b4d"
+    },
+    "m357_unimon": {
+      ".ncer": "ca98a90cbb2a70430fff7ba9f8426533be0c326e8d7b466454ed8f77117abdf6",
+      ".ncbr": "bbbb82b2b3161f4a3ba5d43ea41c72a5aef79c99b03437a8fd58360cb452c40a",
+      ".nclr": "1b3ce70993bf9d437546db4901ce94e52d2deb60681ba092c9b21c16bfdb837c"
+    },
+    "m358_youkomon": {
+      ".ncer": "7814371e0555a93cd839eb74e53b2a710f7d499963593e642021e5779a8b31c2",
+      ".ncbr": "699e26c68a8476608edb211fed541543c6d0121a9a1e5be5d7399a08f09b15a8",
+      ".nclr": "868244eb1c557677637d3d9783161ba1852d677c5a6ea55a3fa9e755853dc0a5"
+    },
+    "m359_rynxmon": {
+      ".ncer": "c758633b9a7ea992173e130c481c1ab43084fc22ded859a612aa0b394ff371c2",
+      ".ncbr": "dba19d55416c623ac580ae2f80a60fc6bcef6b99dabe14ab83f85276d971fad0",
+      ".nclr": "0aff6b5080010f8db1e672dce7c298f3f3e1a13cc7cb326a7cc61340739d30b6"
+    },
+    "m362_raremon": {
+      ".ncer": "34f39799f7e4674ea90c2346abe411ad42da9fdc19ff668decf242752755a8da",
+      ".ncbr": "e0028a663fc243bc5b2cd2c2200848919b713dc535ea6e8ea65a9b2647840d1c",
+      ".nclr": "0a27f79839e7e58c525e35849756f5294229efc8687b8f2fac8cc9cfcd0a4daa"
+    },
+    "m363_leomon": {
+      ".ncer": "5d0b24e27ca4dc0e6b6db195d85059bd769af87946a4b6fe18a342ee05a9ae97",
+      ".ncbr": "3ab64aa5b8114006e50f10be0a192bc1f9f646189bcb237a9e9a8797c66fafef",
+      ".nclr": "9040bef6123a3b1d7fdf8b0a8bab774d07dd394555ac8efe8b358e2287a1d479"
+    },
+    "m364_redvagimon": {
+      ".ncer": "4dfb15c8c3a429bd9b7a6b3d3cbc504bef69e14a1b968d96f0179139ba3c78d1",
+      ".ncbr": "ce91deba4a32ca38103698843cae2a78cfbb3d7468aa99451f5c8b547984cf4e",
+      ".nclr": "147514cb057a0c93d9b01b8bbac49f00c20d291fb144c0e9506a6684cd3a7cf7"
+    },
+    "m366_coredramon_ten": {
+      ".ncer": "d43fe3a4c57d3a197b3361773475ef6eac7cafd3ecbea53c5779af3946299365",
+      ".ncbr": "f37bc5300e3b943b8fef679797e06b3f3c5c220aa72c3de38974bc89e4815ccb",
+      ".nclr": "ce57b2e03937c41a341ad313c63e8ba4559bdcc75eb3bb68e13d2ad519ffcd18"
+    },
+    "m367_coredramon_ti": {
+      ".ncer": "d43fe3a4c57d3a197b3361773475ef6eac7cafd3ecbea53c5779af3946299365",
+      ".ncbr": "f37bc5300e3b943b8fef679797e06b3f3c5c220aa72c3de38974bc89e4815ccb",
+      ".nclr": "541e6fa65cb07de9d73e4eba04bc6e759eeb35991a00785aa36252698b44f191"
+    },
+    "m368_firamon": {
+      ".ncer": "96522af9082334fd6f241d45fc2c06568c38a2cc508056ed22fa9c7ce7bad3de",
+      ".ncbr": "33a1411900a274c5c53b97c22885ec3839510dc624bddf8ee1855425a7dc2305",
+      ".nclr": "3338168b75ba02132e452c8ae62785808c1d0a4715af86ddd562208943ebfba1"
+    },
+    "m369_lekismon": {
+      ".ncer": "57ebf8de016f405bb2fc1df211ea74d14fe4346727848dc5fd976d91f4fa1938",
+      ".ncbr": "29285f973e5462132579abab642cf2dee1750e1b1959bdd1dac0cf2ecd6423df",
+      ".nclr": "6a20a8efc2b9c77dad53952f136df445bb0766817105adb44670cc92a55f72c0"
+    },
+    "m370_icedevimon": {
+      ".ncer": "b6e9ef36a099b7892ee7c74987d4a633dc204ef23d7095f2f9d6b8e2242de2a3",
+      ".ncbr": "237f3b68d0eaf9f5a1998af380b08a8e16f62c8da75b50bbc0353a29e08ff807",
+      ".nclr": "b2ee08e7236b8f1053201cda838ee76026f664ac36845da20dc979db6e838407"
+    },
+    "m371_grurumon": {
+      ".ncer": "34c75e120f1acf8298f4075c8e84ba9b70311ad75bf3700c6261f0ba9f1fd81f",
+      ".ncbr": "a4de87a237b79cfe47ba1e1ee07f1a8c68f92f0befa9fd7a7e55c4419b9d4235",
+      ".nclr": "7995d2977ff8e32dbcea4a86d10324ef7d72ff0c6d59adf0213bd62116e847a7"
+    },
+    "m372_geremon": {
+      ".ncer": "dc1cc3d36861903725e321478c5baaa10c31b1461272ebda6a16e6468b2658e5",
+      ".ncbr": "0d4d69913ee6242d4cd80e142ec52db65459a48ac910ac951d2fc0f214aa3c74",
+      ".nclr": "a160f0aeb6dd820321c48b18859e5e26eaefc4e7d849daf0348b65ca43206acd"
+    },
+    "m373_bluemeramon": {
+      ".ncer": "b4c219b647ceb1828b1a2518237b3904a31240d9c7d71e95bf1b08b6160733a1",
+      ".ncbr": "5b57584a965372608464cf7661929d116daaf19c9827ed0d3c1c0a161f40bf43",
+      ".nclr": "2177a679722e30f419903e0f867c2819cf39780b0da73c23495cc4985146696d"
+    },
+    "m374_sorcerimon": {
+      ".ncer": "b6e9ef36a099b7892ee7c74987d4a633dc204ef23d7095f2f9d6b8e2242de2a3",
+      ".ncbr": "e34d1cbe9c2f25198b1fe75c7bc5fd300196185f62e815f7562dcac843ca505e",
+      ".nclr": "06512dae935deceaf48b909fefe946dc7a7be3063034ac41936b7ca6b69b736b"
+    },
+    "m375_akatorimon": {
+      ".ncer": "0cdb82b77cbb41d90a41c99de8c89d9a5ccee9e2fb84555b23b189d698fecbcf",
+      ".ncbr": "c837fdc6235d72da0aff1500f923ee5fb6e07238e64f23c195e8abf35a925af3",
+      ".nclr": "ce70fdc712d40ee03666bd77741ce1e2f54f4fe6fd7dc91cca484786ff4c1937"
+    },
+    "m376_saverdramon": {
+      ".ncer": "0e497393701fd294bebd297803e5a7efce16b6559625e2c7445fc5f671361ed3",
+      ".ncbr": "03d8dc9680dcf18e7f2cb12c5c58b2e20d9015f2bd5f8a9d91c1534c6da5b7b1",
+      ".nclr": "8b57710fd264e4758e0cdf62aa3de4cc318e0905f3884364d91ce3137a512734"
+    },
+    "m377_icemon": {
+      ".ncer": "bd5279180f933e3ec6488b5c36f65781c6ca3e0c50e3b7ff6862adb2188ad5f6",
+      ".ncbr": "4e5846c859f1771d7de76507bca4d99c6b92679baf2dfaf6202db647543f3510",
+      ".nclr": "a41780a0f3973142fcbe388ac72e083787e90d6bd12a963edd19422665cee538"
+    },
+    "m378_vdramon": {
+      ".ncer": "d43fe3a4c57d3a197b3361773475ef6eac7cafd3ecbea53c5779af3946299365",
+      ".ncbr": "f72260f83fd93ce5ebaa4f295f75b577eb1cb1b77214ed016e0eab8008fb72d1",
+      ".nclr": "68b41764f5cf64d3fa48480d1cec1eb9427b6697ef896dea16862c85499bae43"
+    },
+    "m379_growmon": {
+      ".ncer": "d43fe3a4c57d3a197b3361773475ef6eac7cafd3ecbea53c5779af3946299365",
+      ".ncbr": "24d3e60a905a4f3256d08eb1827d5bee239fbd480c83b1b770a9579cfd64ef94",
+      ".nclr": "e5cf6abb9d6e98deccf0bc155dbf232b9c21062422faf2faf854f4362cdc60b2"
+    },
+    "m401_atlurkabuterimon": {
+      ".ncer": "00db40bf72af9fc09d41c612d6119d0f9140dd2a85360af328ceb7d7fb07c361",
+      ".ncbr": "0526af1635369eb241c0d1e1011a4cf7112b0af175a8cd76bdd43caf4572dadc",
+      ".nclr": "7fd5d03bdb6acbd4af69cea9880c0e5aaa5b33006bc5bbe35ebb10d367bedb12"
+    },
+    "m402_anomalocarimon": {
+      ".ncer": "f2ae71153a9b76f4ca4b9edbdcd19b78b6117b762aa740f5590394a16ede1202",
+      ".ncbr": "fa0e4cf93ae020626d72144b1490f72135500e7d29e08071770c1e921a62769f",
+      ".nclr": "c87e03de703c870d4f07ce72bb698b3387965b2d93f85ec9e2d92ede2ad23047"
+    },
+    "m403_andromon": {
+      ".ncer": "fa60087994d1f4c062f2ce049251f128026f2a9e3b03c7ea2cf340b724bb2b48",
+      ".ncbr": "479777a321d3fd881df8f858358dff5839c7d5704cb4599bd6bce3783f7aee33",
+      ".nclr": "455041e7af0811cae626d5c6837e716ef1bec900b4d387983ee76545a700c2aa"
+    },
+    "m404_etemon": {
+      ".ncer": "6cd0110cee2728511b9f24cb0a0f04f7be0ba06420d1df3f7f126d954f37a4ca",
+      ".ncbr": "f8ccbe8aca63b7e71ef03d5adccad8a2889063368e28247a5f63cbfe8624f0be",
+      ".nclr": "4627c271d4c7f9bee460ebea45207e4a3a80b96967b0084d30a76344ab95f24c"
+    },
+    "m405_angewomon": {
+      ".ncer": "965b0b483f7db4e20b42b36e32108e87cb1dbeaf710f02018c67105be3a0a82f",
+      ".ncbr": "cdd179bc384a0aae95b61895b0c28326ab355b9b9af5604577504ec247f37cae",
+      ".nclr": "00f9671ffef5db2f5c27b678e7f933c82d0e0aa1aa8fee2f61b491a8450bdf4a"
+    },
+    "m406_oukuwamon": {
+      ".ncer": "7ab39d46969571802728c286c91be734abe4a3d34401b8c368c409d0e4415ba3",
+      ".ncbr": "acbb68958e9072d141c4e50849a0ba63a1a22de6b99bafaa184efb8e70717b69",
+      ".nclr": "6a125975fe9854f7f8f694caf5e3332192f09f45f1c4dbd81a9b85183ac51000"
+    },
+    "m407_gurudamon": {
+      ".ncer": "d54bc6676586fc448c850b80b2cc2c05077f9efa63126bd4e51a919a71521fa5",
+      ".ncbr": "c10faefe3810914740643e0eb0ba7bbee86de5cb8e9fc022e17240412d912001",
+      ".nclr": "b832096f29328a407d9d438bd6507ffb12def4052146856d4ca4a9d0efcf48d6"
+    },
+    "m408_gerbemon": {
+      ".ncer": "a1d9f6dd793736ad00582fe4e1b7b3f1a72feefbe30c715220b4b22eaa5a4954",
+      ".ncbr": "9d1d3a626d3f5540c47eed977a3b4f558582571f51d4dc83b2ee0c07dd5c29d8",
+      ".nclr": "9e3b1c8711826001152f100304fe7605caa9295e16bedd42dd5cdaaddaa75c59"
+    },
+    "m410_cyberdramon": {
+      ".ncer": "3d7914e035cd32ac1c8e10fcf0c0b622a3bc29bf6e9c23ff85c8b7e2e491d879",
+      ".ncbr": "4941ef4d57256f35f5b3d20cf3af5aabce2a8918e14cb9617f2a3b6aa41d965d",
+      ".nclr": "89357cffe3d090fb102cde4e06ccabd9d1fc5160d4e333bbd13fa2a652d83a6b"
+    },
+    "m412_jyureimon": {
+      ".ncer": "fda01f408accfbcde28d1a11c516ff2b857ca4c9e6ca796eae1b50c09f9dfc32",
+      ".ncbr": "ad82c9abd660f027c078e78744d12463154f82ef42e6172c780b9a4d4fdbcd3e",
+      ".nclr": "98c983f77441c0e01b4c40f51baf5faef7eed2ac5143a5dd4c52c140b6f15b34"
+    },
+    "m413_skullgreymon": {
+      ".ncer": "3b3edb5e5cbdd1c82e82b276b9b7ffa9b22e757022d74553c1417a1268c03df5",
+      ".ncbr": "28f392aa195f1bd3a3f53b424ca238971675e0e3d4953e5f2ded1138dc10bf38",
+      ".nclr": "647d7820e715ba8052dbd82bc37d95d8e2a67f53586b59e87334287b38244c14"
+    },
+    "m414_zudomon": {
+      ".ncer": "9605e2e61f79f6aad677e5d941b230e77a30a97580743e28c86e9081d6583396",
+      ".ncbr": "2f0588bdf6bbef984a3ae57f028d0f8d0a03ffba45bb610845ba2bb495e918ba",
+      ".nclr": "c1ad3610723e6e1988f5552b93d417556574014a19b61e1fa295f0369c5ec5ce"
+    },
+    "m415_dagomon": {
+      ".ncer": "7bea2d821775990b92d70db8056fa777ac16e5fd13aebed6be7ae93785ea9ef9",
+      ".ncbr": "11545daeed89503cf060f8d7828ca5037d0fd74445c46e60dc24b646ce86268c",
+      ".nclr": "1afc84787e50b04295763f6bf58f97f6ad62bbf211fe3ad33f73a05418ff4b93"
+    },
+    "m416_deathmeramon": {
+      ".ncer": "fbb409730ce487d0c3f26f854bca6a78319269ddc8decd02c821c13b7d0d01e8",
+      ".ncbr": "8c88a2ece098b871eca43efc4e2ca8ba6c3bd8bc71253f72c6081d08f5fd2c7c",
+      ".nclr": "a0eb701182b8aa9513d20369b65f61529afa44c16b93cc87c05112ab7dd56617"
+    },
+    "m417_delumon": {
+      ".ncer": "bf6e7e82cb63b944764d5fe0b6ccf1a427517627d17030d9a5130b03bb52a714",
+      ".ncbr": "df6340d1528c9d207c65b099e34217c70888096bbbfa5b32ee8a2e465c1ecdb2",
+      ".nclr": "9fcbc312a0d8e5ed150a5f7123b4c3ba3304600448df131f7d55b18b0c51fda3"
+    },
+    "m418_tonosamagekomon": {
+      ".ncer": "958e5288df7c1ef457dc4a61e837cdb535ebc3f9eac76da5c42e50e86eb6a45a",
+      ".ncbr": "4ac2329192c65804ad592645c934b80ee35812e292bae0136a43c775799d084f",
+      ".nclr": "8431829adcb08fb9a98dcd20bb7f9c995bc537a5ae5f885d9fa61a55d0c3e659"
+    },
+    "m419_toriceramon": {
+      ".ncer": "cb6b4e562fc04d244785d7e3863195501a3d3aa93d9c01d327a8033ed1604135",
+      ".ncbr": "ef1a7c080a500617b102bda0716c69e8b2444a850d42d7f95900ec6b08f73a69",
+      ".nclr": "c2b4418cbc8a67394b029af10ff991fa09d8aef929433a1792fd9175b9739279"
+    },
+    "m420_knightmon": {
+      ".ncer": "6b89e022c2f8d51fd185c89e38d901523f8ca2cf2de4bf43793136b1652d9e09",
+      ".ncbr": "333e34ccf6f8d9bd5540168e3f4936a3c02262b40ce362d8e6c45e0b8dc0ec33",
+      ".nclr": "c6bb962bc702e8c0f26105660b50bdbb0d08c24f762c4c6adaeaa78b98ca2662"
+    },
+    "m422_parrotmon": {
+      ".ncer": "026da6f445e97092d09e12e2e3b178937d92ddaed93c3da5b9185bf87df1b11c",
+      ".ncbr": "954e4f64716cd41dc9ba9307bbf729a30605cc4d2395b4c9c130ede375dce113",
+      ".nclr": "f7f9a51949ee6a2312516bc10d6388ea9325973d130c68d3afbe4c2b37772f79"
+    },
+    "m423_hangyomon": {
+      ".ncer": "86e0b0a27225c066e91efffacf9f74220744bd72d1ead74d236571bfe36d8bf3",
+      ".ncbr": "d476dabd927593ba64fb9f14e3071d1f0d4385aca3eaa4e8fc7ad0248735a329",
+      ".nclr": "6462a9d3ab5b33fbfd6c474b0002fa989cf4a8da65c3adf3ec211cfbeebcbbf3"
+    },
+    "m424_pandamon": {
+      ".ncer": "d6630eb0bc4a94cb1ffd0ebf1c83d7a02b320c47f83a80e5446200d04370156b",
+      ".ncbr": "151a0c16ab1d6da7f79afcaaca07c88dade47ae3bd969e5e0fc0a5802a28a692",
+      ".nclr": "60eafd591940d762a7a87ea30f3d6fa664fc9b8b6cf2c483263c3c0ea79efa65"
+    },
+    "m426_bigmamemon": {
+      ".ncer": "a2980507c8c448d254b8122ea4c43bb65555cf79e20aca4f6286465ef0c40d6f",
+      ".ncbr": "4bad2f8fd04ce80c00de861507f1fce4ccab71c6f81ba229afc2e7080e11691b",
+      ".nclr": "ce428ab6615e5ba0342e5ddb38e2f8f7da5effea75ca2aa1412002aac289cbb5"
+    },
+    "m427_picklemon": {
+      ".ncer": "d697616cadd110b7e148194ae0b217524a061bbb0b8c9d4b13c7d5f6c0a90146",
+      ".ncbr": "ceeab66289178a3560e9a9b563f83d0cd30afbf1550b2db3e8998d948bb44adb",
+      ".nclr": "a17fb99fd9c6fc77dbeed309593b69cbfa7ded2141c61d201b48abe1b724b510"
+    },
+    "m428_fantomon": {
+      ".ncer": "c2882a9c84659efedd2fb3e6b438b4692104c7c270cc5120403ad7e27a3b8e37",
+      ".ncbr": "2259d7854dd1c08890d3aac998e280fb4264cb1c5f1d84505445eb954193708f",
+      ".nclr": "6427f1ea05eb675e2ceec772edea242e4f3d8f9a85f63fa5afd59d9862477069"
+    },
+    "m430_vademon": {
+      ".ncer": "6c8e0c05ce1d9cb981ad379cb41ab3763196f3c840b552965c49066917c7ecf9",
+      ".ncbr": "466e0cde5861553c7efb26e7ea9526bd38ede94e03ee586f300cc717799b48b3",
+      ".nclr": "1da11a05837472e09ac8fbb33ef5dc2243baf41cac79d4b91e85f0b1d4b00d8e"
+    },
+    "m431_whamon": {
+      ".ncer": "db15eb9b2cac66d917e6531a50cf2b89ac47e7e38db97141c8900f83b6e4d797",
+      ".ncbr": "190d55b78a2add909aa5ae7e231e34552fae77a313edb8690b78b622d031cdf0",
+      ".nclr": "e393731148d063ac239f06b52816e8255dc08c31b455ecf25a68cd9df334dc60"
+    },
+    "m432_holyangemon": {
+      ".ncer": "8a2bd970c5e2e9ebdb860163042eb329419b0581543cb5a5040f396bb139248c",
+      ".ncbr": "84934c1769684005ca9e66544640326ae662b6d934cb3324d7677293b5e64c2e",
+      ".nclr": "5a816c12ed17430ee1528ad90e48e9b44bf0a8bd5f8e3a2e8acaa21992766f0f"
+    },
+    "m433_machgaogamon": {
+      ".ncer": "a516ff19513fc48d1ed78b0e9a3fb059d788b8ee8074608abfea6618c4f26ae6",
+      ".ncbr": "6d81109d06572c5d5b8b2c31bfee17f1746d62137205fd302cea1c3b58551a02",
+      ".nclr": "4fa9355bd00342078c041d5c9f5e9a808e339d5501d9b9aee9605922cf2a4efc"
+    },
+    "m435_mamemon": {
+      ".ncer": "029a3d59a280416d9c18079e4dccfe55252b224613f907e06d07e75ae471cbf2",
+      ".ncbr": "11993f6c5b4319e96f0b610bb0fa9a0894ab0d59fa9468f1e32f10cad4829ca6",
+      ".nclr": "1dbf1546d7fab436bf025e18c83c0304f48484fe16bb920f458db32644ebdef6"
+    },
+    "m437_mammon": {
+      ".ncer": "a0ccc35735e2b3c522c8535912177438ab56944fd2829e9ffd8336b02b13003c",
+      ".ncbr": "5dd7bd7f9e1879f3d5d0db8d30ebc12554a5e0c86a4bc49da721495aa288bdf6",
+      ".nclr": "5e140f9b59b8424086ca3687a0abf3f00d9a24e84103185588276665b390560a"
+    },
+    "m438_megaseadramon": {
+      ".ncer": "12ec4306e0668351b116b5b139c3ebd24b7c1fe8f80a1709a7f8029cb2f60089",
+      ".ncbr": "29762f237bd45bba19ec08d4660f8796bf298cc39d9d8cdd9f47f9f0f4333450",
+      ".nclr": "6e852395025056d72480b8cf597be417f8d56711604990b9c6d32c4b750836f5"
+    },
+    "m439_megadramon": {
+      ".ncer": "ede4280dfef5bdcb9563883449e6ec9021a5caea241e84678a38148ef7c7a1dd",
+      ".ncbr": "89dac5ad82508b29e5988f30c37d65136f208bf12f5fb374b83997f2440ebe36",
+      ".nclr": "b0835ad5199eb11eaad7e7f93687650485bbbfd236b19029fa6bb52d553f4390"
+    },
+    "m440_metalgreymon_vi": {
+      ".ncer": "3d7914e035cd32ac1c8e10fcf0c0b622a3bc29bf6e9c23ff85c8b7e2e491d879",
+      ".ncbr": "c562cb2a8ba7d9e1e51888cc3b38fde7873f45c979a09776e64cb8f9a861f1b3",
+      ".nclr": "fda612a358122608107328afe7b91941b839964062aef0cb1a38b71d0f368bd7"
+    },
+    "m441_metalgreymon_va": {
+      ".ncer": "3d7914e035cd32ac1c8e10fcf0c0b622a3bc29bf6e9c23ff85c8b7e2e491d879",
+      ".ncbr": "c562cb2a8ba7d9e1e51888cc3b38fde7873f45c979a09776e64cb8f9a861f1b3",
+      ".nclr": "e6c7e1e297fcecc8db8550a6e5073180d6b4ba1db7cc4cba3db953bef3d94e23"
+    },
+    "m442_metaltyranomon": {
+      ".ncer": "a3e0e55f5b9af2b56c202ea6a5f553fa91e36d9b1ffcf84850094725257065bf",
+      ".ncbr": "1e6ca83e7cd39edb2fef1250db397bac4dfbc56c23b12fa441892fcf1e16b82e",
+      ".nclr": "94364b7c36a2eaa0b4ba0f03bafb81d0da1e6b62eb2f3f8471bb18550f6b0961"
+    },
+    "m444_monzaemon": {
+      ".ncer": "26f1635ac0438ed4f350f75c474dfec3f12597813f877dd881a70f5618626a9c",
+      ".ncbr": "eecf6b7b656daa05f030a6e845f1627b572675f7282ca39a93abb782c6c81168",
+      ".nclr": "16ba08bc536cd948d46f1396c81028ca0447595e9988a4ea63c539ca1683f955"
+    },
+    "m445_yatagaramon": {
+      ".ncer": "e54753006d16afac00de47a81ba32febc129f38536377044cc5a0737d2bf1578",
+      ".ncbr": "1c025154012fd30961288e312b2bc7a8c9703f98857f9b2354dd460e16b34bb9",
+      ".nclr": "fa382dafd56d96860726ceef13c3edb9578daa833bf8c75ce4abb693da63f710"
+    },
+    "m446_rizegreymon": {
+      ".ncer": "c2882a9c84659efedd2fb3e6b438b4692104c7c270cc5120403ad7e27a3b8e37",
+      ".ncbr": "d6184f944ea32d50ee01129dfc8620de60242b18e675a5d79ea3cc07c81c4a4a",
+      ".nclr": "665bf6e1d74f183a183e702a714cbbb8cc4cca15f73b2be46ae5922cde62421f"
+    },
+    "m447_rapidmon": {
+      ".ncer": "6732e80ff5fde255b109bddc45093e6bd63e3ef37afe989819c6ccec5c7c3ca7",
+      ".ncbr": "0aa2af47ce0d483f0333126e27aebebde607f58770d1415cd7fbedea33050782",
+      ".nclr": "a1eff80f1a742df3387e1e7aefb06fa09a16ab0d87f29d02942f32adef67e029"
+    },
+    "m448_lilimon": {
+      ".ncer": "609a9a717952dfc7b960f1e5ad477f4a0bc2ed74a7c674dfcaf3ac24a7c1f7ac",
+      ".ncbr": "3b011b3d0a52e43a642f59e4bf6b10a8a6cb5c252500544d62e9544a1cbec7bf",
+      ".nclr": "a9ddc158874bda954320e39e72fb6c152c38ef8f24fe580f0d76a4153828549e"
+    },
+    "m449_ladydevimon": {
+      ".ncer": "9be4989547b7afbc24b895d287a99f8615b2035234e73d56bba28e7fee55b983",
+      ".ncbr": "94faec29367c2b7b8d7752a662f2fb2af506e9626cece7105b64b75bd3e0fc46",
+      ".nclr": "484376864766f9bd25abcd6c9b832a788d06a0d6249e6086948022d3a2336ede"
+    },
+    "m450_warumonzaemon": {
+      ".ncer": "c38523e820f7fcd9a5e44e4d46fa9a773e705e2a1f250082ee9356f0dd38b3a7",
+      ".ncbr": "9e0ece310c02e33993724b08b037c7f8e802f78b0deda2806ab5a4ac4f0ac663",
+      ".nclr": "158020869921f853bdb45ebf0eb4f0b7b856269a760cd3ea8d5aab15c18c02ed"
+    },
+    "m451_weregarurumon_va": {
+      ".ncer": "a516ff19513fc48d1ed78b0e9a3fb059d788b8ee8074608abfea6618c4f26ae6",
+      ".ncbr": "06adc8ab86a4622c6e0ad3a0debf825ba644cf974a5f94358a46c55790111d7f",
+      ".nclr": "f2b304417433654831a1147ea607845af2ea7a1540ef1d93b42e2bcba00db582"
+    },
+    "m452_weregarurumon_vi": {
+      ".ncer": "a516ff19513fc48d1ed78b0e9a3fb059d788b8ee8074608abfea6618c4f26ae6",
+      ".ncbr": "822cb5c648658562fefb29d7e67e15fb5263503336b724b3bb27646ea5791523",
+      ".nclr": "528ceb43edd99bb01f4500b62d71c41aa4ea19758f09046012048e663019de5d"
+    },
+    "m453_wingdramon": {
+      ".ncer": "71e262c6bbde642081a5fa4586da245a47495984296811b3bbf7af1a91badae0",
+      ".ncbr": "d2e2576e7f370b9957b2ed7de78d9e3277cf4bc8a6aca2bcd1d3ccc310190c15",
+      ".nclr": "c2a12c4043660087169754c1cc473540708426c9656c156b205af97f18f131f2"
+    },
+    "m454_grondramon": {
+      ".ncer": "e4eea90a66b26db210c1cbf80807aa987da9f52a433fe0a919fb8b064c552c7b",
+      ".ncbr": "8576d22b0206b6abf79567e9ae24ef439bffc5b8a059466ba261ce840fcab4c1",
+      ".nclr": "f1a45b48826b73e0f4aa382ebbd314e067d030e46649707b78824a48bd392096"
+    },
+    "m455_flaremon": {
+      ".ncer": "711a0326719b93397e724e572732be5b5c27d15f3e0835a2df2682021e7dd07e",
+      ".ncbr": "3727590fa9d758d313b98e4e0c814cdfcb29c1c1892d3a9fd35117abe683b59b",
+      ".nclr": "2b3511eb1e8abe48cab6b97651a4ca599d9d93482c10705ebb8044eb80b4ab02"
+    },
+    "m456_crescemon": {
+      ".ncer": "bd9536a5e81f451842008798c39e424de15a566294692a0c6f5ffdef93989348",
+      ".ncbr": "e173d990de71e62902601ed85e69acc5c23970d555e3cfc7251e36e1756824aa",
+      ".nclr": "50be5d595f4fe72b5e40eee097dc91ee5be658dd6b9c3b443f250a3eb8006aa5"
+    },
+    "m457_superstarmon": {
+      ".ncer": "cea6bda50afc69535cc4d932f349aebf4d4eeda6731450210f2fabac27b9f517",
+      ".ncbr": "ee5cf59b8fc4151ad35a7a5fa31f460f77dbae184c70365a74bbafc86db583ca",
+      ".nclr": "bab32b950cd62facc2e3f792b2f00adbbc985eb4b75c344a24930a1f6936c906"
+    },
+    "m458_blackrapidmon": {
+      ".ncer": "6732e80ff5fde255b109bddc45093e6bd63e3ef37afe989819c6ccec5c7c3ca7",
+      ".ncbr": "f762e0c05e5354a05f6913c9475933c6aa51d5fd9bf3ea426e860d76f80dd64f",
+      ".nclr": "fcb7a2218f2c277ec6bd8efe07bdcc46ba1439ea5658dee8ac47f1c314ef575a"
+    },
+    "m501_vikemon": {
+      ".ncer": "7f5186d343da4d7f65c0e77dba203b3e4171f39755fbfd930c6e78af486d776b",
+      ".ncbr": "f2b44927736d53f5e1afa8f1a510d2b74805d8e6ce1807de909f5f83bbcd0e2f",
+      ".nclr": "e4b52e82a768b03feb4ff08099524739d44a6df5e413c69125d3830247c8d486"
+    },
+    "m502_valkyrimon": {
+      ".ncer": "4ceb5faf59c1c40bbcf94dd11858a048616c30bca743f327c543984b1bcc2109",
+      ".ncbr": "5e7b28db36b380d6e7bc456df628cee851977817f8a086f1f24ced4a90fe6f24",
+      ".nclr": "6a6642eb29600c2c027affc0c523a81cb69957006e91cf38e91e6fdf795b6be4"
+    },
+    "m503_warglaymon": {
+      ".ncer": "53c02d2f1e2f4114a44f36b4916684a7642e005cfc0197d1e492d70c773ee94f",
+      ".ncbr": "5ee0204ccbd5350240aa0b0e1f609729fde3502cb75732dd5ad4e7449d42cf04",
+      ".nclr": "7103829a322fea8ac52d7ca0f7e927878440a06c74a8391c247e3f3289ff13a6"
+    },
+    "m504_gigaseadramon": {
+      ".ncer": "203d6e11f2f883ff7deee64aa63e76fcebdc8d50506302ef4a97ec7b527d3596",
+      ".ncbr": "11327a8535e9663748441aaae2bb2d2b17c1ba536d5cf4871ab8e84fb64b7fe6",
+      ".nclr": "2717da54e2e001cc2edfb7c50b64cdb57467a58d783fe8642d35c760fa3192a0"
+    },
+    "m505_grankuwagamon": {
+      ".ncer": "21f8dc38f6a9e38aee4ae1b4b1e8aae3a53f024f13ed31b450cfd9fbc6085098",
+      ".ncbr": "f1d33c06507a6767308fb9f5eafd2709a66c8864fef3eb4e7b81b23e2ce4e87b",
+      ".nclr": "2836399673c3194d4a31b5a32b2b3b756ad50ab518eb8f646cdc42a656ee4b31"
+    },
+    "m506_griffomon": {
+      ".ncer": "9c534237ded7261e66ae2a5d9e816ff8470d75b29c761a2c53a3b4888eec9df5",
+      ".ncbr": "5d56212e68f72798dbf1c282a0dec264933d54feca469e465f4143698c365b28",
+      ".nclr": "3826b9eaef24b16d24eb51351b6d8ce3fd196ee4cfb8fbc194fe1d806c9d4d38"
+    },
+    "m507_crossmon": {
+      ".ncer": "384a496a991372c07b40c579c241af065a76399d56fb81a76aa40fb7461a8904",
+      ".ncbr": "d834f0eaa73f79f3b4cc456082a6013a6445ff03a17326f7f36e71f9f047d819",
+      ".nclr": "c52ece5f098c3d704c6a659de8d00f3bc91b82cc0bcb1e487744185a92501932"
+    },
+    "m508_saberleomon": {
+      ".ncer": "02139e8ee0ba1adca534bd910a3376c193850f8b12f1f0c511308281a713b73e",
+      ".ncbr": "513fbd40be5135692c3a0fcb2a9e2488229d405234ea03471f03bc2e446b68ab",
+      ".nclr": "c9b4e860c907bde7146f7db303fcd29c9a2762d9989bf21f895c0b4beddf1476"
+    },
+    "m509_shinegraymon": {
+      ".ncer": "e642118e08a9a95d5a2aa58115be262d5d90a4ce88e76f051e45b77091e5fd41",
+      ".ncbr": "c7108686b1d2c49f928c91a5a6704439f021f5b685f6d35dda2eff8f26dcd6e5",
+      ".nclr": "106e9d50fdb5a2c33eccdd88a39044790f543431e31314d46feb7f2750f50651"
+    },
+    "m510_skullmammon": {
+      ".ncer": "f02ae2c976bb478264906c3af01420ec6016050e5a03953b5bf1d062863b59cd",
+      ".ncbr": "27fbdce45a54e73c3890b66c92b86ea7c86b05f625984688158bb71e34e90ddc",
+      ".nclr": "299fd14fa86a3d57026ad90fc513e96022ecb95c9488e6d7ba2fc0e14a6b1acd"
+    },
+    "m511_saintgargomon": {
+      ".ncer": "057377f711ec5de8fc9451cdf8002e90e00886c5d46d45bf454391a8ac9d337c",
+      ".ncbr": "2dc8570335038204b8acd514ff73cbbc255a96bdab3d1af9bae2a47f404b9360",
+      ".nclr": "3eab58e553ae501ac93ae1fe1be6037df27631ab330d81dd6c441d9815647ef8"
+    },
+    "m512_hiandromon": {
+      ".ncer": "349f73a89971282ebca4b6bd0f1dcde470ebbc097f42cf4efd39efdcb1d4bc95",
+      ".ncbr": "bcf055baa7fc8a72b022cee17ae2e6de8f8ecd9310cf9873c07e9f6579d22dae",
+      ".nclr": "17d714fd3f5f590f137cc457542971bc5c74b2189e0545877e327567b03b3b9e"
+    },
+    "m513_bantyoliomon": {
+      ".ncer": "b650a4450af51329d517402317639e4fbb8fa35dec00cfd004ccdacbacd1b867",
+      ".ncbr": "47399ad2a0dae8dfbd0991a04c1810f48a4b30f2a79c798477557d88887ce4ce",
+      ".nclr": "1485ae8d13a3f5805eb7f28ea4afc3c42f7a8c27c9c7b81fed72403806314782"
+    },
+    "m514_piemon": {
+      ".ncer": "d9ac27ae78e998e3fce0ec6146dea52ef7defbf2b591a9bd28178fe3cdba54a0",
+      ".ncbr": "4e626b531d58990ac8b336dfe900fdc5be6c2df2dc231323618d946cd8ae0bc6",
+      ".nclr": "6414c893396d496d25ff994f7a89a5ee2205e46e4a51e5cc24f48301d8ca8f9c"
+    },
+    "m515_pinochimon": {
+      ".ncer": "b3231539e730c89be0b1a49df21e25e1e3b025aedc6bf2d6fd3a0d6db58a847a",
+      ".ncbr": "ef2944afd3f282bf3c2edd36d408e5f437c5ffa264631c9b8968c72c81c9a78f",
+      ".nclr": "89824ce2b7428fb3e41c615c628d6de612981f0b12add4e97f64a2b33406d5f4"
+    },
+    "m516_pharaohmon": {
+      ".ncer": "e3fb51e0ff49e8e541a64ba522f2c8a85ebaade41e24e659fb9b1496a6cd0fa2",
+      ".ncbr": "1bbcae020bb5892fa10ea1a52cbaf9341300ab9db3d6f110251de9d2af479091",
+      ".nclr": "43307529508b635caf4a694cf54a81cb70c1bf406fbea49e14e0ab6a36544feb"
+    },
+    "m517_pukumon": {
+      ".ncer": "c27c95f0e1f47e09b6a2b6a35f9ddd615a449433eb53411c21047102a7d84688",
+      ".ncbr": "71a9789ed1773cf239e17728408c9e41d718fcbe3724a10868f5a07ea0cb9456",
+      ".nclr": "5dbf331711674492735a3b1564b362f05e4b46856891683c3d66b6b603e3bc70"
+    },
+    "m518_blackwargreymon": {
+      ".ncer": "53c02d2f1e2f4114a44f36b4916684a7642e005cfc0197d1e492d70c773ee94f",
+      ".ncbr": "6b345241fb8f7dbcec29dcd360eb9f845adba4da04b683f735989c574edaab54",
+      ".nclr": "f02bdbbd14cd88760e930ffd0982a3ae0156e35444dfc085a00cce2da8c8ce0b"
+    },
+    "m519_princemamemon": {
+      ".ncer": "29558dc1c67569939506f01922315c638dfd657ab56940b7660814171004c4cf",
+      ".ncbr": "4e45b38bcd7a68911aab5dd084ac63b3c9c08ab2b24e0fb6438a4461d4e2251b",
+      ".nclr": "d2d2aef953d4922c27b27b580a14f3a0146bc3e75e04128d1adcbee189b8bba5"
+    },
+    "m520_pilesiomon": {
+      ".ncer": "c4f39c47d47550bc6846617a9df1eebb8b19647ea437ab959e3b87a0207f1670",
+      ".ncbr": "a9286bb31072a3a6cc4577d6e5b7a6e38a877dc198ae9bf8065f6c88545cf10e",
+      ".nclr": "967ea2f7e4565dd54a5a19406f187371ed20fc6978ab53e0ff1db9cbabe3de77"
+    },
+    "m521_heraklekabuterimon": {
+      ".ncer": "58320a41aaf6ba594f3ee8b2e61b5105e51eb3a2811857ba3a005d82564ea04a",
+      ".ncbr": "855f1a53dabc039cc23159843fa9e19ae9bb86a3ad3c934bf4ae24052c461518",
+      ".nclr": "15c9363ba15718836e963109de7950fddbc99e9db8b7bb9c7aeb368dc187690f"
+    },
+    "m522_hououmon": {
+      ".ncer": "411cad7dc083f0d5172f65214fa9e2296132453d8a62060c108de4390025ffcf",
+      ".ncbr": "97217c360554cdf563e76f25845d2d4a7bad53fa00bb4582aa4fcee596c34153",
+      ".nclr": "371f3cb961ce78e5c6e9d99b0f76af859c5fc235ede89d11d19c3ad10386f089"
+    },
+    "m526_miragegaogamon": {
+      ".ncer": "ef503e7c33e45487c00d8e6a0e40120ffdd8b67db75d05792e185db19872c4f3",
+      ".ncbr": "2409d4f1f35aa046c5018606fe1b1ddc271c573243ce4cb5c38594b90b7b5252",
+      ".nclr": "a9352be0172508b1ab1b5315f2e7fb7c5b3f0aa37987227fcb3ded90148ed37d"
+    },
+    "m527_mugendramon": {
+      ".ncer": "8c7eb58b8ad5365d18e7cd32ebeec2737fee329bd54f657394550afcb057e9db",
+      ".ncbr": "f8f5cf093d07b91870e57b3fefdf3c2ae2356712b3f2903f438e41aa98f89ae0",
+      ".nclr": "a1ae825645a87c56b5ebcf7ea5fa4680e1444b536867946d877e78308bf7a870"
+    },
+    "m528_metaletemon": {
+      ".ncer": "6cd0110cee2728511b9f24cb0a0f04f7be0ba06420d1df3f7f126d954f37a4ca",
+      ".ncbr": "0ae717c716620d50a438af8dce56e48b39d1da66a4d42020fef7be91f08afe23",
+      ".nclr": "8bb8e233c9ed89637a02e7f25ebd88b651a950eefd521d8eb8f81c47d1dd6c79"
+    },
+    "m529_metalgarurumon_va": {
+      ".ncer": "965381a83d5f6fc935c571e20fe469517673f79e31a8960d1c03aa1b3bc144d2",
+      ".ncbr": "59a0ea72ed8f38c87ead626e2bf7bd4abd0290a6ca16e4d0ad40972d9aabae5c",
+      ".nclr": "aeb59789b2d781960222e823c814dcef013b9fbe76daf2b3e9a57638f2c16693"
+    },
+    "m530_metalgarurumon_vi": {
+      ".ncer": "965381a83d5f6fc935c571e20fe469517673f79e31a8960d1c03aa1b3bc144d2",
+      ".ncbr": "15ae4fab7ad891e1ba1047da1dded7676229a641ad016f8b27574090958ec756",
+      ".nclr": "4e610a1baa34ff64dbc24ad7678e7d1246a9d11664371439b88da2aaa2d3f257"
+    },
+    "m531_metalseadramon": {
+      ".ncer": "33734c269e57d20f6b42b2e2fbe61949ba2d326b39ca8fda56caf1757893e11c",
+      ".ncbr": "dff9867cb1ad77dce221cd83fed6e0e400344eba61b6fbf666a220149bb4cdd9",
+      ".nclr": "906282201baee285c6510a72007d5243c2f334289c4a01356a85ed96f0d60b74"
+    },
+    "m532_rosemon": {
+      ".ncer": "f4382b00aaf9ad5c8e0278ae9ab095ef80257fd056109c91acbbd9b938bc0094",
+      ".ncbr": "031874bc336f9468725c39426b13fd163c0d6eb6badfbd38b2755190d6a47132",
+      ".nclr": "a56aa1fc3c59bac250a90fc35961f49f9d9396c2cda8ae652d3fd5df2887e152"
+    },
+    "m533_zeedgarurumon": {
+      ".ncer": "6253ee13a6251fa44bf65bf3116c23b96eeacc7464be8a10f1ecdc7575997f94",
+      ".ncbr": "d4910934d3c16d008e0a21110829416078d780cce578b92b3546dffb34d34efd",
+      ".nclr": "1ea07ee49427fb97ba85ee830cb4c29c9ffcf12798007c6c1348ba6c92eea9af"
+    },
+    "m534_victorygreymon": {
+      ".ncer": "b7e86e14bbdc7b0d63c7cc0543f3afed821dd546ebae92058d5cf30458e1cb36",
+      ".ncbr": "41b9189946690569ce832b987a296341e366de010a2ca9a45123999bdb98829b",
+      ".nclr": "371276bd61f2507aa5a521cc273a576392a4d90a4fa07b960c1a7648b91c379d"
+    },
+    "m535_slayerdramon": {
+      ".ncer": "a72bbe8e55b45b5ea27f2963b3de848d1b324d8bb410e68bc1b362af0a46beeb",
+      ".ncbr": "4328f8e174d9f02d29ab3a3e5596a2337c7ab243a636429ad4053e6108c9ad4d",
+      ".nclr": "c542d93d95e1fb0261da14f93cad8279f65d147631e85ad0523e0fe0a2f3a659"
+    },
+    "m536_brakedramon": {
+      ".ncer": "706ff9f69e7607f0e5f3337c793aa17eb49fa70c5221899d9f23a8e1e8ae56ab",
+      ".ncbr": "7dafbcb28e4cab98f77a53457da9f995f526d54b827a6173b45eeb9ead15f266",
+      ".nclr": "873c6df6d69b0caced8a2293ec66c60ec80c44d78896c242d85cb3a759d1c862"
+    },
+    "m538_apollomon": {
+      ".ncer": "89ae24f289030e4ec1acc940a142a8e93fc2616cb1862176d415f5fa3d6b9d21",
+      ".ncbr": "19aec919c0dc5c250bd4d150a48b6dd0a2133538075e36095859aaea4b0d18ef",
+      ".nclr": "3dc9e65d61421e690b4c25065aa6eed580813d8356b6171eb682d46abf47565c"
+    },
+    "m539_dianamon": {
+      ".ncer": "53dee84a740702142d3124f57e8e456a1035e5fec44434aadc8635b3e318e72f",
+      ".ncbr": "465f9a3d63fed6d16b065ec85efb452d480f0dfe5458ebcbdebbbefa12cbbbfe",
+      ".nclr": "f1d7655b50287cf3ac1ccda44e8cdc8951dbc4c9f5659b8abb44c1059067c086"
+    },
+    "m540_imperialdramon_fm": {
+      ".ncer": "3b0cc020ee8bb9fea2d799a4be3411aa86212a2cd4c01147087ca1a56b6ba49f",
+      ".ncbr": "60fbe7168cc313f655575184a2ff9e1f4df94070a8e3cf48fc213ccc4bd6408c",
+      ".nclr": "c995fa0abbc33202c36355742219ef0835fd4f17e6d90a91a7d7d0be746c63fe"
+    },
+    "m541_dukemon": {
+      ".ncer": "98d2ef8ee4415c7e5e4ac0c3aa35c6064bdfa10bc3d2026e645bce83d911dec2",
+      ".ncbr": "8d7573f13d24598acca636c6e33cbac5a810d9234bba6c80a1466aee9646768d",
+      ".nclr": "be250578e12f716f589433019a1469d787ce582b5c5e428c9fd2b034cf76de00"
+    }
+  },
+  "policy": "Cell0 portraits; responsive card grid and enlarged detail are web layout. Unregistered portrait silhouette is not asserted as original."
+}
