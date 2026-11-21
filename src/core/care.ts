@@ -7,6 +7,11 @@ import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, migrateTitleIds, tamerRank } from './titles';
 import { bestRope, MEMORY_CARDS, ROPES, START_ROPE, WIRE_PACK, BAIT_PACK, BAITS, GEARS, gearCount, itemUnlocked, SHOT_PACK, SHOTS } from './hunt';
 import { pluginPrice, shopPlugins, togglePlugin } from './plugins';
+/**
+ * 자연 회복 간격(게임 분 = 실시간 초). 원본은 +0x460 세기가 10을 넘으면(11분째) 최대 HP의 1%.
+ * 형규 지시(2026-11-22)로 2분마다로 줄였다 — 원작보다 5.5배 빠름.
+ */
+export const HP_REGEN_EVERY = 2;
 import { ATTRS, FAMILIES, PERSONALITIES, STAT_KEYS, type ApKey, type Digimon, type SaveData, type Stats } from './types';
 
 /** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
@@ -459,13 +464,13 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   const cage = getCage(d.cage);
   const wasSleeping = isSleeping(prev);
   const sleeping = tickRestCycle(d, ctx.rng, !!ctx.sleep) || !!ctx.sleep;
-  // 현재 HP 회복
+  // 현재 HP 자연 회복: HP_REGEN_EVERY분마다 최대의 1%
   const maxHp = d.stats.hp;
   let hp = hpOf(d);
   if (wasSleeping && !sleeping) hp += Math.trunc(maxHp / 30);
   if (hp < maxHp) {
     d.hpRegenMinutes = (d.hpRegenMinutes ?? 0) + 1;
-    if (d.hpRegenMinutes > 10) {
+    if (d.hpRegenMinutes >= HP_REGEN_EVERY) {
       d.hpRegenMinutes = 0;
       hp += Math.trunc(maxHp / 100);
     }

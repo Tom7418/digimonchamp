@@ -3852,6 +3852,11 @@ var ChampCore = (function(exports) {
 	/** 상점에 낼 플러그인 (가지지 않았고 해금된 것). 최대 소지 수는 모두 1 */
 	var shopPlugins = (save) => PLUGINS.filter((p) => !(save.plugins ?? []).includes(p.id) && itemUnlocked(save, p.name));
 	// src/core/care.ts
+	/**
+	* 자연 회복 간격(게임 분 = 실시간 초). 원본은 +0x460 세기가 10을 넘으면(11분째) 최대 HP의 1%.
+	* 형규 지시(2026-11-22)로 2분마다로 줄였다 — 원작보다 5.5배 빠름.
+	*/
+	var HP_REGEN_EVERY = 2;
 	/** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
 	var CAPACITY = 200;
 	var OFFLINE_CAP_MINUTES = 720;
@@ -4399,7 +4404,7 @@ var ChampCore = (function(exports) {
 		if (wasSleeping && !sleeping) hp += Math.trunc(maxHp / 30);
 		if (hp < maxHp) {
 			d.hpRegenMinutes = (d.hpRegenMinutes ?? 0) + 1;
-			if (d.hpRegenMinutes > 10) {
+			if (d.hpRegenMinutes >= 2) {
 				d.hpRegenMinutes = 0;
 				hp += Math.trunc(maxHp / 100);
 			}
@@ -11982,6 +11987,7 @@ var ChampCore = (function(exports) {
 	exports.FREE_FOES = FREE_FOES;
 	exports.FREE_POOLS = FREE_POOLS;
 	exports.GEARS = GEARS;
+	exports.HP_REGEN_EVERY = HP_REGEN_EVERY;
 	exports.HUNT_CLOSE_HOUR = HUNT_CLOSE_HOUR;
 	exports.HUNT_ITEM_IDS = HUNT_ITEM_IDS;
 	exports.HUNT_ITEM_SLOTS = HUNT_ITEM_SLOTS;

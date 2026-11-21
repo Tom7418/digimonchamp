@@ -965,9 +965,11 @@ describe('illness', () => {
     const base = { ...freshSave(0), nextUid: 3 };
     const mon = (patch: Partial<Digimon>) => ({ ...base, digimon: [{ ...newDigimon(1, '아구몬', () => 0.5), hunger: 100, ...patch }, newDigimon(2, '깜몬')] });
     const max = newDigimon(1, '아구몬', () => 0.5).stats.hp;
-    // 자연 회복: 11분째에 최대의 1%
-    let r = advance(mon({ hpNow: max - 50 }), 11, seeded(1));
+    // 자연 회복: 2분마다 최대의 1% (원본은 11분째, 형규 지시로 2분)
+    let r = advance(mon({ hpNow: max - 50 }), 2, seeded(1));
     expect(r.save.digimon[0].hpNow).toBe(max - 50 + Math.trunc(max / 100));
+    r = advance(mon({ hpNow: max - 50 }), 1, seeded(1));
+    expect(r.save.digimon[0].hpNow).toBe(max - 50);
     // 1/10 이하 → 빈사, 회복하면 해제
     r = tickFarm(mon({ hpNow: Math.trunc(max / 10) }), seeded(1));
     expect(r.events.some((e) => e.type === 'dying' && e.cause === 'hp')).toBe(true);
@@ -981,7 +983,8 @@ describe('illness', () => {
   it('양호실 HP 회복에도 케이지 레벨 배율이 붙는다', () => {
     const max = newDigimon(1, '아구몬', () => 0.5).stats.hp;
     const s = (lv: number): SaveData => ({ ...freshSave(0), nextUid: 3, cageLevels: { '미니 양호실': lv }, digimon: [{ ...newDigimon(1, '아구몬', () => 0.5), hunger: 100, cage: '미니 양호실', hpNow: max - 100 }, newDigimon(2, '깜몬')] });
-    const gain = (lv: number) => (advance(s(lv), 2, seeded(1)).save.digimon[0].hpNow ?? 0) - (max - 100);
+    // 2분 동안 자연 회복(최대 1%)도 한 번 붙으므로 빼고 본다
+    const gain = (lv: number) => (advance(s(lv), 2, seeded(1)).save.digimon[0].hpNow ?? 0) - (max - 100) - Math.trunc(max / 100);
     expect(gain(0)).toBe(8);
     expect(gain(1)).toBe(16);
     expect(gain(2)).toBe(24);
