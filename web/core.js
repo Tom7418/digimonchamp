@@ -11024,7 +11024,7 @@ var ChampCore = (function(exports) {
 		const e = EVENT_ROWS.get(id), g = e && GIFT_ROWS.get(e.gift);
 		const team = g?.kind === 1 ? npcTeam(g.value) : null;
 		if (!e || !g || !team) return void 0;
-		const text = `${team.name} 팀으로 한판 붙자!\n이기면 상금 ${g.value2.toLocaleString("ko-KR")}bit.\n도전을 받겠어?`;
+		const text = BOSS_TEXT[id] ?? `${team.name} 팀으로 한판 붙자!\n이기면 상금 ${g.value2.toLocaleString("ko-KR")}bit.\n도전을 받겠어?`;
 		return {
 			id,
 			from: e.from,
@@ -11036,6 +11036,39 @@ var ChampCore = (function(exports) {
 				name: team.name
 			}
 		};
+	}
+	/**
+	* 0xAD 첫 신청: 챔피언십 본선 마지막 경기를 이긴 결과 화면(overlay9_19 0x21120AC — 모드 0·본선·마지막 경기 +0x1F208,
+	* 결과 4 = 승리)에서 +0x11C가 0이면 +0x11C와 +0x124를 켜고, 육성 화면(overlay9_18 0x21211B8)이 +0x124를 보고 메일을 넣는다.
+	* 0xAE 재도전: +0x11C가 켜져 있고 +0x120이 0이며, 계절 첫날(날 % 8 == 0) 12:00 정각이면(0x21211D8~0x212122C) 보낸다.
+	* 본문은 원작 글을 옮기지 않고 새로 썼다.
+	*/
+	var BOSS_INTRO_MAIL = 173;
+	var BOSS_REMATCH_MAIL = 174;
+	var BOSS_TEAM = 151;
+	var BOSS_TEXT = {
+		[173]: "챔피언십 우승, 잘 봤다.\n이 대회를 연 사람으로서\n챔피언의 실력을 직접 확인하고 싶군.\n상금은 400,000bit. 받겠나?",
+		[174]: "다시 한 번 붙어 보겠나?\n네 디지몬들이 얼마나 컸는지\n궁금하구나. 상금은 400,000bit."
+	};
+	/** 매시 정각과 배틀이 끝난 뒤에 부른다. 챔피언이 되면 첫 신청, 그 뒤로 사장을 이기기 전까지 계절 첫날 12시마다 재도전 */
+	function rollBossMail(save) {
+		if (!save.champion) return save;
+		if ((save.pendingMails ?? []).length >= 4) return save;
+		if (!save.bossIntro) return queueMails({
+			...save,
+			bossIntro: true
+		}, [173]);
+		const d = dateOf(save.clock);
+		if (save.bossBeaten || d.day !== 1 || d.hour !== 12 || d.minute !== 0) return save;
+		if ((save.pendingMails ?? []).includes(174) || save.challenge?.team === 151) return save;
+		return queueMails(save, [174]);
+	}
+	/** 배틀 신청 상대를 이겼을 때. 사장 팀이면 재도전 메일을 멈춘다 (웹판) */
+	function rivalBeaten(save, team) {
+		return team === 151 ? {
+			...save,
+			bossBeaten: true
+		} : save;
 	}
 	/** 웹판 랭크 번호(1 그린 ~ 10 마스터) → 이벤트. 원본 랭크 번호는 웹판보다 1 작다 */
 	var RANK_UP_MAIL = {
@@ -11830,6 +11863,9 @@ var ChampCore = (function(exports) {
 	exports.BATTLE_MAPS = BATTLE_MAPS;
 	exports.BLAST_RADIUS = BLAST_RADIUS;
 	exports.BOMB_FUSE = BOMB_FUSE;
+	exports.BOSS_INTRO_MAIL = BOSS_INTRO_MAIL;
+	exports.BOSS_REMATCH_MAIL = BOSS_REMATCH_MAIL;
+	exports.BOSS_TEAM = BOSS_TEAM;
 	exports.CAGES = CAGES;
 	exports.CAGE_LEVEL_FACTOR = CAGE_LEVEL_FACTOR;
 	Object.defineProperty(exports, "CAGE_LEVEL_ROWS", {
@@ -12109,6 +12145,8 @@ var ChampCore = (function(exports) {
 	exports.resistBounds = resistBounds;
 	exports.restoreFloorFood = restoreFloorFood;
 	exports.reviveSupport = reviveSupport;
+	exports.rivalBeaten = rivalBeaten;
+	exports.rollBossMail = rollBossMail;
 	exports.rollMorningMail = rollMorningMail;
 	exports.rollNpcOffer = rollNpcOffer;
 	exports.rollRivalChallenge = rollRivalChallenge;

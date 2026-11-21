@@ -9,7 +9,7 @@
  */
 import eventsRaw from '../data/events.txt?raw';
 import { npcTeam } from './battle';
-import { originalSpecies } from './data';
+import { dateOf, originalSpecies } from './data';
 import { maxStageForRank } from './evolution';
 import { MONEY_MAX, tamerRank } from './titles';
 import type { SaveData } from './types';
@@ -36,9 +36,38 @@ function battleEvent(id: number): MailEvent | undefined {
   const e = EVENT_ROWS.get(id), g = e && GIFT_ROWS.get(e.gift);
   const team = g?.kind === 1 ? npcTeam(g.value) : null;
   if (!e || !g || !team) return undefined;
-  const text = `${team.name} 팀으로 한판 붙자!\n이기면 상금 ${g.value2.toLocaleString('ko-KR')}bit.\n도전을 받겠어?`;
+  const text = BOSS_TEXT[id] ?? `${team.name} 팀으로 한판 붙자!\n이기면 상금 ${g.value2.toLocaleString('ko-KR')}bit.\n도전을 받겠어?`;
   return { id, from: e.from, text, foods: [], battle: { team: g.value, prize: g.value2, name: team.name } };
 }
+// ---------- 사장 배틀 (팀 151 「디지털 아리나」, 상금 400,000 — 선물 표 85번) ----------
+/**
+ * 0xAD 첫 신청: 챔피언십 본선 마지막 경기를 이긴 결과 화면(overlay9_19 0x21120AC — 모드 0·본선·마지막 경기 +0x1F208,
+ * 결과 4 = 승리)에서 +0x11C가 0이면 +0x11C와 +0x124를 켜고, 육성 화면(overlay9_18 0x21211B8)이 +0x124를 보고 메일을 넣는다.
+ * 0xAE 재도전: +0x11C가 켜져 있고 +0x120이 0이며, 계절 첫날(날 % 8 == 0) 12:00 정각이면(0x21211D8~0x212122C) 보낸다.
+ * 본문은 원작 글을 옮기지 않고 새로 썼다.
+ */
+export const BOSS_INTRO_MAIL = 0xad;
+export const BOSS_REMATCH_MAIL = 0xae;
+export const BOSS_TEAM = 151;
+const BOSS_TEXT: Record<number, string> = {
+  [BOSS_INTRO_MAIL]: '챔피언십 우승, 잘 봤다.\n이 대회를 연 사람으로서\n챔피언의 실력을 직접 확인하고 싶군.\n상금은 400,000bit. 받겠나?',
+  [BOSS_REMATCH_MAIL]: '다시 한 번 붙어 보겠나?\n네 디지몬들이 얼마나 컸는지\n궁금하구나. 상금은 400,000bit.',
+};
+/** 매시 정각과 배틀이 끝난 뒤에 부른다. 챔피언이 되면 첫 신청, 그 뒤로 사장을 이기기 전까지 계절 첫날 12시마다 재도전 */
+export function rollBossMail(save: SaveData): SaveData {
+  if (!save.champion) return save;
+  if ((save.pendingMails ?? []).length >= 4) return save;
+  if (!save.bossIntro) return queueMails({ ...save, bossIntro: true }, [BOSS_INTRO_MAIL]);
+  const d = dateOf(save.clock);
+  if (save.bossBeaten || d.day !== 1 || d.hour !== 12 || d.minute !== 0) return save;
+  if ((save.pendingMails ?? []).includes(BOSS_REMATCH_MAIL) || save.challenge?.team === BOSS_TEAM) return save;
+  return queueMails(save, [BOSS_REMATCH_MAIL]);
+}
+/** 배틀 신청 상대를 이겼을 때. 사장 팀이면 재도전 메일을 멈춘다 (웹판) */
+export function rivalBeaten(save: SaveData, team: number): SaveData {
+  return team === BOSS_TEAM ? { ...save, bossBeaten: true } : save;
+}
+
 /** 웹판 랭크 번호(1 그린 ~ 10 마스터) → 이벤트. 원본 랭크 번호는 웹판보다 1 작다 */
 export const RANK_UP_MAIL: Record<number, MailEvent> = {
   3: { id: 0x75, from: '사장', text: '레드 랭크 축하한다!\n애써 준 디지몬들에게도 선물을 보내마.\n케이지에 고기를 놓아 두었다.', foods: ['big'] },

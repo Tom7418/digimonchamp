@@ -167,6 +167,10 @@ export interface SaveData {
   /** 본선에서 이긴 라운드 수 (같은 날 8강 → 4강 → 결승) */
   finalRound?: number;
   champion: boolean;
+  /** 사장 배틀 신청(0xAD)을 받았는가. 원본 +0x11C. 없으면 false (이전 불필요) */
+  bossIntro?: boolean;
+  /** 사장 팀(151)을 이겼는가. 원본 +0x120 — 원본에서 켜는 곳은 미확인, 웹판은 이기면 켠다 */
+  bossBeaten?: boolean;
   nextUid: number;
   seen: string[];
   lastSavedAt: number;

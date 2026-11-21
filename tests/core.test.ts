@@ -18,7 +18,7 @@ import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleF
 import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { DEX_ORDER, dexEntries, dexCount } from '../src/core/dex';
-import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent, rollMorningMail } from '../src/core/events';
+import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent, rollMorningMail, rollBossMail, rivalBeaten } from '../src/core/events';
 import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';
 import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotCooldown, paralysisSeconds, itemDamage as itemDmg, WIRE_UNIT, BOMB_FUSE, useGear, gearCount, BAITS, GEARS, gearOf, itemResist, itemDamage, effectLands, magnetSticks, attracted, HUNT_ITEM_SLOTS, huntItems, toggleHuntItem } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
@@ -2121,6 +2121,25 @@ describe('라이벌 배틀 신청 (원본 0x2129450)', () => {
     expect(e.battle).toEqual({ team: 111, prize: 4500, name: '트리오 더 케이코 A' });
     expect(npcTeamFoes(111, () => 0)!.map((f) => f.speciesId)).toEqual(['둥실몬', '모티몬', '모티몬']);
     expect(mailEvent(0xae)!.battle?.team).toBe(151);
+  });
+});
+
+describe('사장 배틀 메일 (원본 overlay9_19 0x21120AC, overlay9_18 0x21211B8)', () => {
+  const day = 1440;
+  it('챔피언이 되면 0xAD 한 번, 이기기 전까지 계절 첫날 12시에 0xAE', () => {
+    const s = { ...freshEggSave(0), clock: 3 * day + 9 * 60 };
+    expect(rollBossMail(s)).toBe(s); // 챔피언 전
+    const champ = rollBossMail({ ...s, champion: true });
+    expect(champ.pendingMails).toEqual([0xad]);
+    expect(champ.bossIntro).toBe(true);
+    expect(rollBossMail(champ)).toBe(champ); // 한 번만
+    expect(mailEvent(0xad)!.battle).toEqual({ team: 151, prize: 400000, name: mailEvent(0xad)!.battle!.name });
+    const seasonStart = { ...champ, pendingMails: [], clock: 8 * day + 12 * 60 }; // 다음 계절 1일 12:00
+    expect(rollBossMail(seasonStart).pendingMails).toEqual([0xae]);
+    expect(rollBossMail({ ...seasonStart, clock: seasonStart.clock + 60 }).pendingMails).toEqual([]);
+    expect(rollBossMail({ ...seasonStart, clock: seasonStart.clock + day }).pendingMails).toEqual([]); // 2일
+    expect(rollBossMail(rivalBeaten(seasonStart, 151)).pendingMails).toEqual([]);
+    expect(rivalBeaten(seasonStart, 111).bossBeaten).toBeUndefined();
   });
 });
 

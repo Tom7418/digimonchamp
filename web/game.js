@@ -508,6 +508,8 @@
         const r = C.rollNpcOffer(save, minute / 60, Math.random);
         if (r) save = r.save;
         save = C.rollRivalChallenge(save, minute / 60, Math.random);
+        // 사장 배틀: 챔피언이 되면 첫 신청(0xAD), 이기기 전까지 계절 첫날 12시 재도전(0xAE)
+        save = C.rollBossMail(save);
         persist();
       }
       deliverEventMails();
@@ -1427,6 +1429,9 @@
     const bitsBefore = save.bits;
     if (m) save = C.applyMatch(save, m, won);
     else if (won) save = C.addBits(save, b.setup.prize);
+    if (won && b.setup.rival) save = C.rivalBeaten(save, b.setup.rival);
+    // 원본: 챔피언십 본선 마지막 경기를 이기면 사장 배틀 신청 메일 (overlay9_19 0x21120AC)
+    save = C.rollBossMail(save);
     const after = C.tamerRank(save);
     // 원본 결과 화면: 레드·브론즈·골드·챔프로 오르면 사장 메일 예약 (overlay9_8 0x2111978)
     save = C.queueMails(save, C.rankUpMails(before, after));
