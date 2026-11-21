@@ -3,17 +3,20 @@
 (function(root){
  function createBattleEffects(){
   let effects=[];
+  const skills=root.createBattleSkillEffects?.();
   const data=root.BATTLE_EFFECT_DATA;
   const hitImage=new Image();hitImage.src='assets/battle/effects.png';
   const healImages=Array.from({length:6},(_,i)=>{const im=new Image();im.src='assets/ui/fx_ring_'+(i+1)+'.png';return im;});
-  function add(event,units){
+  function add(event,units,before){
+   const skill=skills?.add(event,units,before);if(skill)return skill;
    if(!['hit','heal'].includes(event.type))return;
    const target=units.find(u=>u.id===event.to);if(!target)return;
    effects.push({kind:event.type,x:target.x,y:target.y-10,age:0,
     duration:event.type==='heal'?1:data.hit.frames.reduce((s,f)=>s+f[1],0)/data.tickRate});
   }
-  function tick(dt){for(const e of effects)e.age+=Math.max(0,dt);effects=effects.filter(e=>e.age<e.duration);}
+  function tick(dt){skills?.tick(dt);for(const e of effects)e.age+=Math.max(0,dt);effects=effects.filter(e=>e.age<e.duration);}
   function draw(ctx,scale=1){
+   skills?.draw(ctx,scale);
    for(const e of effects){
     if(e.kind==='hit'){
      let t=e.age*data.tickRate,cell=data.hit.frames[0][0];
@@ -25,7 +28,7 @@
     }
    }
   }
-  return {add,tick,draw,get count(){return effects.length;}};
+  return {add,tick,draw,drain:()=>skills?.drain()||[],visualUnit:u=>skills?.visualUnit(u)||u,get busy(){return skills?.busy||false;},get ready(){return skills?.ready??true;},get count(){return effects.length+(skills?.count||0);}};
  }
  root.createBattleEffects=createBattleEffects;
  if(typeof module!=='undefined')module.exports={createBattleEffects};

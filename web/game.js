@@ -1288,32 +1288,65 @@
     render();
   }
   function battleTick(dt) {
+    // 엔진 피해는 한 번만 계산한다. 비행 중 HP/쓰러짐 표시는 이전 상태를 유지하고 도착 때 반영한다.
+    function battleHitVisual(b,e,delayed=false) {
+      const target=b.state.units.find(u=>u.id===e.to);
+      const id=SPRITE_BY_NAME[C.getSpecies(target.speciesId).id];
+      const state=e.damage===0?'guard2':Math.random()<0.5?'hurt':'hurtAlt';
+      const duration=animations.duration(id,state);
+      b.actions.set(e.to,{kind:'hit',left:duration,duration,state});
+      const text=e.damage===0?'막음':`-${e.damage}${e.critical?' 크리티컬!':e.special?'!':''}`;
+      b.flashes.push({id:e.to,text,until:performance.now()+700,color:e.critical?'#ff9a6a':e.special?'#ffd36a':'#fff'});
+      if(e.damage===0)battleLog(`${target.name}: 공격을 막아 냄 (피해 0)`);
+      else if(e.critical)battleLog(`크리티컬! ${target.name}에게 ${e.damage}`);
+      if(delayed&&!target.alive)battleLog(`${target.name} 쓰러짐!`);
+    }
+    function tickBattleArt(b,dt) {
+      b.effects.tick(dt);
+      for(const e of b.effects.drain?.()||[])battleHitVisual(b,e,true);
+    }
     const b = battle;
     if (!b) return;
     // 그림을 읽는 동안 보이지 않는 전투가 먼저 진행되지 않는다. 실패/지연은 최대4초만 기다린다.
     if(!b.done&&b.map&&(b.assetWait??0)<4&&
-      (battleBackdrop.status(b.map)==='loading'||b.state.units.some(u=>{const a=spriteOf(u.speciesId,false);return a&&!a.image.complete;}))){
+      (b.effects.ready===false||battleBackdrop.status(b.map)==='loading'||b.state.units.some(u=>{const a=spriteOf(u.speciesId,false);return a&&!a.image.complete;}))){
       b.assetWait=(b.assetWait??0)+dt;drawArena(0);return;
     }
     // 강조 중에는 다음 전투 틱을 보류한다. 이미 발생한 피해/TP는 재계산하지 않는다.
-    if(b.presentation?.busy){b.presentation.tick(dt*2);drawArena(0);return;}
+    if(b.presentation?.busy){
+      const focus=b.presentation.snapshot(),step=dt*2;
+      b.presentation.tick(step);
+      const play=Math.max(0,Math.min(focus.age+step,focus.transition+focus.hold)-Math.max(focus.age,focus.transition));
+      if(play){
+        tickBattleArt(b,play);
+        for(const [id,a] of b.actions){a.left-=play;if(a.left<=0)b.actions.delete(id);}
+      }
+      drawArena(0);return;
+    }
+    if(b.effects.busy){
+      tickBattleArt(b,dt*2);
+      for(const [id,a] of b.actions){a.left-=dt*2;if(a.left<=0)b.actions.delete(id);}
+      drawArena(dt*2);
+      if(b.state.over&&!b.effects.busy)finishBattle();
+      return;
+    }
     if(b.done){
-      b.effects.tick(dt);
+      tickBattleArt(b,dt*2);
       for(const [id,a] of b.actions){a.left-=dt*2;if(a.left<=0)b.actions.delete(id);}
       drawArena(dt*2);return;
     }
-    b.effects.tick(dt);
+    tickBattleArt(b,dt*2);
     b.acc += dt * 2; // 화면에서는 2배속으로 진행
-    while (b.acc >= 0.1 && !b.state.over && !b.presentation?.busy) {
+    while (b.acc >= 0.1 && !b.state.over && !b.presentation?.busy && !b.effects.busy) {
       b.acc -= 0.1;
-      const before=new Map(b.state.units.map(u=>[u.id,{x:u.x,y:u.y}]));
+      const before=new Map(b.state.units.map(u=>[u.id,{...u}]));
       const events=C.stepBattle(b.state, Math.random);
       for(const u of b.state.units){
         const p=before.get(u.id);
         b.motion.set(u.id,{dx:u.x-p.x,dy:u.y-p.y});
       }
       for (const e of events) {
-        b.effects.add(e,b.state.units);
+        const effect=b.effects.add(e,b.state.units,before);
         // 실제 적중 이벤트로 공격/피격을 연결하고 각 종 NANR 유지 시간을 사용한다.
         if(e.type==='hit'){
           const attacker=b.state.units.find(u=>u.id===e.from),target=b.state.units.find(u=>u.id===e.to);
@@ -1321,13 +1354,9 @@
           const attackState=e.special?(e.skill?.animation??'attack1'):'attack4';
           const attackId=SPRITE_BY_NAME[C.getSpecies(attacker.speciesId).id];
           const attackDuration=animations.duration(attackId,attackState);
-          b.presentation?.add(e,b.state.units,attackDuration);
+          b.presentation?.add(e,b.state.units,Math.max(attackDuration,effect?.hold||0));
           if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:attackDuration,duration:attackDuration,state:attackState});
-          const id=SPRITE_BY_NAME[C.getSpecies(target.speciesId).id];
-          // 원본: 피해0 → 반응13(0x21189fc) → NANR34(0x2116b90).
-          const state=e.damage===0?'guard2':Math.random()<0.5?'hurt':'hurtAlt';
-          const duration=animations.duration(id,state);
-          b.actions.set(e.to,{kind:'hit',left:duration,duration,state});
+          if(!effect?.lead)battleHitVisual(b,e);
           if(e.special&&e.skill){
             b.flashes.push({id:e.from,text:e.skill.name,until:performance.now()+700,color:'#a9e7ff',skill:true});
             const cost=Number.isFinite(e.skill.tpCost)?` · TP ${e.skill.tpCost}`:'';
@@ -1339,13 +1368,6 @@
           battleLog(`${b.state.units[e.id].name}: ${e.status} 상태`);
         }
         if (e.type === 'statusDamage') b.flashes.push({ id: e.id, text: `-${e.damage} ${e.status}`, until: performance.now() + 700, color: '#a6e36b' });
-        if (e.type === 'hit') {
-          // 피해 0은 원작처럼 공격을 막아 낸 것으로 표시(txt_list #1847), 크리티컬은 따로 표시한다
-          const text = e.damage === 0 ? '막음' : `-${e.damage}${e.critical ? ' 크리티컬!' : e.special ? '!' : ''}`;
-          b.flashes.push({ id: e.to, text, until: performance.now() + 700, color: e.critical ? '#ff9a6a' : e.special ? '#ffd36a' : '#fff' });
-          if (e.damage === 0) battleLog(`${b.state.units[e.to].name}: 공격을 막아 냄 (피해 0)`);
-          else if (e.critical) battleLog(`크리티컬! ${b.state.units[e.to].name}에게 ${e.damage}`);
-        }
         if (e.type === 'heal') {
           b.flashes.push({ id: e.to, text: `+${e.amount}`, until: performance.now() + 700, color: '#8ef0a0' });
           if(e.support)battleLog(`${b.state.units[e.from].name} · ${e.support.name} → ${b.state.units[e.to].name} +${e.amount}`);
@@ -1367,12 +1389,12 @@
             b.actions.set(e.from,{kind:'attack',left:duration,duration,state});
           }
         }
-        if (e.type === 'ko') battleLog(`${b.state.units[e.id].name} 쓰러짐!`);
+        if (e.type === 'ko'&&!b.effects.busy) battleLog(`${b.state.units[e.id].name} 쓰러짐!`);
       }
     }
     for(const [id,a] of b.actions){a.left-=dt*2;if(a.left<=0)b.actions.delete(id);}
     drawArena(dt * 2);
-    if (b.state.over) finishBattle();
+    if (b.state.over&&!b.effects.busy&&!b.presentation?.busy) finishBattle();
   }
   function battleLog(t) {
     const el = $('#battle-log');
@@ -1449,6 +1471,7 @@
     const ctx = el.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     const s = battle.state;
+    const units=s.units.map(u=>(battle.effects.visualUnit?.(u)||u));
     const focus=battle.presentation?.snapshot();
     ctx.save();
     if(focus){
@@ -1466,7 +1489,7 @@
     const viewport=battleBackdrop.viewport;
     ctx.translate(viewport.x,viewport.y);ctx.scale(viewport.scale,viewport.scale);
     // 아래쪽 개체를 나중에 그려 뒤쪽 디지몬이 앞쪽을 덮지 않게 한다.
-    for (const u of [...s.units].sort((a,b)=>a.y-b.y||a.id-b.id)) {
+    for (const u of [...units].sort((a,b)=>a.y-b.y||a.id-b.id)) {
       ctx.globalAlpha = !u.alive?0.3:focus&&u.id!==focus.from?1-focus.dim:1;
       const m=battle.done?{dx:0,dy:0}:battle.motion.get(u.id)||{dx:u.team===0?0.001:-0.001,dy:0};
       const spriteId=SPRITE_BY_NAME[C.getSpecies(u.speciesId).id];
@@ -1518,7 +1541,7 @@
     }
     $('#battle-map-name').textContent=battle.map.name;
     $('#battle-time').textContent=`TIME ${Math.max(0,Math.ceil(C.TIME_LIMIT-s.t))}`;
-    const team = (t) => s.units.filter((u) => u.team === t);
+    const team = (t) => units.filter((u) => u.team === t);
     const hpHtml = [0, 1]
       .map(
         (t) =>
