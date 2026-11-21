@@ -1,0 +1,84 @@
+{
+  "source": "common/e002_hunt_*",
+  "sha256": {
+    "smallmine": {
+      ".ncer": "1a7ce704c4264b8ee35e6c60059bc8778310cafa42f7b6225c7edfdb27d84d48",
+      ".ncbr": "c40ea36fb57784af4fd22757cc91823e5ffa32691fcb748276056e66d1d2157d",
+      ".nclr": "b3d0e9bdf62255fcd04414805002fcaefd89a0901d2c4074f442c1db27cde980",
+      ".nanr": "513af033585d95ce66cf7513e7845e5101b3f0c44ef825ff326600cf3251df1a"
+    },
+    "hugemine": {
+      ".ncer": "cf679e28d4017fe354876dd13a0830541c32b90f31ca386d361aa605a0f96e4f",
+      ".ncbr": "7254687987f4abf9cc1fd008ef6e8426e43b53e7add73c951377f30ab7a7139a",
+      ".nclr": "b3d0e9bdf62255fcd04414805002fcaefd89a0901d2c4074f442c1db27cde980",
+      ".nanr": "513af033585d95ce66cf7513e7845e5101b3f0c44ef825ff326600cf3251df1a"
+    },
+    "digicach": {
+      ".ncer": "8fe58a6c917f13668c1bbbc7aef77aa10833e2d8ebdca8df4b0e837c68d10eb1",
+      ".ncbr": "2ce1dba47274f03963d1f52b5efa43d6b83970e821904dfb0f43990cf62c76b0",
+      ".nclr": "2f05a53dad470db62367ad8d917f8983cfeb2b57232c96f5a13589ab2084d282",
+      ".nanr": "67274727f8fe3796fb7ad1ef863a2d9c48a48042848720da5de02158252ff8b7"
+    },
+    "digiprison": {
+      ".ncer": "dac5ef69c75f3c76e4859fd7858be515c94c780408c1294e4fe56ff45722a3a6",
+      ".ncbr": "fe56dd788547d7f4af492680d672046c749ed313238f227a4a1c89f23f7759cb",
+      ".nclr": "dd33b7ae09e69ef159fbdda271527e635a3430199bea10f63162c965216e1b3f",
+      ".nanr": "a217d2b16fd74fc748dddd51cd52d30e3d59893eecc6f796bc75295a8e380b4f"
+    },
+    "decoy": {
+      ".ncer": "da4e8175327a48a24d2e6427ca51aaa2eca39f9374a1ec117a48e25861f3ac5c",
+      ".ncbr": "22b4da42190888cfbf57c024de6031196cda47839b0d5a0c7d0fb37beab4ef46",
+      ".nclr": "66623ab1aa6abec498c9528c5bac228b8cfcc3d732da42a1555a4cae5f2bb259",
+      ".nanr": "59d9630e653e666870231fd430700f8139270d162191c907702ba16bc2ae93b7"
+    },
+    "decoy2": {
+      ".ncer": "da1db581a5e8a7edaa96a0698f3f9d3fedec4b0a2a263990c8746d875eac5be3",
+      ".ncbr": "cf0c5a62f9dc1cee09fb3eaf33132fbcc18e584a03b3db2125371ed9e724e91a",
+      ".nclr": "cd6d3d8a338cb253874a139b4ec721ebd931a282f15452e9a1a01353216541ee",
+      ".nanr": "59d9630e653e666870231fd430700f8139270d162191c907702ba16bc2ae93b7"
+    },
+    "digilight": {
+      ".ncer": "e2c3a9bef8a6d2e1829b313ec14d88c2e458dd309ad2898a89d4d5c2b6372fa5",
+      ".ncbr": "dd4dd560f9144989e471aed8da294c8922bbdbee4aebe02ef0b4855bd698961f",
+      ".nclr": "b0d8bc3329b4371891168f44916b982944591be92a8cbde3f9206ce52eb99ed7",
+      ".nanr": "e66cc37e21cde696e34302c05c9103d3f433b402149f5b5cb43c1dc82244787e"
+    },
+    "digilight2": {
+      ".ncer": "e2c3a9bef8a6d2e1829b313ec14d88c2e458dd309ad2898a89d4d5c2b6372fa5",
+      ".ncbr": "1fe083c2faa9b8f9f59957f1b0b5cd1b38447696cdccccfd1a705a677b3da365",
+      ".nclr": "93236ba51845b5b5bf3858a4eafda4eccac30c9ff0cd4ab5f74bc88e0bc643c6",
+      ".nanr": "e66cc37e21cde696e34302c05c9103d3f433b402149f5b5cb43c1dc82244787e"
+    },
+    "niku_nomal": {
+      ".ncer": "72716f4d9777f2b332bd468e91ec2731006447252fec309ee6c72502938e228a",
+      ".ncbr": "f2370bcfa2f88f48e396f1ecc5c83da05ccde0a587523534639d49b9f198123c",
+      ".nclr": "0487ec8621b24223c68d4d0ba0b65d4feff6b49fb833e340fedc265ac26ff840",
+      ".nanr": "665b1e8cb368eeeaf8cc4a7f97c6cdd8e3d7d37f91ebbb06066beab384e595d6"
+    },
+    "niku_big": {
+      ".ncer": "5b92f93a9834e97ae72897b914b49e2ce057650040a103c0ec8789fc3b798d7c",
+      ".ncbr": "4b22b99cc17a5245ca7be6811b6f5fcb96597b8521a2b81f5f1fe6ad498fb0c8",
+      ".nclr": "0487ec8621b24223c68d4d0ba0b65d4feff6b49fb833e340fedc265ac26ff840",
+      ".nanr": "665b1e8cb368eeeaf8cc4a7f97c6cdd8e3d7d37f91ebbb06066beab384e595d6"
+    },
+    "niku_poison": {
+      ".ncer": "72716f4d9777f2b332bd468e91ec2731006447252fec309ee6c72502938e228a",
+      ".ncbr": "8c875b7b1bec2e9ee9a1adf4fe87410108835131f0877d9f821f10a59f0a4db3",
+      ".nclr": "0487ec8621b24223c68d4d0ba0b65d4feff6b49fb833e340fedc265ac26ff840",
+      ".nanr": "665b1e8cb368eeeaf8cc4a7f97c6cdd8e3d7d37f91ebbb06066beab384e595d6"
+    },
+    "niku_stun": {
+      ".ncer": "11ec0082cb84819037e1310b54ebc6d759f1d06b6b149c1d18be33b24e756d3a",
+      ".ncbr": "556d8daa14ea55f9cf465cb567bdf41df4c0c07fa2ad5b15b1ee01586bb20e68",
+      ".nclr": "4471bf96535521624b97a15c4f5b4c5ef62a69c3dd4f3d703094211d6c13fc93",
+      ".nanr": "665b1e8cb368eeeaf8cc4a7f97c6cdd8e3d7d37f91ebbb06066beab384e595d6"
+    },
+    "niku_sleep": {
+      ".ncer": "11ec0082cb84819037e1310b54ebc6d759f1d06b6b149c1d18be33b24e756d3a",
+      ".ncbr": "63a870de834ccfa578cccaf35bf12a96a67e25b40e5c68721fc1efcf374331e3",
+      ".nclr": "4471bf96535521624b97a15c4f5b4c5ef62a69c3dd4f3d703094211d6c13fc93",
+      ".nanr": "665b1e8cb368eeeaf8cc4a7f97c6cdd8e3d7d37f91ebbb06066beab384e595d6"
+    }
+  },
+  "policy": "Floor display uses sequence0. Item/resource names identify variants. Activation/explosion sequences not wired."
+}

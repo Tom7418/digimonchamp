@@ -18,6 +18,7 @@
     }
   })();
   // 온라인·오프라인 시간에 같은 엔진 배율을 쓴다(현실10초 = 게임10분, 사용자 지정).
+  const huntEquipmentArt=window.createHuntEquipmentRenderer();
   const MINUTES_PER_SECOND = C.MINUTES_PER_SECOND;
   const pad = (n) => String(n).padStart(2, '0');
   const clamp = (n, a = 0, b = 100) => Math.min(b, Math.max(a, n));
@@ -2035,7 +2036,7 @@
       }
       // 특수 고기·미끼 장난감·라이트: 디지몬을 끌어들인다. 장난감은 스스로 걸어 다닌다
       const a = Math.random() * Math.PI * 2;
-      hunt.baits.push({ x: p.x, y: p.y, range: gear.range, left: gear.seconds, kind: gear.kind, effect: gear.effect, name: gear.name,
+      hunt.baits.push({ x: p.x, y: p.y, range: gear.range, left: gear.seconds, gearId:gear.id, kind: gear.kind, effect: gear.effect, name: gear.name,
         vx: gear.speed ? Math.cos(a) * gear.speed : 0, vy: gear.speed ? Math.sin(a) * gear.speed * 0.6 : 0 });
       return huntNote(`${gear.name}을(를) 놓았다.`);
     }
@@ -2528,15 +2529,7 @@
     ctx.strokeRect(AREA.x0, AREA.y0, AREA.x1 - AREA.x0, AREA.y1 - AREA.y0);
     ctx.setLineDash([]);
     for (const t of hunt.traps) {
-      // 마인·함정 (원작 그림을 넣기 전의 임시 표시)
-      const mine = t.g.kind === 'mine';
-      ctx.fillStyle = mine ? '#5b2a2a' : '#2a4a5b';
-      ctx.strokeStyle = mine ? '#ff8a6a' : '#8fe0ff';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.ellipse(t.x, t.y, mine ? 12 : t.g.range, mine ? 7 : t.g.range * 0.5, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      huntEquipmentArt.draw(ctx,t,dt);
     }
     for (const l of hunt.wires) {
       ctx.strokeStyle = !l.g ? '#d8dde0' : l.g.sticky ? '#e58bd8' : l.g.power ? '#ffe36a' : '#d8dde0';
@@ -2549,21 +2542,7 @@
       for (const p of [l.a, l.b]) ctx.fillRect(p.x - 3, p.y - 8, 6, 12);
     }
     for (const b of hunt.baits) {
-      const im = itemImages.meat, k = b.big ? 1.5 : 1;
-      if (b.kind === 'toy' || b.kind === 'light') {
-        // 장난감·라이트 (원작 그림을 넣기 전의 임시 표시)
-        ctx.fillStyle = b.kind === 'light' ? (b.name.startsWith('블루') ? '#8fd0ff' : '#ffe36a') : '#ff9a3c';
-        ctx.globalAlpha = b.kind === 'light' ? 0.35 : 1;
-        ctx.beginPath();
-        ctx.arc(b.x, b.y - 12, b.kind === 'light' ? 34 : 11, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        if (b.kind === 'light') { ctx.beginPath(); ctx.arc(b.x, b.y - 12, 8, 0, Math.PI * 2); ctx.fill(); }
-      } else if (im?.complete && im.naturalWidth) {
-        if (b.effect) ctx.filter = b.effect === '독' ? 'hue-rotate(250deg)' : 'hue-rotate(40deg) saturate(2)';
-        ctx.drawImage(im, b.x - 32 * k, b.y - 50 * k, 64 * k, 70 * k);
-        ctx.filter = 'none';
-      }
+      huntEquipmentArt.draw(ctx,b,dt);
     }
     const order = [...hunt.wilds].sort((a, b) => a.y - b.y);
     for (const w of order) {

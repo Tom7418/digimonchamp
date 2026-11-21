@@ -807,3 +807,9 @@
 - 원본 overlay18 0x210F55C의 +0x210은 NANR시작번호, 큰 고기36·케이크41이다. +0x20C의149·150은 객체 상태번호이며 파일번호가 아니다(0x2043530 상태전환 비교/저장). 이전 GPT메모의 파일번호 추정 정정.
 - common/e001_ikusei NANR36~39→셀170~173,41~44→176~179. 0x210F4E0가 남은양 사분위에 따라+0..3선택. docs/gift-food-audit.json에 원본해시와 셀 대응 기록.
 - 웹표시는원점(-32,-48)64×56틀을2배로 출력한다. 기존 일반고기/먹이효과·양·저장형식 유지. gift표시는 kind=meat일때만 적용해 썩은고기는기존그림을쓴다.
+
+
+## 사냥 설치·유인 장비 원본 그림 (2026-11-21)
+- common/e002_hunt_smallmine/hugemine, digicach/digiprison, decoy/decoy2, digilight/digilight2, niku_nomal/big/poison/stun/sleep13종을 변환했다. 파일명과 그림에 따른장비대응이며 원본 장비상태 dispatch전체를 검증한 것은 아니다.
+- NCER/OAM의 모든셀 공유원점을기록해 발동그림이큰시트도 설치물이뛰지않는다. 바닥그림1배는기존야생스프라이트1배와맞춘웹판정책. 원본NANR0번의셀/유지시간/반복을사용한다.
+- 설치물/유인물만변경. 폭탄/마인폭발·포획발동·먹이감소·소멸시퀀스는 후속. trap2도전용digiprison을사용한다. 프레임전체와해시는 docs/hunt-equipment-art-audit.json, tools/extract_hunt_equipment.py.
