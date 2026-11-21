@@ -20,7 +20,7 @@ import { seeded } from '../src/core/rng';
 import { DEX_ORDER, dexEntries, dexCount } from '../src/core/dex';
 import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent, rollMorningMail } from '../src/core/events';
 import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage, HUNT_ITEM_SLOTS, huntItems, toggleHuntItem } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, shotCooldown, useGear, gearCount, BAITS, GEARS, gearOf, itemResist, itemDamage, effectLands, magnetSeconds, attracted, HUNT_ITEM_SLOTS, huntItems, toggleHuntItem } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
 import { discardFloorFood, ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -798,26 +798,67 @@ describe('원본 속성·종족', () => {
 });
 
 describe('사냥 장비', () => {
-  it('샷 12종: 원작 이름·위력, 수면·마비는 더 오래 멈춘다', () => {
+  it('샷 12종: 원작 이름·위력, 원본 발사 간격(보통 0.5초·연사 5프레임·산탄 1초)', () => {
     expect(SHOTS.map((s) => s.name)).toEqual(['핸드 건α', '핸드 건β', '래피드 건α', '래피드 건β', '슬립 라이플α', '슬립 라이플β', '스턴 라이플α', '스턴 라이플β', '샷 건α', '샷 건β', '스턴 샷α', '스턴 샷β']);
     expect(shotOf('hand2')!.power).toBe(20);
-    expect(shotStun(shotOf('sleep1')!)).toBeGreaterThan(shotStun(shotOf('stun1')!));
-    expect(shotStun(shotOf('stun1')!)).toBeGreaterThan(shotStun(shotOf('hand1')!));
+    expect(shotStun(shotOf('hand2')!)).toBeGreaterThan(shotStun(shotOf('hand1')!));
+    expect(shotCooldown(shotOf('hand1')!)).toBe(0.5);
+    expect(shotCooldown(shotOf('sleep1')!)).toBe(0.5);
+    expect(shotCooldown(shotOf('rapid1')!)).toBeCloseTo(5 / 60);
+    expect(shotCooldown(shotOf('shotgun2')!)).toBe(1);
     expect(shotDamage(shotOf('hand1')!, 3)).toBe(0);
     expect(shotDamage(shotOf('hand2')!, 3)).toBe(1);
     expect(shotDamage(shotOf('hand2')!, 1)).toBe(0); // 샷만으로는 잡히지 않는다
-    expect(BAITS[1].range).toBe(BAITS[0].range * 2);
+    expect(BAITS.map((b) => b.range)).toEqual([128, 256]); // 원본 고기 표 +4
   });
-  it('나머지 장비 19종: 원작 이름·길이·위력, 위력 20당 HP 1이고 HP 1은 남긴다', () => {
+  it('나머지 장비 19종: 원작 이름·길이·위력', () => {
     expect(GEARS.length).toBe(19);
     expect(gearOf('spark2')).toMatchObject({ name: '스파크 와이어β', length: 48, power: 20 });
     expect(gearOf('mine2')!.power).toBe(70);
     expect(gearOf('light1')!.nightOnly).toBe(true);
-    expect(gearDamage(40, 5)).toBe(2);
-    expect(gearDamage(70, 5)).toBe(3);
-    expect(gearDamage(70, 2)).toBe(1);
-    expect(gearDamage(10, 5)).toBe(0);
     expect(shopItems({ ...freshSave(0), bits: 99999, titles: rankUp(2) }).some((i) => i.id === 'gear:bomb1')).toBe(true);
+  });
+  it('아이템 내성 등급: 종 표 +118~+129 (원본 overlay9_0 0x2112618)', () => {
+    // 문몬 +118~ = 3,2,2,2,2,1,2,1,3,2,1,3
+    expect(itemResist('문몬', 'bomb')).toBe(2);
+    expect(itemResist('문몬', 'sleep')).toBe(1);
+    expect(itemResist('문몬', 'magnet')).toBe(3);
+    expect(itemResist('발키리몬', 'bomb')).toBe(1); // 원본 0은 1과 같이 첫 칸
+  });
+  it('폭탄·마인·스파크 대미지는 HP 최대치의 %, 등급이 높을수록 덜 받는다 (원본 표)', () => {
+    const lvl1 = '즈루몬'; // 모든 내성 1
+    expect(itemDamage(lvl1, 'bomb1', 5)).toBe(2); // 40%
+    expect(itemDamage('문몬', 'bomb2', 5)).toBe(1); // 등급 2 → 20%
+    expect(itemDamage(lvl1, 'mine1', 10)).toBe(5);
+    expect(itemDamage(lvl1, 'mine2', 10)).toBe(7);
+    expect(itemDamage(lvl1, 'spark1', 10)).toBe(2);
+    expect(itemDamage(lvl1, 'spark2', 10)).toBe(2); // α·β 같은 값
+    expect(itemDamage(lvl1, 'hand1', 10)).toBe(0);
+    // 마비 내성 3이면 스파크 전격을 받지 않는다
+    const immune = Object.values(SPECIES).find((sp) => originalSpecies(sp.id)!.itemResist[9] === 3)!;
+    expect(itemDamage(immune.id, 'spark1', 10)).toBe(0);
+  });
+  it('수면·마비: 등급 1 반드시, 2 반반, 3 안 걸림. 눈가리기 70%·마그넷 27초는 등급 1만', () => {
+    expect(effectLands('즈루몬', '수면', () => 0.99)).toBe(true);
+    expect(effectLands('문몬', '마비', () => 0.4)).toBe(true); // 등급 2
+    expect(effectLands('문몬', '마비', () => 0.6)).toBe(false);
+    const sleep3 = Object.values(SPECIES).find((sp) => originalSpecies(sp.id)!.itemResist[7] === 3)!;
+    expect(effectLands(sleep3.id, '수면', () => 0)).toBe(false);
+    expect(effectLands('즈루몬', '눈가리기', () => 0.69)).toBe(true);
+    expect(effectLands('즈루몬', '눈가리기', () => 0.7)).toBe(false);
+    const flash3 = Object.values(SPECIES).find((sp) => originalSpecies(sp.id)!.itemResist[10] === 3)!;
+    expect(effectLands(flash3.id, '눈가리기', () => 0)).toBe(false); // 등급 3 → 0%
+    expect(magnetSeconds('즈루몬')).toBe(27);
+    expect(magnetSeconds('문몬')).toBe(0);
+  });
+  it('미끼·라이트·고기에 끌릴 확률 (원본 표)', () => {
+    expect(attracted('즈루몬', 'toy1', () => 0.59)).toBe(true);
+    expect(attracted('즈루몬', 'toy1', () => 0.6)).toBe(false);
+    expect(attracted('즈루몬', 'toy2', () => 0.99)).toBe(true);
+    expect(attracted('즈루몬', 'light2', () => 0)).toBe(false); // 블루 라이트는 등급 2만
+    expect(attracted('즈루몬', 'light1', () => 0)).toBe(true);
+    expect(attracted('즈루몬', 'bait1', () => 0.89)).toBe(true);
+    expect(attracted('즈루몬', 'bait1', () => 0.89, false)).toBe(false); // 배고프지 않으면 안 먹는다
   });
   it('장비는 쓸 때마다 줄고, 상점에서 묶음으로 산다. 예전 저장에는 빈 장비 칸이 생긴다', () => {
     const s = freshSave(0);

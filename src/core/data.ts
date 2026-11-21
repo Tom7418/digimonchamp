@@ -45,11 +45,11 @@ function hash(s: string) {
 }
 
 /** 원본 표의 속성·종족 (이름 → 값) */
-const ORIGINAL: Record<string, { attr: SpeciesAttr; family: string; stage: number; size: number; life: number; stats: number[]; speed: number; awake: number[]; sleep: number[]; kind: number; ropeSize: number; ropePower: number; resist: number[]; era: number; price: number }> = {};
+const ORIGINAL: Record<string, { attr: SpeciesAttr; family: string; stage: number; size: number; life: number; stats: number[]; speed: number; awake: number[]; sleep: number[]; kind: number; ropeSize: number; ropePower: number; resist: number[]; era: number; price: number; itemResist: number[] }> = {};
 for (const line of speciesRaw.split(/\r?\n/)) {
   if (!line.trim() || line.startsWith('#')) continue;
-  const [name, attr, family, stage, , size, life, stats, speed, awake, sleep, kind, ropeSize, ropePower, resist, era, price] = line.split('|');
-  ORIGINAL[name] = { attr: attr as SpeciesAttr, family, stage: Number(stage), size: Number(size), life: Number(life), stats: stats.split(',').map(Number), speed: Number(speed), awake: awake.split(',').map(Number), sleep: sleep.split(',').map(Number), kind: Number(kind), ropeSize: Number(ropeSize ?? 0), ropePower: Number(ropePower ?? 0), resist: (resist ?? '0,0,0,0,0').split(',').map(Number), era: Number(era ?? 0), price: Number(price ?? 0) };
+  const [name, attr, family, stage, , size, life, stats, speed, awake, sleep, kind, ropeSize, ropePower, resist, era, price, itemResist] = line.split('|');
+  ORIGINAL[name] = { attr: attr as SpeciesAttr, family, stage: Number(stage), size: Number(size), life: Number(life), stats: stats.split(',').map(Number), speed: Number(speed), awake: awake.split(',').map(Number), sleep: sleep.split(',').map(Number), kind: Number(kind), ropeSize: Number(ropeSize ?? 0), ropePower: Number(ropePower ?? 0), resist: (resist ?? '0,0,0,0,0').split(',').map(Number), era: Number(era ?? 0), price: Number(price ?? 0), itemResist: (itemResist ?? '').split(',').filter(Boolean).map(Number) };
 }
 export const originalSpecies = (id: string) => ORIGINAL[id];
 /** 원본에서 프리·없음인 종의 속성을 디지몬 API 값으로 보완한 표 (src/data/species-api.txt) */

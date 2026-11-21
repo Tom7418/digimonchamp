@@ -2015,14 +2015,37 @@
   const wireGear = () => (hunt && hunt.tool === 'gear' ? [C.gearOf($('#gear-select').value)].find((x) => x && x.kind === 'wire') : null);
   const wireMode = () => hunt.tool === 'wire' || !!wireGear();
   const huntIsNight = () => C.dateOf(save.clock).hour >= C.HUNT_NIGHT_HOUR;
-  // 효과(수면·마비·눈가리기·독)를 디지몬에게 건다
+  // 미끼·라이트·고기에 끌리는지 디지몬마다 판정한다 (원본 확률). 끌리지 않으면 미끼·라이트는 그 미끼를 무시하고,
+  // 고기는 1초마다 다시 판정한다
+  function lureTakes(w, b, dt) {
+    if (!b.uid) b.uid = hunt.lureSeq = (hunt.lureSeq || 0) + 1;
+    const memo = (w.lureMemo ??= {});
+    const m = memo[b.uid];
+    if (m === true) return true;
+    const isMeat = !b.kind || b.kind === 'bait';
+    if (m === false && !isMeat) return false;
+    if (typeof m === 'number' && (memo[b.uid] = m - dt) > 0) return false;
+    const ok = C.attracted(w.id, b.gearId || (b.big ? 'bait2' : 'bait1'));
+    memo[b.uid] = ok ? true : isMeat ? 1 : false;
+    return ok;
+  }
+  // 효과(수면·마비·눈가리기·독)를 디지몬에게 건다. 걸리는지는 그 종의 아이템 내성 등급(원본)으로 정한다
   function applyEffect(w, effect) {
-    if (effect === '독') w.poison = C.POISON_TICK;
-    else if (effect) {
-      w.stun = Math.max(w.stun || 0, C.EFFECT_SECONDS[effect]);
-      w.stunKind = effect;
-      w.flee = 0;
-    }
+    if (!effect || !C.effectLands(w.id, effect)) return false;
+    if (effect === '독') { w.poisonWait = C.POISON_DELAY; w.poisonLeft = 0; return true; }
+    w.stun = Math.max(w.stun || 0, effect === '눈가리기' ? C.flashSeconds() : C.EFFECT_SECONDS[effect]);
+    w.stunKind = effect;
+    w.flee = 0;
+    return true;
+  }
+  // 아이템 대미지(HP 최대치의 %, 원본). 0이 되면 기절한다
+  function itemHit(w, id) {
+    const dmg = C.itemDamage(w.id, id, w.max);
+    if (!(dmg > 0)) return false;
+    w.hp = Math.max(0, w.hp - dmg);
+    w.flash = 0.4;
+    if (w.hp <= 0 && !w.ko) faint(w);
+    return true;
   }
   // 폭발: 범위 안 디지몬에게 대미지와 효과
   function blast(x, y, g) {
@@ -2034,8 +2057,8 @@
     }
     const hits = hunt.wilds.filter((w) => !w.gone && Math.hypot(x - w.x, y - (w.y - 15)) < g.range);
     for (const w of hits) {
-      w.hp -= C.gearDamage(g.power || 0, w.hp);
-      w.flash = 0.4;
+      itemHit(w, g.id);
+      if (w.ko) continue;
       applyEffect(w, g.effect);
       if (!g.effect) w.stun = Math.max(w.stun || 0, 1.5);
     }
@@ -2092,14 +2115,16 @@
     let hits = hunt.wilds.filter((w) => !w.gone && (shot.spread?Math.hypot(p.x-w.x,p.y-(w.y-15))<reach:wildSpriteHit(w,p)));
     if (!shot.spread) hits = hits.sort((a, b) => Math.hypot(p.x - a.x, p.y - a.y) - Math.hypot(p.x - b.x, p.y - b.y)).slice(0, 1);
     if (!hits.length) return huntNote('빗나갔다!');
+    let landed = 0;
     for (const w of hits) {
       w.stun = Math.max(w.stun || 0, C.shotStun(shot));
-      w.stunKind = shot.effect || '';
+      w.stunKind = '';
       w.flee = 0;
+      if (applyEffect(w, shot.effect)) landed += 1;
       w.hp -= C.shotDamage(shot, w.hp);
       w.flash = 0.4;
     }
-    huntNote(`${shot.name} 명중! ${hits.map((w) => C.getSpecies(w.id).name).join(', ')}${shot.effect ? ` ${shot.effect}` : ' 멈춤'}`);
+    huntNote(`${shot.name} 명중! ${hits.map((w) => C.getSpecies(w.id).name).join(', ')}${shot.effect ? (landed ? ` ${shot.effect}` : ` (${shot.effect}에 걸리지 않았다)`) : ' 멈춤'}`);
   }
 
   // 선분 교차 (와이어 충돌)
@@ -2180,13 +2205,26 @@
         }
         continue;
       }
-      if (w.poison > 0) {
-        // 독: 일정 시간마다 HP 1, HP 1에서 멈춘다
-        w.poison -= dt;
-        if (w.poison <= 0) {
-          if (w.hp > 1) { w.hp -= 1; w.flash = 0.3; w.poison = C.POISON_TICK; }
-          else w.poison = 0;
+      if (w.poisonWait > 0) {
+        // 독 고기를 먹고 4초 뒤 독이 돌기 시작한다 (원본)
+        w.poisonWait -= dt;
+        if (w.poisonWait <= 0) { w.poisonWait = 0; w.poisonLeft = C.poisonSeconds(); w.poisonTick = C.POISON_TICK; }
+      }
+      if (w.poisonLeft > 0) {
+        // 독: 3초마다 HP 최대치의 3% (원본). 0이 되면 기절한다
+        w.poisonLeft -= dt;
+        w.poisonTick -= dt;
+        if (w.poisonTick <= 0) {
+          w.poisonTick += C.POISON_TICK;
+          w.hp = Math.max(0, w.hp - (w.max * C.POISON_TICK_PERCENT) / 100);
+          w.flash = 0.3;
+          if (w.hp <= 0) { faint(w); continue; }
         }
+      }
+      if (w.paraWait > 0) {
+        // 마비 고기: 먹고 2초 뒤 마비 (원본)
+        w.paraWait -= dt;
+        if (w.paraWait <= 0) { w.paraWait = 0; w.stun = Math.max(w.stun || 0, C.EFFECT_SECONDS['마비']); w.stunKind = '마비'; w.flee = 0; }
       }
       w.wireCd = Math.max(0, (w.wireCd || 0) - dt);
       if (w.stun > 0) {
@@ -2238,7 +2276,7 @@
         }
       }
       if (w.runAway > 0) w.runAway -= dt;
-      const lure = !(w.flee > 0) && hunt.baits.find((b) => Math.hypot(b.x - w.x, b.y - w.y) < b.range);
+      const lure = !(w.flee > 0) && hunt.baits.find((b) => Math.hypot(b.x - w.x, b.y - w.y) < b.range && lureTakes(w, b, dt));
       if (lure) {
         // 고기 냄새를 따라간다. 다 오면 그 자리에 머문다
         const dist = Math.hypot(lure.x - w.x, lure.y - w.y);
@@ -2247,9 +2285,10 @@
         w.turn = 1;
         // 독·마비 고기는 다가와 먹은 디지몬에게 효과를 건다 (한 마리가 먹으면 사라진다)
         if (dist <= 14 && lure.effect && huntGroundLine(w,lure)) {
-          applyEffect(w, lure.effect);
+          // 독은 내성 등급에 따른 확률(원본), 마비는 등급 3만 버틴다(원본). 효과는 조금 뒤에 나타난다
+          const took = lure.effect === '독' ? applyEffect(w, '독') : C.itemResist(w.id, 'paralysis') < 3 && (w.paraWait = C.PARALYSIS_MEAT_DELAY);
           lure.left = 0;
-          huntNote(`${C.getSpecies(w.id).name}이(가) ${lure.name}를 먹었다! ${lure.effect}`);
+          huntNote(`${C.getSpecies(w.id).name}이(가) ${lure.name}를 먹었다!${took ? '' : ` (${lure.effect}에 걸리지 않았다)`}`);
         }
       } else if (w.flee > 0) {
         w.flee -= dt;
@@ -2272,9 +2311,11 @@
         w.vy = -w.vy;
         if (wire.g && !w.wireCd) {
           // 마그넷은 달라붙고, 스파크는 전격 대미지
-          w.wireCd = C.WIRE_COOLDOWN + (wire.g.sticky ? C.WIRE_STICK : 0);
-          if (wire.g.sticky) { w.stun = C.WIRE_STICK; w.stunKind = '달라붙음'; w.flee = 0; }
-          else if (wire.g.power) { w.hp -= C.gearDamage(Math.max(20, wire.g.power * 2), w.hp); w.flash = 0.4; w.stun = 1; w.stunKind = ''; }
+          // 원본: 마그넷은 내성 등급별 초만큼 달라붙고(등급 3은 튕김), 스파크는 HP 최대치의 %만큼 전격
+          const stick = wire.g.sticky ? C.magnetSeconds(w.id) : 0;
+          w.wireCd = C.WIRE_COOLDOWN + stick;
+          if (stick) { w.stun = stick; w.stunKind = '달라붙음'; w.flee = 0; }
+          else if (wire.g.power && itemHit(w, wire.g.id)) { if (w.ko) continue; w.stun = 1; w.stunKind = ''; }
         }
         continue;
       }

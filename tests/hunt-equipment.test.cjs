@@ -27,7 +27,7 @@ test('폭발은 원본36틱을 재생하고 정지·상태전환·마지막프�
 test('실제 폭발 이벤트는 원본 도트를 예약하고 기존 범위·피해를 한 번만 적용한다',()=>{
  const src=fs.readFileSync('web/game.js','utf8'),a=src.indexOf('  function blast('),b=src.indexOf('  // 체커 묶음:',a),events=[];
  const hunt={fx:[],wilds:[{x:10,y:15,hp:10},{x:500,y:500,hp:10}]};
- const c=vm.createContext({hunt,huntEquipmentArt:{duration:()=>.6},C:{gearDamage:()=>2},applyEffect:(...v)=>events.push(v),huntNote(){}});
+ const c=vm.createContext({hunt,huntEquipmentArt:{duration:()=>.6},C:{},itemHit:(w)=>{w.hp-=2;return true},applyEffect:(...v)=>events.push(v),huntNote(){}});
  vm.runInContext(src.slice(a,b),c);c.blast(10,0,{id:'mine1',name:'마인',power:50,range:70});
  assert.equal(hunt.fx.length,3);assert.equal(hunt.fx[0].artSequence,2);assert.equal(hunt.fx[0].left,.6);
  assert.equal(hunt.wilds[0].hp,8);assert.equal(hunt.wilds[1].hp,10);assert.equal(events.length,1);
