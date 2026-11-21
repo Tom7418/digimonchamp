@@ -9,7 +9,7 @@ import { battleSkills } from './battle-skills';
 import { STAGE_LABEL, getSpecies, originalSpecies } from './data';
 import type { SaveData, Stage } from './types';
 
-export const DEX_ORDER: readonly string[] = dexRaw.split('\n').filter((l) => l && !l.startsWith('#'));
+export const DEX_ORDER: readonly string[] = dexRaw.split(/\r?\n/).filter((l) => l && !l.startsWith('#'));
 export interface DexEntry {
   no: number;
   id: string;

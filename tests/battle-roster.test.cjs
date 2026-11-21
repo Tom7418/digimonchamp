@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 function setup(){
- const noop=()=>{},messages=[],ctx=vm.createContext({window:{createBattleEffects:()=>({})},battle:null,battleBackdrop:{preload:noop},spriteOf:()=>null,
+ const noop=()=>{},messages=[],ctx=vm.createContext({window:{createBattlePresentation:()=>({snapshot:()=>null}),createBattleEffects:()=>({})},battle:null,battleBackdrop:{preload:noop},spriteOf:()=>null,
   log:noop,render:noop,persist:noop,showModal:noop,toast:text=>messages.push(text),nameOf:d=>d.speciesId,$:()=>({classList:{add:noop}})});
  vm.runInContext(fs.readFileSync('web/core.js','utf8'),ctx);
  vm.runInContext(`const C=ChampCore;globalThis.save=C.freshSave(0);save.digimon=[1,2,3,4].map(uid=>C.newDigimon(uid,'코로몬'));globalThis.current=()=>save.digimon[0];`,ctx);

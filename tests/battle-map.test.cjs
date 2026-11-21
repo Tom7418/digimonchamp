@@ -23,7 +23,7 @@ test('실제 출전은 맵을 한 번 고르고 결과 화면까지 같은 맵�
  vm.runInContext(`let selections=0,battle;
   const C={...ChampCore,battleMapFor:(...args)=>{selections++;return ChampCore.battleMapFor(...args);}};
   const battleBackdrop=window.createBattleMapRenderer();
-  window.createBattleEffects=()=>({draw(){}});
+  window.createBattleEffects=()=>({draw(){}});window.createBattlePresentation=()=>({snapshot:()=>null});
   const members=()=>[C.newDigimon(1,'아구몬')],canFight=()=>true,nameOf=d=>d.speciesId;
   const log=()=>{},render=()=>{},persist=()=>{},toast=()=>{},showModal=(...args)=>{globalThis.modal=args;};
   const animations={movement:()=>({frame:0,flip:false}),sample:()=>0},SPRITE_BY_NAME={아구몬:'m201_agumon'};

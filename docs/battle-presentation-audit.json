@@ -1,0 +1,29 @@
+{
+  "arm9Sha256": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
+  "overlay19Sha256": "02ef4c126fd11bd5e2bea21202442bd48575b2afcd29c045f70036940ebde671",
+  "scripts": {
+    "0x2123ee0": 36,
+    "0x212416c": 325
+  },
+  "supportScript": "0x212456f",
+  "transitionFrames": {
+    "15": 311,
+    "18": 1,
+    "21": 8,
+    "30": 4,
+    "100": 1
+  },
+  "zoomIn": "1 + sqrt((i + 1) / frames)",
+  "zoomOut": "2 - sqrt((i + 1) / frames)",
+  "evidence": [
+    "overlay19 0x212429f..0x212434a / 0x212449e..0x2124530: zoom loops",
+    "0x21209ac: zoom setter; 0x21121a8 / 0x2112374: camera rendering",
+    "0x211ee78..0x211eea4: brightness = 1 - (zoom - 1) * 2/3",
+    "0x211fd80..0x211fd94: record byte +0x22 passed to script as fixed point argument"
+  ],
+  "limits": [
+    "Web camera anchoring and focus duration use viewport and NANR; original effect VM not fully ported.",
+    "Damage events are already resolved; web focus pauses subsequent engine ticks, not original hit timing.",
+    "Original speed-line sprites and camera pan trajectory not yet ported."
+  ]
+}

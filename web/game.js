@@ -1287,7 +1287,7 @@
     );
     battleBackdrop.preload(map);
     for(const u of state.units)spriteOf(u.speciesId,false); // 배경과 출전 그림을 함께 미리 읽는다.
-    battle = { setup, state, map, assetWait:0, acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
+    battle = { setup, state, map, assetWait:0, presentation:window.createBattlePresentation(), acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
     if(holderFoes)log(`${setup.title} 홀더 「${C.titleHolder(setup.match.id).name}」 등장`);
     log(`${setup.title} 출전: ${team.map(nameOf).join(', ')}`);
     showModal(
@@ -1309,6 +1309,8 @@
       (battleBackdrop.status(b.map)==='loading'||b.state.units.some(u=>{const a=spriteOf(u.speciesId,false);return a&&!a.image.complete;}))){
       b.assetWait=(b.assetWait??0)+dt;drawArena(0);return;
     }
+    // 강조 중에는 다음 전투 틱을 보류한다. 이미 발생한 피해/TP는 재계산하지 않는다.
+    if(b.presentation?.busy){b.presentation.tick(dt*2);drawArena(0);return;}
     if(b.done){
       b.effects.tick(dt);
       for(const [id,a] of b.actions){a.left-=dt*2;if(a.left<=0)b.actions.delete(id);}
@@ -1316,7 +1318,7 @@
     }
     b.effects.tick(dt);
     b.acc += dt * 2; // 화면에서는 2배속으로 진행
-    while (b.acc >= 0.1 && !b.state.over) {
+    while (b.acc >= 0.1 && !b.state.over && !b.presentation?.busy) {
       b.acc -= 0.1;
       const before=new Map(b.state.units.map(u=>[u.id,{x:u.x,y:u.y}]));
       const events=C.stepBattle(b.state, Math.random);
@@ -1333,6 +1335,7 @@
           const attackState=e.special?(e.skill?.animation??'attack1'):'attack4';
           const attackId=SPRITE_BY_NAME[C.getSpecies(attacker.speciesId).id];
           const attackDuration=animations.duration(attackId,attackState);
+          b.presentation?.add(e,b.state.units,attackDuration);
           if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:attackDuration,duration:attackDuration,state:attackState});
           const id=SPRITE_BY_NAME[C.getSpecies(target.speciesId).id];
           // 원본: 피해0 → 반응13(0x21189fc) → NANR34(0x2116b90).
@@ -1458,13 +1461,25 @@
     const ctx = el.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     const s = battle.state;
+    const focus=battle.presentation?.snapshot();
+    ctx.save();
+    if(focus){
+      const v=battleBackdrop.viewport;
+      const px=v.x+focus.x*v.scale,py=v.y+(focus.y-15)*v.scale;
+      // 원작 줌 값을 현재 경기장에 투영. 가장자리 시전자도 확대 중 화면 안에 유지한다.
+      const pan=focus.progress;
+      const tx=Math.max(el.width*(1-focus.zoom),Math.min(0,(el.width/2-px)*pan+px*(1-focus.zoom)));
+      const ty=Math.max(el.height*(1-focus.zoom),Math.min(0,(el.height/2-py)*pan+py*(1-focus.zoom)));
+      ctx.translate(tx,ty);ctx.scale(focus.zoom,focus.zoom);
+    }
     const backgroundReady=battleBackdrop.draw(ctx,battle.map,el.width,el.height);
+    if(focus){ctx.fillStyle=`rgba(0,0,0,${focus.dim})`;ctx.fillRect(0,0,el.width,el.height);}
     ctx.save();
     const viewport=battleBackdrop.viewport;
     ctx.translate(viewport.x,viewport.y);ctx.scale(viewport.scale,viewport.scale);
     // 아래쪽 개체를 나중에 그려 뒤쪽 디지몬이 앞쪽을 덮지 않게 한다.
     for (const u of [...s.units].sort((a,b)=>a.y-b.y||a.id-b.id)) {
-      if (!u.alive) ctx.globalAlpha = 0.3;
+      ctx.globalAlpha = !u.alive?0.3:focus&&u.id!==focus.from?1-focus.dim:1;
       const m=battle.done?{dx:0,dy:0}:battle.motion.get(u.id)||{dx:u.team===0?0.001:-0.001,dy:0};
       const spriteId=SPRITE_BY_NAME[C.getSpecies(u.speciesId).id];
       // 원본 반응12의 착지 후 자세(0x2116e38..0x2116e78).
@@ -1474,7 +1489,7 @@
       const pose=animations.movement(u,spriteId,m.dx,m.dy,dt,!u.alive||!!statusPose,statusPose);
       const action=battle.actions.get(u.id);
       // 피격 시 해당 종의 원본 셀을 원본 유지 시간으로 재생한다. 인위적 흔들림/점멸 없음.
-      const frame=!u.alive?animations.sample(spriteId,'ko',0):statusPose?pose.frame:action?animations.sample(spriteId,action.state,action.duration-action.left):pose.frame;
+      const frame=!u.alive?animations.sample(spriteId,'ko',0):statusPose?pose.frame:action?animations.sample(spriteId,action.state,focus?.from===u.id?Math.max(0,focus.age-focus.transition):action.duration-action.left):pose.frame;
       const art=spriteOf(u.speciesId,false),scale=battleBackdrop.spriteScale(art);
       ctx.fillStyle='#081c3044';ctx.beginPath();ctx.ellipse(u.x,u.y+14,Math.max(10,(art?.body||24)*scale*.4),5,0,0,Math.PI*2);ctx.fill();
       body(ctx,u.speciesId,false,u.x,u.y+14,scale,frame,pose.flip);
@@ -1502,6 +1517,12 @@
       ctx.fillText(f.text, x, y, f.skill?220:480);
     }
     ctx.restore();
+    ctx.restore();
+    if(focus){
+      ctx.fillStyle='#071a2ddd';ctx.fillRect(0,0,el.width,30);
+      ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff0b5';
+      ctx.fillText(focus.name,el.width/2,21,el.width-20);
+    }
     if(!backgroundReady){
       ctx.fillStyle='#e1f5ff';ctx.font='12px sans-serif';ctx.textAlign='center';
       ctx.fillText(battleBackdrop.status(battle.map)==='failed'?'배경을 불러오지 못했습니다.':'경기장을 불러오는 중…',el.width/2,18);
