@@ -1477,6 +1477,7 @@
     if (!el || !battle) return;
     const ctx = el.getContext('2d');
     ctx.imageSmoothingEnabled = false;
+    window.HDText?.begin(ctx);
     const s = battle.state;
     const units=s.units.map(u=>(battle.effects.visualUnit?.(u)||u));
     const focus=battle.presentation?.snapshot();
@@ -1569,6 +1570,7 @@
       )
       .join('');
     if(battle.hpHtml!==hpHtml){$('#battle-hp').innerHTML=hpHtml;battle.hpHtml=hpHtml;}
+    window.HDText?.end(ctx);
   }
 
   // ---------- 그리기 (캔버스) ----------
@@ -1635,6 +1637,7 @@
   portrait.imageSmoothingEnabled = false;
 
   function drawFarm(t, dt) {
+    window.HDText?.begin(ctx);
     const animDt = !titleOpen && !battle && !hunt && !paused && !mailOpen && !dayEnding && !board.editing && !window.evolutionScene?.busy ? dt : 0;
     // 로스트·놓아주기·새 게임으로 사라진 개체의 먹이 예약을 해제한다.
     for (const uid of feeding.keys()) if (!digi(uid)) feeding.delete(uid);
@@ -1772,6 +1775,7 @@
       ctx.textAlign = 'center';
       ctx.fillText('일시 정지', 480, 280);
     }
+    window.HDText?.end(ctx);
   }
   // 오른쪽 아래 작은 지도: 사육장 전체와 지금 보는 범위
   function drawMinimap() {
@@ -2547,6 +2551,7 @@
   }
 
   function drawHunt(t, dt) {
+    window.HDText?.begin(ctx);
     huntScroll(dt);
     const [c1, c2] = FIELD_LOOK[hunt.field.id] || ['#7fb069', '#6a9a57'];
     const map = hunt.map;
@@ -2693,6 +2698,7 @@
       ctx.fillStyle = '#fff';
       ctx.fillText(n.text, 26, 520 - i * 26 - 2);
     });
+    window.HDText?.end(ctx);
   }
 
   // ---------- 시작 ----------
