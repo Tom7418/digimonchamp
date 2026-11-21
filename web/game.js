@@ -594,7 +594,7 @@
       ctx.stroke();
     }
   }
-  const itemImages = Object.fromEntries(['meat', 'meat_1', 'meat_2', 'meat_3', 'pill', 'pill_1', 'pill_2', 'pill_3', 'rotten'].map((kind) => {
+  const itemImages = Object.fromEntries(['meat', 'meat_1', 'meat_2', 'meat_3', 'pill', 'pill_1', 'pill_2', 'pill_3', 'rotten', ...['big','cake'].flatMap(k=>[0,1,2,3].map(n=>`${k}_${n}`))].map((kind) => {
     const image = new Image();
     image.src = `assets/items/${kind}.png`;
     return [kind, image];
@@ -602,18 +602,14 @@
   function drawFood(f) {
     const full = 100 * C.foodUnits(f);
     const stage = Math.min(3, Math.floor((full - (f.remaining ?? full)) / (full / 4)));
-    // 케이크: 원본 그림을 아직 못 찾아 임시 도형으로 그린다 (먹는 양·효과는 고기와 같다)
-    if (f.gift === 'cake' && f.kind === 'meat') {
-      const h = 22 * (1 - stage / 4) + 6;
-      ctx.fillStyle = '#f4e3c8'; ctx.fillRect(f.x - 18, f.y - 8 - h, 36, h);
-      ctx.fillStyle = '#f08aa6'; ctx.fillRect(f.x - 18, f.y - 8 - h, 36, 6);
-      ctx.strokeStyle = '#7a4b3a'; ctx.lineWidth = 2; ctx.strokeRect(f.x - 18, f.y - 8 - h, 36, h);
-      if (stage === 0) { ctx.fillStyle = '#d8283c'; ctx.beginPath(); ctx.arc(f.x, f.y - 13 - h, 4, 0, 7); ctx.fill(); }
+    // 원본 사육 NANR: 큰 고기36~39, 케이크41~44. 같은 원점으로 먹는 단계만 바꾼다.
+    if(f.kind==='meat'&&['big','cake'].includes(f.gift)){
+      const image=itemImages[`${f.gift}_${stage}`];
+      if(image?.complete&&image.naturalWidth)ctx.drawImage(image,f.x-64,f.y-96,128,112);
       return;
     }
     const image = itemImages[(f.kind === 'meat' || f.kind === 'pill') && stage ? `${f.kind}_${stage}` : f.kind];
-    // 큰 고기(원본 먹이 종류 2, 그림 크기 0x20)는 일반 고기의 두 배 양이라 크게 그린다
-    const k = f.gift === 'big' && f.kind === 'meat' ? 1.4 : 1;
+    const k = 1;
     if (image?.complete && image.naturalWidth) ctx.drawImage(image, f.x - 32 * k, f.y - 60 * k - (k - 1) * -10, 64 * k, 70 * k);
   }
   // 선택형 도구: 고기·알약(프로틴)은 바닥에 놓아 먹이고, 약(주사기)·상처약은 디지몬을 터치해 쓴다.

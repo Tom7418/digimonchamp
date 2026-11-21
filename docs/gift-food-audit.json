@@ -1,0 +1,34 @@
+{
+  "source": "common/e001_ikusei",
+  "sequences": {
+    "big": [
+      36,
+      37,
+      38,
+      39
+    ],
+    "cake": [
+      41,
+      42,
+      43,
+      44
+    ]
+  },
+  "cells": {
+    "170": "big_0",
+    "171": "big_1",
+    "172": "big_2",
+    "173": "big_3",
+    "176": "cake_0",
+    "177": "cake_1",
+    "178": "cake_2",
+    "179": "cake_3"
+  },
+  "evidence": "overlay18 0x210f55c selects sequence36/41; 0x210f4e0 selects +0..3 by remaining quarters; 0x95/0x96 are object state IDs, not ROM file IDs",
+  "sha256": {
+    ".ncer": "84abeeb742300573cadb9bf5d9bff17dea536f8928b83ed6c5225962bb032f7a",
+    ".ncbr": "bb5715cd31ff126464f572dc332cc47bb2d40eb568be2049eeac506a7fc9359b",
+    ".nclr": "11e1dfb8a4e09437fbf26bd078f7006d44da156e1862140ced93a5f7680a11f3",
+    ".nanr": "898843f4e7e3f1656584844614449463886ac321e37c4165ce9916a66f017ba1"
+  }
+}
