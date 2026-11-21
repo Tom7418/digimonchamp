@@ -15,3 +15,12 @@ test('사용자 확인 크기: 기본 케이지 4칸, 미니 운동장 3칸',()=
 test('5행 격자는 3/4행 왼쪽1칸, 5행 왼쪽2칸 경계로 판정한다',()=>{for(let r=0;r<5;r++){const left=-Math.floor(r/2);assert.ok(L.valid([],cage('a','clinic',left,r)));assert.ok(L.valid([],cage('a','clinic',left+4+(r%2===0?1:0),r)));assert.equal(L.valid([],cage('a','clinic',left-1,r)),false);assert.equal(L.valid([],cage('a','clinic',left+5+(r%2===0?1:0),r)),false);}});
 
 test('홀수번째 줄은 여섯 칸, 짝수번째 줄은 다섯 칸이다',()=>{for(let r=0;r<5;r++){let n=0;for(let q=-5;q<8;q++)if(L.valid([],cage('x','clinic',q,r)))n++;assert.equal(n,r%2===0?6:5);}});
+
+
+test('랭크별 열린칸만 설치 가능하며 승급하면 실제 설치 범위가 늘어난다',()=>{
+ const old=L.space;try{
+  for(const n of [14,16,18,20,22,24,26,28]){L.space=n;assert.equal(L.boardCells().filter(([q,r])=>L.available(q,r)).length,n);}
+  L.space=14;const p=L.boardCells()[15];assert.equal(L.valid([],cage('a','clinic',...p)),false);
+  L.space=16;assert.equal(L.valid([],cage('a','clinic',...p)),true);
+ }finally{L.space=old;}
+});

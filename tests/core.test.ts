@@ -2163,3 +2163,11 @@ describe('내 디지몬 내성 범위·첫 값·진화 이월 (원본 arm9 0x020
     }
   });
 });
+
+
+describe('케이지 공간 최종28칸과 원본 정원',()=>{
+ it('챔프와마스터도 최대28칸이며 미니양호실2·양호실6을쓴다',()=>{
+  const save=freshSave(0);save.champion=true;expect(cageSpaceOf(save)).toBe(28);
+  expect(getCage('미니 양호실').capacity).toBe(2);expect(getCage('양호실').capacity).toBe(6);
+ });
+});

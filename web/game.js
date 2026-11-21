@@ -29,9 +29,9 @@
   const SPRITE_BY_NAME = Object.fromEntries(window.SPRITES.filter((m) => m.name).map((m) => [m.name, m.id]));
   const FAMILY_COLOR = { 용: '#d9774b', 짐승: '#c9a35b', 물: '#5b9fd9', 새: '#8fc7e8', 벌레풀: '#7fb35a', 기계: '#9aa3ad', 성: '#f0dc8a', 암흑: '#7a5a9a' };
   const START_LAYOUT = [
-    { id: 'start-basic', kind: 'free', q: 1, r: 2, rotation: 0 },
-    { id: 'start-clinic', kind: 'clinic', q: 0, r: 0, rotation: 0 },
-    { id: 'start-field', kind: 'field', q: 2, r: 1, rotation: 0 },
+    { id: 'start-basic', kind: 'free', q: 0, r: 0, rotation: 0 },
+    { id: 'start-clinic', kind: 'clinic', q: 2, r: 0, rotation: 0 },
+    { id: 'start-field', kind: 'field', q: 3, r: 0, rotation: 0 },
   ];
 
   // 217장을 한 번에 받지 않도록 처음 그릴 때 불러온다
@@ -113,6 +113,9 @@
             layout: view.layout,
             storedCages: view.storedCages,
             layoutVersion: view.layoutVersion,
+            rankAreaVersion: view.rankAreaVersion,
+            rankAreaBackup: view.rankAreaBackup,
+            floorItems: view.floorItems,
             team: view.team,
             selected: view.selected,
             logs: view.logs.slice(0, 40),
@@ -230,6 +233,8 @@
   // ---------- 케이지 규칙 연결 ----------
   // 케이지 공간은 테이머 랭크에 따라 늘어나고(레드 테이머 16칸), 새 시설은 상점에서 산 것만 한 개씩 설치할 수 있다.
   L.space = () => C.cageSpaceOf(save);
+  // 정원 표시와 과밀 판정이 같은 엔진 값을 사용하도록 연결한다.
+  for(const type of Object.values(L.types))type.capacity=C.getCage(type.core).capacity;
   L.canPlace = (item, items) => {
     const t = L.types[item.kind];
     if (item.kind === 'free') return true;

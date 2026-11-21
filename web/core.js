@@ -42,6 +42,47 @@ var ChampCore = (function(exports) {
 		"성급한",
 		"제멋대로"
 	];
+	// src/data/cage-capacity.json
+	var cage_capacity_default = {
+		"1": 2,
+		"2": 6,
+		"3": 10,
+		"4": 6,
+		"5": 8,
+		"6": 8,
+		"7": 8,
+		"8": 6,
+		"9": 8,
+		"10": 8,
+		"11": 6,
+		"12": 6,
+		"13": 6,
+		"14": 6,
+		"15": 6,
+		"16": 2,
+		"17": 6,
+		"18": 4,
+		"19": 8,
+		"20": 6,
+		"21": 8,
+		"22": 6,
+		"23": 4,
+		"24": 2,
+		"25": 2,
+		"26": 8,
+		"27": 6,
+		"30": 2,
+		"31": 6,
+		"32": 2,
+		"33": 2,
+		"34": 2,
+		"35": 2,
+		"36": 2,
+		"37": 2,
+		"38": 2,
+		"39": 2,
+		"40": 2
+	};
 	var training_default = {
 		facilities: {
 			"1": [
@@ -1511,6 +1552,10 @@ var ChampCore = (function(exports) {
 			resist: "어둠"
 		}
 	];
+	for (const cage of CAGES) {
+		const original = cage_capacity_default[String(cage.no)];
+		if (original !== void 0) cage.capacity = original;
+	}
 	/** 예전 임시 케이지 이름 → 원작 이름 (저장 데이터 이전용) */
 	var CAGE_RENAMES = {
 		"미니 수영장": "미니 해변",
@@ -2583,11 +2628,11 @@ var ChampCore = (function(exports) {
 		24,
 		26,
 		28,
-		30,
-		30
+		28,
+		28
 	];
 	var capacityOf = (save) => CAPACITY_BY_RANK[tamerRank(save)] ?? 300;
-	var cageSpaceOf = (save) => CAGE_SPACE_BY_RANK[tamerRank(save)] ?? 30;
+	var cageSpaceOf = (save) => CAGE_SPACE_BY_RANK[tamerRank(save)] ?? 28;
 	var CHAMP_SEASON = 2;
 	var PRELIM_DAYS = [
 		1,

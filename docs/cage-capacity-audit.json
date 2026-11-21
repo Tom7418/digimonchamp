@@ -1,0 +1,9 @@
+{
+  "source": "ui/txt/txt_list_txt.dat",
+  "sha256": "2044132b7d70d5c42f05680b38b7d97882741ead7dacdb9803e45b9b38e06e58",
+  "textIndex": "526 + facilityNo",
+  "count": 38,
+  "unverified": [
+    "Basic cage no0 has no corresponding source help entry; existing fallback99 is not claimed as original."
+  ]
+}

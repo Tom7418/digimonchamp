@@ -1,3 +1,4 @@
+import cageCapacity from '../data/cage-capacity.json';
 import statTable from '../data/training.json';
 import type { Rng } from './rng';
 import raw from '../data/evolutions.txt?raw';
@@ -287,6 +288,8 @@ export const CAGES: Cage[] = [
   { id: '미니 해변', no: 39, price: 400, minRank: 1, capacity: 2, apUp: ['물'], apDown: ['새'] },
   { id: '동굴', no: 40, price: 0, minRank: 99, capacity: 2, resist: '어둠' },
 ];
+// 원본 도움말에서 확인한 수용수만 적용한다. 기본 케이지(no0)의99는 미확인 웹판 값이다.
+for(const cage of CAGES){const original=(cageCapacity as Record<string,number>)[String(cage.no)];if(original!==undefined)cage.capacity=original;}
 /** 예전 임시 케이지 이름 → 원작 이름 (저장 데이터 이전용) */
 export const CAGE_RENAMES: Record<string, string> = {
   '미니 수영장': '미니 해변',

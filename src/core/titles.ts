@@ -154,9 +154,9 @@ export const RANK_UP: readonly [grade: number, need: number][] = [[0, 2], [0, 4]
  *  +16 케이지 레벨 한도 · +24 진화 가능 세대(0x20E2154, 진화 판정 overlay18 0x2116484 — maxStageForRank와 같음) */
 // 웹판 값 (형규 지정). 원본 표는 용량 64·74·96·112·160·168·180·192·200·200G, 공간 14·14·16·16·18·18·20·20·20·20칸
 export const CAPACITY_BY_RANK = [0, 64, 74, 96, 128, 160, 172, 192, 216, 240, 300];
-export const CAGE_SPACE_BY_RANK = [0, 14, 16, 18, 20, 22, 24, 26, 28, 30, 30];
+export const CAGE_SPACE_BY_RANK = [0, 14, 16, 18, 20, 22, 24, 26, 28, 28, 28];
 export const capacityOf = (save: Pick<SaveData, 'titles' | 'champion'>) => CAPACITY_BY_RANK[tamerRank(save)] ?? 300;
-export const cageSpaceOf = (save: Pick<SaveData, 'titles' | 'champion'>) => CAGE_SPACE_BY_RANK[tamerRank(save)] ?? 30;
+export const cageSpaceOf = (save: Pick<SaveData, 'titles' | 'champion'>) => CAGE_SPACE_BY_RANK[tamerRank(save)] ?? 28;
 
 // ---------- 챔피언십 ----------
 // 원작(기획 문서): 가을에 5일간 예선 → 다음 해 본선, 우승하면 랭크 9.

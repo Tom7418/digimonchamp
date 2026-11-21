@@ -22,7 +22,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  const coordinate=e=>{const p=screenPoint(e);return {x:p.x/zoom+cam.x,y:p.y/zoom+cam.y};};
  // 원 안 거리 대신 실제 육각 경계로 판정하여 모서리에서도 이웃 칸으로 잘못 들어가지 않는다.
  const inHex=(p,c)=>{const x=Math.abs(p.x-c.x),y=Math.abs(p.y-c.y);return x<=Math.sqrt(3)*R/2+1e-6&&y+x/Math.sqrt(3)<=R+1e-6;};
- const tile=p=>{for(let r=0;r<5;r++)for(let q=-Math.floor(r/2);q<5+(r%2===0?1:0)-Math.floor(r/2);q++)if(inHex(p,center(q,r)))return {q,r};return null;};
+ const tile=p=>{for(let r=0;r<5;r++)for(let q=-Math.floor(r/2);q<5+(r%2===0?1:0)-Math.floor(r/2);q++)if(L.available(q,r)&&inHex(p,center(q,r)))return {q,r};return null;};
  const inCage=(p,c)=>L.cells(c).some(([q,r])=>inHex(p,center(q,r)));
  // 벽의 바깥 변만 검사한다. 여러 칸짜리 케이지의 내부 이음선은 벽이 아니다.
  const edges=c=>{const map=new Map();for(const [q,r] of L.cells(c)){const o=center(q,r),v=Array.from({length:6},(_,i)=>({x:o.x+R*Math.cos((i*60-30)*Math.PI/180),y:o.y+R*Math.sin((i*60-30)*Math.PI/180)}));for(let i=0;i<6;i++){const a=v[i],b=v[(i+1)%6],k=[a,b].map(p=>`${Math.round(p.x)},${Math.round(p.y)}`).sort().join('/');if(map.has(k))map.delete(k);else map.set(k,[a,b]);}}return [...map.values()];};
@@ -96,11 +96,30 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  // 맞닿은 변은 제거하여 여러 칸 시설을 하나의 방처럼 표시한다.
  function outerBorder(ctx,c){const edges=new Map();for(const [q,r] of L.cells(c)){const p=center(q,r),v=Array.from({length:6},(_,i)=>{const a=(i*60-30)*Math.PI/180;return [p.x+R*Math.cos(a),p.y+R*Math.sin(a)];});for(let i=0;i<6;i++){const a=v[i],b=v[(i+1)%6],key=[a.map(Math.round).join(','),b.map(Math.round).join(',')].sort().join('/');if(edges.has(key))edges.delete(key);else edges.set(key,[a,b]);}}ctx.beginPath();for(const [a,b] of edges.values()){ctx.moveTo(...a);ctx.lineTo(...b);}ctx.stroke();return [...edges.values()];}
  const toolbar=document.createElement('section');toolbar.className='cage-toolbar';
- toolbar.innerHTML='<div class="cage-toolbar-head"><button id="edit-cages">케이지 편집</button><button id="rotate-cage">↻ 회전</button><button id="remove-cage">선택 케이지 철거</button></div><div class="cage-palette">'+Object.entries(L.types).map(([k,t])=>`<button data-build="${k}" draggable="false"><img src="assets/facilities/${t.img||k}.png" alt="${t.name} 시설">${footprint(k)}${t.name}<small>${t.cells.length}칸 · 정원 ${t.capacity}</small></button>`).join('')+'</div><p id="cage-instruction"></p>';
+ toolbar.innerHTML='<div class="cage-toolbar-head"><button id="edit-cages">케이지 편집</button><button id="rotate-cage">↻ 회전</button><button id="remove-cage">선택 케이지 철거</button></div><div class="cage-palette">'+Object.entries(L.types).map(([k,t])=>`<button data-build="${k}" draggable="false"><img src="assets/facilities/${t.img||k}.png" alt="${t.name} 시설">${footprint(k)}${t.name}<small>${t.cells.length}칸 · 정원 ${k==='free'?'원본 미확인':t.capacity}</small></button>`).join('')+'</div><p id="cage-instruction"></p>';
  canvas.closest('.canvas-wrap').after(toolbar);
  const instruction=toolbar.querySelector('#cage-instruction');
  function status(){toolbar.classList.toggle('editing',editing);toolbar.querySelector('#edit-cages').textContent=editing?'✓ 편집 완료':'케이지 편집';instruction.textContent=editing?'종류 선택 → 빈 칸에 배치 · 설치된 케이지는 끌어서 이동 · 회전 후 배치 · 빈 곳을 눌러 선택 해제':'디지몬을 케이지로 끌어 넣으세요. 디지몬을 누르면 선택하고, 끌어 놓으면 이동합니다. 빈 바닥을 누르면 선택이 풀립니다. 빈 곳에 놓으면 가까운 케이지로 튕겨 이동합니다. 휠: 확대/축소 · 빈 바닥 드래그: 화면 이동.';if(getState().storedCages?.length)instruction.textContent+=` · 보관 시설 ${getState().storedCages.length}개: 해당 종류를 선택해 다시 설치하세요.`;toolbar.querySelector('#rotate-cage').disabled=!editing;toolbar.querySelector('#remove-cage').disabled=!editing||!selected;toolbar.querySelectorAll('[data-build]').forEach(b=>b.classList.toggle('active',b.dataset.build===tool));}
- function init(){const s=getState();if(s.layoutVersion!==6){s.layoutBackup=JSON.parse(JSON.stringify(s.layout||[]));const renamed=c=>c&&({...c,kind:L.rename(c.kind)});const old=(s.layout||[]).map(renamed);if(!old.some(c=>c.kind==='free')&&!(s.storedCages||[]).some(c=>L.rename(c.kind)==='free'))old.push({id:'start-basic',kind:'free',q:1,r:2,rotation:0});const migrated=L.migrate(old);s.layout=migrated.placed;s.storedCages=[...(s.storedCages||[]).map(renamed).filter(c=>c&&L.types[c.kind]),...migrated.stored];for(const p of s.team||[])if(p.cage)p.cage=L.rename(p.cage);s.layoutVersion=6;}s.layout=L.restore(s.layout);if(!s.layout.length&&L.types.free)s.layout.push({id:'start-basic',kind:'free',q:1,r:2,rotation:0});for(const p of s.team){if(!s.layout.some(c=>c.id===p.cageId)){p.cageId=null;p.cage='free';p.cageSeconds=0;}}}
+ function migrateRankArea(s){
+   if(L.space==null||s.rankAreaVersion===1)return;
+   const originals=(s.layout||[]).map(c=>({...c}));s.rankAreaBackup=JSON.parse(JSON.stringify({layout:s.layout,team:s.team,foods:s.foods,poops:s.poops,floorItems:s.floorItems}));
+   const defaults=originals.length===3&&originals.every(c=>!(c.rotation||0))&&originals.every(c=>['start-basic','start-clinic','start-field'].includes(c.id))&&originals.some(c=>c.id==='start-basic'&&c.q===1&&c.r===2)&&originals.some(c=>c.id==='start-clinic'&&c.q===0&&c.r===0)&&originals.some(c=>c.id==='start-field'&&c.q===2&&c.r===1);
+   const desired=originals.map(c=>defaults?({...c,...({ 'start-basic':{q:0,r:0},'start-clinic':{q:2,r:0},'start-field':{q:3,r:0}})[c.id]}):c);
+   const result=L.migrate(desired);s.layout=result.placed;s.storedCages=[...(s.storedCages||[]),...result.stored];
+   for(const next of s.layout){const old=originals.find(c=>c.id===next.id);if(!old||old.q===next.q&&old.r===next.r&&old.rotation===next.rotation)continue;
+    moveContents(old,next);
+    for(const pet of s.team||[])if(pet.cageId===next.id){const point=worldPoint(localPoint(pet,old),next);placePet(pet,point,next);}
+   }
+   // 공간 초과 시설은 보관하고 물품은 기본 케이지로 옮겨 잠긴 바닥에 남지 않게 한다.
+   const basic=s.layout.find(c=>c.kind==='free')||s.layout[0];
+   if(basic)for(const old of result.stored){
+    for(const item of [...(s.foods||[]),...(s.poops||[]),...(s.floorItems||[])])if((item.cageId||item.cagePosition?.id)===old.id){
+     const point=center(basic.q,basic.r);item.x=point.x;item.y=point.y;item.cageId=basic.id;item.cagePosition=localPoint(point,basic);
+    }
+   }
+   s.rankAreaVersion=1;
+ }
+ function init(){const s=getState();migrateRankArea(s);if(s.layoutVersion!==6){s.layoutBackup=JSON.parse(JSON.stringify(s.layout||[]));const renamed=c=>c&&({...c,kind:L.rename(c.kind)});const old=(s.layout||[]).map(renamed);if(!old.some(c=>c.kind==='free')&&!(s.storedCages||[]).some(c=>L.rename(c.kind)==='free'))old.push({id:'start-basic',kind:'free',q:1,r:2,rotation:0});const migrated=L.migrate(old);s.layout=migrated.placed;s.storedCages=[...(s.storedCages||[]).map(renamed).filter(c=>c&&L.types[c.kind]),...migrated.stored];for(const p of s.team||[])if(p.cage)p.cage=L.rename(p.cage);s.layoutVersion=6;}s.layout=L.restore(s.layout);if(!s.layout.length&&L.types.free)s.layout.push({id:'start-basic',kind:'free',q:1,r:2,rotation:0});for(const p of s.team){if(!s.layout.some(c=>c.id===p.cageId)){p.cageId=null;p.cage='free';p.cageSeconds=0;}}}
  init();status();
  toolbar.querySelector('#edit-cages').onclick=()=>{if(isBlocked())return;editing=!editing;tool=null;selected=null;drag=null;status();};
  toolbar.querySelectorAll('[data-build]').forEach(b=>{
@@ -120,7 +139,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  canvas.onpointermove=e=>{if(drag?.pan){const box=canvas.getBoundingClientRect(),k=VIEW.w/box.width/zoom,dx=(e.clientX-drag.pan.x)*k,dy=(e.clientY-drag.pan.y)*k;if(Math.hypot(dx,dy)>6)drag.pan.moved=true;if(drag.pan.moved){cam.x=drag.pan.cx-dx;cam.y=drag.pan.cy-dy;clampCam();}}hover=tile(coordinate(e));if(drag?.pet!==undefined)drag.point=coordinate(e);};
  canvas.addEventListener('wheel',e=>{if(isBlocked())return;e.preventDefault();const before=coordinate(e),p=screenPoint(e);zoom=Math.max(0.5,Math.min(2.5,zoom*Math.exp(-e.deltaY*0.001)));cam.x=before.x-p.x/zoom;cam.y=before.y-p.y/zoom;clampCam();},{passive:false});
  canvas.onpointerup=e=>{if(isBlocked()){restoreDrag();drag=null;return;}if(drag?.pan?.moved){drag=null;status();return;}const s=getState(),point=coordinate(e),foot=drag?.pet!==undefined?draggedPoint(point):point,t=tile(editing?point:foot);
-   if(editing){const next=candidate(t);if(next){if(L.valid(s.layout,next)){if(drag?.cage){const c=s.layout.find(c=>c.id===drag.cage);moveContents(c,next);Object.assign(c,next);}else{const stored=(s.storedCages||[]).findIndex(c=>c.kind===next.kind);const id=stored>=0?s.storedCages.splice(stored,1)[0].id:crypto.randomUUID();s.layout.push({...next,id});}changed('케이지 배치를 저장했습니다.');}else notify('다른 케이지와 겹치거나 사육장을 벗어납니다.');}}
+   if(editing){const next=candidate(t);if(next){if(L.valid(s.layout,next)){if(drag?.cage){const c=s.layout.find(c=>c.id===drag.cage);moveContents(c,next);Object.assign(c,next);}else{const stored=(s.storedCages||[]).findIndex(c=>c.kind===next.kind);const id=stored>=0?s.storedCages.splice(stored,1)[0].id:crypto.randomUUID();s.layout.push({...next,id});}changed('케이지 배치를 저장했습니다.');}else notify('다른 케이지와 겹치거나 잠긴 칸입니다. 테이머 랭크가 오르면 사용 가능한 칸이 늘어납니다.');}}
    // 디지몬 클릭은 선택/쓰다듬기만 한다. 수동 이동은 실제로 잡아 끈 개체만 허용한다.
    else if(drag?.pet!==undefined&&Math.hypot(point.x-drag.start.x,point.y-drag.start.y)<8){restoreDrag();const uid=s.team[drag.pet].uid;s.pickedUid=s.pickedUid===uid?null:uid;onPet?.(drag.pet);changed();}
    else if(drag?.pet!==undefined){
@@ -169,7 +188,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
    open(){if(isBlocked())return;editing=true;status();toolbar.scrollIntoView({block:'nearest',behavior:'smooth'});},
    get editing(){return editing;},
    draw(ctx){const s=getState();ctx.fillStyle='#214b50';ctx.fillRect(0,0,WORLD.w,WORLD.h);
-     for(let r=0;r<5;r++)for(let q=-Math.floor(r/2);q<5+(r%2===0?1:0)-Math.floor(r/2);q++){polygon(ctx,q,r);ctx.fillStyle='#407675';ctx.fill();ctx.strokeStyle='#8eaaa1';ctx.lineWidth=1;ctx.stroke();}
+     for(let r=0;r<5;r++)for(let q=-Math.floor(r/2);q<5+(r%2===0?1:0)-Math.floor(r/2);q++){polygon(ctx,q,r);const open=L.available(q,r);ctx.fillStyle=open?'#407675':'#193a40';ctx.fill();ctx.strokeStyle=open?'#8eaaa1':'#35505a';ctx.lineWidth=1;ctx.stroke();if(!open){const c=center(q,r);ctx.fillStyle='#63818a';ctx.font='18px sans-serif';ctx.textAlign='center';ctx.fillText('잠김',c.x,c.y+6);}}
      for(const c of s.layout){
        const type=L.types[c.kind],cells=L.cells(c),anchor=center(c.q,c.r),im=facilities[c.kind];
        // 전체 점유 영역을 합집합으로 잘라 원본 시설 배경을 딱 한 번 그린다.

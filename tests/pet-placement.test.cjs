@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-function setup(saved,rng){
+function setup(saved,rng,limit){
  const noop=()=>{},nodes={},toolbar={classList:{toggle:noop},querySelector:k=>nodes[k]??=( {} ),querySelectorAll:()=>[]};
  const math=Object.create(Math);if(rng)math.random=rng;
  const window={},ctx=vm.createContext({Math:math,window,document:{createElement:()=>toolbar},Image:function(){},crypto:{randomUUID:()=> 'new'}});
@@ -7,6 +7,7 @@ function setup(saved,rng){
  const events={},box={left:80,top:40,width:480,height:280};
  const canvas={style:{},closest:()=>({after:noop}),addEventListener:(k,f)=>events[k]=f,getBoundingClientRect:()=>box,setPointerCapture:noop};
  const state=saved??{layoutVersion:6,layout:[{id:'clinic',kind:'clinic',q:1,r:1,rotation:0},{id:'field',kind:'field',q:2,r:2,rotation:0}],team:[],selected:0};
+ if(limit!==undefined)window.CageLayout.space=limit;
  const board=window.createCageEditor(canvas,()=>state,noop,noop,()=>false);
  if(!saved){const p=board.center(0,0);state.team=[{uid:1,...p,target:p.x,cage:'free',cageId:null}];}
  const drawCtx=new Proxy({}, {get:()=>noop});
@@ -195,4 +196,22 @@ test('철거한 케이지의 디지몬은 다른 케이지로 이동하고 마�
  s.nodes['#remove-cage'].onclick();s.draw();const p=s.state.team[0];assert.equal(s.state.layout.length,1);assert.equal(p.cageId,'field');assert.equal(s.board.isBouncing(p.uid),true);
  s.canvas.onpointerdown(s.event(s.board.center(2,2)));s.canvas.onpointerup(s.event(s.board.center(2,2)));
  s.nodes['#remove-cage'].onclick();assert.equal(s.state.layout.length,1);
+});
+
+
+test('옛시작배치이전은기본왼쪽위·양호실옆으로옮기고디지몬과먹이를같이이동한다',()=>{
+ const ref=setup(),old=ref.board.center(1,2);
+ const raw={layoutVersion:6,layout:[{id:'start-basic',kind:'free',q:1,r:2,rotation:0},{id:'start-clinic',kind:'clinic',q:0,r:0,rotation:0},{id:'start-field',kind:'field',q:2,r:1,rotation:0}],team:[{uid:1,x:old.x,y:old.y,cageId:'start-basic',cage:'free'}],foods:[{x:old.x+10,y:old.y,cageId:'start-basic'}],poops:[]};
+ const s=setup(raw,undefined,14),basic=s.state.layout.find(c=>c.id==='start-basic'),clinic=s.state.layout.find(c=>c.id==='start-clinic'),point=s.board.center(0,0);
+ assert.equal(basic.q,0);assert.equal(basic.r,0);assert.equal(clinic.q,2);assert.equal(clinic.r,0);
+ near(s.state.team[0].x,point.x);near(s.state.team[0].y,point.y);near(s.state.foods[0].x,point.x+10);
+ const copy=JSON.stringify(s.state.layout);s.board.reset();assert.equal(JSON.stringify(s.state.layout),copy);assert.ok(s.state.rankAreaBackup);
+});
+
+test('한도초과배치는시설과바닥물품을잃지않고보관한다',()=>{
+ const ref=setup(),p=ref.board.center(4,4),layout=[{id:'basic',kind:'free',q:0,r:0,rotation:0}];
+ for(let i=0;i<15;i++)layout.push({id:'c'+i,kind:'clinic',q:4,r:4,rotation:0});
+ const raw={layoutVersion:6,layout,team:[],foods:[{...p,cageId:'c14'}],poops:[]},s=setup(raw,undefined,14);
+ assert.equal(s.state.layout.length+s.state.storedCages.length,16);assert.equal(s.state.foods.length,1);
+ assert.ok(s.state.layout.reduce((n,c)=>n+(c.kind==='free'?4:1),0)<=14);
 });

@@ -50,11 +50,15 @@ window.CageLayout = {
   // space: 랭크별 케이지 공간(칸), canPlace(item, items): 새 시설 설치 허용 여부(보유 확인)
   space: null,
   canPlace: null,
+  // 랭크 한도는 설치 합계뿐 아니라 보이는 격자 해금에도 적용한다.
+  boardCells(){const out=[];for(let r=0;r<5;r++)for(let q=-Math.floor(r/2);q<5+(r%2===0?1:0)-Math.floor(r/2);q++)out.push([q,r]);return out;},
+  available(q,r){if(this.space==null)return true;const n=typeof this.space==='function'?this.space():this.space;return this.boardCells().slice(0,n).some(p=>p[0]===q&&p[1]===r);},
   // 60도 회전: 축 좌표의 세 번째 축은 -q-r이다.
   cells(item){return this.types[item.kind].cells.map(([q,r])=>{for(let n=0;n<(item.rotation||0);n++)[q,r]=[-r,q+r];return [q+item.q,r+item.r];});},
   valid(items,item){
     if(!this.types[item.kind]||!Number.isInteger(item.q)||!Number.isInteger(item.r)||!Number.isInteger(item.rotation)||item.rotation<0||item.rotation>5)return false;
     const cells=this.cells(item);
+    if(cells.some(([q,r])=>!this.available(q,r)))return false;
     if(cells.some(([q,r])=>r<0||r>=5||q < -Math.floor(r/2)||q >= 5+(r%2===0?1:0)-Math.floor(r/2)))return false;
     const others=items.filter(c=>c.id!==item.id);
     if(this.space!=null&&others.reduce((n,c)=>n+this.cells(c).length,0)+cells.length>(typeof this.space==='function'?this.space():this.space))return false;
