@@ -16,7 +16,16 @@ finally:sprites.png=write
 w,h,pixels=capture[0];write(repo/'web/assets/battle/speedlines.png',w,h,pixels)
 seq=decode(sprites.ROOT/'common/e003_specialtime.nanr',meta['frames'])[2]
 assert seq['frames']==[[2,2]]
-data={'width':meta['width'],'height':meta['height'],'cell':2,'scale':2,'spacing':128,'wrap':384,'bands':4,'tickRate':60}
+# Shared sheet origin is (-32,-4), but cell2 OAM origin is (0,0), bounds64x8.
+c=(sprites.ROOT/'common/e003_specialtime.ncer').read_bytes()
+n,kind,offset=struct.unpack_from('<HHI',c,24);stride=16 if kind else 8;bank=24+offset;oams=bank+n*stride
+objects,_,off=struct.unpack_from('<HHI',c,bank+2*stride)
+assert objects==2
+assert [struct.unpack_from('<HHH',c,oams+off+i*6) for i in range(2)]==[(0x4000,0x4000,6),(0x4000,0x4020,8)]
+# The 3D locations use z=64; projected y = y-z, not the raw y coordinate.
+for addr,word in {0x211ebf4:0xe3a03701,0x211ec54:0xe3a03701}.items():
+ assert struct.unpack_from('<I',ov,addr-base)[0]==word,hex(addr)
+data={'width':meta['width'],'height':meta['height'],'cell':2,'scale':2,'crop':[32,4,64,8],'spacing':128,'wrap':384,'bands':4,'tickRate':60}
 (repo/'web/assets/battle/speedlines.js').write_text('window.BATTLE_SPEEDLINE_DATA='+json.dumps(data)+';\n',encoding='utf-8')
 print('Verified bank5 e003_specialtime, sequence2; 24 sprites, scale2')
 

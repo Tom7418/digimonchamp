@@ -22,8 +22,16 @@ test('투사체 도착까지 HP/쓰러짐을 숨기고 도착 이벤트는 한 �
 test('오른쪽에서 왼쪽으로 발사해도 대상에 도착하며 일시정지 중 프레임은 유지한다',()=>{
  const {fx}=setup(),u=units();u[0].x=220;u[1].x=40;const t=fx.add(event(60),u),calls=[];
  const ctx={save(){},restore(){},translate(...a){calls.push(['p',...a]);},scale(...a){calls.push(['s',...a]);},drawImage(...a){calls.push(['d',...a.slice(1)]);}};
- fx.draw(ctx);const first=JSON.stringify(calls);calls.length=0;fx.tick(0);fx.draw(ctx);assert.equal(JSON.stringify(calls),first);assert.ok(calls.some(x=>x[0]==='s'&&x[1]<0));fx.tick(t.lead);assert.equal(fx.drain().length,1);
+ fx.draw(ctx);const first=JSON.stringify(calls);calls.length=0;fx.tick(0);fx.draw(ctx);assert.equal(JSON.stringify(calls),first);assert.ok(calls.some(x=>x[0]==='s'&&x[1]>0));fx.tick(t.lead);assert.equal(fx.drain().length,1);
 });
 test('해석되지 않은 기술을 투사체로 꾸미지 않고 기본 공격은 기존 경로에 맡긴다',()=>{
  const {fx}=setup();assert.equal(fx.add({type:'hit',special:false},units()),null);assert.equal(fx.add(event(99999),units()),null);
+});
+
+test('왼쪽 기준 투사체는 오른쪽 표적일 때만 반전하고 출발 오프셋은 진행 방향을 따른다',()=>{
+ for(const right of [true,false]){
+  const {fx}=setup(),u=units();u[0].x=150;u[1].x=right?290:10;fx.add(event(60),u);const scales=[],positions=[];
+  fx.draw({save(){},restore(){},translate:(x,y)=>positions.push([x,y]),scale:x=>scales.push(x),drawImage(){}});
+  assert.ok(scales.length>0);assert.ok(scales.every(x=>right?x<0:x>0));assert.ok(right?positions.at(-1)[0]>150:positions.at(-1)[0]<150);
+ }
 });

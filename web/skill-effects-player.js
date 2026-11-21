@@ -11,7 +11,8 @@
    if(!d||!a||!t)return null;
    // 미해석 스크립트는 이미 확인한 대상 타격 그림만 사용한다. 비행 궤적을 임의로 만들지 않는다.
    if(d.kind!=='projectile'&&!d.impact)return null;
-   const flip=t.x<a.x,sign=flip?-1:1,off=d.flightOffset||[0,0,1];
+   // 투사체 원본도 왼쪽을 본다. 그림 반전과 좌표 진행 부호를 분리한다.
+   const flip=t.x>a.x,sign=flip?1:-1,off=d.flightOffset||[0,0,1];
    const start={x:a.x+sign*off[0],y:a.y+off[1]},end={x:t.x,y:t.y-10};
    const lead=d.kind==='projectile'?Math.hypot(end.x-start.x,end.y-start.y)/(d.speed*60):0;
    const tail=Math.max(duration(d.finish),duration(d.impact));

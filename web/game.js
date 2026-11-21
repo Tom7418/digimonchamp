@@ -1355,7 +1355,8 @@
           const attackId=SPRITE_BY_NAME[C.getSpecies(attacker.speciesId).id];
           const attackDuration=animations.duration(attackId,attackState);
           b.presentation?.add(e,b.state.units,Math.max(attackDuration,effect?.hold||0));
-          if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:attackDuration,duration:attackDuration,state:attackState});
+          animations.face?.(attacker,attackId,target.x-attacker.x);
+          if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:attackDuration,duration:attackDuration,state:attackState,flip:target.x>attacker.x});
           if(!effect?.lead)battleHitVisual(b,e);
           if(e.special&&e.skill){
             b.flashes.push({id:e.from,text:e.skill.name,until:performance.now()+700,color:'#a9e7ff',skill:true});
@@ -1473,6 +1474,7 @@
     const s = battle.state;
     const units=s.units.map(u=>(battle.effects.visualUnit?.(u)||u));
     const focus=battle.presentation?.snapshot();
+    let camera=null;
     ctx.save();
     if(focus){
       const v=battleBackdrop.viewport;
@@ -1481,10 +1483,16 @@
       const pan=focus.progress;
       const tx=Math.max(el.width*(1-focus.zoom),Math.min(0,(el.width/2-px)*pan+px*(1-focus.zoom)));
       const ty=Math.max(el.height*(1-focus.zoom),Math.min(0,(el.height/2-py)*pan+py*(1-focus.zoom)));
+      camera={tx,ty,zoom:focus.zoom};
       ctx.translate(tx,ty);ctx.scale(focus.zoom,focus.zoom);
     }
     const backgroundReady=battleBackdrop.draw(ctx,battle.map,el.width,el.height);
     if(focus){ctx.fillStyle=`rgba(0,0,0,${focus.dim})`;ctx.fillRect(0,0,el.width,el.height);}
+    // 원본 띠는 화면 좌표의 배경층. 줌으로 다시 확대하거나 개체 위에 덮지 않는다.
+    ctx.restore();
+    battle.presentation?.draw?.(ctx,el.width,el.height);
+    ctx.save();
+    if(camera){ctx.translate(camera.tx,camera.ty);ctx.scale(camera.zoom,camera.zoom);}
     ctx.save();
     const viewport=battleBackdrop.viewport;
     ctx.translate(viewport.x,viewport.y);ctx.scale(viewport.scale,viewport.scale);
@@ -1503,7 +1511,7 @@
       const frame=!u.alive?animations.sample(spriteId,'ko',0):statusPose?pose.frame:action?animations.sample(spriteId,action.state,focus?.from===u.id?Math.max(0,focus.age-focus.transition):action.duration-action.left):pose.frame;
       const art=spriteOf(u.speciesId,false),scale=battleBackdrop.spriteScale(art);
       ctx.fillStyle='#081c3044';ctx.beginPath();ctx.ellipse(u.x,u.y+14,Math.max(10,(art?.body||24)*scale*.4),5,0,0,Math.PI*2);ctx.fill();
-      body(ctx,u.speciesId,false,u.x,u.y+14,scale,frame,pose.flip);
+      body(ctx,u.speciesId,false,u.x,u.y+14,scale,frame,action?.flip??pose.flip);
       ctx.globalAlpha = 1;
       if(!u.alive){ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle='#5c6570';ctx.fillText('전투 불능',u.x,u.y-25);}
       ctx.fillStyle = '#30404a';
@@ -1529,7 +1537,6 @@
     }
     ctx.restore();
     ctx.restore();
-    battle.presentation?.draw?.(ctx,el.width,el.height);
     if(focus){
       ctx.fillStyle='#071a2ddd';ctx.fillRect(0,0,el.width,30);
       ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff0b5';

@@ -42,7 +42,14 @@
       }
       return {state: m.state, flip: m.flip, frame: pose(actor, id, m.state, dt)};
     }
-    return { duration, sample, pose, movement };
+    function face(actor,id,dx) {
+      let m=movementActors.get(actor);
+      if(!m||m.id!==id){m={id,state:'idle',flip:false};movementActors.set(actor,m);}
+      // 원본 개체 도트는 왼쪽을 본다. 공격 시 이동 여부와 관계없이 목표를 바라본다.
+      if(Math.abs(dx)>0.0001)m.flip=dx>0;
+      return m.flip;
+    }
+    return { duration, sample, pose, movement, face };
   }
   root.createAnimationPlayer = create;
   if (typeof module !== 'undefined') module.exports = { createAnimationPlayer: create };

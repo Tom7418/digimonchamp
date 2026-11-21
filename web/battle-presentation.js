@@ -40,9 +40,10 @@
     const offset=focus.age*lines.tickRate*speed*direction;
     for(let column=0;column<3;column++){
      const x=((column*lines.spacing+offset+128)%lines.wrap+lines.wrap)%lines.wrap-128;
-     for(const y of [64+band*16,240-band*16]){
-      ctx.save();ctx.translate(x,y);ctx.scale(2,2);
-      ctx.drawImage(image,lines.cell*lines.width,0,lines.width,lines.height,0,0,lines.width,lines.height);ctx.restore();
+     // 원본 위치의 z=64를 빼면 위0..48 / 아래176..128이다.
+     for(const y of [band*16,176-band*16]){
+      ctx.save();ctx.translate(x,y);ctx.scale(lines.scale,lines.scale);
+      ctx.drawImage(image,lines.cell*lines.width+lines.crop[0],lines.crop[1],lines.crop[2],lines.crop[3],0,0,lines.crop[2],lines.crop[3]);ctx.restore();
      }
     }
    }

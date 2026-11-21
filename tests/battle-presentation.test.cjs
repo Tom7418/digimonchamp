@@ -29,7 +29,8 @@ test('원본 속도선은 강조 중에만24개를 그리고 일시정지에서�
  const ctx={save(){},restore(){},beginPath(){},rect(){},clip(){},scale(){},translate:(...v)=>moves.push(v),drawImage:(...v)=>draws.push(v)};
  p.draw(ctx,416,272);assert.equal(draws.length,0);
  const record=+Object.keys(c.window.BATTLE_PRESENTATION_DATA.records)[0];p.add({type:'hit',from:0,special:true,skill:{record,name:'기술'}},[{id:0,x:0,y:0}],.2);p.tick(.05);
- p.draw(ctx,416,272);assert.equal(draws.length,24);assert.ok(draws.every(d=>d[1]===192&&d[3]===96));
+ p.draw(ctx,416,272);assert.equal(draws.length,24);assert.ok(draws.every(d=>d[1]===224&&d[2]===4&&d[3]===64&&d[4]===8));
+ assert.ok(moves.every(([x,y])=>y<=48||y>=128));assert.ok(moves.some(([x,y])=>y===0));assert.ok(moves.some(([x,y])=>y===176));
  const positions=JSON.stringify(moves);moves.length=0;p.tick(0);p.draw(ctx,416,272);assert.equal(JSON.stringify(moves),positions);
  p.tick(10);draws.length=0;p.draw(ctx,416,272);assert.equal(draws.length,0);
 });

@@ -164,3 +164,11 @@ test('실제 경기장은 상태이상 지속·해제·KO·정지에서 올바�
  u.status={id:9,until:10};u.alive=false;frames.length=0;c.drawArena(.1);assert.equal(frames[0],player.sample(id,'ko',0));
  u.alive=true;u.status=undefined;c.b.motion.set(0,{dx:2,dy:0});frames.length=0;c.drawArena(.1);assert.equal(frames[0],player.sample(id,'walk',0));
 });
+
+test('공격 대상 바라보기는 정지·일시정지에서도 유지되고 다음 이동 때만 방향을 바꾼다',()=>{
+ const c=vm.createContext({window:{}});for(const f of ['web/assets/animations.js','web/animation.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);
+ const p=c.window.createAnimationPlayer(c.window.DIGIMON_ANIMATIONS),actor={},id=Object.keys(c.window.DIGIMON_ANIMATIONS.sprites)[0];
+ p.movement(actor,id,-1,0,.1);assert.equal(p.face(actor,id,100),true);
+ assert.equal(p.movement(actor,id,0,0,.1).flip,true);assert.equal(p.movement(actor,id,-1,0,0).flip,true);
+ assert.equal(p.movement(actor,id,-1,0,.1).flip,false);assert.equal(p.face(actor,id,-100),false);
+});
