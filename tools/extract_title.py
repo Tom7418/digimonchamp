@@ -103,7 +103,8 @@ def cells(base: Path, picks: dict, gfx='.ncbr', box=None, crop=None, key=None):
             for py in range(oh):
                 for px in range(ow):
                     sx, sy = (ow - 1 - px if b & 4096 else px), (oh - 1 - py if b & 8192 else py)
-                    q = sy * ow + sx
+                    # NCGR is tiled; NCBR stores each OBJ as a linear bitmap.
+                    q = ((sy // 8) * (ow // 8) + sx // 8) * 64 + (sy % 8) * 8 + sx % 8 if gfx == '.ncgr' else sy * ow + sx
                     bo = addr + (q if depth == 8 else q // 2)
                     idx = g[bo] if depth == 8 else (g[bo] >> (4 * (q % 2))) & 15
                     if not idx:

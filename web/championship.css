@@ -64,18 +64,6 @@ dialog h3{font-size:13px;margin:10px 0 2px;color:#ffd36a}
 .tray-item:disabled{opacity:.4;cursor:not-allowed}
 .tray-hint{font-size:11px;color:#8fa6b0}
 .drag-ghost{position:fixed;z-index:50;font-size:28px;pointer-events:none;transform:translate(-50%,-60%)}
-/* 하루 마감 달력 */
-.calendar{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-top:10px}
-.cal-head{grid-column:1/-1;font-weight:700;color:#8fe39a}
-.cal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:#8fd36a;padding:6px;border-radius:6px}
-.cal-cell{background:#e9f7dc;color:#203020;border-radius:3px;min-height:46px;padding:2px 4px;font-size:11px}
-.cal-cell b{display:block;font-size:16px;text-align:center}
-.cal-cell small{display:block;font-size:9px;line-height:1.2;color:#7a2f2f}
-.cal-cell.past{opacity:.55}
-.cal-cell.today{background:#e45b5b;color:#fff}.cal-cell.today small{color:#fff}
-.cal-today{background:#3b4a55;color:#eef;padding:12px 18px;border-radius:8px;font-size:15px}
-.cal-today b{font-size:22px;margin:0 4px}
-
 /* ---------- 원작 타이틀 화면·공통 배경 (assets/ui, tools/extract_title.py) ---------- */
 /* 공통 파란 패턴은 정보창 원본 그림에만 남기고 일반 화면은 차분한 색으로 표시한다. */
 body{background:linear-gradient(160deg,#12283b,#091522 70%);image-rendering:auto}
@@ -336,3 +324,26 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 @media(max-width:650px){.dex-browser .dex-detail{flex-direction:column;align-items:stretch}.dex-original-stage{align-self:center}.dex-browser .dex-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.dex-browser .dex-grid button{padding:4px 1px}.dex-browser .dex-grid .dex-portrait,.dex-unknown{max-width:96px;transform:scale(.9)}}
 
 .dex-stage-title{position:absolute;top:24px;left:12px;right:12px;text-align:center;color:#0c4930;font-size:15px;z-index:1;overflow-wrap:anywhere}
+/* 원본 today_window와 battle_result 도트. NDS 두 화면은 웹에서 나란히/세로 배치한다. */
+.original-day-change{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:24px;background:#000;padding:24px 16px;color:#fff}
+.original-date-card{aspect-ratio:3/1;background:url('assets/day-result/date-card.png') center/100% 100% no-repeat;display:flex;align-items:center;justify-content:space-evenly;font-size:clamp(18px,3vw,30px);text-shadow:2px 2px #222;image-rendering:pixelated}
+.original-date-card>img{width:25%;height:32px;object-fit:contain;image-rendering:pixelated}
+.original-date-card b{font-size:1.6em;margin-right:12px}
+.original-calendar{container-type:inline-size;aspect-ratio:4/3;position:relative;background-size:100% 100%;image-rendering:pixelated}
+.original-cal-grid{position:absolute;left:8.333333%;top:11.111111%;width:83.333333%;height:77.777778%;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr)}
+.original-cal-cell{min-width:0;display:grid;grid-template-rows:3fr 4fr;color:#697761}
+.cal-date{height:100%;display:flex;justify-content:center;align-items:center}
+.original-cal-cell.today .cal-date{background:url('assets/day-result/today.png') center/100% 100% no-repeat}
+.cal-date>img{height:100%;width:auto;image-rendering:pixelated}
+.cal-counts{display:flex;flex-direction:column;justify-content:center;gap:0;font:8cqw/1 monospace;min-height:0;overflow:hidden}
+.cal-counts span{height:50%;min-height:0;display:flex;align-items:center;justify-content:center;white-space:nowrap}
+.cal-counts img{width:auto;max-width:70%;height:100%;image-rendering:pixelated}
+.calendar-help{font-size:12px;color:#b7cbd1}
+.day-change-modal{max-width:900px;width:calc(100% - 24px)}
+.title-medal-result{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center;background:#a20019 url('assets/day-result/result-circuit.png') center/auto 100%;padding:20px 12px;margin-bottom:16px;image-rendering:pixelated}
+.result-win img{width:100%;height:auto;image-rendering:pixelated}
+.medal-panel{background:url('assets/day-result/result-panel.png') center/100% 100% no-repeat;min-height:240px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:24px 12px;color:#fff;text-align:center}
+.medal-panel h3{color:#ffe153;margin:0;font-size:20px;text-shadow:2px 2px #775a1a}
+.medal-panel p{margin:0;font-size:18px}
+.title-medal{width:64px;height:64px;object-fit:contain;image-rendering:pixelated}
+@media(max-width:600px){.original-day-change{grid-template-columns:1fr;gap:16px;padding:16px}.original-date-card{width:80%;justify-self:center;font-size:24px}.original-calendar{width:100%}.title-medal-result{grid-template-columns:1fr}.result-win{width:65%;justify-self:center}.medal-panel{min-height:220px}}

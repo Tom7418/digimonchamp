@@ -518,10 +518,10 @@
     // 이번 계절 달력에 표시할 경기 날짜
     const rank = C.tamerRank(save);
     const marks = {};
-    for (const t of C.TITLES) if (t.season === season && rank >= t.minRank) (marks[t.day] ??= []).push(t.name + (save.titles.includes(t.id) ? ' ✓' : ''));
+    for (const t of C.TITLES) if (t.season === season && rank >= t.minRank) (marks[t.day] ??= []).push({name:t.name,won:save.titles.includes(t.id)});
     if (season === C.CHAMP_SEASON && !save.champion) {
-      if (save.qualifiedYear !== null && year > save.qualifiedYear) (marks[C.CHAMP_DAY] ??= []).push('챔피언십 본선');
-      else if (save.qualifiedYear === null && rank >= C.PRELIM_MIN_RANK) for (const d of C.PRELIM_DAYS) (marks[d] ??= []).push('예선');
+      if (save.qualifiedYear !== null && year > save.qualifiedYear) (marks[C.CHAMP_DAY] ??= []).push({name:'챔피언십 본선',won:false});
+      else if (save.qualifiedYear === null && rank >= C.PRELIM_MIN_RANK) for (const d of C.PRELIM_DAYS) (marks[d] ??= []).push({name:'예선',won:false});
     }
     return marks;
   }
@@ -531,24 +531,18 @@
     dayEnding = true;
     clock = 0;
     const morning = C.dateOf(C.nextMorningClock(save));
-    const nextIdx = morning.day;
     const nextSeason = morning.season;
     const nextYear = morning.year;
     const marks = matchDays(nextSeason, nextYear);
-    const seasonName = ['봄', '여름', '가을', '겨울'][nextSeason];
-    const cells = Array.from({ length: C.DAYS_PER_SEASON }, (_, i) => {
-      const day = i + 1;
-      const m = marks[day];
-      return `<div class="cal-cell${day === nextIdx ? ' today' : ''}${day < nextIdx ? ' past' : ''}"><b>${day}</b>${m ? `<small>★ ${esc(m.join(', '))}</small>` : ''}</div>`;
-    }).join('');
     showModal(
       '하루가 끝났습니다',
       `<p>디지몬들이 잠들었습니다. 내일 아침 7시에 다시 시작합니다.</p>
-       <div class="calendar"><div class="cal-head">${seasonName}</div><div class="cal-grid">${cells}</div><div class="cal-today">${seasonName} <b>${nextIdx}</b> 일</div></div>`,
+       ${window.dayResultCalendarHtml(C,morning,marks,esc)}`,
       'END OF DAY',
       '다음 날로',
     );
     $('#close-modal').disabled = true;
+    $('#modal').classList.add('day-change-modal');
   }
   function finishDay() {
     const r = C.endDay(save, Math.random, L.crowded(view));
@@ -1100,7 +1094,7 @@
     $('#modal-body').querySelectorAll('[data-dex]').forEach(b=>b.onclick=()=>{dexMenu(+b.dataset.dex);$('#modal-body').querySelector(`[data-dex="${b.dataset.dex}"]`)?.focus({preventScroll:true});});
   }
   function showModal(title, body, kicker = 'TAMER GUIDE', ok = '사육장으로 돌아가기') {
-    $('#modal').classList.remove('battle-modal');
+    $('#modal').classList.remove('battle-modal','day-change-modal');
     $('#modal-title').textContent = title;
     $('#modal-body').innerHTML = body;
     $('#modal-kicker').textContent = kicker;
@@ -1437,6 +1431,8 @@
       toast('랭크 업!');
     }
     for (const d of save.digimon) if (uids.has(d.uid) && d.injured) log(`${nameOf(d)}이(가) 다쳤습니다. 양호실에 넣거나 상처약으로 치료하세요.`);
+    // mN corresponds to original item_badge(N+1); prelim/final have no title medal.
+    if(won && /^m\d+$/.test(m?.id||'')) $('#modal-body').insertAdjacentHTML('afterbegin',window.titleMedalHtml(m,esc));
     $('#modal-title').textContent = won ? 'WIN!' : 'LOSE';
     $('#modal-ok').disabled = false;
     $('#close-modal').disabled = false;
