@@ -172,3 +172,27 @@ test('공격 대상 바라보기는 정지·일시정지에서도 유지되고 �
  assert.equal(p.movement(actor,id,0,0,.1).flip,true);assert.equal(p.movement(actor,id,-1,0,0).flip,true);
  assert.equal(p.movement(actor,id,-1,0,.1).flip,false);assert.equal(p.face(actor,id,-100),false);
 });
+
+test('아구몬은 원본 준비15프레임이 지난 순간 입을 벌린12번 셀로 전환하고 빔 동안 유지한다',()=>{
+ const id='m201_agumon',wait=player.windup(id,'attack1');assert.equal(wait,15/60);
+ assert.equal(player.sample(id,'attack1',wait-.001),11);assert.equal(player.sample(id,'attack1',wait),12);assert.equal(player.sample(id,'attack1',4),12);
+});
+test('전체 종의 스킬 준비 시간은 종별 원본 첫 프레임 시간이며 복합 공격 순서를 보존한다',()=>{
+ for(const [id,bank] of Object.entries(data.sprites)){
+  if(id.endsWith('_digitama'))continue;
+  for(const [n,state] of [[7,'attack1'],[8,'attack2'],[9,'attack3'],[10,'attack4']]){
+   const seq=data.banks[bank][n],wait=player.windup(id,state);assert.equal(wait,seq.frames.length>1?seq.frames[0][1]/60:0);
+   if(seq.frames.length>1)assert.equal(player.sample(id,state,wait+1e-6),seq.frames[1][0]);
+  }
+ }
+ const id='m205_gaomon',q=data.banks[data.sprites[id]][9];assert.ok(q.frames.length>2);
+ let t=0;for(const [cell,ticks] of q.frames){assert.equal(player.sample(id,'attack3',t+1e-6),cell);t+=ticks/60;}
+});
+
+test('복합 빔은 발사 프레임을 연장하고 기술이 끝나기 전 복귀 자세로 넘어가지 않는다',()=>{
+ const id=Object.keys(data.sprites).find(x=>x.includes('victorygreymon')),q=data.banks[data.sprites[id]][9];assert.equal(q.frames.length,3);
+ const activeEnd=(q.frames[0][1]+q.frames[1][1])/60,holdUntil=activeEnd+.5;
+ assert.equal(player.sampleCast(id,'attack3',holdUntil-.001,holdUntil),q.frames[1][0]);
+ assert.equal(player.sampleCast(id,'attack3',holdUntil+.001,holdUntil),q.frames[2][0]);
+ assert.equal(player.castDuration(id,'attack3',holdUntil),player.duration(id,'attack3')+.5);
+});

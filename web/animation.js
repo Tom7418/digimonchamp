@@ -7,6 +7,28 @@
     function sequence(id, state) {
       return data.banks[data.sprites[id]]?.[data.states[state]] || { frames: [[0, 1]], loop: true, start: 0 };
     }
+    // 원본 스킬은 첫 NANR 프레임이 준비, 그 다음부터 발사 동작이다.
+    // 복합 공격의 나머지 프레임은 임의로 잘라내지 않는다.
+    function windup(id,state) {
+      const seq=sequence(id,state);
+      return seq.frames.length>1?seq.frames[0][1]/data.tickRate:0;
+    }
+    function castExtension(id,state,holdUntil) {
+      const frames=sequence(id,state).frames;
+      const activeEnd=frames.slice(0,2).reduce((n,f)=>n+f[1],0)/data.tickRate;
+      return frames.length>1?Math.max(0,holdUntil-activeEnd):0;
+    }
+    function castDuration(id,state,holdUntil=0) {
+      return duration(id,state)+castExtension(id,state,holdUntil);
+    }
+    function sampleCast(id,state,elapsed,holdUntil=0) {
+      const frames=sequence(id,state).frames;
+      const activeEnd=frames.slice(0,2).reduce((n,f)=>n+f[1],0)/data.tickRate;
+      const extension=castExtension(id,state,holdUntil);
+      // 빔이 길면 발사 프레임을 늘리고, 복귀 프레임은 빔 종료 뒤 원래 순서대로 재생한다.
+      const played=elapsed<activeEnd?elapsed:elapsed<activeEnd+extension?activeEnd-1e-6:elapsed-extension;
+      return sample(id,state,played);
+    }
     function duration(id, state) {
       return sequence(id, state).frames.reduce((n, f) => n + f[1], 0) / data.tickRate;
     }
@@ -49,7 +71,7 @@
       if(Math.abs(dx)>0.0001)m.flip=dx>0;
       return m.flip;
     }
-    return { duration, sample, pose, movement, face };
+    return { duration, sample, pose, movement, face, windup, castDuration, sampleCast };
   }
   root.createAnimationPlayer = create;
   if (typeof module !== 'undefined') module.exports = { createAnimationPlayer: create };

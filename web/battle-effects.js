@@ -2,22 +2,29 @@
 // 원본 NCER/NCBR 타격광과 NANR 셀 유지 시간을 재생한다.
 (function(root){
  function createBattleEffects(){
-  let effects=[];
+  let effects=[];const arrivals=[];
   const skills=root.createBattleSkillEffects?.();
   const data=root.BATTLE_EFFECT_DATA;
   const hitImage=new Image();hitImage.src='assets/battle/effects.png';
   const healImages=Array.from({length:6},(_,i)=>{const im=new Image();im.src='assets/ui/fx_ring_'+(i+1)+'.png';return im;});
-  function add(event,units,before,actorScale){
-   const skill=skills?.add(event,units,before,actorScale);if(skill)return skill;
+  function add(event,units,before,actorScale,windup=0){
+   const skill=skills?.add(event,units,before,actorScale,windup);if(skill)return skill;
    if(!['hit','heal'].includes(event.type))return;
    const target=units.find(u=>u.id===event.to);if(!target)return;
-   effects.push({kind:event.type,x:target.x,y:target.y-10,age:0,
-    duration:event.type==='heal'?1:data.hit.frames.reduce((s,f)=>s+f[1],0)/data.tickRate});
+   const delay=event.type==='hit'&&event.special?windup:0;
+   const duration=event.type==='heal'?1:data.hit.frames.reduce((s,f)=>s+f[1],0)/data.tickRate;
+   effects.push({kind:event.type,x:target.x,y:target.y-10,age:-delay,duration,pending:delay>0,event,before:before?.get(target.id)});
+   if(delay)return {lead:delay,hold:delay+duration};
   }
-  function tick(dt){skills?.tick(dt);for(const e of effects)e.age+=Math.max(0,dt);effects=effects.filter(e=>e.age<e.duration);}
+  function tick(dt){
+   skills?.tick(dt);
+   for(const e of effects){e.age+=Math.max(0,dt);if(e.pending&&e.age>=0){e.pending=false;arrivals.push(e.event);}}
+   effects=effects.filter(e=>e.age<e.duration);
+  }
   function draw(ctx,scale=1){
    skills?.draw(ctx,scale);
    for(const e of effects){
+    if(e.age<0)continue;
     if(e.kind==='hit'){
      let t=e.age*data.tickRate,cell=data.hit.frames[0][0];
      for(const f of data.hit.frames){cell=f[0];if(t<f[1])break;t-=f[1];}
@@ -28,7 +35,7 @@
     }
    }
   }
-  return {add,tick,draw,drain:()=>skills?.drain()||[],visualUnit:u=>skills?.visualUnit(u)||u,get busy(){return skills?.busy||false;},get ready(){return skills?.ready??true;},get count(){return effects.length+(skills?.count||0);}};
+  return {add,tick,draw,drain:()=>arrivals.splice(0).concat(skills?.drain()||[]),visualUnit:u=>effects.find(e=>e.pending&&e.event.to===u.id)?.before||skills?.visualUnit(u)||u,get busy(){return effects.some(e=>e.pending)||skills?.busy||false;},get ready(){return skills?.ready??true;},get count(){return effects.length+(skills?.count||0);}};
  }
  root.createBattleEffects=createBattleEffects;
  if(typeof module!=='undefined')module.exports={createBattleEffects};

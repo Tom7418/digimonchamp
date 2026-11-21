@@ -29,5 +29,10 @@ for address, expected in checks.items():
     assert actual == expected, f'{address:#x}: {actual:#x} != {expected:#x}'
 for state, handler in [(12, 0x2116860), (15, 0x2116890), (20, 0x2117314)]:
     assert struct.unpack_from('<2I', raw, 0x212310c-base+state*8) == (handler, 0)
-print(json.dumps({'instructionChecks':len(checks), 'dispatchChecks':3,
+# 준비 셀을 벗어났는지 검사하는 공통 전투 VM: actor -> sprite -> NANR frame index != 0.
+arm=(args.root/'ftc/arm9.bin').read_bytes()
+for address,expected in {0x20470f0:0xe59fc004,0x20470fc:0x202d7f8,0x202d7f8:0xe590101c,0x202d800:0xe591000c}.items():
+ assert struct.unpack_from('<I',arm,address-0x2000000)[0]==expected,hex(address)
+assert raw[0x2123f8d-base:0x2123f8d-base+5]==bytes([50,0x90,0x0b,0x12,0x02])
+print(json.dumps({'instructionChecks':len(checks), 'dispatchChecks':3,'windupChecks':5,
     'overlay19Sha256': hashlib.sha256(raw).hexdigest()}, indent=2))

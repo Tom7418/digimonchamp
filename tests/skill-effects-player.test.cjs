@@ -66,3 +66,12 @@ test('발끝 정렬과 종별 NCER 원점을 반영해 배율이 달라도 입 �
  fx.add(event(61),u,undefined,1.5);const out=captureBeam(fx);assert.equal(out.positions[0][0],40+16*1.5);assert.equal(out.positions[0][1],90+14+(-2-10)*1.5);
  const b=setup();b.fx.add(event(60),u,undefined,1.5);const shots=captureBeam(b.fx);assert.equal(shots.positions[0][0],shots.positions[1][0]);assert.equal(shots.positions[0][1],shots.positions[1][1]);
 });
+
+test('준비 동작 동안 기술 그림·피해를 보류하고 입이 열린 뒤에만 비행을 시작한다',()=>{
+ for(const record of [60,61]){
+  const {fx}=setup(),u=units(),before=new Map([[1,{...u[1],hp:100,alive:true}]]),wait=.25,t=fx.add(event(record),u,before,1,wait);
+  assert.equal(captureBeam(fx).draws.length,0);assert.equal(fx.visualUnit(u[1]).hp,100);fx.tick(wait-.001);assert.equal(captureBeam(fx).draws.length,0);assert.equal(fx.drain().length,0);
+  fx.tick(.002);assert.ok(captureBeam(fx).draws.length>0);assert.equal(fx.visualUnit(u[1]).hp,100);
+  fx.tick(t.lead-wait);assert.equal(fx.drain().length,1);assert.equal(fx.visualUnit(u[1]).hp,0);
+ }
+});

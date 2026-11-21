@@ -1347,7 +1347,9 @@
       }
       for (const e of events) {
         const caster=b.state.units.find(u=>u.id===e.from);
-        const effect=b.effects.add(e,b.state.units,before,caster?battleBackdrop.spriteScale(spriteOf(caster.speciesId,false)):1);
+        const skillState=e.type==='hit'&&e.special?(e.skill?.animation??'attack1'):null;
+        const windup=skillState&&caster?(animations.windup?.(SPRITE_BY_NAME[C.getSpecies(caster.speciesId).id],skillState)||0):0;
+        const effect=b.effects.add(e,b.state.units,before,caster?battleBackdrop.spriteScale(spriteOf(caster.speciesId,false)):1,windup);
         // 실제 적중 이벤트로 공격/피격을 연결하고 각 종 NANR 유지 시간을 사용한다.
         if(e.type==='hit'){
           const attacker=b.state.units.find(u=>u.id===e.from),target=b.state.units.find(u=>u.id===e.to);
@@ -1358,8 +1360,9 @@
           b.presentation?.add(e,b.state.units,Math.max(attackDuration,effect?.hold||0));
           animations.face?.(attacker,attackId,target.x-attacker.x);
           // 원본 빔은 0x212073c로 시전자를 잠근다. 빔이 끝날 때까지 공격 자세를 유지한다.
-          const actionDuration=effect?.lockActor?Math.max(attackDuration,effect.hold):attackDuration;
-          if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:actionDuration,duration:actionDuration,state:attackState,flip:target.x>attacker.x});
+          const holdUntil=effect?.lockActor?effect.hold:0;
+          const actionDuration=holdUntil?(animations.castDuration?.(attackId,attackState,holdUntil)||Math.max(attackDuration,holdUntil)):attackDuration;
+          if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:actionDuration,duration:actionDuration,state:attackState,holdUntil,flip:target.x>attacker.x});
           if(!effect?.lead)battleHitVisual(b,e);
           if(e.special&&e.skill){
             b.flashes.push({id:e.from,text:e.skill.name,until:performance.now()+700,color:'#a9e7ff',skill:true});
@@ -1511,7 +1514,9 @@
       const pose=animations.movement(u,spriteId,m.dx,m.dy,dt,!u.alive||!!statusPose,statusPose);
       const action=battle.actions.get(u.id);
       // 피격 시 해당 종의 원본 셀을 원본 유지 시간으로 재생한다. 인위적 흔들림/점멸 없음.
-      const frame=!u.alive?animations.sample(spriteId,'ko',0):statusPose?pose.frame:action?animations.sample(spriteId,action.state,focus?.from===u.id?Math.max(0,focus.age-focus.transition):action.duration-action.left):pose.frame;
+      const actionAge=action?Math.max(0,action.duration-action.left):0;
+      const actionFrame=action?.holdUntil&&animations.sampleCast?animations.sampleCast(spriteId,action.state,actionAge,action.holdUntil):action?animations.sample(spriteId,action.state,actionAge):pose.frame;
+      const frame=!u.alive?animations.sample(spriteId,'ko',0):statusPose?pose.frame:actionFrame;
       const art=spriteOf(u.speciesId,false),scale=battleBackdrop.spriteScale(art);
       ctx.fillStyle='#081c3044';ctx.beginPath();ctx.ellipse(u.x,u.y+14,Math.max(10,(art?.body||24)*scale*.4),5,0,0,Math.PI*2);ctx.fill();
       body(ctx,u.speciesId,false,u.x,u.y+14,scale,frame,action?.flip??pose.flip);

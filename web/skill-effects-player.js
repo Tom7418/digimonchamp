@@ -5,7 +5,7 @@
   const image=new Image();image.src='assets/battle/skill-effects.png';let jobs=[],clock=0;const arrivals=[];
   const sequence=ref=>data.banks[ref[0]].sequences[ref[1]];
   const duration=ref=>ref?sequence(ref).frames.reduce((n,f)=>n+f[1],0)/data.tickRate:0;
-  function add(event,units,before,actorScale=1){
+  function add(event,units,before,actorScale=1,windup=0){
    if(event.type!=='hit'||!event.special)return null;
    const d=data?.records[event.skill?.record],a=units.find(u=>u.id===event.from),t=units.find(u=>u.id===event.to);
    if(!d||!a||!t)return null;
@@ -20,8 +20,8 @@
    const beam=d.kind==='beam'?data.beam:null;
    const activeEnd=beam?Math.max(lead,(beam.growDelayFrames+Math.ceil(1/beam.widthStep)-1)/data.tickRate):0;
    const tail=beam?Math.max(activeEnd-lead+Math.ceil(1/beam.widthStep)/data.tickRate,duration(d.impact)):Math.max(duration(d.finish),duration(d.impact));
-   jobs.push({d,event,from,actorScale,start,end,flip,begin:clock,lead,tail,activeEnd,arrived:lead===0,before:before?.get(t.id)});
-   return {lead,hold:lead+tail,lockActor:d.kind==='beam'};
+   jobs.push({d,event,from,actorScale,start,end,flip,begin:clock+windup,lead,tail,activeEnd,arrived:windup+lead===0,before:before?.get(t.id)});
+   return {lead:windup+lead,hold:windup+lead+tail,lockActor:d.kind==='beam'};
   }
   function tick(dt){
    clock+=Math.max(0,dt);
@@ -39,6 +39,7 @@
   function draw(ctx,scale=1){
    for(const j of jobs){
     const age=clock-j.begin,d=j.d;
+    if(age<0)continue; // 준비 동작 중에는 발사광·투사체·빔을 그리지 않는다.
     if(d.kind==='beam'){
      const b=data.beam,dx=j.end.x-j.start.x,dy=j.end.y-j.start.y,distance=Math.hypot(dx,dy)||1;
      const frame=Math.floor(age*data.tickRate+1e-7),endFrame=Math.ceil(j.activeEnd*data.tickRate);

@@ -3,9 +3,6 @@
  // 확대 대상/전환 시간은 원본 표. 카메라 중심 보간과 유지 시간은 웹 화면 정책.
  root.createBattlePresentation=function(data=root.BATTLE_PRESENTATION_DATA){
   const queue=[];let active=null;
-  const lines=root.BATTLE_SPEEDLINE_DATA;
-  const image=lines&&typeof Image!=='undefined'?new Image():null;
-  if(image)image.src='assets/battle/speedlines.png';
   function add(event,units,duration){
    const frames=event.type==='hit'&&event.special&&data?.records[event.skill?.record];
    const actor=units.find(u=>u.id===event.from);
@@ -28,27 +25,8 @@
    const z=a.age<t?1+Math.sqrt(a.age/t):a.age<t+a.hold?2:2-Math.sqrt(Math.min(1,(a.age-t-a.hold)/t));
    return {...a,zoom:z,dim:(z-1)*data.dimFraction,progress:z-1};
   }
-  function draw(ctx,width,height){
-   const focus=snapshot();
-   if(!focus||!lines||!image?.complete||!image.naturalWidth||focus.zoom<=1||focus.zoom>2)return;
-   ctx.save();ctx.beginPath();ctx.rect(0,0,width,height);ctx.clip();
-   // 원본 0x211ee30: alpha=1+floor((zoom-1)*30), DS alpha 1..31.
-   ctx.globalAlpha=(1+Math.floor((focus.zoom-1)*30))/31;
-   ctx.scale(width/256,height/192);
-   for(let band=0;band<lines.bands;band++){
-    const speed=1+Math.floor(band/2)*.5,direction=band%2?-1:1;
-    const offset=focus.age*lines.tickRate*speed*direction;
-    for(let column=0;column<3;column++){
-     const x=((column*lines.spacing+offset+128)%lines.wrap+lines.wrap)%lines.wrap-128;
-     // 원본 위치의 z=64를 빼면 위0..48 / 아래176..128이다.
-     for(const y of [band*16,176-band*16]){
-      ctx.save();ctx.translate(x,y);ctx.scale(lines.scale,lines.scale);
-      ctx.drawImage(image,lines.cell*lines.width+lines.crop[0],lines.crop[1],lines.crop[2],lines.crop[3],0,0,lines.crop[2],lines.crop[3]);ctx.restore();
-     }
-    }
-   }
-   ctx.restore();
-  }
+  // 사용자 요청: 0/1 디지털 띠는 표시하지 않는다. 확대와 암전만 유지한다.
+  function draw(){}
   return {add,tick,snapshot,draw,get busy(){return !!active;}};
  };
 })(typeof window!=='undefined'?window:globalThis);
