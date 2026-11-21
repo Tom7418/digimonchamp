@@ -1878,13 +1878,7 @@
   }
   // 원작처럼 사냥 전에 플러그인을 장비한다. 칸 수는 랭크에 따라 2·3·4칸 (원본 랭크 표 +20)
   function loadoutHtml() {
-    const slots = C.pluginSlots(save), now = C.equippedPlugins(save).map((p) => p.id);
-    const owned = C.PLUGINS.filter((p) => (save.plugins ?? []).includes(p.id));
-    const list = owned.map((p) => {
-      const on = now.includes(p.id);
-      return `<button data-plugin="${p.id}" class="${on ? 'active' : ''}"${!on && now.length >= slots ? ' disabled' : ''}>${on ? '✔ ' : ''}${esc(p.name)}</button>`;
-    }).join('');
-    return `<h3>플러그인 ${now.length}/${slots}칸</h3><div class="load-list">${list || '<p class="hint">가진 플러그인이 없습니다. 애널라이저(이름·정보), 레이더(미니맵 표시), 체커(장비 수량)는 상점에서 살 수 있어요.</p>'}</div>`;
+    return window.pluginLoadoutHtml(C,save,esc);
   }
 
   // 화면의 잘라낸 좌표를 ATR의 원본 지도 좌표로 바꾼다. 사육장 카메라/줌은 쓰지 않는다.

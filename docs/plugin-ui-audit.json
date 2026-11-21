@@ -1,0 +1,16 @@
+{
+  "source": "ui/hunt/setting/setting_obj_plug_main",
+  "cells": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "policy": "Original cartridge pixels. Category-to-color correspondence and responsive slots/cards are web layout policy; original screen mapping is not confirmed.",
+  "sha256": {
+    ".ncer": "96f00a752be421520ab20ef1029c446ca3ddcd491f0f121fe822e4dbcc5782cd",
+    ".ncbr": "f384ef55339f30b5caac5eb6bf5f589b1eb3ff4eaac0d9025217ddf6ec84f175",
+    ".nclr": "98ee8fc2a3fd5b80ebcfb7e748bd4722a702cb9df65dcaa32e45deaf53c1e604",
+    ".nanr": "a2895869c068803887a62e5228b9151b49f24ead19625d6c774a4d71b9db819d"
+  }
+}
