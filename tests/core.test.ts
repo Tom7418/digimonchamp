@@ -20,7 +20,7 @@ import { seeded } from '../src/core/rng';
 import { DEX_ORDER, dexEntries, dexCount } from '../src/core/dex';
 import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent, rollMorningMail } from '../src/core/events';
 import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, shotCooldown, useGear, gearCount, BAITS, GEARS, gearOf, itemResist, itemDamage, effectLands, magnetSeconds, attracted, HUNT_ITEM_SLOTS, huntItems, toggleHuntItem } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotCooldown, paralysisSeconds, itemDamage as itemDmg, WIRE_UNIT, BOMB_FUSE, useGear, gearCount, BAITS, GEARS, gearOf, itemResist, itemDamage, effectLands, magnetSticks, attracted, HUNT_ITEM_SLOTS, huntItems, toggleHuntItem } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
 import { discardFloorFood, ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -801,14 +801,13 @@ describe('사냥 장비', () => {
   it('샷 12종: 원작 이름·위력, 원본 발사 간격(보통 0.5초·연사 5프레임·산탄 1초)', () => {
     expect(SHOTS.map((s) => s.name)).toEqual(['핸드 건α', '핸드 건β', '래피드 건α', '래피드 건β', '슬립 라이플α', '슬립 라이플β', '스턴 라이플α', '스턴 라이플β', '샷 건α', '샷 건β', '스턴 샷α', '스턴 샷β']);
     expect(shotOf('hand2')!.power).toBe(20);
-    expect(shotStun(shotOf('hand2')!)).toBeGreaterThan(shotStun(shotOf('hand1')!));
+    // 멈춤 = 샷 내성 등급(+118) × 위력(1·2)초. 문몬 +118 = 3, 즈루몬 1
+    expect(shotStun(shotOf('hand1')!, '즈루몬')).toBe(1);
+    expect(shotStun(shotOf('hand2')!, '문몬')).toBe(6);
     expect(shotCooldown(shotOf('hand1')!)).toBe(0.5);
     expect(shotCooldown(shotOf('sleep1')!)).toBe(0.5);
     expect(shotCooldown(shotOf('rapid1')!)).toBeCloseTo(5 / 60);
     expect(shotCooldown(shotOf('shotgun2')!)).toBe(1);
-    expect(shotDamage(shotOf('hand1')!, 3)).toBe(0);
-    expect(shotDamage(shotOf('hand2')!, 3)).toBe(1);
-    expect(shotDamage(shotOf('hand2')!, 1)).toBe(0); // 샷만으로는 잡히지 않는다
     expect(BAITS.map((b) => b.range)).toEqual([128, 256]); // 원본 고기 표 +4
   });
   it('나머지 장비 19종: 원작 이름·길이·위력', () => {
@@ -848,8 +847,14 @@ describe('사냥 장비', () => {
     expect(effectLands('즈루몬', '눈가리기', () => 0.7)).toBe(false);
     const flash3 = Object.values(SPECIES).find((sp) => originalSpecies(sp.id)!.itemResist[10] === 3)!;
     expect(effectLands(flash3.id, '눈가리기', () => 0)).toBe(false); // 등급 3 → 0%
-    expect(magnetSeconds('즈루몬')).toBe(27);
-    expect(magnetSeconds('문몬')).toBe(0);
+    expect(magnetSticks('즈루몬')).toBe(true);
+    expect(magnetSticks('문몬')).toBe(false); // 마그넷 등급 3
+    expect(paralysisSeconds(() => 0)).toBe(20);
+    expect(paralysisSeconds(() => 0.99)).toBe(29);
+    expect(itemDmg('즈루몬', 'bomb4', 10)).toBe(0); // 플래시 폭탄은 대미지 없음
+    expect(WIRE_UNIT * 24).toBeCloseTo(64);
+    expect(WIRE_UNIT * 48).toBeCloseTo(128);
+    expect(BOMB_FUSE).toBeCloseTo(4.2, 1);
   });
   it('미끼·라이트·고기에 끌릴 확률 (원본 표)', () => {
     expect(attracted('즈루몬', 'toy1', () => 0.59)).toBe(true);

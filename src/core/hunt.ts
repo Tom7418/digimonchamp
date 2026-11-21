@@ -245,8 +245,8 @@ export const WIRE_PACK = { count: 10, price: 100 };
 
 // ---------- 사냥 장비: 샷·고기 ----------
 // 이름·위력·효과·'6발' 문구는 원작 글(txt_list 350~361, 368~369번과 설명 396~407, 414~415번).
-// 임시 값: 묶음 수, 맞았을 때 멈추는 시간과 HP 감소, 범위, 고기가 남는 시간. 발사 간격·고기 냄새 거리는 원본.
-//   원작의 위력 1/2가 명중 대미지(overlay9_0 0x2065910 호출)에서 어떻게 계산되는지는 확인하지 못했다.
+// 임시 값: 묶음 수, 산탄 범위, 고기가 남는 시간. 발사 간격·멈추는 시간·고기 냄새 거리는 원본.
+//   샷은 맞은 디지몬에게 메시지 0x2E(위력, 효과, 샷 내성)를 보내 멈추게만 한다(0x2125ED8 → 0x2111CBC).
 export interface Shot {
   id: string;
   name: string;
@@ -275,10 +275,14 @@ export const shotOf = (id: string) => SHOTS.find((s) => s.id === id);
 /** 한 번 살 때 들어오는 탄 수 (임시) */
 export const SHOT_PACK = 10;
 export const SHOT_SPREAD_RADIUS = 90;
-/** 맞은 디지몬이 멈추는 초 (임시): 위력 10당 2초. 수면·마비가 걸리면 EFFECT_SECONDS */
-export const shotStun = (s: Shot) => (s.power / 10) * 2;
-/** 맞았을 때 줄어드는 HP (임시): 위력 20 이상이면 1. 샷만으로는 잡히지 않게 HP 1은 남긴다 */
-export const shotDamage = (s: Shot, hp: number) => (s.power >= 20 && hp > 1 ? 1 : 0);
+/**
+ * 샷에 맞아 멈추는 초 (원본 overlay9_0 0x2111CBC): 샷 내성 등급(종 표 +118, 0은 1) × (위력 1이면 1초, 2면 2초).
+ * 멈춰 있는 동안 또 맞으면 더해지고 15초(900프레임)를 넘지 않는다. 샷은 HP를 깎지 않는다(대미지 처리 없음).
+ */
+export const shotStun = (s: Shot, speciesId?: string) => (speciesId ? itemResist(speciesId, 'shot') : 1) * (s.power / 10);
+export const SHOT_STOP_MAX = 15;
+/** 효과 없는 샷으로 멈춘 뒤에는 ±128px 안의 아무 곳으로 달아난다 (0x2111D48) */
+export const SHOT_SCATTER = 128;
 /** 다음 발까지의 초 (원본 overlay9_0 0x2125D08: 보통 30프레임, 연사 5프레임, 산탄 60프레임) */
 export const shotCooldown = (s: Shot) => (s.rapid ? 5 / 60 : s.spread ? 1 : 0.5);
 
@@ -309,7 +313,7 @@ export function useGear<T extends { gear?: Record<string, number> }>(save: T, id
 
 // ---------- 사냥 장비: 와이어·특수 고기·미끼·라이트·폭탄·마인·함정 ----------
 // 이름·길이·위력·효과·'밤에만'은 원작 글(txt_list 362~383번, 설명 408~429번).
-// 임시 값: 묶음 수, 길이 1 = 7.5px(노멀 와이어α 24 = 지금까지의 180px), 수면·마비 지속 시간, 폭발·함정 범위, 남는 시간.
+// 임시 값: 묶음 수, 수면 지속 시간, 함정 범위, 마인이 터지는 거리, 남는 시간. 와이어 최대 길이(64·128px)·폭발 반경(96·256px)은 원본.
 //   대미지·확률·끌리는 거리는 아래 '사냥 아이템의 원본 효과'(원본 표)를 쓴다. power·range 일부는 원작 글 값으로 표시용이다.
 export type GearKind = 'wire' | 'bait' | 'toy' | 'light' | 'bomb' | 'mine' | 'trap';
 export type GearEffect = '수면' | '마비' | '독' | '눈가리기';
@@ -348,18 +352,18 @@ export const GEARS: Gear[] = [
   { id: 'toy2', name: '미끼EV', kind: 'toy', range: 96, seconds: 20, speed: 40, price: 700, minRank: 4, pack: 3 },
   { id: 'light1', name: '옐로우 라이트', kind: 'light', range: 128, seconds: 15, nightOnly: true, price: 400, minRank: 2, pack: 3 },
   { id: 'light2', name: '블루 라이트', kind: 'light', range: 128, seconds: 15, nightOnly: true, price: 800, minRank: 4, pack: 3 },
-  { id: 'bomb1', name: '일반 폭탄', kind: 'bomb', power: 40, range: 110, price: 400, minRank: 3, pack: 3 },
-  { id: 'bomb2', name: '슬립 폭탄', kind: 'bomb', power: 40, effect: '수면', range: 110, price: 600, minRank: 4, pack: 3 },
-  { id: 'bomb3', name: '스턴 폭탄', kind: 'bomb', power: 40, effect: '마비', range: 110, price: 600, minRank: 4, pack: 3 },
-  { id: 'bomb4', name: '플래시 폭탄', kind: 'bomb', power: 40, effect: '눈가리기', range: 160, price: 600, minRank: 5, pack: 3 },
-  { id: 'mine1', name: '일반 마인', kind: 'mine', power: 50, range: 70, price: 500, minRank: 4, pack: 3 },
-  { id: 'mine2', name: '휴즈 마인', kind: 'mine', power: 70, range: 120, price: 900, minRank: 6, pack: 3 },
+  { id: 'bomb1', name: '일반 폭탄', kind: 'bomb', power: 40, range: 96, price: 400, minRank: 3, pack: 3 },
+  { id: 'bomb2', name: '슬립 폭탄', kind: 'bomb', power: 40, effect: '수면', range: 96, price: 600, minRank: 4, pack: 3 },
+  { id: 'bomb3', name: '스턴 폭탄', kind: 'bomb', power: 40, effect: '마비', range: 96, price: 600, minRank: 4, pack: 3 },
+  { id: 'bomb4', name: '플래시 폭탄', kind: 'bomb', power: 40, effect: '눈가리기', range: 256, price: 600, minRank: 5, pack: 3 },
+  { id: 'mine1', name: '일반 마인', kind: 'mine', power: 50, range: 96, price: 500, minRank: 4, pack: 3 },
+  { id: 'mine2', name: '휴즈 마인', kind: 'mine', power: 70, range: 96, price: 900, minRank: 6, pack: 3 },
   { id: 'trap1', name: '디지 캐치', kind: 'trap', range: 30, seconds: 15, holds: 1, price: 600, minRank: 3, pack: 2 },
   { id: 'trap2', name: '디지 프리즌', kind: 'trap', range: 60, seconds: 15, holds: 4, price: 1500, minRank: 6, pack: 2 },
 ];
 export const gearOf = (id: string) => GEARS.find((g) => g.id === id);
-/** 원작 길이 1이 화면에서 차지하는 px (임시) */
-export const WIRE_UNIT = 7.5;
+/** 원작 글의 길이 1이 사냥 지도에서 차지하는 px: 원본 와이어 표 +4의 최대 길이가 α 64px·β 128px(0x21270E4)라 24 → 64 */
+export const WIRE_UNIT = 64 / 24;
 
 // ---------- 사냥 아이템의 원본 효과 ----------
 /**
@@ -372,9 +376,9 @@ export const WIRE_UNIT = 7.5;
  * 세 칸짜리 값은 야생 디지몬의 아이템 내성 등급(종 표 +118~+129, 1~3)으로 고른다: 등급 1 → 첫 칸.
  * %는 그 디지몬 HP 최대치에 대한 비율이고(0x210F968, 0 미만은 0 = 기절할 수 있다), 확률은 rand(100) < 값.
  */
-export type ItemResistKind = 'bomb' | 'meat' | 'light' | 'lure' | 'mine' | 'sleep' | 'poison' | 'paralysis' | 'flash' | 'magnet';
+export type ItemResistKind = 'shot' | 'bomb' | 'meat' | 'light' | 'lure' | 'mine' | 'sleep' | 'poison' | 'paralysis' | 'flash' | 'magnet';
 /** 0x2112618의 번호 n → 종 표 +117+n */
-const ITEM_RESIST_INDEX: Record<ItemResistKind, number> = { bomb: 2, meat: 4, light: 5, lure: 6, mine: 7, sleep: 8, poison: 9, paralysis: 10, flash: 11, magnet: 12 };
+const ITEM_RESIST_INDEX: Record<ItemResistKind, number> = { shot: 1, bomb: 2, meat: 4, light: 5, lure: 6, mine: 7, sleep: 8, poison: 9, paralysis: 10, flash: 11, magnet: 12 };
 /** 야생 디지몬의 아이템 내성 등급 1~3 (원본 0은 1과 같게 쓰인다: 표 칸 = 등급−1, 음수는 0) */
 export function itemResist(speciesId: string, kind: ItemResistKind): 1 | 2 | 3 {
   const v = originalSpecies(speciesId)?.itemResist?.[ITEM_RESIST_INDEX[kind] - 1] ?? 1;
@@ -389,8 +393,6 @@ export const ITEM_EFFECT = {
   mineDamage: { mine1: [50, 30, 10], mine2: [70, 40, 10] } as Record<string, number[]>,
   /** 스파크 와이어 대미지 % (0x2112120, α·β 같음). 등급 3은 전격을 받지 않는다(0x2111988) */
   sparkDamage: [20, 10, 0],
-  /** 마그넷 와이어에 달라붙는 초 (0x21120E8: 값 × 60프레임). 등급 3은 달라붙지 않는다(0x2111910) */
-  magnetSeconds: [27, 0, 0],
   /** 플래시 폭탄 눈가리기 확률 % (0x2112310) */
   flashChance: [70, 0, 0],
   /** 미끼에 끌릴 확률 % (0x21123B0), 96px 안에서 */
@@ -425,7 +427,8 @@ const rollPercent = (pct: number, rng: () => number) => pct >= 100 || (pct > 0 &
 export function itemDamage(speciesId: string, itemId: string, max: number): number {
   const g = gearOf(itemId);
   let pct = 0;
-  if (g?.kind === 'bomb') pct = byLevel(ITEM_EFFECT.bombDamage, itemResist(speciesId, 'bomb'));
+  // 플래시 폭탄은 빛(메시지 0x37)만 내고 폭발 대미지(0x35)는 없다 (폭탄 관리 0x2124B6C)
+  if (g?.kind === 'bomb') pct = g.effect === '눈가리기' ? 0 : byLevel(ITEM_EFFECT.bombDamage, itemResist(speciesId, 'bomb'));
   else if (g?.kind === 'mine') pct = byLevel(ITEM_EFFECT.mineDamage[itemId] ?? [], itemResist(speciesId, 'mine'));
   else if (g?.kind === 'wire' && g.power) pct = itemResist(speciesId, 'paralysis') === 3 ? 0 : byLevel(ITEM_EFFECT.sparkDamage, itemResist(speciesId, 'paralysis'));
   return (max * pct) / 100;
@@ -439,11 +442,11 @@ export function effectLands(speciesId: string, effect: GearEffect, rng: () => nu
   return level === 3 ? false : level === 2 ? rng() < 0.5 : true;
 }
 
-/** 마그넷 와이어에 달라붙는 초 (0이면 달라붙지 않고 보통 와이어처럼 튕긴다) */
-export function magnetSeconds(speciesId: string): number {
-  const level = itemResist(speciesId, 'magnet');
-  return level === 3 ? 0 : byLevel(ITEM_EFFECT.magnetSeconds, level);
-}
+/**
+ * 마그넷 와이어에 달라붙는가 (0x2111910: 등급 1·2는 상태 13, 3은 튕김).
+ * 상태 13은 그 와이어가 없어질 때까지 이어진다(0x2115804). 표 +7(27)은 몸부림 간격 프레임÷60으로, 등급 2는 0이라 매 프레임 몸부림친다.
+ */
+export const magnetSticks = (speciesId: string) => itemResist(speciesId, 'magnet') < 3;
 
 /** 미끼·라이트·고기에 끌리는가. 고기는 포만감이 절반 이하일 때만 (1초마다 다시 판정) */
 export function attracted(speciesId: string, itemId: string, rng: () => number = Math.random, hungry = true): boolean {
@@ -453,8 +456,19 @@ export function attracted(speciesId: string, itemId: string, rng: () => number =
   return hungry && rollPercent(byLevel(ITEM_EFFECT.meatChance, itemResist(speciesId, 'meat')), rng);
 }
 
-/** 효과로 멈추는 초 (임시: 원본 수면은 졸음 수치를 최대치의 80%로 올리고, 마비는 상태 0x11 — 길이는 미확인). 눈가리기는 flashSeconds */
-export const EFFECT_SECONDS: Record<'수면' | '마비', number> = { 수면: 12, 마비: 8 };
+/** 수면으로 멈추는 초 (임시: 원본 수면은 졸음 수치를 최대치(+0x51C)의 80%로 올려 잠들게 한다 — 0x2111DE4. 종별 졸음 최대치 미확인) */
+export const SLEEP_SECONDS = 12;
+/** 마비(상태 17) 초: 20 + rand(10) (원본 0x21163B0 진입, 0x21161FC에서 매 프레임 줄여 0이면 풀림) */
+export const paralysisSeconds = (rng: () => number = Math.random) => 20 + Math.floor(rng() * 10);
+/** 스파크 와이어 감전(상태 14) 0.5초 뒤 마비로 넘어간다 (0x2115A68 30프레임, 0x2115864) */
+export const SPARK_SHOCK = 0.5;
+/** 폭탄: 놓고 약 4.2초 뒤 터진다 (원본 폭탄 관리 0x2124A90: 240프레임 + 6 + 6) */
+export const BOMB_FUSE = 253 / 60;
+/** 폭발이 닿는 거리 px: 폭탄·마인 96, 플래시 폭탄 256 (메시지 0x35·0x3A 반경 0x60, 0x37 반경 0x100 — 0x2112840) */
+export const BLAST_RADIUS = 96;
+export const FLASH_RADIUS = 256;
+/** 사냥터에 동시에 놓을 수 있는 와이어 수 (원본 와이어 관리 칸 2개, 0x2126C1C) */
+export const HUNT_WIRE_MAX = 2;
 /** 마그넷·스파크 와이어에 한 번 걸린 뒤 다시 걸리기까지의 초 (임시) */
 export const WIRE_COOLDOWN = 3;
 

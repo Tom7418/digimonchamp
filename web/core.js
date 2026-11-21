@@ -3246,10 +3246,14 @@ var ChampCore = (function(exports) {
 	/** 한 번 살 때 들어오는 탄 수 (임시) */
 	var SHOT_PACK = 10;
 	var SHOT_SPREAD_RADIUS = 90;
-	/** 맞은 디지몬이 멈추는 초 (임시): 위력 10당 2초. 수면·마비가 걸리면 EFFECT_SECONDS */
-	var shotStun = (s) => s.power / 10 * 2;
-	/** 맞았을 때 줄어드는 HP (임시): 위력 20 이상이면 1. 샷만으로는 잡히지 않게 HP 1은 남긴다 */
-	var shotDamage = (s, hp) => s.power >= 20 && hp > 1 ? 1 : 0;
+	/**
+	* 샷에 맞아 멈추는 초 (원본 overlay9_0 0x2111CBC): 샷 내성 등급(종 표 +118, 0은 1) × (위력 1이면 1초, 2면 2초).
+	* 멈춰 있는 동안 또 맞으면 더해지고 15초(900프레임)를 넘지 않는다. 샷은 HP를 깎지 않는다(대미지 처리 없음).
+	*/
+	var shotStun = (s, speciesId) => (speciesId ? itemResist(speciesId, "shot") : 1) * (s.power / 10);
+	var SHOT_STOP_MAX = 15;
+	/** 효과 없는 샷으로 멈춘 뒤에는 ±128px 안의 아무 곳으로 달아난다 (0x2111D48) */
+	var SHOT_SCATTER = 128;
 	/** 다음 발까지의 초 (원본 overlay9_0 0x2125D08: 보통 30프레임, 연사 5프레임, 산탄 60프레임) */
 	var shotCooldown = (s) => s.rapid ? 5 / 60 : s.spread ? 1 : .5;
 	var BAITS = [{
@@ -3403,7 +3407,7 @@ var ChampCore = (function(exports) {
 			name: "일반 폭탄",
 			kind: "bomb",
 			power: 40,
-			range: 110,
+			range: 96,
 			price: 400,
 			minRank: 3,
 			pack: 3
@@ -3414,7 +3418,7 @@ var ChampCore = (function(exports) {
 			kind: "bomb",
 			power: 40,
 			effect: "수면",
-			range: 110,
+			range: 96,
 			price: 600,
 			minRank: 4,
 			pack: 3
@@ -3425,7 +3429,7 @@ var ChampCore = (function(exports) {
 			kind: "bomb",
 			power: 40,
 			effect: "마비",
-			range: 110,
+			range: 96,
 			price: 600,
 			minRank: 4,
 			pack: 3
@@ -3436,7 +3440,7 @@ var ChampCore = (function(exports) {
 			kind: "bomb",
 			power: 40,
 			effect: "눈가리기",
-			range: 160,
+			range: 256,
 			price: 600,
 			minRank: 5,
 			pack: 3
@@ -3446,7 +3450,7 @@ var ChampCore = (function(exports) {
 			name: "일반 마인",
 			kind: "mine",
 			power: 50,
-			range: 70,
+			range: 96,
 			price: 500,
 			minRank: 4,
 			pack: 3
@@ -3456,7 +3460,7 @@ var ChampCore = (function(exports) {
 			name: "휴즈 마인",
 			kind: "mine",
 			power: 70,
-			range: 120,
+			range: 96,
 			price: 900,
 			minRank: 6,
 			pack: 3
@@ -3485,10 +3489,11 @@ var ChampCore = (function(exports) {
 		}
 	];
 	var gearOf = (id) => GEARS.find((g) => g.id === id);
-	/** 원작 길이 1이 화면에서 차지하는 px (임시) */
-	var WIRE_UNIT = 7.5;
+	/** 원작 글의 길이 1이 사냥 지도에서 차지하는 px: 원본 와이어 표 +4의 최대 길이가 α 64px·β 128px(0x21270E4)라 24 → 64 */
+	var WIRE_UNIT = 64 / 24;
 	/** 0x2112618의 번호 n → 종 표 +117+n */
 	var ITEM_RESIST_INDEX = {
+		shot: 1,
 		bomb: 2,
 		meat: 4,
 		light: 5,
@@ -3531,12 +3536,6 @@ var ChampCore = (function(exports) {
 		sparkDamage: [
 			20,
 			10,
-			0
-		],
-		/** 마그넷 와이어에 달라붙는 초 (0x21120E8: 값 × 60프레임). 등급 3은 달라붙지 않는다(0x2111910) */
-		magnetSeconds: [
-			27,
-			0,
 			0
 		],
 		/** 플래시 폭탄 눈가리기 확률 % (0x2112310) */
@@ -3612,7 +3611,7 @@ var ChampCore = (function(exports) {
 	function itemDamage(speciesId, itemId, max) {
 		const g = gearOf(itemId);
 		let pct = 0;
-		if (g?.kind === "bomb") pct = byLevel(ITEM_EFFECT.bombDamage, itemResist(speciesId, "bomb"));
+		if (g?.kind === "bomb") pct = g.effect === "눈가리기" ? 0 : byLevel(ITEM_EFFECT.bombDamage, itemResist(speciesId, "bomb"));
 		else if (g?.kind === "mine") pct = byLevel(ITEM_EFFECT.mineDamage[itemId] ?? [], itemResist(speciesId, "mine"));
 		else if (g?.kind === "wire" && g.power) pct = itemResist(speciesId, "paralysis") === 3 ? 0 : byLevel(ITEM_EFFECT.sparkDamage, itemResist(speciesId, "paralysis"));
 		return max * pct / 100;
@@ -3624,11 +3623,11 @@ var ChampCore = (function(exports) {
 		const level = itemResist(speciesId, effect === "수면" ? "sleep" : "paralysis");
 		return level === 3 ? false : level === 2 ? rng() < .5 : true;
 	}
-	/** 마그넷 와이어에 달라붙는 초 (0이면 달라붙지 않고 보통 와이어처럼 튕긴다) */
-	function magnetSeconds(speciesId) {
-		const level = itemResist(speciesId, "magnet");
-		return level === 3 ? 0 : byLevel(ITEM_EFFECT.magnetSeconds, level);
-	}
+	/**
+	* 마그넷 와이어에 달라붙는가 (0x2111910: 등급 1·2는 상태 13, 3은 튕김).
+	* 상태 13은 그 와이어가 없어질 때까지 이어진다(0x2115804). 표 +7(27)은 몸부림 간격 프레임÷60으로, 등급 2는 0이라 매 프레임 몸부림친다.
+	*/
+	var magnetSticks = (speciesId) => itemResist(speciesId, "magnet") < 3;
 	/** 미끼·라이트·고기에 끌리는가. 고기는 포만감이 절반 이하일 때만 (1초마다 다시 판정) */
 	function attracted(speciesId, itemId, rng = Math.random, hungry = true) {
 		const g = gearOf(itemId);
@@ -3636,11 +3635,19 @@ var ChampCore = (function(exports) {
 		if (g?.kind === "light") return rollPercent(byLevel(ITEM_EFFECT.lightChance[itemId] ?? [], itemResist(speciesId, "light")), rng);
 		return hungry && rollPercent(byLevel(ITEM_EFFECT.meatChance, itemResist(speciesId, "meat")), rng);
 	}
-	/** 효과로 멈추는 초 (임시: 원본 수면은 졸음 수치를 최대치의 80%로 올리고, 마비는 상태 0x11 — 길이는 미확인). 눈가리기는 flashSeconds */
-	var EFFECT_SECONDS = {
-		수면: 12,
-		마비: 8
-	};
+	/** 수면으로 멈추는 초 (임시: 원본 수면은 졸음 수치를 최대치(+0x51C)의 80%로 올려 잠들게 한다 — 0x2111DE4. 종별 졸음 최대치 미확인) */
+	var SLEEP_SECONDS = 12;
+	/** 마비(상태 17) 초: 20 + rand(10) (원본 0x21163B0 진입, 0x21161FC에서 매 프레임 줄여 0이면 풀림) */
+	var paralysisSeconds = (rng = Math.random) => 20 + Math.floor(rng() * 10);
+	/** 스파크 와이어 감전(상태 14) 0.5초 뒤 마비로 넘어간다 (0x2115A68 30프레임, 0x2115864) */
+	var SPARK_SHOCK = .5;
+	/** 폭탄: 놓고 약 4.2초 뒤 터진다 (원본 폭탄 관리 0x2124A90: 240프레임 + 6 + 6) */
+	var BOMB_FUSE = 253 / 60;
+	/** 폭발이 닿는 거리 px: 폭탄·마인 96, 플래시 폭탄 256 (메시지 0x35·0x3A 반경 0x60, 0x37 반경 0x100 — 0x2112840) */
+	var BLAST_RADIUS = 96;
+	var FLASH_RADIUS = 256;
+	/** 사냥터에 동시에 놓을 수 있는 와이어 수 (원본 와이어 관리 칸 2개, 0x2126C1C) */
+	var HUNT_WIRE_MAX = 2;
 	/** 마그넷·스파크 와이어에 한 번 걸린 뒤 다시 걸리기까지의 초 (임시) */
 	var WIRE_COOLDOWN = 3;
 	var ORIGINAL_ITEMS = {};
@@ -11821,6 +11828,8 @@ var ChampCore = (function(exports) {
 	exports.BAITS = BAITS;
 	exports.BAIT_PACK = BAIT_PACK;
 	exports.BATTLE_MAPS = BATTLE_MAPS;
+	exports.BLAST_RADIUS = BLAST_RADIUS;
+	exports.BOMB_FUSE = BOMB_FUSE;
 	exports.CAGES = CAGES;
 	exports.CAGE_LEVEL_FACTOR = CAGE_LEVEL_FACTOR;
 	Object.defineProperty(exports, "CAGE_LEVEL_ROWS", {
@@ -11847,7 +11856,6 @@ var ChampCore = (function(exports) {
 	exports.DEX_ORDER = DEX_ORDER;
 	exports.DYING_AFTER_MINUTES = DYING_AFTER_MINUTES;
 	exports.DYING_LOST_MINUTES = DYING_LOST_MINUTES;
-	exports.EFFECT_SECONDS = EFFECT_SECONDS;
 	exports.EGG_MINUTES = EGG_MINUTES;
 	exports.ENTRY_CLOSE_HOUR = ENTRY_CLOSE_HOUR;
 	exports.ENTRY_OPEN_HOUR = ENTRY_OPEN_HOUR;
@@ -11856,6 +11864,7 @@ var ChampCore = (function(exports) {
 	exports.FIELDS = FIELDS;
 	exports.FINAL = FINAL;
 	exports.FINAL_ROUNDS = FINAL_ROUNDS;
+	exports.FLASH_RADIUS = FLASH_RADIUS;
 	exports.FREE_FOES = FREE_FOES;
 	exports.FREE_POOLS = FREE_POOLS;
 	exports.GEARS = GEARS;
@@ -11866,6 +11875,7 @@ var ChampCore = (function(exports) {
 	exports.HUNT_NIGHT_HOUR = HUNT_NIGHT_HOUR;
 	exports.HUNT_OPEN_HOUR = HUNT_OPEN_HOUR;
 	exports.HUNT_WILD_COUNT = HUNT_WILD_COUNT;
+	exports.HUNT_WIRE_MAX = HUNT_WIRE_MAX;
 	exports.ITEM_EFFECT = ITEM_EFFECT;
 	exports.LIFESPAN = LIFESPAN;
 	exports.LIGHT_REACH = LIGHT_REACH;
@@ -11919,7 +11929,11 @@ var ChampCore = (function(exports) {
 	exports.SEASON_CODE = SEASON_CODE;
 	exports.SHOTS = SHOTS;
 	exports.SHOT_PACK = SHOT_PACK;
+	exports.SHOT_SCATTER = SHOT_SCATTER;
 	exports.SHOT_SPREAD_RADIUS = SHOT_SPREAD_RADIUS;
+	exports.SHOT_STOP_MAX = SHOT_STOP_MAX;
+	exports.SLEEP_SECONDS = SLEEP_SECONDS;
+	exports.SPARK_SHOCK = SPARK_SHOCK;
 	exports.SPECIES = SPECIES;
 	exports.SPOIL_MINUTES = SPOIL_MINUTES;
 	exports.STAGE_LABEL = STAGE_LABEL;
@@ -12050,7 +12064,7 @@ var ChampCore = (function(exports) {
 	exports.itemResist = itemResist;
 	exports.itemUnlocked = itemUnlocked;
 	exports.keepDistance = keepDistance;
-	exports.magnetSeconds = magnetSeconds;
+	exports.magnetSticks = magnetSticks;
 	exports.mailEvent = mailEvent;
 	exports.makeEnemies = makeEnemies;
 	exports.matchEntryNotice = matchEntryNotice;
@@ -12067,6 +12081,7 @@ var ChampCore = (function(exports) {
 	exports.openMail = openMail;
 	exports.originalDamage = originalDamage;
 	exports.originalSpecies = originalSpecies;
+	exports.paralysisSeconds = paralysisSeconds;
 	exports.parseCond = parseCond;
 	exports.parseHabitats = parseHabitats;
 	exports.payEntryFee = payEntryFee;
@@ -12111,7 +12126,6 @@ var ChampCore = (function(exports) {
 	exports.shopItems = shopItems;
 	exports.shopPlugins = shopPlugins;
 	exports.shotCooldown = shotCooldown;
-	exports.shotDamage = shotDamage;
 	exports.shotOf = shotOf;
 	exports.shotStun = shotStun;
 	exports.speciesByStage = speciesByStage;

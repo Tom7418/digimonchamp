@@ -2033,7 +2033,8 @@
   function applyEffect(w, effect) {
     if (!effect || !C.effectLands(w.id, effect)) return false;
     if (effect === '독') { w.poisonWait = C.POISON_DELAY; w.poisonLeft = 0; return true; }
-    w.stun = Math.max(w.stun || 0, effect === '눈가리기' ? C.flashSeconds() : C.EFFECT_SECONDS[effect]);
+    w.stun = Math.max(w.stun || 0, effect === '눈가리기' ? C.flashSeconds() : effect === '마비' ? C.paralysisSeconds() : C.SLEEP_SECONDS);
+    w.scatter = null;
     w.stunKind = effect;
     w.flee = 0;
     return true;
@@ -2098,7 +2099,11 @@
       return huntNote(`${bait.name}를 놓았다. 냄새에 디지몬이 모여든다.`);
     }
     if (gear) {
-      if (gear.kind === 'bomb') return blast(p.x, p.y, gear);
+      if (gear.kind === 'bomb') {
+        // 원본: 놓고 약 4초 뒤 터진다
+        hunt.traps.push({ x: p.x, y: p.y, g: gear, left: 1e9, held: 0, fuse: C.BOMB_FUSE });
+        return huntNote(`${gear.name}을(를) 놓았다. 곧 터진다!`);
+      }
       if (gear.kind === 'mine' || gear.kind === 'trap') {
         hunt.traps.push({ x: p.x, y: p.y, g: gear, left: gear.kind === 'trap' ? 60 : 1e9, held: 0 });
         return huntNote(`${gear.name}을(를) 설치했다.`);
@@ -2117,11 +2122,12 @@
     if (!hits.length) return huntNote('빗나갔다!');
     let landed = 0;
     for (const w of hits) {
-      w.stun = Math.max(w.stun || 0, C.shotStun(shot));
+      // 원본: 샷은 HP를 깎지 않고 멈추게만 한다. 멈춤은 쌓이며 15초까지. 효과 없는 샷은 풀린 뒤 근처로 달아난다
+      w.stun = Math.min(C.SHOT_STOP_MAX, (w.stun > 0 && !w.stunKind ? w.stun : 0) + C.shotStun(shot, w.id));
       w.stunKind = '';
       w.flee = 0;
+      w.scatter = shot.effect ? null : { x: w.x + (Math.random() * 2 - 1) * C.SHOT_SCATTER, y: w.y + (Math.random() * 2 - 1) * C.SHOT_SCATTER };
       if (applyEffect(w, shot.effect)) landed += 1;
-      w.hp -= C.shotDamage(shot, w.hp);
       w.flash = 0.4;
     }
     huntNote(`${shot.name} 명중! ${hits.map((w) => C.getSpecies(w.id).name).join(', ')}${shot.effect ? (landed ? ` ${shot.effect}` : ` (${shot.effect}에 걸리지 않았다)`) : ' 멈춤'}`);
@@ -2224,16 +2230,29 @@
       if (w.paraWait > 0) {
         // 마비 고기: 먹고 2초 뒤 마비 (원본)
         w.paraWait -= dt;
-        if (w.paraWait <= 0) { w.paraWait = 0; w.stun = Math.max(w.stun || 0, C.EFFECT_SECONDS['마비']); w.stunKind = '마비'; w.flee = 0; }
+        if (w.paraWait <= 0) { w.paraWait = 0; w.stun = Math.max(w.stun || 0, C.paralysisSeconds()); w.stunKind = '마비'; w.flee = 0; }
       }
       w.wireCd = Math.max(0, (w.wireCd || 0) - dt);
+      if (w.stuckWire) {
+        // 마그넷 와이어: 그 와이어가 없어질 때까지 붙어 있다 (원본 상태 13)
+        if (hunt.wires.includes(w.stuckWire)) continue;
+        w.stuckWire = null; w.stun = 0; w.stunKind = '';
+      }
       if (w.stun > 0) {
         // 샷·폭탄·함정에 걸려 멈춘 동안은 움직이지 않는다
         w.stun -= dt;
+        if (w.stun <= 0 && w.spark) {
+          // 스파크 감전 0.5초 뒤 마비 (원본 상태 14 → 17)
+          w.spark = false; w.stun = C.paralysisSeconds(); w.stunKind = '마비';
+        } else if (w.stun <= 0 && w.scatter) {
+          // 효과 없는 샷에서 풀리면 근처 아무 곳으로 달아난다 (원본)
+          const dx = w.scatter.x - w.x, dy = w.scatter.y - w.y, d = Math.hypot(dx, dy) || 1;
+          w.vx = (dx / d) * 95; w.vy = (dy / d) * 95; w.flee = d / 95; w.scatter = null;
+        }
         continue;
       }
       // 마인은 밟으면 터지고, 함정은 밟은 디지몬을 붙잡는다
-      const trap = hunt.traps.find((t) => Math.hypot(t.x - w.x, t.y - w.y) < (t.g.kind === 'mine' ? 26 : t.g.range)&&huntGroundLine(w,t));
+      const trap = hunt.traps.find((t) => t.g.kind !== 'bomb' && Math.hypot(t.x - w.x, t.y - w.y) < (t.g.kind === 'mine' ? 26 : t.g.range)&&huntGroundLine(w,t));
       if (trap && trap.g.kind === 'mine') {
         trap.left = 0;
         blast(trap.x, trap.y, trap.g);
@@ -2311,11 +2330,11 @@
         w.vy = -w.vy;
         if (wire.g && !w.wireCd) {
           // 마그넷은 달라붙고, 스파크는 전격 대미지
-          // 원본: 마그넷은 내성 등급별 초만큼 달라붙고(등급 3은 튕김), 스파크는 HP 최대치의 %만큼 전격
-          const stick = wire.g.sticky ? C.magnetSeconds(w.id) : 0;
-          w.wireCd = C.WIRE_COOLDOWN + stick;
-          if (stick) { w.stun = stick; w.stunKind = '달라붙음'; w.flee = 0; }
-          else if (wire.g.power && itemHit(w, wire.g.id)) { if (w.ko) continue; w.stun = 1; w.stunKind = ''; }
+          // 원본: 마그넷은 내성 등급 1·2면 와이어가 없어질 때까지 달라붙고(3은 튕김),
+          // 스파크는 HP 최대치의 %만큼 전격 후 0.5초 감전 → 마비
+          w.wireCd = C.WIRE_COOLDOWN;
+          if (wire.g.sticky && C.magnetSticks(w.id)) { w.stuckWire = wire; w.stun = 0.1; w.stunKind = '달라붙음'; w.flee = 0; w.vx = 0; w.vy = 0; }
+          else if (wire.g.power && itemHit(w, wire.g.id)) { if (w.ko) continue; w.stun = C.SPARK_SHOCK; w.stunKind = '감전'; w.spark = true; w.scatter = null; }
         }
         continue;
       }
@@ -2343,7 +2362,10 @@
         b.x=move.x;b.y=move.y;if(move.blockedX||target.x!==x)b.vx=-b.vx;if(move.blockedY||target.y!==y)b.vy=-b.vy;
       }
     }
-    for (const t of hunt.traps) t.left -= dt;
+    for (const t of hunt.traps) {
+      t.left -= dt;
+      if (t.fuse > 0 && (t.fuse -= dt) <= 0) { t.left = 0; blast(t.x, t.y, t.g); }
+    }
     hunt.traps = hunt.traps.filter((t) => t.left > 0);
     hunt.baits = hunt.baits.filter((b) => b.left > 0);
     for (const f of hunt.fx) f.left -= dt;
@@ -2488,6 +2510,8 @@
           hunt.wires.push({ a: t[0], b });
           save = { ...save, wires: save.wires - 1 };
         }
+        // 원본은 와이어를 2개까지 놓는다. 새로 놓으면 가장 오래된 것이 없어진다
+        if (hunt.wires.length > C.HUNT_WIRE_MAX) hunt.wires = hunt.wires.slice(-C.HUNT_WIRE_MAX);
         render();
         return;
       }
