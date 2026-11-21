@@ -204,8 +204,11 @@ export const DAY_END_MINUTE = 23 * 60 + 59;
 export const MIN_PER_DAY = 1440;
 /** 사용자 지정: 실제10초 = 게임10분(×1). 온라인·오프라인 모두 같은 배율. */
 export const MINUTES_PER_SECOND = 1;
-/** 실제10초마다 게임10분을 한 번에 진행한다. 내부 돌봄 계산은1분씩 유지. */
-export const CLOCK_STEP_MINUTES = 10;
+/**
+ * 실제 2초마다 게임 2분을 한 번에 진행한다(내부 돌봄 계산은 1분씩). 화면 시계는 예전처럼 10분 단위로 보인다.
+ * 예전 10분 묶음에서는 HP 회복이 10초마다 한 번에 보여 형규 지시(2026-11-22)로 2분으로 줄였다.
+ */
+export const CLOCK_STEP_MINUTES = 2;
 export const START_CLOCK = 8 * 60;
 
 export function dateOf(clock: number) {

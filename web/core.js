@@ -1198,8 +1198,11 @@ var ChampCore = (function(exports) {
 	var MIN_PER_DAY = 1440;
 	/** 사용자 지정: 실제10초 = 게임10분(×1). 온라인·오프라인 모두 같은 배율. */
 	var MINUTES_PER_SECOND = 1;
-	/** 실제10초마다 게임10분을 한 번에 진행한다. 내부 돌봄 계산은1분씩 유지. */
-	var CLOCK_STEP_MINUTES = 10;
+	/**
+	* 실제 2초마다 게임 2분을 한 번에 진행한다(내부 돌봄 계산은 1분씩). 화면 시계는 예전처럼 10분 단위로 보인다.
+	* 예전 10분 묶음에서는 HP 회복이 10초마다 한 번에 보여 형규 지시(2026-11-22)로 2분으로 줄였다.
+	*/
+	var CLOCK_STEP_MINUTES = 2;
 	var START_CLOCK = 480;
 	function dateOf(clock) {
 		const dayIndex = Math.floor(clock / MIN_PER_DAY);
@@ -3857,6 +3860,11 @@ var ChampCore = (function(exports) {
 	* 형규 지시(2026-11-22)로 2분마다로 줄였다 — 원작보다 5.5배 빠름.
 	*/
 	var HP_REGEN_EVERY = 2;
+	/**
+	* 쉬는 시설(미니 양호실·온천·양호실·동물원·목장)의 HP 회복량 배율. 원본 시설 표 값(예: 미니 양호실 2분마다 +8)에
+	* 형규 지시(2026-11-22)로 ×5 — 예전 10초마다 보이던 양(+40)이 2초마다 찬다.
+	*/
+	var REST_HP_BOOST = 5;
 	/** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
 	var CAPACITY = 200;
 	var OFFLINE_CAP_MINUTES = 720;
@@ -4410,7 +4418,7 @@ var ChampCore = (function(exports) {
 			}
 		} else d.hpRegenMinutes = 0;
 		const hpFactor = CAGE_LEVEL_FACTOR[ctx.cageLevels?.[cage.id] ?? 0] ?? 1;
-		for (const e of facilityHpEffects(cage.no)) if (ctx.clock % e.every === 0) hp += e.amount * hpFactor;
+		for (const e of facilityHpEffects(cage.no)) if (ctx.clock % e.every === 0) hp += e.amount * hpFactor * 5;
 		for (const e of facilityPeriodic(cage.no, 2)) if (ctx.clock % e.every === 0) addStress(d, e.amount * hpFactor);
 		d.hpNow = Math.min(maxHp, Math.max(0, hp));
 		d.bowel = bowelAt(d, ctx.clock);
@@ -12039,6 +12047,7 @@ var ChampCore = (function(exports) {
 	exports.RESIST_CURVE = RESIST_CURVE;
 	exports.RESIST_KEYS = RESIST_KEYS;
 	exports.RESIST_ORDER = RESIST_ORDER;
+	exports.REST_HP_BOOST = REST_HP_BOOST;
 	exports.RIVAL_HOURS = RIVAL_HOURS;
 	exports.ROOKIE_CHANCE = ROOKIE_CHANCE;
 	exports.ROPES = ROPES;

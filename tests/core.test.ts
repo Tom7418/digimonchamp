@@ -982,12 +982,13 @@ describe('illness', () => {
   });
   it('양호실 HP 회복에도 케이지 레벨 배율이 붙는다', () => {
     const max = newDigimon(1, '아구몬', () => 0.5).stats.hp;
-    const s = (lv: number): SaveData => ({ ...freshSave(0), nextUid: 3, cageLevels: { '미니 양호실': lv }, digimon: [{ ...newDigimon(1, '아구몬', () => 0.5), hunger: 100, cage: '미니 양호실', hpNow: max - 100 }, newDigimon(2, '깜몬')] });
+    const s = (lv: number): SaveData => ({ ...freshSave(0), nextUid: 3, cageLevels: { '미니 양호실': lv }, digimon: [{ ...newDigimon(1, '아구몬', () => 0.5), hunger: 100, cage: '미니 양호실', hpNow: max - 300 }, newDigimon(2, '깜몬')] });
     // 2분 동안 자연 회복(최대 1%)도 한 번 붙으므로 빼고 본다
-    const gain = (lv: number) => (advance(s(lv), 2, seeded(1)).save.digimon[0].hpNow ?? 0) - (max - 100) - Math.trunc(max / 100);
-    expect(gain(0)).toBe(8);
-    expect(gain(1)).toBe(16);
-    expect(gain(2)).toBe(24);
+    const gain = (lv: number) => (advance(s(lv), 2, seeded(1)).save.digimon[0].hpNow ?? 0) - (max - 300) - Math.trunc(max / 100);
+    // 원본 미니 양호실 2분마다 +8 × 형규 지시 배율 5 × 케이지 레벨 배율
+    expect(gain(0)).toBe(40);
+    expect(gain(1)).toBe(80);
+    expect(gain(2)).toBe(120);
   });
   it('먹으면 HP가 차고(포만감 1칸마다 1%), 다음 날 아침에는 가득 찬다', () => {
     const d = { ...newDigimon(1, '아구몬', () => 0.5), hpNow: 100 };

@@ -143,7 +143,7 @@
   function stamp() {
     if (!save) return '';
     const d = C.dateOf(save.clock);
-    return `${d.seasonName} ${d.day}일 ${pad(d.hour)}:${pad(d.minute)}`;
+    return `${d.seasonName} ${d.day}일 ${pad(d.hour)}:${pad(d.minute - d.minute % 10)}`;
   }
   function log(text) {
     view.logs.unshift({ time: stamp(), text });
@@ -273,7 +273,7 @@
         `${date.day}일`,
         `${date.year}년차`,
         `<b>${battle ? '배틀' : hunt ? '사냥' : '육성'}</b>`,
-        `${pad(date.hour)}:${pad(date.minute)}`,
+        `${pad(date.hour)}:${pad(date.minute - date.minute % 10)}`,
         `${esc(C.rankName(rank))}`,
         `용량 ${C.usedCapacity(save)} / ${capacity}G`,
         `케이지 ${usedCells()} / ${C.cageSpaceOf(save)}칸`,
@@ -1900,7 +1900,7 @@
     const fields = C.huntFields(save);
     showModal(
       '사냥',
-      `<p>${esc(date.seasonName)} ${date.day}일 ${pad(date.hour)}:${pad(date.minute)} · ${C.ropeOf(save.rope).name} · 와이어 ${save.wires}개 · 메모리카드 ${save.memoryCard}G · 용량 ${C.usedCapacity(save)}/${C.capacityOf(save)}G</p>
+      `<p>${esc(date.seasonName)} ${date.day}일 ${pad(date.hour)}:${pad(date.minute - date.minute % 10)} · ${C.ropeOf(save.rope).name} · 와이어 ${save.wires}개 · 메모리카드 ${save.memoryCard}G · 용량 ${C.usedCapacity(save)}/${C.capacityOf(save)}G</p>
        ${can.ok ? '' : `<p class="warn">${esc(can.reason)}</p>`}
        <div class="menu-list">${fields
          .map((f, i) => {
@@ -2761,7 +2761,7 @@
     ctx.fillText(`사냥 · ${hunt.field.id}`, 16, 32);
     ctx.fillStyle = '#e6f2f5';
     ctx.font = '13px "Noto Sans KR",sans-serif';
-    ctx.fillText(`${d.seasonName} ${d.day}일 ${pad(d.hour)}:${pad(d.minute)} (22:00 종료) · ${C.ropeOf(save.rope).name}${hunt.plug?.check.has('wire') ? ` · 와이어 ${save.wires}개` : ''}${hunt.plug?.memory ? ` · 카드 ${hunt.carried}/${save.memoryCard}G` : ''}`, 230, 31);
+    ctx.fillText(`${d.seasonName} ${d.day}일 ${pad(d.hour)}:${pad(d.minute - d.minute % 10)} (22:00 종료) · ${C.ropeOf(save.rope).name}${hunt.plug?.check.has('wire') ? ` · 와이어 ${save.wires}개` : ''}${hunt.plug?.memory ? ` · 카드 ${hunt.carried}/${save.memoryCard}G` : ''}`, 230, 31);
     const now = performance.now();
     hunt.notes = hunt.notes.filter((n) => n.until > now);
     ctx.textAlign = 'left';

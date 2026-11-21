@@ -12,6 +12,11 @@ import { pluginPrice, shopPlugins, togglePlugin } from './plugins';
  * 형규 지시(2026-11-22)로 2분마다로 줄였다 — 원작보다 5.5배 빠름.
  */
 export const HP_REGEN_EVERY = 2;
+/**
+ * 쉬는 시설(미니 양호실·온천·양호실·동물원·목장)의 HP 회복량 배율. 원본 시설 표 값(예: 미니 양호실 2분마다 +8)에
+ * 형규 지시(2026-11-22)로 ×5 — 예전 10초마다 보이던 양(+40)이 2초마다 찬다.
+ */
+export const REST_HP_BOOST = 5;
 import { ATTRS, FAMILIES, PERSONALITIES, STAT_KEYS, type ApKey, type Digimon, type SaveData, type Stats } from './types';
 
 /** 최대치. 실제 용량은 랭크에 따라 capacityOf(save) */
@@ -477,7 +482,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   } else d.hpRegenMinutes = 0;
   // 양호실 등 쉬는 시설의 HP 회복에도 케이지 레벨 배율(×2·×3)을 붙인다 — 사용자 결정(원본 미확인)
   const hpFactor = CAGE_LEVEL_FACTOR[ctx.cageLevels?.[cage.id] ?? 0] ?? 1;
-  for (const e of facilityHpEffects(cage.no)) if (ctx.clock % e.every === 0) hp += e.amount * hpFactor;
+  for (const e of facilityHpEffects(cage.no)) if (ctx.clock % e.every === 0) hp += e.amount * hpFactor * REST_HP_BOOST;
   // 시설 상시 스트레스 (원본 시설 표 명령6 종류2): 미니 양호실·목장·양호실 6분마다 -1, 온천 3분마다 -1, 동물원 4시간마다 +1. 배율은 HP와 같게(형규 지정)
   for (const e of facilityPeriodic(cage.no, 2)) if (ctx.clock % e.every === 0) addStress(d, e.amount * hpFactor);
   d.hpNow = Math.min(maxHp, Math.max(0, hp));

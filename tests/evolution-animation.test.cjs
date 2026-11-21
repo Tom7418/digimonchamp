@@ -56,13 +56,13 @@ test('실제 진화 이벤트를 화면 큐에 전달하며 안내 편지는 연
 });
 test('실제 화면 프레임은 진화 동안 시간을 멈추고 편지·숨김·일시정지에 따라 연출도 멈춘다',()=>{
  const source=fs.readFileSync('web/game.js','utf8'),a=source.indexOf('  function frame(now)'),b=source.indexOf("  document.addEventListener('visibilitychange'",a),updates=[];
- const ctx=vm.createContext({window:{evolutionScene:{busy:true,update:dt=>updates.push(dt)}},document:{hidden:false},titleOpen:false,selectedItem:null,lastTime:1,battle:null,paused:false,board:{editing:false},mailOpen:false,dayEnding:false,hunt:null,clock:3,speed:1,$:()=>({open:false}),drawFarm(){},drawPortrait(){},requestAnimationFrame(){}});
+ const ctx=vm.createContext({window:{evolutionScene:{busy:true,update:dt=>updates.push(dt)}},document:{hidden:false},titleOpen:false,selectedItem:null,lastTime:1,battle:null,paused:false,board:{editing:false},mailOpen:false,dayEnding:false,hunt:null,clock:1,speed:1,$:()=>({open:false}),drawFarm(){},drawPortrait(){},requestAnimationFrame(){}});
  vm.runInContext(fs.readFileSync('web/core.js','utf8'),ctx);vm.runInContext('const C=ChampCore;const MINUTES_PER_SECOND=C.MINUTES_PER_SECOND;globalThis.save=C.freshSave(0);'+source.slice(a,b),ctx);
- const clock=ctx.save.clock;ctx.frame(10001);assert.equal(ctx.save.clock,clock);assert.equal(ctx.clock,3);assert.equal(updates[0],.05);
+ const clock=ctx.save.clock;ctx.frame(10001);assert.equal(ctx.save.clock,clock);assert.equal(ctx.clock,1);assert.equal(updates[0],.05);
  ctx.paused=true;ctx.frame(10021);assert.equal(updates.at(-1),0);
  const count=updates.length;ctx.mailOpen=true;ctx.frame(10041);ctx.document.hidden=true;ctx.frame(10061);assert.equal(updates.length,count);
  // 사냥 중 발생한 진화는 귀환까지 대기한다. 사냥 자체를 멈춰 귀환을 강요하지 않는다.
  let huntTicks=0;ctx.document.hidden=false;ctx.mailOpen=false;ctx.paused=false;ctx.hunt={};
  ctx.huntTick=()=>huntTicks++;ctx.drawHunt=()=>{};ctx.frame(10081);
- assert.equal(huntTicks,1);assert.ok(ctx.clock>3);assert.equal(updates.length,count);
+ assert.equal(huntTicks,1);assert.ok(ctx.clock>1);assert.equal(updates.length,count);
 });
