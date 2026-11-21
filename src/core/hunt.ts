@@ -402,3 +402,29 @@ export function unlockText(name: string): string {
   if (o.kind === 1) return `${rankName(o.value + 1)}부터`;
   return `타이틀 '${TITLES.find((t) => t.id === `m${o.value}`)?.name ?? o.value}' 획득 시`;
 }
+
+// ---------- 사냥 아이템 장비 칸 (원본 5칸 고정) ----------
+/**
+ * 원작은 사냥 전에 쓸 아이템 종류를 장비한다. 칸은 랭크와 상관없이 5칸이다:
+ * 테이머 +0xA00부터 8바이트 × 5(분류·번호). 장비 화면 overlay9_12 0x2113584~0x21135C4, 사냥 화면 HUD overlay9_0 0x2119F30~0x211A0CC가
+ * 5칸을 돈다. 분류 2 샷 · 3 와이어 · 4 고기 · 5 미끼 · 6 라이트 · 7 폭탄 · 8 마인 · 9 함정(아이템 표 분류와 같음).
+ * 로프와 웹판 기본 와이어 묶음은 칸과 별개(웹판).
+ */
+export const HUNT_ITEM_SLOTS = 5;
+export const HUNT_ITEM_IDS: readonly string[] = [...SHOTS.map((s) => s.id), ...BAITS.map((b) => b.id), ...GEARS.map((g) => g.id)];
+type ItemSave = { gear?: Record<string, number>; huntItems?: string[] };
+/**
+ * 장비한 사냥 아이템. 한 번도 고른 적이 없는 저장(huntItems 없음)은 가진 아이템 앞에서부터 5종을 자동으로 넣는다(웹판, 기존 저장 호환).
+ * 다 써서 0개가 된 종류도 칸에는 남는다(원본 HUD는 0개 칸을 빈 칸으로 그린다 — 0x2119F58).
+ */
+export function huntItems(save: ItemSave): string[] {
+  const list = save.huntItems ?? HUNT_ITEM_IDS.filter((id) => gearCount(save, id) > 0);
+  return [...new Set(list)].filter((id) => HUNT_ITEM_IDS.includes(id)).slice(0, HUNT_ITEM_SLOTS);
+}
+/** 아이템을 칸에 넣거나 뺀다. 가지지 않았거나 칸이 다 찼으면 그대로 */
+export function toggleHuntItem<T extends ItemSave>(save: T, id: string): T {
+  const now = huntItems(save);
+  if (now.includes(id)) return { ...save, huntItems: now.filter((x) => x !== id) };
+  if (now.length >= HUNT_ITEM_SLOTS || gearCount(save, id) <= 0) return { ...save, huntItems: now };
+  return { ...save, huntItems: [...now, id] };
+}

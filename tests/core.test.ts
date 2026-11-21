@@ -20,7 +20,7 @@ import { seeded } from '../src/core/rng';
 import { DEX_ORDER, dexEntries, dexCount } from '../src/core/dex';
 import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent, rollMorningMail } from '../src/core/events';
 import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotDamage, useGear, gearCount, BAITS, GEARS, gearOf, gearDamage, HUNT_ITEM_SLOTS, huntItems, toggleHuntItem } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
 import { discardFloorFood, ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -2190,5 +2190,24 @@ describe('데이터 파일 줄바꿈(Windows CRLF)에도 같은 값', () => {
   it('팀 이름·이벤트 보낸 사람 끝에 \\r이 붙지 않는다', () => {
     expect(npcTeam(111)!.name).toBe('트리오 더 케이코 A');
     expect(mailEvent(0x85)!.from).toBe('영희');
+  });
+});
+
+describe('사냥 아이템 장비 5칸 (원본 테이머 +0xA00)', () => {
+  const gear = { hand1: 20, bait1: 3, bomb1: 1, mine1: 1, trap1: 1, wire2: 2 } as Record<string, number>;
+  it('한 번도 고르지 않았으면 가진 것 앞에서 5종', () => {
+    expect(HUNT_ITEM_SLOTS).toBe(5);
+    expect(huntItems({ gear })).toHaveLength(5);
+  });
+  it('칸이 차면 더 넣지 못하고, 빼면 들어간다. 0개가 되어도 칸에 남는다', () => {
+    let s = { gear, huntItems: [] as string[] };
+    for (const id of Object.keys(gear)) s = toggleHuntItem(s, id);
+    expect(huntItems(s)).toHaveLength(5);
+    const last = Object.keys(gear).find((id) => !huntItems(s).includes(id))!;
+    expect(huntItems(toggleHuntItem(s, last))).not.toContain(last);
+    s = toggleHuntItem(s, huntItems(s)[0]);
+    expect(huntItems(toggleHuntItem(s, last))).toContain(last);
+    expect(huntItems({ ...s, gear: { ...gear, [huntItems(s)[0]]: 0 } })).toEqual(huntItems(s));
+    expect(huntItems(toggleHuntItem({ gear, huntItems: [] }, 'nothing'))).toEqual([]);
   });
 });

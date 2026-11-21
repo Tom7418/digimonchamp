@@ -1863,6 +1863,7 @@
            return `<button data-field="${i}"${off ? ' disabled' : ''}><b>${esc(f.id)}${f.fee ? ` · ${f.fee} ฿` : ''}</b><small>${why ? esc(why) + ' · ' : ''}이번 계절: ${esc(pool.babies.join(', ') || '없음')}${pool.rookies.length ? ` / 성장기 ${esc(pool.rookies.join(', '))}` : ''}${pool.strong.length ? ` / 성숙기 이상 ${esc(pool.strong.join(', '))}` : ''}</small></button>`;
          })
          .join('')}</div>
+       ${huntItemsHtml()}
        ${loadoutHtml()}
        <p class="hint">드래그로 디지몬을 둘러싸고 처음 위치 근처에서 손을 떼면 로프가 감깁니다. 감긴 디지몬을 누른 채 끌어 로프를 팽팽하게 유지하세요. 가까우면 로프 게이지가 회복되고, 멀어지면 체력이 줄지만 너무 멀거나 게이지가 다 닳으면 끊어집니다. 체력이 0이 되어 기절하면 눌러서 포획하세요. 성장기 이상은 해당 세대를 잡을 수 있는 로프가 필요합니다. 휠로 확대·축소하고, 이동 도구·오른쪽 드래그·방향키로 화면을 움직일 수 있습니다.</p>`,
       'HUNT',
@@ -1870,6 +1871,17 @@
     );
     $('#modal-body').querySelectorAll('[data-field]').forEach((b) => (b.onclick = () => startHunt(fields[+b.dataset.field])));
     $('#modal-body').querySelectorAll('[data-plugin]').forEach((b) => (b.onclick = () => { save = C.togglePlugin(save, b.dataset.plugin); persist(); huntMenu(); }));
+    $('#modal-body').querySelectorAll('[data-hunt-item]').forEach((b) => (b.onclick = () => { save = C.toggleHuntItem(save, b.dataset.huntItem); persist(); huntMenu(); }));
+  }
+  // 원작처럼 사냥에 가져갈 아이템 종류를 5칸에 장비한다 (원본 테이머 +0xA00 × 5, overlay9_12 0x2113584)
+  // 그림·배치는 임시 글자 버튼 (GPT 그림 메모 참고)
+  function huntItemsHtml() {
+    const now = C.huntItems(save), owned = GEAR.filter((x) => C.gearCount(save, x.id) > 0 || now.includes(x.id));
+    const list = owned.map((x) => {
+      const on = now.includes(x.id);
+      return `<button type="button" data-hunt-item="${x.id}" class="${on ? 'active' : ''}" aria-pressed="${on}"${!on && now.length >= C.HUNT_ITEM_SLOTS ? ' disabled' : ''}>${on ? '✔ ' : ''}${esc(x.name)} ×${C.gearCount(save, x.id)}</button>`;
+    }).join('');
+    return `<section class="hunt-items"><h3>사냥 아이템 <span>${now.length}/${C.HUNT_ITEM_SLOTS}칸</span></h3><div class="load-list">${list || '<p class="hint">가진 사냥 아이템이 없습니다. 상점에서 살 수 있어요.</p>'}</div><p class="hint">장비한 아이템만 사냥터에서 쓸 수 있습니다. 로프와 기본 와이어는 칸과 상관없이 가져갑니다.</p></section>`;
   }
   // 원작처럼 사냥 전에 플러그인을 장비한다. 칸 수는 랭크에 따라 2·3·4칸 (원본 랭크 표 +20)
   function loadoutHtml() {
@@ -1918,7 +1930,7 @@
     const spawnPoints=C.huntSpawnPoints(terrain,{x0:AREA.x0+24,y0:AREA.y0+24,x1:AREA.x1-24,y1:AREA.y1-24});
     if(!spawnPoints.length)return toast('이 구역에 출현 가능한 바닥이 없습니다. 다시 선택해 주세요.');
     save = { ...save, bits: save.bits - field.fee };
-    hunt = { field,terrain,view:viewport,spawnPoints, plug: C.pluginView(save), wilds: [], wires: [], baits: [], traps: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0,
+    hunt = { field,terrain,view:viewport,spawnPoints, plug: C.pluginView(save), items: C.huntItems(save), wilds: [], wires: [], baits: [], traps: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0,
       size:{w:W,h:H}, zoom:HUNT_ZOOM.start, cam:{x:0,y:0}, pan:null };
     // 첫 화면은 출현 가능한 바닥 아무 곳을 가운데에 둔다
     const first=C.pickHuntSpawn(spawnPoints,Math.random)||{x:W/2,y:H/2};
@@ -2000,8 +2012,9 @@
   function refreshGear() {
     const sel = $('#gear-select'), keep = sel.value;
     // 수량은 그 장비 묶음의 체커 플러그인을 장비했을 때만 보인다 (원작 체커 설명)
-    const owned = GEAR.filter((x) => C.gearCount(save, x.id) > 0);
-    const html = owned.map((x) => `<option value="${x.id}">${esc(x.name)}${hunt?.plug?.check.has(checkKind(x)) ? ` ×${C.gearCount(save, x.id)}` : ''}</option>`).join('') || '<option value="">장비 없음 (상점에서 구매)</option>';
+    // 장비 칸(5칸)에 넣어 온 아이템만 쓸 수 있다
+    const owned = GEAR.filter((x) => C.gearCount(save, x.id) > 0 && (hunt?.items ?? C.huntItems(save)).includes(x.id));
+    const html = owned.map((x) => `<option value="${x.id}">${esc(x.name)}${hunt?.plug?.check.has(checkKind(x)) ? ` ×${C.gearCount(save, x.id)}` : ''}</option>`).join('') || '<option value="">가져온 아이템 없음 (사냥 전에 장비)</option>';
     if (sel.innerHTML !== html) sel.innerHTML = html;
     if (owned.some((x) => x.id === keep)) sel.value = keep;
   }
@@ -2009,6 +2022,7 @@
   function useGearAt(p) {
     const id = $('#gear-select').value, shot = C.shotOf(id), bait = C.baitOf(id), gear = C.gearOf(id);
     if (!shot && !bait && !gear) return huntNote('쓸 장비가 없습니다. 상점에서 사세요.');
+    if (!(hunt.items ?? C.huntItems(save)).includes(id)) return huntNote('장비해 오지 않은 아이템입니다.');
     if (gear && gear.nightOnly && !huntIsNight()) return huntNote(`${gear.name}는 밤에만 쓸 수 있습니다.`);
     // 바닥에 놓는 장비는 차단된 칸에 설치하거나 재고를 소비하지 않는다. 샷/투척 폭탄의 범위 판정은 유지한다.
     if((bait||(gear&&gear.kind!=='bomb'))&&!huntGroundClear(p))return huntNote('이곳에는 장비를 놓을 수 없습니다.');

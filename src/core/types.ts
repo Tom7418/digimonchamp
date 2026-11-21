@@ -149,6 +149,8 @@ export interface SaveData {
   challenge?: { id: number; team: number; prize: number; name: string; from: string };
   /** 답하지 않은 NPC 매입 제안 */
   npcOffer?: { id: number; uid: number; price: number; from: string };
+  /** 장비한 사냥 아이템 id (원본 5칸). 없으면 가진 것 앞에서 5종 */
+  huntItems?: string[];
   /** 가진 사냥 플러그인 id (src/core/plugins.ts) */
   plugins?: string[];
   /** 장비한 플러그인 id (랭크별 칸 수까지) */
