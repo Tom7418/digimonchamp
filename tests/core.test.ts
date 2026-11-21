@@ -14,7 +14,7 @@ import { evolvedResistance } from '../src/core/stats';
 import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy , relocate, trainingBlocker } from '../src/core/care';
 import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
-import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, npcTeamFoes, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
+import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, npcTeamFoes, npcTeam, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { DEX_ORDER, dexEntries, dexCount } from '../src/core/dex';
@@ -2184,4 +2184,11 @@ describe('실행 코드의 시설 정원',()=>{
    expect(five[0].stress).toBe(four[0].stress!+4);
   }
  });
+});
+
+describe('데이터 파일 줄바꿈(Windows CRLF)에도 같은 값', () => {
+  it('팀 이름·이벤트 보낸 사람 끝에 \\r이 붙지 않는다', () => {
+    expect(npcTeam(111)!.name).toBe('트리오 더 케이코 A');
+    expect(mailEvent(0x85)!.from).toBe('영희');
+  });
 });

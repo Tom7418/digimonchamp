@@ -18,7 +18,7 @@ export interface FreeBattle { label: string; format: 1 | 3; level: number; stage
 export const FREE_FOES = new Map<number, FreeFoe>();
 /** 후보표 [레벨 0~9][계절 0~3, 4=공통] (원본 0x020C7E24) */
 export const FREE_POOLS: number[][][] = Array.from({ length: 10 }, () => Array.from({ length: 5 }, () => []));
-for (const line of freeRaw.split('\n')) {
+for (const line of freeRaw.split(/\r?\n/)) {
   if (!line || line.startsWith('#')) continue;
   const f = line.split('|');
   if (f[0] === 'pool') FREE_POOLS[+f[1]][+f[2]] = f[3] ? f[3].split(',').map(Number) : [];
@@ -76,7 +76,7 @@ export const freeFoeResist = (f: FreeFoe): Record<ResistKey, number> =>
 export interface HolderFoe extends FreeFoe { personality: Personality }
 const HOLDER_NPC = new Map<number, FreeFoe & { personalityNo: number }>();
 const HOLDER_TEAM = new Map<number, { name: string; members: number[] }>();
-for (const line of holderRaw.split('\n')) {
+for (const line of holderRaw.split(/\r?\n/)) {
   const f = line.split('|');
   if (f[0] === 'team') HOLDER_TEAM.set(+f[1], { name: f[2], members: f[3].split(',').filter(Boolean).map(Number) });
   else if (f[0] === 'npc') HOLDER_NPC.set(+f[1], { no: +f[1], nick: f[2], speciesId: f[3], level: +f[4], prize: +f[5], curves: f[6].split(',').map(Number), resist: f[7].split(',').map(Number), personalityNo: +f[8] });

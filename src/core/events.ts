@@ -26,7 +26,7 @@ export interface MailEvent {
 // 원본 이벤트 표·선물 표 (tools/extract_events.py)
 const EVENT_ROWS = new Map<number, { from: string; gift: number }>();
 const GIFT_ROWS = new Map<number, { kind: number; value: number; value2: number }>();
-for (const line of eventsRaw.split('\n')) {
+for (const line of eventsRaw.split(/\r?\n/)) {
   const f = line.split('|');
   if (f[0] === 'event') EVENT_ROWS.set(+f[1], { from: f[2], gift: +f[6] });
   else if (f[0] === 'gift') GIFT_ROWS.set(+f[1], { kind: +f[2], value: +f[3], value2: +f[4] });
