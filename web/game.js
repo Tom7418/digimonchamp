@@ -1518,6 +1518,7 @@
     }
     ctx.restore();
     ctx.restore();
+    battle.presentation?.draw?.(ctx,el.width,el.height);
     if(focus){
       ctx.fillStyle='#071a2ddd';ctx.fillRect(0,0,el.width,30);
       ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff0b5';

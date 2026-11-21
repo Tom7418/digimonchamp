@@ -21,3 +21,15 @@ test('실제 배틀 틱은 강조 중 엔진·효과·시간을 진행하지 않
  const c=vm.createContext({battle:{presentation:{busy:true,tick(){ticks++;}},state:{}},drawArena:dt=>{assert.equal(dt,0);draws++;}});
  vm.runInContext(src.slice(src.indexOf('  function battleTick('),src.indexOf('  function battleLog(')),c);c.battleTick(.1);assert.equal(ticks,1);assert.equal(draws,1);
 });
+
+test('원본 속도선은 강조 중에만24개를 그리고 일시정지에서는 좌표를 유지한다',()=>{
+ const c=vm.createContext({window:{},Image:function(){this.complete=true;this.naturalWidth=288;}});
+ for(const f of ['assets/battle/presentation.js','assets/battle/speedlines.js','battle-presentation.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),c);
+ const p=c.window.createBattlePresentation(),draws=[],moves=[];
+ const ctx={save(){},restore(){},beginPath(){},rect(){},clip(){},scale(){},translate:(...v)=>moves.push(v),drawImage:(...v)=>draws.push(v)};
+ p.draw(ctx,416,272);assert.equal(draws.length,0);
+ const record=+Object.keys(c.window.BATTLE_PRESENTATION_DATA.records)[0];p.add({type:'hit',from:0,special:true,skill:{record,name:'기술'}},[{id:0,x:0,y:0}],.2);p.tick(.05);
+ p.draw(ctx,416,272);assert.equal(draws.length,24);assert.ok(draws.every(d=>d[1]===192&&d[3]===96));
+ const positions=JSON.stringify(moves);moves.length=0;p.tick(0);p.draw(ctx,416,272);assert.equal(JSON.stringify(moves),positions);
+ p.tick(10);draws.length=0;p.draw(ctx,416,272);assert.equal(draws.length,0);
+});
