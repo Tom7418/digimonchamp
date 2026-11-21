@@ -2146,6 +2146,14 @@ describe('라이벌 배틀 신청 (원본 0x2129450)', () => {
   });
 });
 
+describe('정식 명칭 표시', () => {
+  it('종 ID는 원본 이름, 화면 이름만 정식 명칭', () => {
+    expect(getSpecies('쁘띠메라몬').name).toBe('페티메라몬');
+    expect(getSpecies('푸치몬').name).toBe('쁘띠몬');
+    expect(getSpecies('쁘띠메라몬').id).toBe('쁘띠메라몬');
+  });
+});
+
 describe('사장 배틀 메일 (원본 overlay9_19 0x21120AC, overlay9_18 0x21211B8)', () => {
   const day = 1440;
   it('챔피언이 되면 0xAD 한 번, 이기기 전까지 계절 첫날 12시에 0xAE', () => {
