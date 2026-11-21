@@ -1,6 +1,6 @@
 'use strict';
 // 육각 격자는 축 좌표(q, r)를 사용한다. 이미지 픽셀 좌표와 배치 규칙을 분리한다.
-// 원본 시설 배경의 외곽과 점유 모양을 맞춘다. 정원은 별도의 게임 규칙이다.
+// 원본 시설 배경의 외곽과 점유 모양을 맞춘다. 정원은 원본 실행 코드 기준(동물원/양호실4), 기본케이지 제외.
 window.CageLayout = {
   types: {
     // 원작 케이지 (이름·수용 수는 원작 글, 모양·그림은 root/training/field_cmNN_01에서 tools/extract_cage_fields.py로 얻은 값).
@@ -30,11 +30,11 @@ window.CageLayout = {
     cm19: {name:'온천',core:'온천',img:'polished/C19-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[2,0],[3,0]],capacity:8},
     cm23: {name:'가스실',core:'가스실',img:'polished/C23-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[0,1]],capacity:4},
     cm24: {name:'절',core:'절',img:'polished/C24-fence3',fit:true,polished:true,webp:true,cells:[[0,0]],capacity:2},
-    cm25: {name:'동물원',core:'동물원',img:'polished/C25-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0]],capacity:2},
+    cm25: {name:'동물원',core:'동물원',img:'polished/C25-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0]],capacity:4},
     cm26: {name:'목장',core:'목장',img:'polished/C26-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[-1,1],[0,1]],capacity:8},
     cm27: {name:'링',core:'링',img:'polished/C27-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[-1,1],[0,1]],capacity:6},
     field: {name:'미니 운동장',core:'미니 운동장',img:'polished/C30-fence3',fit:true,polished:true,webp:true,cells:[[0,0],[1,0],[0,1]],capacity:2},
-    cm31: {name:'양호실',core:'양호실',img:'polished/C31-scene4',fit:true,polished:true,webp:true,cells:[[0,0],[1,0]],capacity:6},
+    cm31: {name:'양호실',core:'양호실',img:'polished/C31-scene4',fit:true,polished:true,webp:true,cells:[[0,0],[1,0]],capacity:4},
     cm32: {name:'미니 화원',core:'미니 화원',img:'polished/C32-fence3',fit:true,polished:true,webp:true,cells:[[0,0]],capacity:2},
     cm33: {name:'미니 숲',core:'미니 숲',img:'polished/C33-hex2',fit:true,polished:true,webp:true,cells:[[0,0]],capacity:2},
     gym: {name:'미니 체육관',core:'미니 체육관',img:'polished/C34-fence3',fit:true,polished:true,webp:true,cells:[[0,0]],capacity:2},

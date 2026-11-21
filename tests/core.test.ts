@@ -2166,8 +2166,22 @@ describe('내 디지몬 내성 범위·첫 값·진화 이월 (원본 arm9 0x020
 
 
 describe('케이지 공간 최종28칸과 원본 정원',()=>{
- it('챔프와마스터도 최대28칸이며 미니양호실2·양호실6을쓴다',()=>{
+ it('챔프와마스터도 최대28칸이며 미니양호실2·양호실4을쓴다',()=>{
   const save=freshSave(0);save.champion=true;expect(cageSpaceOf(save)).toBe(28);
-  expect(getCage('미니 양호실').capacity).toBe(2);expect(getCage('양호실').capacity).toBe(6);
+  expect(getCage('미니 양호실').capacity).toBe(2);expect(getCage('양호실').capacity).toBe(4);
+ });
+});
+
+
+describe('실행 코드의 시설 정원',()=>{
+ it('동물원4·양호실4이며 다섯마리부터 실제 과밀효과를 적용한다',()=>{
+  for(const cage of ['동물원','양호실']){
+   expect(getCage(cage).capacity).toBe(4);
+   const mon=(uid:number)=>({...newDigimon(uid,'아구몬'),personality:'열혈' as const,hunger:100,stress:50,cage,cageInstance:'c1'});
+   const base={...freshEggSave(0),clock:10*60+59} as SaveData;
+   const four=tickFarm({...base,digimon:[1,2,3,4].map(mon)},seeded(1)).save.digimon;
+   const five=tickFarm({...base,digimon:[1,2,3,4,5].map(mon)},seeded(1)).save.digimon;
+   expect(five[0].stress).toBe(four[0].stress!+4);
+  }
  });
 });

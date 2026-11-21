@@ -1,9 +1,289 @@
 {
-  "source": "ui/txt/txt_list_txt.dat",
-  "sha256": "2044132b7d70d5c42f05680b38b7d97882741ead7dacdb9803e45b9b38e06e58",
-  "textIndex": "526 + facilityNo",
-  "count": 38,
-  "unverified": [
-    "Basic cage no0 has no corresponding source help entry; existing fallback99 is not claimed as original."
-  ]
+  "source": "arm9 0x0204F318..0x0204F384; table0x020C81DC stride40; shapeMask0x0209EDE0; capacity=popcount(mask)*2",
+  "runtime": "overlay18 0x0211A1C0..0x0211A1E8 counts occupants and subtracts getter0x0204F260 (object byte+9)",
+  "instructionChecks": 8,
+  "codeFacilities": [
+    {
+      "facilityNo": 1,
+      "tableIndex": 0,
+      "shape": 0,
+      "mask": 1,
+      "capacity": 2
+    },
+    {
+      "facilityNo": 2,
+      "tableIndex": 1,
+      "shape": 6,
+      "mask": 7,
+      "capacity": 6
+    },
+    {
+      "facilityNo": 3,
+      "tableIndex": 2,
+      "shape": 15,
+      "mask": 31,
+      "capacity": 10
+    },
+    {
+      "facilityNo": 4,
+      "tableIndex": 3,
+      "shape": 4,
+      "mask": 21,
+      "capacity": 6
+    },
+    {
+      "facilityNo": 5,
+      "tableIndex": 4,
+      "shape": 11,
+      "mask": 30,
+      "capacity": 8
+    },
+    {
+      "facilityNo": 6,
+      "tableIndex": 5,
+      "shape": 13,
+      "mask": 90,
+      "capacity": 8
+    },
+    {
+      "facilityNo": 7,
+      "tableIndex": 6,
+      "shape": 10,
+      "mask": 15,
+      "capacity": 8
+    },
+    {
+      "facilityNo": 8,
+      "tableIndex": 7,
+      "shape": 8,
+      "mask": 11,
+      "capacity": 6
+    },
+    {
+      "facilityNo": 9,
+      "tableIndex": 8,
+      "shape": 12,
+      "mask": 27,
+      "capacity": 8
+    },
+    {
+      "facilityNo": 10,
+      "tableIndex": 9,
+      "shape": 12,
+      "mask": 27,
+      "capacity": 8
+    },
+    {
+      "facilityNo": 11,
+      "tableIndex": 10,
+      "shape": 9,
+      "mask": 26,
+      "capacity": 6
+    },
+    {
+      "facilityNo": 12,
+      "tableIndex": 11,
+      "shape": 7,
+      "mask": 13,
+      "capacity": 6
+    },
+    {
+      "facilityNo": 13,
+      "tableIndex": 12,
+      "shape": 6,
+      "mask": 7,
+      "capacity": 6
+    },
+    {
+      "facilityNo": 14,
+      "tableIndex": 13,
+      "shape": 7,
+      "mask": 13,
+      "capacity": 6
+    },
+    {
+      "facilityNo": 15,
+      "tableIndex": 14,
+      "shape": 8,
+      "mask": 11,
+      "capacity": 6
+    },
+    {
+      "facilityNo": 16,
+      "tableIndex": 15,
+      "shape": 0,
+      "mask": 1,
+      "capacity": 2
+    },
+    {
+      "facilityNo": 17,
+      "tableIndex": 16,
+      "shape": 5,
+      "mask": 14,
+      "capacity": 6
+    },
+    {
+      "facilityNo": 18,
+      "tableIndex": 17,
+      "shape": 3,
+      "mask": 6,
+      "capacity": 4
+    },
+    {
+      "facilityNo": 19,
+      "tableIndex": 18,
+      "shape": 14,
+      "mask": 85,
+      "capacity": 8
+    },
+    {
+      "facilityNo": 20,
+      "tableIndex": 19,
+      "shape": 7,
+      "mask": 13,
+      "capacity": 6
+    },
+    {
+      "facilityNo": 21,
+      "tableIndex": 20,
+      "shape": 11,
+      "mask": 30,
+      "capacity": 8
+    },
+    {
+      "facilityNo": 22,
+      "tableIndex": 21,
+      "shape": 6,
+      "mask": 7,
+      "capacity": 6
+    },
+    {
+      "facilityNo": 23,
+      "tableIndex": 22,
+      "shape": 2,
+      "mask": 3,
+      "capacity": 4
+    },
+    {
+      "facilityNo": 24,
+      "tableIndex": 23,
+      "shape": 0,
+      "mask": 1,
+      "capacity": 2
+    },
+    {
+      "facilityNo": 25,
+      "tableIndex": 24,
+      "shape": 1,
+      "mask": 5,
+      "capacity": 4
+    },
+    {
+      "facilityNo": 26,
+      "tableIndex": 25,
+      "shape": 11,
+      "mask": 30,
+      "capacity": 8
+    },
+    {
+      "facilityNo": 27,
+      "tableIndex": 26,
+      "shape": 5,
+      "mask": 14,
+      "capacity": 6
+    },
+    {
+      "facilityNo": 30,
+      "tableIndex": 27,
+      "shape": 0,
+      "mask": 1,
+      "capacity": 2
+    },
+    {
+      "facilityNo": 31,
+      "tableIndex": 28,
+      "shape": 1,
+      "mask": 5,
+      "capacity": 4
+    },
+    {
+      "facilityNo": 32,
+      "tableIndex": 29,
+      "shape": 0,
+      "mask": 1,
+      "capacity": 2
+    },
+    {
+      "facilityNo": 34,
+      "tableIndex": 30,
+      "shape": 0,
+      "mask": 1,
+      "capacity": 2
+    },
+    {
+      "facilityNo": 35,
+      "tableIndex": 31,
+      "shape": 0,
+      "mask": 1,
+      "capacity": 2
+    },
+    {
+      "facilityNo": 37,
+      "tableIndex": 32,
+      "shape": 0,
+      "mask": 1,
+      "capacity": 2
+    },
+    {
+      "facilityNo": 39,
+      "tableIndex": 33,
+      "shape": 0,
+      "mask": 1,
+      "capacity": 2
+    },
+    {
+      "facilityNo": 40,
+      "tableIndex": 34,
+      "shape": 0,
+      "mask": 1,
+      "capacity": 2
+    },
+    {
+      "facilityNo": 28,
+      "tableIndex": 35,
+      "shape": 10,
+      "mask": 15,
+      "capacity": 8
+    },
+    {
+      "facilityNo": 29,
+      "tableIndex": 36,
+      "shape": 0,
+      "mask": 1,
+      "capacity": 2
+    }
+  ],
+  "helpDifferences": [
+    {
+      "facilityNo": 25,
+      "help": 2,
+      "code": 4
+    },
+    {
+      "facilityNo": 31,
+      "help": 6,
+      "code": 4
+    }
+  ],
+  "helpOnlyFacilities": [
+    33,
+    36,
+    38
+  ],
+  "sha256": {
+    "arm9": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
+    "overlay18": "44183ea85e90332dca3747699c2ff6033d8c0cd1e5deb3d6e2b0350f112d386e",
+    "help": "2044132b7d70d5c42f05680b38b7d97882741ead7dacdb9803e45b9b38e06e58"
+  },
+  "scope": "Basic cage no0 excluded. Facilities33/36/38 absent from the runtime table retain help capacity2; not claimed as code-confirmed."
 }

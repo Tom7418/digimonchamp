@@ -68,11 +68,11 @@ var ChampCore = (function(exports) {
 		"22": 6,
 		"23": 4,
 		"24": 2,
-		"25": 2,
+		"25": 4,
 		"26": 8,
 		"27": 6,
 		"30": 2,
-		"31": 6,
+		"31": 4,
 		"32": 2,
 		"33": 2,
 		"34": 2,
@@ -81,7 +81,9 @@ var ChampCore = (function(exports) {
 		"37": 2,
 		"38": 2,
 		"39": 2,
-		"40": 2
+		"40": 2,
+		"28": 8,
+		"29": 2
 	};
 	var training_default = {
 		facilities: {
@@ -1436,7 +1438,7 @@ var ChampCore = (function(exports) {
 			no: 25,
 			price: 1500,
 			minRank: 2,
-			capacity: 2,
+			capacity: 4,
 			autoCare: true
 		},
 		{
@@ -1469,7 +1471,7 @@ var ChampCore = (function(exports) {
 			no: 31,
 			price: 2e3,
 			minRank: 3,
-			capacity: 6,
+			capacity: 4,
 			rest: true
 		},
 		{

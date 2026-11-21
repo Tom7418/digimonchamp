@@ -242,7 +242,7 @@ export interface Cage {
 }
 type StatKey2 = keyof Stats;
 
-// 케이지 40종: 이름·순서·효과·수용 수는 원작 글(root/ui/txt txt_list 487~566번)에서 확인.
+// 케이지: 이름·순서·효과는 원작 글(txt_list487~566), 정원은 아래 실행 코드 추출값을 우선한다.
 //   no는 원작 번호이자 그림 번호(root/training/field_cmNN_01).
 // price·minRank는 임시. 훈련은 training.ts의 원본 결과표가 우선하며,
 // up/apUp은 시설 분류·표시용, gain/down/apDown은 원본 표에 없는 시설의 임시 대체에만 사용.
@@ -273,11 +273,11 @@ export const CAGES: Cage[] = [
   { id: '발전소', no: 22, price: 0, minRank: 99, capacity: 6, resist: '천둥' },
   { id: '가스실', no: 23, price: 1200, minRank: 2, capacity: 4, apUp: ['바이러스'], gain: 2 },
   { id: '절', no: 24, price: 400, minRank: 1, capacity: 2, up: ['int'] },
-  { id: '동물원', no: 25, price: 1500, minRank: 2, capacity: 2, autoCare: true },
+  { id: '동물원', no: 25, price: 1500, minRank: 2, capacity: 4, autoCare: true },
   { id: '목장', no: 26, price: 4000, minRank: 4, capacity: 8, autoCare: true },
   { id: '링', no: 27, price: 2500, minRank: 3, capacity: 6, battleUp: 1 },
   { id: '미니 운동장', no: 30, price: 0, minRank: 1, capacity: 2, up: ['hp'], down: ['tp'] },
-  { id: '양호실', no: 31, price: 2000, minRank: 3, capacity: 6, rest: true },
+  { id: '양호실', no: 31, price: 2000, minRank: 3, capacity: 4, rest: true },
   { id: '미니 화원', no: 32, price: 400, minRank: 1, capacity: 2, apUp: ['성'], apDown: ['암흑'] },
   { id: '미니 숲', no: 33, price: 400, minRank: 1, capacity: 2, apUp: ['벌레풀'], apDown: ['기계'] },
   { id: '미니 체육관', no: 34, price: 300, minRank: 1, capacity: 2, up: ['atk'], down: ['def'] },
@@ -288,7 +288,8 @@ export const CAGES: Cage[] = [
   { id: '미니 해변', no: 39, price: 400, minRank: 1, capacity: 2, apUp: ['물'], apDown: ['새'] },
   { id: '동굴', no: 40, price: 0, minRank: 99, capacity: 2, resist: '어둠' },
 ];
-// 원본 도움말에서 확인한 수용수만 적용한다. 기본 케이지(no0)의99는 미확인 웹판 값이다.
+// 원본 실행 코드의 popcount(시설 마스크)×2 정원을 적용한다. 도움말과 다른 동물원/양호실은 코드 우선.
+// 원본 표에 없는33/36/38은 도움말2를 유지한다. 기본 케이지(no0)는 이번 수정 제외.
 for(const cage of CAGES){const original=(cageCapacity as Record<string,number>)[String(cage.no)];if(original!==undefined)cage.capacity=original;}
 /** 예전 임시 케이지 이름 → 원작 이름 (저장 데이터 이전용) */
 export const CAGE_RENAMES: Record<string, string> = {
