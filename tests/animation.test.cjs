@@ -84,7 +84,7 @@ test('실제 적중 이벤트는 공격과 피격을 분리하며 결과 화면�
  const source=fs.readFileSync('web/game.js','utf8');
  const a=source.indexOf('  function battleTick(dt)'),b=source.indexOf('  function battleLog(',a);
  for(const special of [false,true]){
-  const sandbox=vm.createContext({window:{},performance:{now:()=>0},drawArena(){},finishBattle(){},battleLog(){}});
+  const sandbox=vm.createContext({window:{},performance:{now:()=>0},battleBackdrop:{spriteScale:()=>1},spriteOf:()=>({}),drawArena(){},finishBattle(){},battleLog(){}});
   for(const f of ['core.js','assets/sprites.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),sandbox);
   vm.runInContext(`const animations=window.createAnimationPlayer(window.DIGIMON_ANIMATIONS);
     const SPRITE_BY_NAME=Object.fromEntries(window.SPRITES.map(s=>[s.name,s.id]));
@@ -108,7 +108,7 @@ test('실제 기술 레코드의7~10 동작·한글 이름·소비TP를 화면�
   ['코로몬',0,'attack2','물방울',4],['드라코몬',1,'attack4','테일 스매시',10],
  ]){
   const logs=[];
-  const sandbox=vm.createContext({window:{},performance:{now:()=>0},drawArena(){},finishBattle(){},battleLog:t=>logs.push(t)});
+  const sandbox=vm.createContext({window:{},performance:{now:()=>0},battleBackdrop:{spriteScale:()=>1},spriteOf:()=>({}),drawArena(){},finishBattle(){},battleLog:t=>logs.push(t)});
   for(const file of ['core.js','assets/sprites.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync('web/'+file,'utf8'),sandbox);
   vm.runInContext(`const animations=window.createAnimationPlayer(window.DIGIMON_ANIMATIONS);
    const SPRITE_BY_NAME=Object.fromEntries(window.SPRITES.map(s=>[s.name,s.id]));
@@ -133,7 +133,7 @@ test('피해0은 방어34, 치료/강화는35, 부활은33을 종별 원본 길�
   [[{type:'support',from:0,targets:[0],skill:{id:9,name:'공격업'}}],0,'shoutFrame2'],
   [[{type:'hit',from:1,to:0,damage:10},{type:'support',from:0,targets:[0],skill:{id:28,name:'부활α'}}],0,'shout'],
  ]){
-  const c=vm.createContext({window:{},events,performance:{now:()=>0},drawArena(){},finishBattle(){},battleLog(){}});
+  const c=vm.createContext({window:{},events,performance:{now:()=>0},battleBackdrop:{spriteScale:()=>1},spriteOf:()=>({}),drawArena(){},finishBattle(){},battleLog(){}});
   for(const f of ['core.js','assets/sprites.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),c);
   vm.runInContext(`const animations=window.createAnimationPlayer(window.DIGIMON_ANIMATIONS),SPRITE_BY_NAME=Object.fromEntries(window.SPRITES.map(s=>[s.name,s.id]));
    const C={getSpecies:ChampCore.getSpecies,stepBattle:()=>events};

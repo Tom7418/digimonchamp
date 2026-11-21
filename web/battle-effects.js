@@ -7,8 +7,8 @@
   const data=root.BATTLE_EFFECT_DATA;
   const hitImage=new Image();hitImage.src='assets/battle/effects.png';
   const healImages=Array.from({length:6},(_,i)=>{const im=new Image();im.src='assets/ui/fx_ring_'+(i+1)+'.png';return im;});
-  function add(event,units,before){
-   const skill=skills?.add(event,units,before);if(skill)return skill;
+  function add(event,units,before,actorScale){
+   const skill=skills?.add(event,units,before,actorScale);if(skill)return skill;
    if(!['hit','heal'].includes(event.type))return;
    const target=units.find(u=>u.id===event.to);if(!target)return;
    effects.push({kind:event.type,x:target.x,y:target.y-10,age:0,

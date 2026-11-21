@@ -2,9 +2,10 @@
   "summary": {
     "skills": 361,
     "projectiles": 122,
+    "beams": 31,
     "impactSelected": 157,
-    "banks": 77,
-    "cells": 633,
+    "banks": 86,
+    "cells": 669,
     "atlas": [
       2048,
       318
@@ -69,6 +70,12 @@
       ".ncer": "503df21b69ce120f2f5b4ca3ed6d6f2ab8be03bc775c65537664307ea140166e",
       ".nclr": "1897b6469a4d8fb4e72c7afec0a4f9a44db8e2bd2ce21e561a1d715327c3f1e4",
       ".nanr": "97e3308b920b9eaf753f1f1d984c4f3b31597b1d66efcdd5cf2d4160a956bdfb"
+    },
+    "e003_beam01": {
+      ".ncbr": "7c696f0cf49fdf1055c0ccde6bb8a260ab161348c4b5d4a58f082ac33baeebd7",
+      ".ncer": "479ce1906ed99f02e078da000e9061c63f88f7ee871171a0a8fb87f6af1861bf",
+      ".nclr": "3eafe5cd7ed5504bebc90aa179fa1abebca98446b0b44311fede821db66b6cce",
+      ".nanr": "64e3267ceb14d7f5de82c25113782fa15f61d2158a24342e8a0a899c8f25a7b6"
     },
     "e003_thunderball00": {
       ".ncbr": "71d3ffe0f5ec9455b9cb029e0100699e0a1b7de0ba6e4c4e172b2eeb5f5f7dd4",
@@ -172,6 +179,12 @@
       ".nclr": "ee0bb83f77f8984db4dd3f0ac3b3bc24372a85af8fe38e727b564cac015dccae",
       ".nanr": "0512b3562172b35db892d6091980a86d8a53e88aa3e922dbee25b1848814da24"
     },
+    "e003_beam00": {
+      ".ncbr": "33aabac9fbbbababd7ba6ca0e965d00b3402048b04c744fd4f377203487cfbea",
+      ".ncer": "bc5151a6a430b6e8b4ac621fa51f3c3ac40cca45b48581d8b3e03be4b17c2bc3",
+      ".nclr": "329550be1c8d0c802b6dcd3c0165be7937dcfcb2c602cadc23c817b53cc26630",
+      ".nanr": "64e3267ceb14d7f5de82c25113782fa15f61d2158a24342e8a0a899c8f25a7b6"
+    },
     "e003_flamefist00": {
       ".ncbr": "cfe045be431e4ea7bc6772df99528b221b5d56e5757f44a2f08dff29b461349a",
       ".ncer": "1f5719f196d17bcfce81b49daa7529c1e0cc93edb9672624d5e216ac5ad9bfb2",
@@ -208,6 +221,18 @@
       ".nclr": "8ef86d57217f00864fe1ccbb43da017fdefb1a9befebc4d554e50cad202e7585",
       ".nanr": "5145bc854a09b0e1c160b3ccf2467f55f2d087dab86acb20327761e22b7f63e2"
     },
+    "e003_beam02": {
+      ".ncbr": "33aabac9fbbbababd7ba6ca0e965d00b3402048b04c744fd4f377203487cfbea",
+      ".ncer": "bc5151a6a430b6e8b4ac621fa51f3c3ac40cca45b48581d8b3e03be4b17c2bc3",
+      ".nclr": "3c9dadaeb089ff144a6286161d27a3760f5da687653bbe46ac259a41fac4af80",
+      ".nanr": "64e3267ceb14d7f5de82c25113782fa15f61d2158a24342e8a0a899c8f25a7b6"
+    },
+    "e003_beam03": {
+      ".ncbr": "bd84fad5a6babd57be73c8a3a76f9b4e0fa9b6292be6b9ad0025ec17b087d56f",
+      ".ncer": "479ce1906ed99f02e078da000e9061c63f88f7ee871171a0a8fb87f6af1861bf",
+      ".nclr": "f005e87e9d91edb8e95154c0f8d619e82c0f5e555cc92cda42194fcb87921369",
+      ".nanr": "64e3267ceb14d7f5de82c25113782fa15f61d2158a24342e8a0a899c8f25a7b6"
+    },
     "e003_waterball01": {
       ".ncbr": "b7c1268b051c0cca66f1247269d44c479f2fd9624bf404b230eb622fbbe398f1",
       ".ncer": "c9e2ea4496710ae5024639112c5b1df5b1db6134029eb493229f877576b555ac",
@@ -219,6 +244,12 @@
       ".ncer": "b3fa99f0740306ccb59703cebaca7043565afc6e88b359d598c70c990ba48c1b",
       ".nclr": "b0bcc6d89e88a3f4abac709a2c282109cbeebdfa592f5f63a332a87ea4e9988f",
       ".nanr": "85a8ec9d1cc2f4850057358b8601ba3cab64553fc5742c9188748732e08eb505"
+    },
+    "e003_beam04": {
+      ".ncbr": "a17bb1b73f56063cda0befec3fac0e702d3027f15627593ae878d648f8de7b13",
+      ".ncer": "bc5151a6a430b6e8b4ac621fa51f3c3ac40cca45b48581d8b3e03be4b17c2bc3",
+      ".nclr": "d56c748d1ba129e9be883352ea2d534d8f0e5fb5ef750083ae312ddc52939b35",
+      ".nanr": "64e3267ceb14d7f5de82c25113782fa15f61d2158a24342e8a0a899c8f25a7b6"
     },
     "e003_deathcharm00": {
       ".ncbr": "ce2ccfa51d037c2ce0d9957a7a062c9620c4d644a9091d090eb6e2a87b70d064",
@@ -268,6 +299,12 @@
       ".nclr": "f188b0cc4058d7e7f3fe6ab602c7001146d0c41ef0cbe7b39136daea008cb7ef",
       ".nanr": "84e167027a63a843bd0a4d043daa0d3e117428c52f77d8b0b3977313b5d143a2"
     },
+    "e003_beam06": {
+      ".ncbr": "33edb43671e0ee2ec56ade713a4f573caf33a4c60c969f21ba2581ffa5d6fa4b",
+      ".ncer": "f18242d9fe60465de39a787b1d022e62d2c08e2e1d332f81caf556e1ae6204da",
+      ".nclr": "e089cff4e671a6e4d7fa787d40f42b17184b2bfbdc6f6a9131319e6aa3286e7f",
+      ".nanr": "64e3267ceb14d7f5de82c25113782fa15f61d2158a24342e8a0a899c8f25a7b6"
+    },
     "e003_lightball01": {
       ".ncbr": "02296f6557d3bde27827a3311e9b9a12dd2d6c3cd40641c60608c5af592f7681",
       ".ncer": "70905788897220b21b733edb93724642db9dc71d353b56500a8e39ba11226d43",
@@ -291,6 +328,12 @@
       ".ncer": "266813a3452870a61126d88b1af85d215d02eae57e9aa01d3a1f33a900cdf643",
       ".nclr": "8825744503e8e13b95656011689e49fbe603be57fadfe8c76641e7a9753657ec",
       ".nanr": "44e6185b3fb124fab73689e5055e24955f1fd08d7bb21c51ae4b57dd45af943b"
+    },
+    "e003_heaven00": {
+      ".ncbr": "41cdb715efaca02339f68c9d20326f683a706514ae05841ad674333a91c14447",
+      ".ncer": "479ce1906ed99f02e078da000e9061c63f88f7ee871171a0a8fb87f6af1861bf",
+      ".nclr": "88474db647d3757e2fb196eb2354e671713e2e70ccc2c3b747345509e40c1627",
+      ".nanr": "e249ea53970594ab88021c4d4d63294cc8aa164cc14caf02c21b684a58614c37"
     },
     "e003_firehurricane00": {
       ".ncbr": "e6ad2a47bd2df509e3f41797ebcb22dfb0ddb893ae6c1cd75ef7f0a1ee68a6a1",
@@ -400,6 +443,12 @@
       ".nclr": "e9e42812fcf877028385aad9fbde74bd795e4f47250fa59a290b19cfbcb77865",
       ".nanr": "a0e12a3ca3d1f73f3cecaaa7324e639c76c520214a2a4de8520b3a35f9f9feef"
     },
+    "e003_risingdestroyer00": {
+      ".ncbr": "aec6ee5f67c3ffffbb44bff1c46be6b4e9180a515a9ebd9a5115b22fa8072f94",
+      ".ncer": "b0088f8d4bdff06a44bfbdfbd83fd443d75dcd52b02f56569401e9674ffa7ae1",
+      ".nclr": "329550be1c8d0c802b6dcd3c0165be7937dcfcb2c602cadc23c817b53cc26630",
+      ".nanr": "e249ea53970594ab88021c4d4d63294cc8aa164cc14caf02c21b684a58614c37"
+    },
     "e003_fraucanon00": {
       ".ncbr": "f21815b7ae8276b81bb57e037b66832a903acd3c26ec30f92e00881945a3a4fb",
       ".ncer": "04b41c6a1c1c8526914dba1acaddaff4f6a2d067b6d8090792fadbbae48dc8be",
@@ -483,6 +532,12 @@
       ".ncer": "1aa6e6011b70485dbf09400e6b87e544bdf7c3e0747e7fef6e2d8c27682ce026",
       ".nclr": "17394e4445eb9abe7ce312ffe4b65cca5b973fae76e516e194abea63e0bbf41d",
       ".nanr": "c5435dc22d84b184be5f0034f22fefbab418025408fbf27b34c6fe798214291a"
+    },
+    "e003_beam05": {
+      ".ncbr": "33aabac9fbbbababd7ba6ca0e965d00b3402048b04c744fd4f377203487cfbea",
+      ".ncer": "bc5151a6a430b6e8b4ac621fa51f3c3ac40cca45b48581d8b3e03be4b17c2bc3",
+      ".nclr": "5412b12fc5dfafc36ab7ba143c5bcb6479efc672d5e09ec411d6c7784f64c4f6",
+      ".nanr": "64e3267ceb14d7f5de82c25113782fa15f61d2158a24342e8a0a899c8f25a7b6"
     }
   },
   "arm9": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
@@ -492,11 +547,13 @@
     "0x211e3dc..e498: resource high byte bank; low byte-1 NANR",
     "0x2120308..03fc: muzzle/flight/finish scale, origin, speed passed to script",
     "VM 0x21285ee: direction, distance/speed, flight; 0x2128828..882c changes finish sequence after collision",
-    "0x211fc34 +0x44 is target-hit effect selected in hit collision path"
+    "0x211fc34 +0x44 is target-hit effect selected in hit collision path",
+    "Actor source origin: NCER shared bounds minus sprites cx/baseline; web foot at y+14",
+    "Beam VM0x2129611: root length/8, rotated moving head seq1; hit head seq2 for6frames; stationary origin seq3; sqrt width grow/fade409/4096"
   ],
   "limits": [
-    "Other 30 action script families and true collision dispatch/hit timing remain to port.",
-    "Web projectile travels to the resolved target; engine damage already calculated.",
+    "Other 29 action script families and true collision dispatch/hit timing remain to port.",
+    "Web projectile/beam aims at the resolved target; engine damage already calculated. Beam uses continuous web time over verified original constants, not a full fixed-point VM.",
     "Auxiliary hit art is selected by original table; web places it at visual target center."
   ]
 }

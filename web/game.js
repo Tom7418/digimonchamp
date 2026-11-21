@@ -1346,7 +1346,8 @@
         b.motion.set(u.id,{dx:u.x-p.x,dy:u.y-p.y});
       }
       for (const e of events) {
-        const effect=b.effects.add(e,b.state.units,before);
+        const caster=b.state.units.find(u=>u.id===e.from);
+        const effect=b.effects.add(e,b.state.units,before,caster?battleBackdrop.spriteScale(spriteOf(caster.speciesId,false)):1);
         // 실제 적중 이벤트로 공격/피격을 연결하고 각 종 NANR 유지 시간을 사용한다.
         if(e.type==='hit'){
           const attacker=b.state.units.find(u=>u.id===e.from),target=b.state.units.find(u=>u.id===e.to);
@@ -1356,7 +1357,9 @@
           const attackDuration=animations.duration(attackId,attackState);
           b.presentation?.add(e,b.state.units,Math.max(attackDuration,effect?.hold||0));
           animations.face?.(attacker,attackId,target.x-attacker.x);
-          if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:attackDuration,duration:attackDuration,state:attackState,flip:target.x>attacker.x});
+          // 원본 빔은 0x212073c로 시전자를 잠근다. 빔이 끝날 때까지 공격 자세를 유지한다.
+          const actionDuration=effect?.lockActor?Math.max(attackDuration,effect.hold):attackDuration;
+          if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:actionDuration,duration:actionDuration,state:attackState,flip:target.x>attacker.x});
           if(!effect?.lead)battleHitVisual(b,e);
           if(e.special&&e.skill){
             b.flashes.push({id:e.from,text:e.skill.name,until:performance.now()+700,color:'#a9e7ff',skill:true});
