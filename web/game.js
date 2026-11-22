@@ -196,6 +196,10 @@
     } else if (e.type === 'revived') {
       log(`${e.name}이(가) 빈사 상태에서 회복했습니다.`);
       toast(`${e.name} 회복`);
+    } else if (e.type === 'extended') {
+      // 원본 +0x4C 수명 연장 (랭크 때문에 못 한 진화, 또는 수명이 다할 때 유대 50 이상). 알림 문구는 웹판
+      log(e.reason === 'rank' ? `${e.name}: 진화할 힘은 있지만 테이머 랭크가 낮아 기다립니다. 이번 세대의 수명이 늘어났습니다.` : `${e.name}: 테이머와의 유대 덕분에 이번 세대의 수명이 늘어났습니다.`);
+      toast(`${e.name} 수명 연장`);
     } else if (e.type === 'blocked')
       log(
         e.reason === 'rank'
@@ -301,7 +305,7 @@
     $('#name').textContent = nameOf(d);
     $('#level').textContent = d.isEgg ? '부화 대기' : C.STAGE_LABEL[sp.stage];
     $('#stage').textContent = d.isEgg ? `디지에그화 ${d.eggs}회` : `${sp.family} · ${sp.attr} · ${sp.size}G`;
-    const life = d.isEgg ? C.EGG_MINUTES : C.LIFESPAN[sp.stage];
+    const life = d.isEgg ? C.EGG_MINUTES : C.lifespanOf(d);
     $('#mood').textContent = d.isEgg
       ? `${Math.max(0, C.EGG_MINUTES - d.stageAge)}분 뒤 부화합니다.`
       : `성격: ${d.personality} · 배틀 ${d.battles}회 (승 ${d.wins}) · 페널티 ${d.penalties}${d.dying ? ' · 빈사' : ''}${d.sick ? ' · 병' : ''}${d.injured ? ' · 부상' : ''}`;

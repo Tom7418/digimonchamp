@@ -27,11 +27,21 @@ export function explain(d: Digimon, cond: Cond): Check[] {
   if (cond.penalties !== undefined) out.push({ label: `페널티(발병) ${cond.penalties}회 이상 (현재 ${d.penalties})`, met: d.penalties >= cond.penalties });
   if (cond.eggs !== undefined) out.push({ label: `디지에그화 ${cond.eggs}회 이상 (현재 ${d.eggs})`, met: d.eggs >= cond.eggs });
   if (cond.time) {
-    const life = LIFESPAN[getSpecies(d.speciesId).stage];
+    const life = lifespanOf(d);
     out.push({ label: '수명이 다할 때까지 다른 조건을 채우지 않음', met: d.stageAge >= life });
   }
   // 별도의 최소 성장 나이는 붙이지 않는다. 시간 경로는 위 cond.time 자체만 검사한다.
   return out;
+}
+
+/**
+ * 이번 세대의 수명(게임 분). 원본 배우 +0x428: 평소에는 종 표 +0x28(세대마다 같은 값, LIFESPAN)이고,
+ * 수명 연장 표시(디지몬 칸 +0x4C)가 서면 0x212B9BC 표[세대] = 다음 세대의 수명이 된다(overlay18 0x2114DEC, 표는 0x212B2B8이 채움).
+ * 궁극체는 진화 판정이 바로 끝나(0x2115D9C) 연장되지 않는다.
+ */
+export function lifespanOf(d: Digimon): number {
+  const stage = getSpecies(d.speciesId).stage;
+  return d.lifeExtended && stage < 6 ? LIFESPAN[(stage + 1) as Stage] : LIFESPAN[stage];
 }
 
 export const meets = (d: Digimon, cond: Cond) => explain(d, cond).every((c) => c.met);

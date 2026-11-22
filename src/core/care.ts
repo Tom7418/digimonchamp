@@ -1,8 +1,8 @@
 import { applyTraining } from './training';
 import facilityEffects from '../data/facility-effects.json';
 import { evolvedResistance, evolvedStats, upgradeStats } from './stats';
-import { CAGE_LEVEL_FACTOR, CAGE_LEVEL_ROWS, CAGE_LEVEL_SIDE_FACTOR, CAGE_SHOP, CAGE_RENAMES, CAGES, dateOf, DAY_END_MINUTE, DAY_START_HOUR, EGG_MINUTES, initialResistance, initialStats, getCage, getSpecies, originalSpecies, LIFESPAN, MIN_PER_DAY, START_CAGES, START_CLOCK } from './data';
-import { endOfLife, findEvolution, type EvoResult } from './evolution';
+import { CAGE_LEVEL_FACTOR, CAGE_LEVEL_ROWS, CAGE_LEVEL_SIDE_FACTOR, CAGE_SHOP, CAGE_RENAMES, CAGES, dateOf, DAY_END_MINUTE, DAY_START_HOUR, EGG_MINUTES, initialResistance, initialStats, getCage, getSpecies, originalSpecies, MIN_PER_DAY, START_CAGES, START_CLOCK } from './data';
+import { endOfLife, findEvolution, lifespanOf, type EvoResult } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, migrateTitleIds, tamerRank } from './titles';
 import { bestRope, MEMORY_CARDS, ROPES, START_ROPE, WIRE_PACK, BAIT_PACK, BAITS, GEARS, gearCount, itemUnlocked, SHOT_PACK, SHOTS } from './hunt';
@@ -213,7 +213,9 @@ export type FarmEvent =
   | { type: 'poop'; uid: number }
   /** 훈련 완료 후 실제로 오른·내린 능력치 (예: 'HP +3, 방어 -1') */
   | { type: 'trained'; uid: number; name: string; changes: string }
-  | { type: 'blocked'; uid: number; name: string; reason: 'rank' | 'capacity' };
+  | { type: 'blocked'; uid: number; name: string; reason: 'rank' | 'capacity' }
+  /** 수명이 한 번 늘었다 (원본 +0x4C). rank: 랭크 때문에 못 한 진화, bond: 수명이 다할 때 유대 50 이상 */
+  | { type: 'extended'; uid: number; name: string; reason: 'rank' | 'bond' };
 
 /**
  * 기억 기록 (원본 ARM9 0x2062E80~0x2062F2C): 진화·디지에그화로 모습이 바뀔 때마다 바뀌기 전 종을
@@ -242,23 +244,39 @@ export function memoryEvolution(d: Digimon, normal: string | null, rng: Rng): st
   return null;
 }
 
-/** 진화 시 능력치/속성 이월은 사육 틱과 배틀 직후에 같은 규칙을 사용한다. */
-function evolveDigimon(d: Digimon, to: string, rng: Rng): Digimon {
+/**
+ * 진화 시 능력치/속성 이월은 사육 틱과 배틀 직후에 같은 규칙을 사용한다.
+ * bonus: 진화표의 마지막 후보(보통 '시간')가 아닌 후보로 진화했으면 유대 +10 (overlay18 0x211A98C~0x211A9AC).
+ */
+function evolveDigimon(d: Digimon, to: string, rng: Rng, bonus = false): Digimon {
   // 원본 ARM9 0x2062258: 새 종 구조체(속성·종족 수치 0)를 만들고 능력치만 이월한다 → 진화하면 속성·종족 수치는 0부터
   const ap = Object.fromEntries(Object.keys(d.ap).map((k) => [k, 0])) as Record<ApKey, number>;
-  // 부상 위험도(원본 +0x40)는 이월하지 않아 진화하면 0 (ARM9 0x2062258)
-  return { ...d, speciesId: to, stageAge: 0, stats: evolvedStats(d, to, d.eggs, rng), resistance: evolvedResistance(d, to, d.eggs, rng), statVersion: 1, ap, rottenEaten: 0, memory: remember(d), injuryRisk: 0 };
+  // 부상 위험도(원본 +0x40)·수명 연장(+0x4C)·동거/전염 시간은 이월하지 않아 0. 스트레스(+0x1C)는 50까지만, 유대(+0x20)는 그대로(0x2062660~0x2062694)
+  const next: Digimon = { ...d, speciesId: to, stageAge: 0, stats: evolvedStats(d, to, d.eggs, rng), resistance: evolvedResistance(d, to, d.eggs, rng), statVersion: 1, ap, rottenEaten: 0, memory: remember(d), injuryRisk: 0, lifeExtended: false, mateMinutes: 0, contagionMinutes: 0, stress: Math.min(50, d.stress ?? 0) };
+  if (bonus) addBond(next, BOND.evolve);
+  return next;
+}
+
+/** 진화표에서 이 후보가 마지막이 아닌가 (원본 +0x1F0 = 고른 후보가 마지막, 0x21167AC) */
+function evoBonus(d: Digimon, normal: string | undefined): boolean {
+  if (!normal) return false;
+  const evos = getSpecies(d.speciesId).evos;
+  const i = evos.findIndex((e) => e.to === normal);
+  return i >= 0 && i < evos.length - 1;
 }
 
 /** 수명이 다한 뒤의 판정에 기억 진화를 덧씌운다. 기억 진화는 원본처럼 랭크 제한을 다시 보지 않고 용량만 확인한다 */
-function lifespanEvolution(d: Digimon, evo: EvoResult, free: number, rng: Rng): (NonNullable<EvoResult> & { memory?: boolean }) | null {
-  if (d.isEgg) return evo;
+function lifespanEvolution(d: Digimon, evo: EvoResult, free: number, rng: Rng): (NonNullable<EvoResult> & { memory?: boolean; bonus?: boolean }) | null {
+  const bonus = evo?.kind === 'evolve' && evoBonus(d, evo.to);
+  const plain = evo?.kind === 'evolve' ? { ...evo, bonus } : evo;
+  if (d.isEgg) return plain;
   const sp = getSpecies(d.speciesId);
-  if (d.stageAge < LIFESPAN[sp.stage] || sp.stage >= 6) return evo;
+  if (d.stageAge < lifespanOf(d) || sp.stage >= 6) return plain;
   const to = memoryEvolution(d, evo?.kind === 'evolve' ? evo.to : null, rng);
-  if (!to || (evo?.kind === 'evolve' && to === evo.to)) return evo;
-  if (getSpecies(to).size - sp.size > free) return evo;
-  return { kind: 'evolve', to, memory: true };
+  if (!to || (evo?.kind === 'evolve' && to === evo.to)) return plain;
+  if (getSpecies(to).size - sp.size > free) return plain;
+  // 기억 진화도 고른 후보 번호는 원래 후보의 것이라 보너스는 같다. 후보가 없을 때의 기억 진화는 보너스 없음(0x21168BC)
+  return { kind: 'evolve', to, memory: true, bonus };
 }
 
 /** 시간/포만감 등을 진행하지 않고 조건만 평가한다. 한 번에 개체당 한 단계만 진화한다. */
@@ -278,7 +296,7 @@ export function evaluateEvolutions(save: SaveData, rng: Rng = defaultRng, uids?:
       free -= getSpecies(evo.to).size - getSpecies(d.speciesId).size;
       events.push({ type: 'evolved', uid: d.uid, from: d.speciesId, to: evo.to, ...(evo.memory ? { memory: true } : {}) });
       seen.add(evo.to);evolved.add(d.uid);changed = true;
-      digimon[i] = evolveDigimon(d, evo.to, rng);
+      digimon[i] = evolveDigimon(d, evo.to, rng, evo.bonus);
     });
   }
   return { save: events.length ? { ...save, digimon, seen: [...seen] } : save, events };
@@ -405,9 +423,51 @@ export function addStress(d: Digimon, amount: number) {
   d.stress = Math.max(0, Math.min(100, (d.stress ?? 0) + amount));
 }
 
-function makeSick(d: Digimon, events: FarmEvent[], stress = STRESS.sick) {
+/**
+ * 유대 (원본 디지몬 칸 +0x20, 0~100, 더하는 함수 overlay18 0x2119A90). 화면에 나오지 않는다.
+ *  - 훈련을 마칠 때 +1 (0x211D5AC), 약·상처약이 들으면 +2 (0x2119A28), 마지막이 아닌 후보로 진화하면 +10 (0x211A9AC)
+ *  - 빈사가 되면 -1 (0x211B138·0x211B160·0x211B19C), 스트레스 100으로 병이 나면 -5 (0x21187C0)
+ *  - 온천: 2시간마다 +1 (시설 표 명령6 종류3)
+ *  - 동거: 같은 케이지에 다른 디지몬이 있는 동안 720분이 넘을 때마다 정산 (0x21183A4~0x211848C, mateBond)
+ *  - 쓰다듬기: 원본은 손으로 문지르는 동안 6분마다 +1·스트레스 -1 (0x21185C0, 상태 0x2110100). 웹판 쓰다듬기는 아직 예전 방식
+ * 쓰임: 수명이 다할 때 50 이상이면 수명이 한 번 다음 세대 길이로 늘어난다 (0x21164BC·0x21168DC).
+ */
+export const BOND = { max: 100, extend: 50, training: 1, cure: 2, evolve: 10, dying: -1, stressSick: -5, matePeriod: 720 };
+export function addBond(d: Digimon, amount: number) {
+  d.bond = Math.max(0, Math.min(BOND.max, (d.bond ?? 0) + amount));
+}
+/** 성격 번호(txt_list #445~452 순서): 솔직·제멋대로·성급함·게으름·열혈·쿨·대담·겁쟁이. 0↔1, 2↔3, 4↔5, 6↔7이 맞지 않는 짝 (표 0x2129B30) */
+const PERSONALITY_NO: Record<string, number> = { 솔직: 0, 제멋대로: 1, 성급한: 2, 게으름: 3, 열혈: 4, 쿨: 5, 대담: 6, 겁쟁이: 7 };
+/** 적대하는 종족 (0x2119C48, mail #73): 용↔짐승, 물↔새, 벌레풀↔기계, 성↔암흑 */
+const RIVAL_FAMILY: Record<string, string> = { 용: '짐승', 짐승: '용', 물: '새', 새: '물', 벌레풀: '기계', 기계: '벌레풀', 성: '암흑', 암흑: '성' };
+/** 동거 디지몬 한 마리의 몫: 같은 종 3, 같은 종족 2, 성격이 맞지 않거나 종족이 적대하면 0, 그 밖 1 */
+export function mateBond(d: Digimon, other: Digimon): number {
+  if (other.speciesId === d.speciesId) return 3;
+  const a = getSpecies(d.speciesId), b = getSpecies(other.speciesId);
+  if (a.family === b.family) return 2;
+  const pa = PERSONALITY_NO[d.personality], pb = PERSONALITY_NO[other.personality];
+  if (pa !== undefined && pb !== undefined && (pa ^ 1) === pb) return 0;
+  if (RIVAL_FAMILY[a.family] === b.family) return 0;
+  return 1;
+}
+/**
+ * 동거 정산 (0x21183C4~0x211848C): 동거 디지몬마다 몫을 누적해 그 누적값을 매번 더한다(원본 그대로의 누적 합).
+ * 예) 같은 종 2마리 → 3 + 6 = 9. 원본에는 '맞지 않으면 -1' 분기가 있지만 플래그가 1이라 실제로는 쓰이지 않는다(0x211846C).
+ */
+export function settleMates(d: Digimon, mates: readonly Digimon[]) {
+  let step = 0;
+  for (const m of mates) {
+    step += mateBond(d, m);
+    addBond(d, step);
+  }
+}
+/** 병 전염 (0x2118514~0x2118598): 4시간(240분)이 넘을 때마다 '병든 동거 디지몬 수 × 20'% 확률로 스트레스 100 */
+export const CONTAGION = { period: 240, chancePerSick: 20 };
+
+function makeSick(d: Digimon, events: FarmEvent[], stress = STRESS.sick, bond = 0) {
   if (d.sick) return;
   addStress(d, stress);
+  if (bond) addBond(d, bond);
   d.sick = true;
   d.sickMinutes = 0;
   d.penalties += 1;
@@ -446,11 +506,15 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
     // 원본 0x2062258: 디지에그가 될 때도 마지막 모습을 그 세대 기억에 적는다. 부상 위험도는 0
     memory: remember(d),
     injuryRisk: 0,
+    // 수명 연장·동거/전염 시간은 새 구조체에서 0, 유대는 이어진다(0x2062668)
+    lifeExtended: false,
+    mateMinutes: 0,
+    contagionMinutes: 0,
   };
 }
 
 /** 디지몬 한 마리의 게임 시간 1분. null이면 로스트 */
-function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number; dirty?: boolean; cageLevels?: Record<string, number> }, events: FarmEvent[]): Digimon | null {
+function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number; dirty?: boolean; cageLevels?: Record<string, number>; mates?: readonly Digimon[] }, events: FarmEvent[]): Digimon | null {
   let d: Digimon = { ...prev, stats: { ...prev.stats }, ap: { ...prev.ap } };
   d.stageAge += 1;
 
@@ -485,6 +549,28 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   for (const e of facilityHpEffects(cage.no)) if (ctx.clock % e.every === 0) hp += e.amount * hpFactor * REST_HP_BOOST;
   // 시설 상시 스트레스 (원본 시설 표 명령6 종류2): 미니 양호실·목장·양호실 6분마다 -1, 온천 3분마다 -1, 동물원 4시간마다 +1. 배율은 HP와 같게(형규 지정)
   for (const e of facilityPeriodic(cage.no, 2)) if (ctx.clock % e.every === 0) addStress(d, e.amount * hpFactor);
+  // 시설 상시 유대 (명령6 종류3, 0x2118020 → 0x2119A90): 온천 2시간마다 +1. 배율은 붙이지 않는다(원본 표 값 그대로)
+  for (const e of facilityPeriodic(cage.no, 3)) if (ctx.clock % e.every === 0) addBond(d, e.amount);
+  // 동거 (0x21182CC~0x211848C): 같은 케이지에 다른 디지몬이 있으면 +0x1AC가 매분 늘고 720을 넘으면 0으로 돌리며 정산, 혼자면 줄어든다
+  const mates = ctx.mates ?? [];
+  if (mates.length) {
+    d.mateMinutes = (d.mateMinutes ?? 0) + 1;
+    if (d.mateMinutes > BOND.matePeriod) {
+      d.mateMinutes = 0;
+      settleMates(d, mates);
+    }
+  } else d.mateMinutes = Math.max(0, (d.mateMinutes ?? 0) - 1);
+  // 병 전염 (0x2118514~0x21185BC): 병든 동거 디지몬이 있고 자신은 병이 아니면 +0x1B0이 늘고, 240을 넘으면 판정. 아무도 병이 아니면 줄어든다
+  const sickMates = mates.filter((m) => m.sick).length;
+  if (sickMates > 0) {
+    if (!d.sick) {
+      d.contagionMinutes = (d.contagionMinutes ?? 0) + 1;
+      if (d.contagionMinutes > CONTAGION.period) {
+        d.contagionMinutes = 0;
+        if (Math.floor(ctx.rng() * 100) < sickMates * CONTAGION.chancePerSick) d.stress = 100;
+      }
+    }
+  } else d.contagionMinutes = Math.max(0, (d.contagionMinutes ?? 0) - 1);
   d.hpNow = Math.min(maxHp, Math.max(0, hp));
   d.bowel = bowelAt(d, ctx.clock);
   if (sleeping) {
@@ -522,7 +608,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   if ((d.stress ?? 0) < 100) d.stressSick = false;
   else if (!d.stressSick) {
     d.stressSick = true;
-    makeSick(d, events, 0);
+    makeSick(d, events, 0, BOND.stressSick);
   }
   // 굶주림 시간은 잠든 동안 멈추기만 하고 지우지 않는다 (밤을 넘겨도 이어진다)
   d.starvingMinutes = d.hunger <= 0 ? d.starvingMinutes + (sleeping ? 0 : 1) : 0;
@@ -541,17 +627,20 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
     if (!d.dying && d.sickMinutes >= DYING_AFTER_MINUTES) {
       d.dying = true;
       d.dyingMinutes = 0;
+      addBond(d, BOND.dying);
       events.push({ type: 'dying', uid: d.uid, name: sp.name, cause: d.sick ? 'sick' : 'injured' });
     }
   }
   if (!d.dying && d.hunger <= 0 && d.starvingMinutes >= DYING_AFTER_MINUTES) {
     d.dying = true;
     d.dyingMinutes = 0;
+    addBond(d, BOND.dying);
     events.push({ type: 'dying', uid: d.uid, name: sp.name, cause: 'hunger' });
   }
   if (!d.dying && lowHp(d)) {
     d.dying = true;
     d.dyingMinutes = 0;
+    addBond(d, BOND.dying);
     events.push({ type: 'dying', uid: d.uid, name: sp.name, cause: 'hp' });
   }
   if (d.dying) {
@@ -588,6 +677,8 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
         const level = ctx.cageLevels?.[cage.id] ?? 0;
         const changes = applyTraining(d, cage, ctx.season ?? 0, ctx.rng, CAGE_LEVEL_FACTOR[level] ?? 1);
         changes.push(...applyTrainingSideEffects(d, cage.no, ctx.season ?? 0, ctx.rng, level));
+        // 훈련을 마치면 유대 +1 (0x211D5AC, 진화·부상 판정 직전)
+        addBond(d, BOND.training);
         events.push({ type: 'trained', uid: d.uid, name: sp.name, changes: changes.join(', ') });
         // 부상 (원본 overlay18 0x211D5F8): 부상 위험도가 30을 넘으면 그 % 확률로 부상, 페널티 +1(최대 7은 원본 칸 크기).
         // 프로틴을 먹은 채 훈련하면 1개당 +2%p는 웹판 임시(help #138).
@@ -614,21 +705,29 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   const evo = lifespanEvolution(d, findEvolution(d, ctx.rank, ctx.free), ctx.free, ctx.rng);
   if (evo?.kind === 'evolve') {
     events.push({ type: 'evolved', uid: d.uid, from: sp.id, to: evo.to, ...(evo.memory ? { memory: true } : {}) });
-    return evolveDigimon(d, evo.to, ctx.rng);
+    return evolveDigimon(d, evo.to, ctx.rng, evo.bonus);
   }
-  if (d.stageAge % 60 === 0) {
-    if (d.stageAge >= LIFESPAN[sp.stage]) {
-      if (evo?.kind === 'blocked' && d.stageAge === LIFESPAN[sp.stage]) events.push({ type: 'blocked', uid: d.uid, name: sp.name, reason: evo.reason });
-      // 수명이 다한 뒤 하루의 유예가 지나면 디지에그화 또는 로스트
-      if (d.stageAge >= LIFESPAN[sp.stage] + 1440 || !evo) {
-        if (endOfLife(d) === 'egg' || ctx.isLast) {
-          events.push({ type: 'egg', uid: d.uid, from: sp.id });
-          return toEgg(d);
-        }
-        events.push({ type: 'lost', uid: d.uid, name: sp.name, reason: '수명' });
-        return null;
-      }
+  const ended = d.stageAge >= lifespanOf(d);
+  // 조건을 채웠지만 랭크 때문에 못 하는 진화 (overlay18 0x2116498~0x2116524): 수명 중이면 바로 한 번 연장
+  if (!ended && evo?.kind === 'blocked' && evo.reason === 'rank' && !d.lifeExtended && sp.stage < 6) {
+    d.lifeExtended = true;
+    events.push({ type: 'extended', uid: d.uid, name: sp.name, reason: 'rank' });
+  }
+  if (ended) {
+    // 수명이 다함 (0x211AFD4~0x211B094): 진화할 곳이 없으면 바로 디지에그화 또는 로스트. 예전 웹판의 하루 유예는 없앴다.
+    if (evo?.kind === 'blocked') events.push({ type: 'blocked', uid: d.uid, name: sp.name, reason: evo.reason });
+    // 연장: 아직 연장하지 않았고 유대 50 이상, 그리고 조건을 하나도 못 채웠거나 랭크에 막힌 경우(용량에 막히면 연장 없음, 0x2116528)
+    if (sp.stage < 6 && !d.lifeExtended && (d.bond ?? 0) >= BOND.extend && (!evo || evo.reason === 'rank')) {
+      d.lifeExtended = true;
+      events.push({ type: 'extended', uid: d.uid, name: sp.name, reason: 'bond' });
+      return d;
     }
+    if (endOfLife(d) === 'egg' || ctx.isLast) {
+      events.push({ type: 'egg', uid: d.uid, from: sp.id });
+      return toEgg(d);
+    }
+    events.push({ type: 'lost', uid: d.uid, name: sp.name, reason: '수명' });
+    return null;
   }
   return d;
 }
@@ -662,7 +761,8 @@ export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, d
     const inCage = key ? headcount.get(key) ?? 0 : 0;
     if (crowdHour && !d.isEgg && inCage > getCage(d.cage).capacity) addStress(candidate, inCage - 1);
     const dirty = !!d.cageInstance && dirtyCages.includes(d.cageInstance);
-    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1, dirty, cageLevels: save.cageLevels }, events);
+    const mates = key === null || d.isEgg ? [] : save.digimon.filter((o) => o.uid !== d.uid && !o.isEgg && group(o) === key);
+    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1, dirty, cageLevels: save.cageLevels, mates }, events);
     if (!r) {
       free += before;
       return;
@@ -823,7 +923,8 @@ export function cure(save: SaveData, uid: number, rng: Rng = defaultRng): Action
   if (save.medicine <= 0) return fail(save, '약이 없어요. 상점에서 사세요.');
   const used = { ...save, medicine: save.medicine - 1 };
   if (rng() >= CURE_CHANCE[getSpecies(d.speciesId).stage]) return { ok: true, message: '약을 놓았지만 아직 낫지 않았다…', save: used };
-  return { ok: true, message: '병이 나았다!', save: update(used, uid, (x) => ({ ...x, sick: false, sickMinutes: 0 })) };
+  // 원본 0x2119A58: 약이 들으면 방치 시간(+0x180)과 스트레스(+0x1C)가 0, 유대 +2(0x2119A28)
+  return { ok: true, message: '병이 나았다!', save: update(used, uid, (x) => ({ ...x, sick: false, sickMinutes: 0, stress: 0, stressSick: false, bond: Math.min(BOND.max, (x.bond ?? 0) + BOND.cure) })) };
 }
 
 /** 상처약으로 부상을 치료한다. 실패해도 상처약은 쓴다 */
@@ -834,7 +935,7 @@ export function treat(save: SaveData, uid: number, rng: Rng = defaultRng): Actio
   const used = { ...save, salve: save.salve - 1 };
   if (rng() >= TREAT_CHANCE[getSpecies(d.speciesId).stage]) return { ok: true, message: '상처약을 발랐지만 아직 낫지 않았다…', save: used };
   // 원본 0x2119A40: 치료하면 방치 시간과 부상 위험도가 0으로 (어느 약이 위험도를 지우는지는 추정)
-  return { ok: true, message: '상처가 나았다!', save: update(used, uid, (x) => ({ ...x, injured: false, sickMinutes: 0, injuryRisk: 0 })) };
+  return { ok: true, message: '상처가 나았다!', save: update(used, uid, (x) => ({ ...x, injured: false, sickMinutes: 0, injuryRisk: 0, bond: Math.min(BOND.max, (x.bond ?? 0) + BOND.cure) })) };
 }
 
 /** 예전 '치료' 버튼 호환: 병이면 약, 다쳤으면 상처약 */

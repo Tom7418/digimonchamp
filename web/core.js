@@ -2360,13 +2360,22 @@ var ChampCore = (function(exports) {
 			met: d.eggs >= cond.eggs
 		});
 		if (cond.time) {
-			const life = LIFESPAN[getSpecies(d.speciesId).stage];
+			const life = lifespanOf(d);
 			out.push({
 				label: "수명이 다할 때까지 다른 조건을 채우지 않음",
 				met: d.stageAge >= life
 			});
 		}
 		return out;
+	}
+	/**
+	* 이번 세대의 수명(게임 분). 원본 배우 +0x428: 평소에는 종 표 +0x28(세대마다 같은 값, LIFESPAN)이고,
+	* 수명 연장 표시(디지몬 칸 +0x4C)가 서면 0x212B9BC 표[세대] = 다음 세대의 수명이 된다(overlay18 0x2114DEC, 표는 0x212B2B8이 채움).
+	* 궁극체는 진화 판정이 바로 끝나(0x2115D9C) 연장되지 않는다.
+	*/
+	function lifespanOf(d) {
+		const stage = getSpecies(d.speciesId).stage;
+		return d.lifeExtended && stage < 6 ? LIFESPAN[stage + 1] : LIFESPAN[stage];
 	}
 	var meets = (d, cond) => explain(d, cond).every((c) => c.met);
 	/** 테이머 랭크로 진화 가능한 최대 세대 */
@@ -4200,10 +4209,13 @@ var ChampCore = (function(exports) {
 		if (first) return rng() < .5 ? first : null;
 		return null;
 	}
-	/** 진화 시 능력치/속성 이월은 사육 틱과 배틀 직후에 같은 규칙을 사용한다. */
-	function evolveDigimon(d, to, rng) {
+	/**
+	* 진화 시 능력치/속성 이월은 사육 틱과 배틀 직후에 같은 규칙을 사용한다.
+	* bonus: 진화표의 마지막 후보(보통 '시간')가 아닌 후보로 진화했으면 유대 +10 (overlay18 0x211A98C~0x211A9AC).
+	*/
+	function evolveDigimon(d, to, rng, bonus = false) {
 		const ap = Object.fromEntries(Object.keys(d.ap).map((k) => [k, 0]));
-		return {
+		const next = {
 			...d,
 			speciesId: to,
 			stageAge: 0,
@@ -4213,21 +4225,40 @@ var ChampCore = (function(exports) {
 			ap,
 			rottenEaten: 0,
 			memory: remember(d),
-			injuryRisk: 0
+			injuryRisk: 0,
+			lifeExtended: false,
+			mateMinutes: 0,
+			contagionMinutes: 0,
+			stress: Math.min(50, d.stress ?? 0)
 		};
+		if (bonus) addBond(next, BOND.evolve);
+		return next;
+	}
+	/** 진화표에서 이 후보가 마지막이 아닌가 (원본 +0x1F0 = 고른 후보가 마지막, 0x21167AC) */
+	function evoBonus(d, normal) {
+		if (!normal) return false;
+		const evos = getSpecies(d.speciesId).evos;
+		const i = evos.findIndex((e) => e.to === normal);
+		return i >= 0 && i < evos.length - 1;
 	}
 	/** 수명이 다한 뒤의 판정에 기억 진화를 덧씌운다. 기억 진화는 원본처럼 랭크 제한을 다시 보지 않고 용량만 확인한다 */
 	function lifespanEvolution(d, evo, free, rng) {
-		if (d.isEgg) return evo;
+		const bonus = evo?.kind === "evolve" && evoBonus(d, evo.to);
+		const plain = evo?.kind === "evolve" ? {
+			...evo,
+			bonus
+		} : evo;
+		if (d.isEgg) return plain;
 		const sp = getSpecies(d.speciesId);
-		if (d.stageAge < LIFESPAN[sp.stage] || sp.stage >= 6) return evo;
+		if (d.stageAge < lifespanOf(d) || sp.stage >= 6) return plain;
 		const to = memoryEvolution(d, evo?.kind === "evolve" ? evo.to : null, rng);
-		if (!to || evo?.kind === "evolve" && to === evo.to) return evo;
-		if (getSpecies(to).size - sp.size > free) return evo;
+		if (!to || evo?.kind === "evolve" && to === evo.to) return plain;
+		if (getSpecies(to).size - sp.size > free) return plain;
 		return {
 			kind: "evolve",
 			to,
-			memory: true
+			memory: true,
+			bonus
 		};
 	}
 	/** 시간/포만감 등을 진행하지 않고 조건만 평가한다. 한 번에 개체당 한 단계만 진화한다. */
@@ -4254,7 +4285,7 @@ var ChampCore = (function(exports) {
 				seen.add(evo.to);
 				evolved.add(d.uid);
 				changed = true;
-				digimon[i] = evolveDigimon(d, evo.to, rng);
+				digimon[i] = evolveDigimon(d, evo.to, rng, evo.bonus);
 			});
 		}
 		return {
@@ -4409,9 +4440,80 @@ var ChampCore = (function(exports) {
 	function addStress(d, amount) {
 		d.stress = Math.max(0, Math.min(100, (d.stress ?? 0) + amount));
 	}
-	function makeSick(d, events, stress = STRESS.sick) {
+	/**
+	* 유대 (원본 디지몬 칸 +0x20, 0~100, 더하는 함수 overlay18 0x2119A90). 화면에 나오지 않는다.
+	*  - 훈련을 마칠 때 +1 (0x211D5AC), 약·상처약이 들으면 +2 (0x2119A28), 마지막이 아닌 후보로 진화하면 +10 (0x211A9AC)
+	*  - 빈사가 되면 -1 (0x211B138·0x211B160·0x211B19C), 스트레스 100으로 병이 나면 -5 (0x21187C0)
+	*  - 온천: 2시간마다 +1 (시설 표 명령6 종류3)
+	*  - 동거: 같은 케이지에 다른 디지몬이 있는 동안 720분이 넘을 때마다 정산 (0x21183A4~0x211848C, mateBond)
+	*  - 쓰다듬기: 원본은 손으로 문지르는 동안 6분마다 +1·스트레스 -1 (0x21185C0, 상태 0x2110100). 웹판 쓰다듬기는 아직 예전 방식
+	* 쓰임: 수명이 다할 때 50 이상이면 수명이 한 번 다음 세대 길이로 늘어난다 (0x21164BC·0x21168DC).
+	*/
+	var BOND = {
+		max: 100,
+		extend: 50,
+		training: 1,
+		cure: 2,
+		evolve: 10,
+		dying: -1,
+		stressSick: -5,
+		matePeriod: 720
+	};
+	function addBond(d, amount) {
+		d.bond = Math.max(0, Math.min(BOND.max, (d.bond ?? 0) + amount));
+	}
+	/** 성격 번호(txt_list #445~452 순서): 솔직·제멋대로·성급함·게으름·열혈·쿨·대담·겁쟁이. 0↔1, 2↔3, 4↔5, 6↔7이 맞지 않는 짝 (표 0x2129B30) */
+	var PERSONALITY_NO = {
+		솔직: 0,
+		제멋대로: 1,
+		성급한: 2,
+		게으름: 3,
+		열혈: 4,
+		쿨: 5,
+		대담: 6,
+		겁쟁이: 7
+	};
+	/** 적대하는 종족 (0x2119C48, mail #73): 용↔짐승, 물↔새, 벌레풀↔기계, 성↔암흑 */
+	var RIVAL_FAMILY = {
+		용: "짐승",
+		짐승: "용",
+		물: "새",
+		새: "물",
+		벌레풀: "기계",
+		기계: "벌레풀",
+		성: "암흑",
+		암흑: "성"
+	};
+	/** 동거 디지몬 한 마리의 몫: 같은 종 3, 같은 종족 2, 성격이 맞지 않거나 종족이 적대하면 0, 그 밖 1 */
+	function mateBond(d, other) {
+		if (other.speciesId === d.speciesId) return 3;
+		const a = getSpecies(d.speciesId), b = getSpecies(other.speciesId);
+		if (a.family === b.family) return 2;
+		const pa = PERSONALITY_NO[d.personality], pb = PERSONALITY_NO[other.personality];
+		if (pa !== void 0 && pb !== void 0 && (pa ^ 1) === pb) return 0;
+		if (RIVAL_FAMILY[a.family] === b.family) return 0;
+		return 1;
+	}
+	/**
+	* 동거 정산 (0x21183C4~0x211848C): 동거 디지몬마다 몫을 누적해 그 누적값을 매번 더한다(원본 그대로의 누적 합).
+	* 예) 같은 종 2마리 → 3 + 6 = 9. 원본에는 '맞지 않으면 -1' 분기가 있지만 플래그가 1이라 실제로는 쓰이지 않는다(0x211846C).
+	*/
+	function settleMates(d, mates) {
+		let step = 0;
+		for (const m of mates) {
+			step += mateBond(d, m);
+			addBond(d, step);
+		}
+	}
+	/** 병 전염 (0x2118514~0x2118598): 4시간(240분)이 넘을 때마다 '병든 동거 디지몬 수 × 20'% 확률로 스트레스 100 */
+	var CONTAGION = {
+		period: 240,
+		chancePerSick: 20
+	};
+	function makeSick(d, events, stress = STRESS.sick, bond = 0) {
 		if (d.sick) return;
 		addStress(d, stress);
+		if (bond) addBond(d, bond);
 		d.sick = true;
 		d.sickMinutes = 0;
 		d.penalties += 1;
@@ -4450,7 +4552,10 @@ var ChampCore = (function(exports) {
 			restCycle: void 0,
 			resistance: void 0,
 			memory: remember(d),
-			injuryRisk: 0
+			injuryRisk: 0,
+			lifeExtended: false,
+			mateMinutes: 0,
+			contagionMinutes: 0
 		};
 	}
 	/** 디지몬 한 마리의 게임 시간 1분. null이면 로스트 */
@@ -4500,6 +4605,25 @@ var ChampCore = (function(exports) {
 		const hpFactor = CAGE_LEVEL_FACTOR[ctx.cageLevels?.[cage.id] ?? 0] ?? 1;
 		for (const e of facilityHpEffects(cage.no)) if (ctx.clock % e.every === 0) hp += e.amount * hpFactor * 5;
 		for (const e of facilityPeriodic(cage.no, 2)) if (ctx.clock % e.every === 0) addStress(d, e.amount * hpFactor);
+		for (const e of facilityPeriodic(cage.no, 3)) if (ctx.clock % e.every === 0) addBond(d, e.amount);
+		const mates = ctx.mates ?? [];
+		if (mates.length) {
+			d.mateMinutes = (d.mateMinutes ?? 0) + 1;
+			if (d.mateMinutes > BOND.matePeriod) {
+				d.mateMinutes = 0;
+				settleMates(d, mates);
+			}
+		} else d.mateMinutes = Math.max(0, (d.mateMinutes ?? 0) - 1);
+		const sickMates = mates.filter((m) => m.sick).length;
+		if (sickMates > 0) {
+			if (!d.sick) {
+				d.contagionMinutes = (d.contagionMinutes ?? 0) + 1;
+				if (d.contagionMinutes > CONTAGION.period) {
+					d.contagionMinutes = 0;
+					if (Math.floor(ctx.rng() * 100) < sickMates * CONTAGION.chancePerSick) d.stress = 100;
+				}
+			}
+		} else d.contagionMinutes = Math.max(0, (d.contagionMinutes ?? 0) - 1);
 		d.hpNow = Math.min(maxHp, Math.max(0, hp));
 		d.bowel = bowelAt(d, ctx.clock);
 		if (sleeping) d.fatigue = Math.max(0, d.fatigue - .3);
@@ -4536,7 +4660,7 @@ var ChampCore = (function(exports) {
 		if ((d.stress ?? 0) < 100) d.stressSick = false;
 		else if (!d.stressSick) {
 			d.stressSick = true;
-			makeSick(d, events, 0);
+			makeSick(d, events, 0, BOND.stressSick);
 		}
 		d.starvingMinutes = d.hunger <= 0 ? d.starvingMinutes + (sleeping ? 0 : 1) : 0;
 		d.dirtyMinutes = (d.poop >= 3 || ctx.dirty) && !sleeping ? d.dirtyMinutes + 1 : 0;
@@ -4553,6 +4677,7 @@ var ChampCore = (function(exports) {
 			if (!d.dying && d.sickMinutes >= 1200) {
 				d.dying = true;
 				d.dyingMinutes = 0;
+				addBond(d, BOND.dying);
 				events.push({
 					type: "dying",
 					uid: d.uid,
@@ -4564,6 +4689,7 @@ var ChampCore = (function(exports) {
 		if (!d.dying && d.hunger <= 0 && d.starvingMinutes >= 1200) {
 			d.dying = true;
 			d.dyingMinutes = 0;
+			addBond(d, BOND.dying);
 			events.push({
 				type: "dying",
 				uid: d.uid,
@@ -4574,6 +4700,7 @@ var ChampCore = (function(exports) {
 		if (!d.dying && lowHp(d)) {
 			d.dying = true;
 			d.dyingMinutes = 0;
+			addBond(d, BOND.dying);
 			events.push({
 				type: "dying",
 				uid: d.uid,
@@ -4625,6 +4752,7 @@ var ChampCore = (function(exports) {
 					const level = ctx.cageLevels?.[cage.id] ?? 0;
 					const changes = applyTraining(d, cage, ctx.season ?? 0, ctx.rng, CAGE_LEVEL_FACTOR[level] ?? 1);
 					changes.push(...applyTrainingSideEffects(d, cage.no, ctx.season ?? 0, ctx.rng, level));
+					addBond(d, BOND.training);
 					events.push({
 						type: "trained",
 						uid: d.uid,
@@ -4659,34 +4787,50 @@ var ChampCore = (function(exports) {
 				to: evo.to,
 				...evo.memory ? { memory: true } : {}
 			});
-			return evolveDigimon(d, evo.to, ctx.rng);
+			return evolveDigimon(d, evo.to, ctx.rng, evo.bonus);
 		}
-		if (d.stageAge % 60 === 0) {
-			if (d.stageAge >= LIFESPAN[sp.stage]) {
-				if (evo?.kind === "blocked" && d.stageAge === LIFESPAN[sp.stage]) events.push({
-					type: "blocked",
+		const ended = d.stageAge >= lifespanOf(d);
+		if (!ended && evo?.kind === "blocked" && evo.reason === "rank" && !d.lifeExtended && sp.stage < 6) {
+			d.lifeExtended = true;
+			events.push({
+				type: "extended",
+				uid: d.uid,
+				name: sp.name,
+				reason: "rank"
+			});
+		}
+		if (ended) {
+			if (evo?.kind === "blocked") events.push({
+				type: "blocked",
+				uid: d.uid,
+				name: sp.name,
+				reason: evo.reason
+			});
+			if (sp.stage < 6 && !d.lifeExtended && (d.bond ?? 0) >= BOND.extend && (!evo || evo.reason === "rank")) {
+				d.lifeExtended = true;
+				events.push({
+					type: "extended",
 					uid: d.uid,
 					name: sp.name,
-					reason: evo.reason
+					reason: "bond"
 				});
-				if (d.stageAge >= LIFESPAN[sp.stage] + 1440 || !evo) {
-					if (endOfLife(d) === "egg" || ctx.isLast) {
-						events.push({
-							type: "egg",
-							uid: d.uid,
-							from: sp.id
-						});
-						return toEgg(d);
-					}
-					events.push({
-						type: "lost",
-						uid: d.uid,
-						name: sp.name,
-						reason: "수명"
-					});
-					return null;
-				}
+				return d;
 			}
+			if (endOfLife(d) === "egg" || ctx.isLast) {
+				events.push({
+					type: "egg",
+					uid: d.uid,
+					from: sp.id
+				});
+				return toEgg(d);
+			}
+			events.push({
+				type: "lost",
+				uid: d.uid,
+				name: sp.name,
+				reason: "수명"
+			});
+			return null;
 		}
 		return d;
 	}
@@ -4725,6 +4869,7 @@ var ChampCore = (function(exports) {
 			const inCage = key ? headcount.get(key) ?? 0 : 0;
 			if (crowdHour && !d.isEgg && inCage > getCage(d.cage).capacity) addStress(candidate, inCage - 1);
 			const dirty = !!d.cageInstance && dirtyCages.includes(d.cageInstance);
+			const mates = key === null || d.isEgg ? [] : save.digimon.filter((o) => o.uid !== d.uid && !o.isEgg && group(o) === key);
 			const r = tickOne(candidate, {
 				rank,
 				free,
@@ -4734,7 +4879,8 @@ var ChampCore = (function(exports) {
 				season,
 				clock: save.clock + 1,
 				dirty,
-				cageLevels: save.cageLevels
+				cageLevels: save.cageLevels,
+				mates
 			}, events);
 			if (!r) {
 				free += before;
@@ -4990,7 +5136,10 @@ var ChampCore = (function(exports) {
 			save: update(used, uid, (x) => ({
 				...x,
 				sick: false,
-				sickMinutes: 0
+				sickMinutes: 0,
+				stress: 0,
+				stressSick: false,
+				bond: Math.min(BOND.max, (x.bond ?? 0) + BOND.cure)
 			}))
 		};
 	}
@@ -5015,7 +5164,8 @@ var ChampCore = (function(exports) {
 				...x,
 				injured: false,
 				sickMinutes: 0,
-				injuryRisk: 0
+				injuryRisk: 0,
+				bond: Math.min(BOND.max, (x.bond ?? 0) + BOND.cure)
 			}))
 		};
 	}
@@ -12033,6 +12183,7 @@ var ChampCore = (function(exports) {
 	exports.BATTLE_OFFER = BATTLE_OFFER;
 	exports.BLAST_RADIUS = BLAST_RADIUS;
 	exports.BOMB_FUSE = BOMB_FUSE;
+	exports.BOND = BOND;
 	exports.BOSS_INTRO_MAIL = BOSS_INTRO_MAIL;
 	exports.BOSS_REMATCH_MAIL = BOSS_REMATCH_MAIL;
 	exports.BOSS_TEAM = BOSS_TEAM;
@@ -12055,6 +12206,7 @@ var ChampCore = (function(exports) {
 	exports.CHAMP_SEASON = CHAMP_SEASON;
 	exports.CLOCK_STEP_MINUTES = CLOCK_STEP_MINUTES;
 	exports.COLLECTOR_OFFER = COLLECTOR_OFFER;
+	exports.CONTAGION = CONTAGION;
 	exports.CURE_CHANCE = CURE_CHANCE;
 	exports.DAYS_PER_SEASON = DAYS_PER_SEASON;
 	exports.DAY_END_HOUR = DAY_END_HOUR;
@@ -12186,6 +12338,7 @@ var ChampCore = (function(exports) {
 	exports.WIRE_UNIT = WIRE_UNIT;
 	exports.actionSeconds = actionSeconds;
 	exports.addBits = addBits;
+	exports.addBond = addBond;
 	exports.addStress = addStress;
 	exports.advance = advance;
 	exports.advanceOffline = advanceOffline;
@@ -12288,11 +12441,13 @@ var ChampCore = (function(exports) {
 	exports.itemResist = itemResist;
 	exports.itemUnlocked = itemUnlocked;
 	exports.keepDistance = keepDistance;
+	exports.lifespanOf = lifespanOf;
 	exports.lightPulse = lightPulse;
 	exports.magnetSticks = magnetSticks;
 	exports.mailEvent = mailEvent;
 	exports.makeEnemies = makeEnemies;
 	exports.matchEntryNotice = matchEntryNotice;
+	exports.mateBond = mateBond;
 	exports.maxStageForRank = maxStageForRank;
 	exports.meatBite = meatBite;
 	exports.meets = meets;
@@ -12353,6 +12508,7 @@ var ChampCore = (function(exports) {
 	exports.scheduleMealPoop = scheduleMealPoop;
 	exports.seeded = seeded;
 	exports.setCage = setCage;
+	exports.settleMates = settleMates;
 	exports.shopItems = shopItems;
 	exports.shopPlugins = shopPlugins;
 	exports.shotCooldown = shotCooldown;

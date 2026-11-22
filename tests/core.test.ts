@@ -11,9 +11,9 @@ import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
 import { initialResistance, resistBounds, RESIST_ORDER } from '../src/core/data';
 import { evolvedResistance } from '../src/core/stats';
-import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy , relocate, trainingBlocker } from '../src/core/care';
+import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy , relocate, trainingBlocker, BOND, CONTAGION, mateBond, settleMates } from '../src/core/care';
 import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
-import { explain, hints, findEvolution, maxStageForRank } from '../src/core/evolution';
+import { explain, hints, findEvolution, maxStageForRank, lifespanOf } from '../src/core/evolution';
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, npcTeamFoes, npcTeam, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
@@ -2332,5 +2332,80 @@ describe('사냥 아이템 장비 5칸 (원본 테이머 +0xA00)', () => {
     expect(huntItems(toggleHuntItem(s, last))).toContain(last);
     expect(huntItems({ ...s, gear: { ...gear, [huntItems(s)[0]]: 0 } })).toEqual(huntItems(s));
     expect(huntItems(toggleHuntItem({ gear, huntItems: [] }, 'nothing'))).toEqual([]);
+  });
+});
+
+describe('유대(원본 +0x20)와 수명 연장(+0x4C)', () => {
+  const mon = (uid: number, sp: string, patch: Partial<Digimon> = {}): Digimon => ({ ...newDigimon(uid, sp), hunger: 100, cage: '미니 운동장', cageInstance: 'c1', trainDone: true, ...patch });
+  const farm = (digimon: Digimon[], clock = 10 * 60 + 5) => ({ ...freshEggSave(0), clock, digimon }) as SaveData;
+  it('동거 몫: 같은 종 3, 같은 종족 2, 맞지 않는 성격·적대 종족 0, 그 밖 1. 정산은 누적 합 (0x21183C4~0x211848C)', () => {
+    const a = mon(1, '아구몬', { personality: '솔직' });
+    expect(mateBond(a, mon(2, '아구몬'))).toBe(3);
+    const other = (sp: string) => mon(2, sp, { personality: '쿨' });
+    const fam = (sp: string) => getSpecies(sp).family;
+    const sameFamily = Object.values(SPECIES).find((x) => x.stage === 3 && x.id !== '아구몬' && x.family === fam('아구몬'))!.id;
+    expect(mateBond(a, other(sameFamily))).toBe(2);
+    const rival = Object.values(SPECIES).find((x) => x.stage === 3 && x.family === '짐승')!.id; // 아구몬(용)의 적대 종족
+    expect(fam('아구몬')).toBe('용');
+    expect(mateBond(a, other(rival))).toBe(0);
+    const plain = Object.values(SPECIES).find((x) => x.stage === 3 && x.family === '물')!.id;
+    expect(mateBond(a, other(plain))).toBe(1);
+    expect(mateBond(a, mon(2, plain, { personality: '제멋대로' }))).toBe(0); // 솔직↔제멋대로
+    const d = { ...a };
+    settleMates(d, [mon(2, '아구몬'), mon(3, '아구몬')]);
+    expect(d.bond).toBe(9); // 3 + 6
+  });
+  it('같은 케이지에 다른 디지몬이 있으면 720분이 넘을 때 정산하고, 혼자면 동거 시간이 준다', () => {
+    const r = tickFarm(farm([mon(1, '아구몬', { mateMinutes: BOND.matePeriod }), mon(2, '아구몬', { mateMinutes: 10 })]), seeded(1)).save.digimon;
+    expect(r[0]).toMatchObject({ mateMinutes: 0, bond: 3 });
+    expect(r[1]).toMatchObject({ mateMinutes: 11 });
+    expect(r[1].bond ?? 0).toBe(0);
+    const alone = tickFarm(farm([mon(1, '아구몬', { mateMinutes: 10 })]), seeded(1)).save.digimon[0];
+    expect(alone.mateMinutes).toBe(9);
+  });
+  it('병 전염: 병든 동거 디지몬 수 × 20% 확률로 4시간마다 스트레스 100 → 병 (0x2118514)', () => {
+    const sick = mon(2, '아구몬', { sick: true });
+    const hit = tickFarm(farm([mon(1, '아구몬', { contagionMinutes: CONTAGION.period }), sick]), () => 0.1).save.digimon[0];
+    expect(hit).toMatchObject({ stress: 100, sick: true, contagionMinutes: 0 });
+    expect(hit.bond ?? 0).toBe(0); // 유대 -5는 0 아래로 가지 않는다
+    const miss = tickFarm(farm([mon(1, '아구몬', { contagionMinutes: CONTAGION.period, bond: 20 }), sick]), () => 0.5).save.digimon[0];
+    expect(miss.sick).toBe(false);
+    const none = tickFarm(farm([mon(1, '아구몬', { contagionMinutes: 5 }), mon(2, '아구몬')]), seeded(1)).save.digimon[0];
+    expect(none.contagionMinutes).toBe(4);
+  });
+  it('스트레스 100으로 병이 나면 유대 -5, 약이 들으면 스트레스 0·유대 +2 (0x21187C0·0x2119A58)', () => {
+    const s = tickFarm(farm([mon(1, '아구몬', { stress: 100, bond: 30 })]), seeded(1)).save;
+    expect(s.digimon[0]).toMatchObject({ sick: true, bond: 25 });
+    const c = cure(s, 1, () => 0).save.digimon[0];
+    expect(c).toMatchObject({ sick: false, stress: 0, bond: 27 });
+  });
+  it('온천은 2시간마다 유대 +1 (시설 표 명령6 종류3)', () => {
+    const d = tickFarm(farm([mon(1, '아구몬', { cage: '온천', cageInstance: 'h1' })], 11 * 60 + 59), seeded(1)).save.digimon[0];
+    expect(d.bond).toBe(1);
+  });
+  it('훈련을 마치면 유대 +1, 마지막이 아닌 후보로 진화하면 +10이고 스트레스는 50까지만 이어진다', () => {
+    const t = tickFarm(farm([mon(1, '아구몬', { trainDone: false, trainMinutes: 14 })]), seeded(1)).save.digimon[0];
+    expect(t.bond).toBe(1);
+    const champ = { ...farm([mon(1, '아구몬', { battles: 6, bond: 5, stress: 80 })]), titles: TITLES.slice(0, 8).map((x) => x.id) } as SaveData;
+    const e = evaluateEvolutions(champ, seeded(1)).save.digimon[0];
+    expect(e.speciesId).toBe('그레이몬');
+    expect(e).toMatchObject({ bond: 15, stress: 50, lifeExtended: false });
+  });
+  it('조건을 채웠지만 랭크에 막히면 수명 중에 한 번 다음 세대 길이로 늘어난다 (0x2116498)', () => {
+    const r = tickFarm(farm([mon(1, '아구몬', { battles: 6 })]), seeded(1));
+    expect(r.events).toContainEqual({ type: 'extended', uid: 1, name: '아구몬', reason: 'rank' });
+    expect(r.save.digimon[0].lifeExtended).toBe(true);
+    expect(lifespanOf(r.save.digimon[0])).toBe(LIFESPAN[4]);
+    // 늘어난 수명도 다하면 바로 디지에그화/로스트(하루 유예 없음)
+    const end = tickFarm(farm([mon(1, '아구몬', { battles: 10, lifeExtended: true, stageAge: LIFESPAN[4] - 1 })]), seeded(1));
+    expect(end.events.map((e) => e.type)).toEqual(expect.arrayContaining(['blocked', 'egg']));
+  });
+  it('수명이 다할 때 진화할 곳이 없으면 유대 50 이상일 때만 한 번 연장된다 (0x21168CC)', () => {
+    const at = (patch: Partial<Digimon>) => tickFarm(farm([mon(1, '안드로몬', { stageAge: LIFESPAN[5] - 1, battles: 10, ...patch }), mon(2, '아구몬', { cageInstance: 'c2' })]), seeded(1));
+    const kept = at({ bond: 50 });
+    expect(kept.events).toContainEqual({ type: 'extended', uid: 1, name: '안드로몬', reason: 'bond' });
+    expect(lifespanOf(kept.save.digimon[0])).toBe(LIFESPAN[6]);
+    expect(at({ bond: 49 }).events.some((e) => e.type === 'egg' && e.uid === 1)).toBe(true);
+    expect(at({ bond: 80, lifeExtended: true, stageAge: LIFESPAN[6] - 1 }).events.some((e) => e.type === 'egg' && e.uid === 1)).toBe(true);
   });
 });
