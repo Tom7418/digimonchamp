@@ -128,6 +128,7 @@ test('실제 기술 레코드의7~10 동작·한글 이름·소비TP를 화면�
 test('피해0은 방어34, 치료/강화는35, 부활은33을 종별 원본 길이로 재생한다',()=>{
  const source=fs.readFileSync('web/game.js','utf8'),a=source.indexOf('  function battleTick('),b=source.indexOf('  function battleLog(',a);
  for(const [events,actor,state] of [
+  [[{type:'revive',id:0,amount:25}],0,'shout'],
   [[{type:'hit',from:0,to:1,damage:0}],1,'guard2'],
   [[{type:'heal',from:0,to:1,amount:300,support:{id:1,name:'치료α'}}],0,'shoutFrame2'],
   [[{type:'support',from:0,targets:[0],skill:{id:9,name:'공격업'}}],0,'shoutFrame2'],

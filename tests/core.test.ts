@@ -4,7 +4,7 @@ import skillTable from '../src/data/battle-skills.json';
 import skillAudit from '../docs/battle-skills-audit.json';
 import { BATTLE_MAPS, RANDOM_BATTLE_MAPS, TITLE_BATTLE_MAPS, battleMapFor } from '../src/core/battle-maps';
 import supportTable from '../src/data/support-skills.json';
-import { supportSkills, useSupport, reviveSupport, buffMultiplier, battleElement, supportCategory } from '../src/core/support-skills';
+import { supportSkills, useSupport, reviveSupport, tickRevival, buffMultiplier, battleElement, supportCategory } from '../src/core/support-skills';
 import { battleSkills, pickBattleSkill } from '../src/core/battle-skills';
 import { evolvedStats, rebirthPercent, upgradeStats } from '../src/core/stats';
 import { describe, expect, it } from 'vitest';
@@ -1898,10 +1898,15 @@ describe('사용자 지정 성격 효과와 원본 SP 연결',()=>{
     const b=duel('대담','지원');b.t=50;b.units[0].cd=0;const tp=b.units[0].tp;stepBattle(b,firstThen(.3));expect(b.units[0].tp).toBe(tp-10);expect(buffMultiplier(b.units[0],'def',b.t)).toBe(1.15);
     b.units[0].cd=0;const out:Parameters<typeof useSupport>[2]=[];expect(useSupport(b,b.units[0],out)).toBe(false);expect(b.units[0].tp).toBe(tp-10);expect(buffMultiplier(b.units[0],'def',b.t+16)).toBe(1);
   });
-  it('파닥몬 쿨의 부활은 KO 직후 한 번만 소비하며 승패 판정 전에 복귀한다',()=>{
-    const s=createBattle([entrantOf(mon(1,'쿨','파닥몬'),'일반')],[entrantOf(mon(2),'일반')]);s.units[0].hp=1;s.units[1].x=100;s.units[1].cd=0;const tp=s.units[0].tp;
-    const events=stepBattle(s,firstThen(.3));expect(events.some(e=>e.type==='ko'&&e.id===0)).toBe(true);expect(events.some(e=>e.type==='support'&&e.skill.id===28)).toBe(true);expect(s.units[0].alive).toBe(true);expect(s.units[0].tp).toBe(tp-5);expect(s.over).toBe(false);
-    s.units[0].hp=1;s.units[1].cd=0;stepBattle(s,firstThen(.3));expect(s.units[0].alive).toBe(false);expect(s.winner).toBe(1);
+  it('원본 자력 기상은 동료가 남아 있을 때 두 확률 판정과310프레임을 거친다',()=>{
+    const s=createBattle([entrantOf(mon(1)),entrantOf(mon(2))],[entrantOf(mon(3))]);
+    const u=s.units[0];u.alive=false;u.hp=0;const events:BattleEvent[]=[];
+    expect(reviveSupport(s,u,events,()=>49/216)).toBe(true);
+    s.t=310/60-.001;tickRevival(s,u,events,()=>0);expect(u.alive).toBe(false);
+    s.t=310/60;tickRevival(s,u,events,()=>39/216);
+    expect(u.alive).toBe(true);expect(u.hp).toBe(Math.max(1,Math.trunc(u.maxHp*.05)));
+    expect(events).toEqual([{type:'revive',id:u.id,amount:u.hp}]);expect(u.koBy).toBeUndefined();
+    u.alive=false;u.hp=0;expect(reviveSupport(s,u,events,()=>0)).toBe(false);
   });
 });
 
@@ -2422,4 +2427,72 @@ describe('유대(원본 +0x20)와 수명 연장(+0x4C)', () => {
     expect(at({ bond: 49 }).events.some((e) => e.type === 'egg' && e.uid === 1)).toBe(true);
     expect(at({ bond: 80, lifeExtended: true, stageAge: LIFESPAN[6] - 1 }).events.some((e) => e.type === 'egg' && e.uid === 1)).toBe(true);
   });
+});
+
+
+describe('원본 배틀 자력 기상·부활 SP',()=>{
+  const setup=(sp=false)=>{
+    const d={...newDigimon(1,sp?'파닥몬':'아구몬',()=>.5),personality:'쿨' as const};
+    const s=createBattle([entrantOf(d),entrantOf(newDigimon(2,'아구몬',()=>.5))],[entrantOf(newDigimon(3,'아구몬',()=>.5))]);
+    s.units[0].alive=false;s.units[0].hp=0;s.units[0].koBy=2;return s;
+  };
+  it('진입50/216·성공40/216 경계에서 실패하면 HP0을 유지한다',()=>{
+    const s=setup(),u=s.units[0],ev:BattleEvent[]=[];
+    expect(reviveSupport(s,u,ev,()=>50/216)).toBe(false);
+    expect(reviveSupport(s,u,ev,()=>0)).toBe(true);
+    s.t=310/60;tickRevival(s,u,ev,()=>40/216);
+    expect(u.alive).toBe(false);expect(u.hp).toBe(0);expect(u.riseAt).toBeUndefined();expect(ev).toEqual([]);
+  });
+  it('부활α는103/216·90/216, 두 번째50/216·45/216이며 성공 때만TP를 쓴다',()=>{
+    const s=setup(true),u=s.units[0],ev:BattleEvent[]=[];u.tp=100;
+    expect(reviveSupport(s,u,ev,()=>103/216)).toBe(false);
+    expect(reviveSupport(s,u,ev,()=>102/216)).toBe(true);expect(u.tp).toBe(100);
+    expect(reviveSupport(s,u,ev,()=>0)).toBe(false);
+    s.t=310/60;tickRevival(s,u,ev,()=>89/216);expect(u.alive).toBe(true);expect(u.tp).toBe(95);
+    u.alive=false;u.hp=0;expect(reviveSupport(s,u,ev,()=>50/216)).toBe(false);
+    expect(reviveSupport(s,u,ev,()=>49/216)).toBe(true);
+    s.t+=310/60;tickRevival(s,u,ev,()=>44/216);expect(u.alive).toBe(true);expect(u.tp).toBe(90);
+    u.alive=false;u.hp=0;expect(reviveSupport(s,u,ev,()=>0)).toBe(false);
+    expect(ev.filter(e=>e.type==='support')).toHaveLength(2);
+  });
+  it('TP가 비용과 같으면 일반 확률, 마지막 한 마리는 기상 불가',()=>{
+    const s=setup(true),u=s.units[0],ev:BattleEvent[]=[];u.tp=5;
+    expect(reviveSupport(s,u,ev,()=>50/216)).toBe(false);
+    s.units[1].alive=false;s.units[1].hp=0;
+    expect(reviveSupport(s,u,ev,()=>0)).toBe(false);
+    s.units[2].cd=100;stepBattle(s,()=>0);expect(s.over).toBe(true);expect(s.winner).toBe(1);
+  });
+  it('실제 전투에서 다운 대기·부활·TP 차감과 재공격을 처리한다',()=>{
+    const s=setup(true),u=s.units[0],ev:BattleEvent[]=[];
+    s.units.forEach(a=>a.cd=100);const tp=u.tp;
+    expect(reviveSupport(s,u,ev,()=>0)).toBe(true);
+    for(let i=0;i<51;i++)stepBattle(s,()=>0);
+    expect(u.alive).toBe(false);expect(s.over).toBe(false);
+    const risen=stepBattle(s,()=>0);expect(u.alive).toBe(true);expect(u.tp).toBe(tp-5);
+    expect(risen.some(e=>e.type==='revive')).toBe(true);expect(u.cd).toBeLessThan(2);
+  });
+});
+
+
+it('부활β는30%·TP10, 적 팀도 동일한 자력 기상 규칙을 적용한다',()=>{
+  const pair=Object.entries(supportTable.species).find(([,r])=>r.pairs.some(p=>p.includes(29)))!;
+  const [species,row]=pair,index=row.pairs.findIndex(p=>p.includes(29));
+  const personality=(index<2?row.personalities[index]:['솔직','쿨','열혈'].find(p=>!row.personalities.includes(p))) as Digimon['personality'];
+  const d={...newDigimon(1,species,()=>.5),personality};
+  const s=createBattle([entrantOf(newDigimon(2,'아구몬',()=>.5))],[entrantOf(d),entrantOf(newDigimon(3,'아구몬',()=>.5))]);
+  const u=s.units[1],ev:BattleEvent[]=[];u.alive=false;u.hp=0;u.tp=100;u.maxHp=1000;
+  expect(reviveSupport(s,u,ev,()=>0)).toBe(true);s.t=310/60;tickRevival(s,u,ev,()=>0);
+  expect(u.hp).toBe(300);expect(u.tp).toBe(90);expect(ev[0]).toMatchObject({type:'support',skill:{id:29}});
+});
+
+
+it('실제 치명타 경로도 즉시 부활 대신 기상 대기를 예약한다',()=>{
+  const ds=[1,2,3].map(uid=>newDigimon(uid,'아구몬',()=>.5));
+  const s=createBattle(ds.slice(0,2).map(d=>entrantOf(d)),[entrantOf(ds[2])]);
+  s.units.forEach(u=>u.cd=100);const victim=s.units[0],attacker=s.units[2];
+  victim.hp=1;attacker.x=victim.x+10;attacker.y=victim.y;attacker.cd=0;attacker.stats={...attacker.stats,atk:99999};
+  const ev=stepBattle(s,firstThen(.3,0));
+  expect(ev.some(e=>e.type==='ko'&&e.id===victim.id)).toBe(true);
+  expect(victim.alive).toBe(false);expect(victim.riseAt).toBeCloseTo(s.t+310/60);
+  expect(s.over).toBe(false);expect(ev.some(e=>e.type==='revive')).toBe(false);
 });

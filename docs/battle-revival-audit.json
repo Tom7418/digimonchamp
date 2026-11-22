@@ -1,0 +1,48 @@
+{
+  "overlay19Sha256": "02ef4c126fd11bd5e2bea21202442bd48575b2afcd29c045f70036940ebde671",
+  "arm9Sha256": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
+  "instructionChecks": 15,
+  "tables": {
+    "entryWithoutSp": [
+      0,
+      0,
+      50
+    ],
+    "riseWithoutSp": [
+      0,
+      0,
+      40
+    ],
+    "entryWithSp": [
+      0,
+      50,
+      103
+    ],
+    "riseWithSp": [
+      0,
+      45,
+      90
+    ]
+  },
+  "denominator": 216,
+  "waitFrames": 310,
+  "initialTries": 2,
+  "animation": 33,
+  "hpPercent": {
+    "none": 5,
+    "alpha": 5,
+    "beta": 30
+  },
+  "evidence": {
+    "entry": "0x02117088..0x02117164",
+    "waiting": "0x02117174..0x021172fc",
+    "rise": "0x02117314..0x021174c0",
+    "skillTp": "0x02117c94..0x02117cec"
+  },
+  "webPolicy": [
+    "0.1-second simulation rounds wait upward to the next tick",
+    "existing 2-second action cooldown retained",
+    "native airborne transforms/shaking during waiting not ported",
+    "last active ally falling ends battle; pending units remain HP0"
+  ]
+}

@@ -84,11 +84,31 @@ export function useSupport(s: BattleState,u:Unit,events:BattleEvent[],budget=u.t
   }
   return false;
 }
-/** 원작 도움말: 부활 SP는 HP0 직후 자신을 한 번 되살린다. 회복은 최대 HP의 부활α 5%, 부활β 30% (overlay19 0x21173A8) */
-export function reviveSupport(s:BattleState,u:Unit,events:BattleEvent[]): boolean {
-  if(u.revived)return false;
-  const skill=supportSkills(u.speciesId,u.personality).find(sk=>[28,29].includes(sk.id)&&sk.tpCost<=u.tp);
-  if(!skill)return false;
-  u.revived=true;u.alive=true;u.tp-=skill.tpCost;u.hp=Math.max(1,Math.trunc(u.maxHp*(skill.id===29?30:5)/100));
-  u.cd=2;events.push({type:'support',from:u.id,targets:[u.id],skill});return true;
+// 원본 0x2117C94는 소비 TP < 현재 TP일 때만 기술을 반환한다(같으면 불가).
+const revivalSkill = (u: Unit) => supportSkills(u.speciesId,u.personality).find(sk=>[28,29].includes(sk.id)&&sk.tpCost<u.tp);
+/** 원본 18→19→20: 기상 대기 진입과 310프레임 뒤 성공을 각각 216분의 확률로 판정.
+ * 남은 횟수 2/1/0, SP 없음: 진입50/0/0·성공40/0/0, SP 있음:103/50/0·90/45/0.
+ * 마지막 생존자가 쓰러지면 재기하지 않는다. HP0 개체는 대기 중에도 전투 불능이다. */
+export function reviveSupport(s:BattleState,u:Unit,_events:BattleEvent[],rng:()=>number=Math.random): boolean {
+  if(u.alive||u.riseAt!==undefined||!s.units.some(a=>a.team===u.team&&a.id!==u.id&&a.alive))return false;
+  const tries=u.revivalTries??2,sp=!!revivalSkill(u);
+  const chance=(sp?[0,50,103]:[0,0,50])[tries]??0;
+  if(!chance||Math.floor(rng()*216)>=chance)return false;
+  u.riseAt=s.t+310/60;u.intent=undefined;u.keep=undefined;u.retreat=0;
+  return true;
+}
+/** 원본19의 마지막 판정·20의 HP 복구. TP는 실제로 일어날 때만 소비한다. */
+export function tickRevival(s:BattleState,u:Unit,events:BattleEvent[],rng:()=>number): void {
+  if(u.riseAt===undefined||s.t+1e-9<u.riseAt)return;
+  u.riseAt=undefined;
+  const tries=u.revivalTries??2,skill=revivalSkill(u);
+  u.revivalTries=Math.max(0,tries-1);
+  const chance=(skill?[0,45,90]:[0,0,40])[tries]??0;
+  if(!s.units.some(a=>a.team===u.team&&a.alive)||Math.floor(rng()*216)>=chance)return;
+  u.revived=true;u.alive=true;u.koBy=undefined;u.status=undefined;u.target=undefined;
+  u.hp=Math.max(1,Math.trunc(u.maxHp*(skill?.id===29?30:5)/100));
+  // 웹판 행동 대기 2초는 유지. 종별 원본 NANR33 기상 동작은 화면에서 재생한다.
+  u.cd=2;
+  if(skill){u.tp-=skill.tpCost;events.push({type:'support',from:u.id,targets:[u.id],skill});}
+  events.push({type:'revive',id:u.id,amount:u.hp});
 }

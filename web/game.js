@@ -1413,6 +1413,13 @@
           battleLog(`${b.state.units[e.from].name} · ${e.skill.name} (${e.skill.tpCost}TP)`);
 
         }
+        if(e.type==='revive'){
+          const actor=b.state.units.find(u=>u.id===e.id);
+          const duration=animations.duration(SPRITE_BY_NAME[C.getSpecies(actor.speciesId).id],'shout');
+          b.actions.set(e.id,{kind:'attack',left:duration,duration,state:'shout'});
+          b.flashes.push({id:e.id,text:`+${e.amount}`,until:performance.now()+900,color:'#8ef0a0'});
+          battleLog(`${actor.name} 다시 일어났다!`);
+        }
         // 치료도 지원 시전자 동작을 재생한다. 전원 치료의 대상별 이벤트는 같은 틱에 시작한다.
         // 원본 지원 행동0x211a6c0 → 배우12 → NANR35. 부활 배우20 → NANR33.
         const support=e.type==='heal'?e.support:e.type==='support'?e.skill:null;

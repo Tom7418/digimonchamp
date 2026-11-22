@@ -1,7 +1,7 @@
 import { baseResist, getSpecies, originalSpecies, RESIST_CURVE, RESIST_ORDER, speciesByStage, STAT_CURVES, typicalStats, type ResistKey } from './data';
 import { basicRecordOf, battleSkills, pickBattleSkill, type BattleSkill } from './battle-skills';
 import formula from '../data/battle-formula.json';
-import { supportSkills, useSupport, reviveSupport, buffMultiplier, battleElement, type BattleBuff, type SupportSkill } from './support-skills';
+import { supportSkills, useSupport, reviveSupport, tickRevival, buffMultiplier, battleElement, type BattleBuff, type SupportSkill } from './support-skills';
 import { pick, range, seeded, type Rng } from './rng';
 import freeRaw from '../data/free-battles.txt?raw';
 import holderRaw from '../data/title-holders.txt?raw';
@@ -160,6 +160,9 @@ export interface Unit {
   /** 정해 둔 다음 행동 (사거리에 들어가면 실행) */
   intent?: { kind: 'basic' } | { kind: 'special'; skill: BattleSkill };
   revived?: boolean;
+  /** 원본 +0x98: 남은 기상 판정 횟수(초기 2). 전투 중에만 존재한다. */
+  revivalTries?: number;
+  riseAt?: number;
   /** 이 유닛을 쓰러뜨린 상대 유닛 id (원본 배우 +0x68로 보임 — 프리 배틀 매입 후보 판정 overlay9_19 0x2111A88) */
   koBy?: number;
 }
@@ -169,6 +172,7 @@ export type BattleEvent =
   | { type: 'heal'; from: number; to: number; amount: number; support?: SupportSkill }
   | { type: 'support'; from:number; targets:number[]; skill:SupportSkill }
   | { type: 'ko'; id: number }
+  | { type: 'revive'; id: number; amount: number }
   | { type: 'status'; id: number; status: StatusName }
   | { type: 'statusDamage'; id: number; damage: number; status: StatusName };
 
@@ -337,7 +341,7 @@ function tickStatus(s: BattleState, u: Unit, events: BattleEvent[], rng: Rng) {
       const damage = Math.trunc((u.maxHp * (u.status.id === 14 ? 5 : 3)) / 100);
       u.hp = Math.max(0, u.hp - damage);
       events.push({ type: 'statusDamage', id: u.id, damage, status: STATUS_NAMES[u.status.id] });
-      if (u.hp <= 0) { u.alive = false; u.status = undefined; events.push({ type: 'ko', id: u.id }); reviveSupport(s, u, events); }
+      if (u.hp <= 0) { u.alive = false; u.status = undefined; events.push({ type: 'ko', id: u.id }); reviveSupport(s, u, events, rng); }
     }
     return;
   }
@@ -435,6 +439,8 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
   const events: BattleEvent[] = [];
   if (s.over) return events;
   s.t += DT;
+  // 다운 중에는 공격 대상에서 제외하고 원본310프레임 뒤 기상을 재판정한다.
+  for (const u of s.units) tickRevival(s, u, events, rng);
   for (const u of s.units) {
     if (!u.alive) continue;
     tickStatus(s, u, events, rng);
@@ -549,7 +555,7 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
       events.push({ type: 'ko', id: near.id });
       // 같은 편이 쓰러지면 남은 편의 분노 게이지 +20 (0x2115E6C)
       for (const a of s.units) if (a.alive && a.team === near.team) a.rage = (a.rage ?? 0) + 20;
-      reviveSupport(s,near,events);
+      reviveSupport(s,near,events,rng);
     }
   }
   const alive = [0, 1].map((t) => s.units.some((u) => u.alive && u.team === t));
