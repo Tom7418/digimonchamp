@@ -6,6 +6,10 @@
     ".nclr": "335d7326d1cc1944bf850d80db873800ddebe52e8277c9bb5b729f4c8d6059ef",
     ".nanr": "0c1e44e19784bbdda93bc06a20f9df9653ae63048b1fb09d0c587829230e5b8f"
   },
+  "codeSha256": {
+    "arm9": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
+    "overlay19": "02ef4c126fd11bd5e2bea21202442bd48575b2afcd29c045f70036940ebde671"
+  },
   "statusChecks": {
     "0x2118be4": "0xe3a01005",
     "0x2118bf4": "0xe3a01007",
@@ -14,6 +18,138 @@
     "0x2118c48": "0xe3a01008",
     "0x2118c80": "0xe3a0100d",
     "0x2118ca0": "0xe3a01001"
+  },
+  "nativeDispatch": {
+    "1": {
+      "mode": 6,
+      "sequence": 27,
+      "anchor": "head",
+      "statusBranch": "0x2117e08",
+      "modeInstruction": "0x2117e0c",
+      "modeStore": "0x2117e18",
+      "renderBranch": "0x20647c4",
+      "sequenceInstruction": "0x20647d8"
+    },
+    "2": {
+      "mode": 7,
+      "sequence": 0,
+      "anchor": "head",
+      "statusBranch": "0x2117e24",
+      "modeInstruction": "0x2117e28",
+      "modeStore": "0x2117e2c",
+      "renderBranch": "0x206480c",
+      "sequenceInstruction": "0x2064820"
+    },
+    "4": {
+      "mode": 9,
+      "sequence": 4,
+      "anchor": "head",
+      "statusBranch": "0x2117e50",
+      "modeInstruction": "0x2117e54",
+      "modeStore": "0x2117e60",
+      "renderBranch": "0x206489c",
+      "sequenceInstruction": "0x20648b0"
+    },
+    "5": {
+      "mode": 10,
+      "sequence": 24,
+      "anchor": "head",
+      "statusBranch": "0x2117e6c",
+      "modeInstruction": "0x2117e70",
+      "modeStore": "0x2117e78",
+      "renderBranch": "0x20648e4",
+      "sequenceInstruction": "0x20648f8"
+    },
+    "6": {
+      "mode": 11,
+      "sequence": 1,
+      "anchor": "head",
+      "statusBranch": "0x2117e84",
+      "modeInstruction": "0x2117e88",
+      "modeStore": "0x2117e8c",
+      "renderBranch": "0x206492c",
+      "sequenceInstruction": "0x2064940"
+    },
+    "7": {
+      "mode": 12,
+      "sequence": 23,
+      "anchor": "head",
+      "statusBranch": "0x2117e94",
+      "modeInstruction": "0x2117e98",
+      "modeStore": "0x2117e9c",
+      "renderBranch": "0x2064974",
+      "sequenceInstruction": "0x2064988"
+    },
+    "8": {
+      "mode": 13,
+      "sequence": 22,
+      "anchor": "body",
+      "statusBranch": "0x2117ea4",
+      "modeInstruction": "0x2117ea8",
+      "modeStore": "0x2117eb4",
+      "renderBranch": "0x20649bc",
+      "sequenceInstruction": "0x20649c4"
+    },
+    "9": {
+      "mode": 14,
+      "sequence": 5,
+      "anchor": "head",
+      "statusBranch": "0x2117ec0",
+      "modeInstruction": "0x2117ec4",
+      "modeStore": "0x2117ed0",
+      "renderBranch": "0x20649f8",
+      "sequenceInstruction": "0x2064a0c"
+    },
+    "10": {
+      "mode": 15,
+      "sequence": 2,
+      "anchor": "body",
+      "statusBranch": "0x2117edc",
+      "modeInstruction": "0x2117ee0",
+      "modeStore": "0x2117eec",
+      "renderBranch": "0x2064a40",
+      "sequenceInstruction": "0x2064a48"
+    },
+    "11": {
+      "mode": 16,
+      "sequence": 25,
+      "anchor": "head",
+      "statusBranch": "0x2117ef8",
+      "modeInstruction": "0x2117efc",
+      "modeStore": "0x2117f00",
+      "renderBranch": "0x2064a7c",
+      "sequenceInstruction": "0x2064a90"
+    },
+    "12": {
+      "mode": 0,
+      "sequence": null,
+      "anchor": null,
+      "statusBranch": "0x2117f08",
+      "modeInstruction": "0x2117f0c",
+      "modeStore": "0x2117f18",
+      "renderBranch": "0x2064b04",
+      "sequenceInstruction": null
+    },
+    "13": {
+      "mode": 0,
+      "sequence": null,
+      "anchor": null,
+      "statusBranch": "0x2117f24",
+      "modeInstruction": "0x2117f28",
+      "modeStore": "0x2117f2c",
+      "renderBranch": "0x2064b04",
+      "sequenceInstruction": null
+    },
+    "14": {
+      "mode": 17,
+      "sequence": 26,
+      "anchor": "head",
+      "statusBranch": "0x2117f34",
+      "modeInstruction": "0x2117f38",
+      "modeStore": "0x2117f3c",
+      "renderBranch": "0x2064ac4",
+      "sequenceInstruction": "0x2064ad8"
+    }
   },
   "states": {
     "1": {
@@ -41,38 +177,97 @@
       "loop": true,
       "start": 0
     },
-    "5": {
-      "name": "confusion",
-      "sequence": 6,
+    "2": {
+      "name": "fear",
+      "sequence": 0,
       "anchor": "head",
       "frames": [
         [
-          28,
+          0,
           7
         ],
         [
-          29,
+          1,
+          10
+        ],
+        [
+          2,
           7
         ],
         [
-          30,
-          7
+          3,
+          20
+        ]
+      ],
+      "loop": true,
+      "start": 0
+    },
+    "4": {
+      "name": "passive",
+      "sequence": 4,
+      "anchor": "head",
+      "frames": [
+        [
+          22,
+          10
         ],
         [
-          31,
-          7
+          23,
+          10
         ],
         [
-          32,
-          7
+          24,
+          10
+        ]
+      ],
+      "loop": true,
+      "start": 0
+    },
+    "5": {
+      "name": "confusion",
+      "sequence": 24,
+      "anchor": "head",
+      "frames": [
+        [
+          68,
+          15
         ],
         [
-          33,
-          7
+          69,
+          15
         ],
         [
-          34,
-          7
+          70,
+          15
+        ],
+        [
+          71,
+          15
+        ]
+      ],
+      "loop": true,
+      "start": 0
+    },
+    "6": {
+      "name": "slow",
+      "sequence": 1,
+      "anchor": "head",
+      "frames": [
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          6,
+          15
+        ],
+        [
+          7,
+          5
         ]
       ],
       "loop": true,
@@ -81,7 +276,7 @@
     "7": {
       "name": "poison",
       "sequence": 23,
-      "anchor": "body",
+      "anchor": "head",
       "frames": [
         [
           64,
@@ -126,19 +321,19 @@
     },
     "9": {
       "name": "sleep",
-      "sequence": 4,
+      "sequence": 5,
       "anchor": "head",
       "frames": [
         [
-          22,
+          25,
           10
         ],
         [
-          23,
+          26,
           10
         ],
         [
-          24,
+          27,
           10
         ]
       ],
@@ -178,8 +373,25 @@
       "loop": true,
       "start": 0
     },
-    "13": {
-      "name": "curse",
+    "11": {
+      "name": "blind",
+      "sequence": 25,
+      "anchor": "head",
+      "frames": [
+        [
+          72,
+          15
+        ],
+        [
+          73,
+          15
+        ]
+      ],
+      "loop": true,
+      "start": 0
+    },
+    "14": {
+      "name": "down",
       "sequence": 26,
       "anchor": "head",
       "frames": [
@@ -196,14 +408,15 @@
       "start": 0
     }
   },
-  "mappingBasis": "Original engine status IDs checked in overlay19; visual roles classified from source cells. Native status-to-effect dispatch is not fully traced. Source pixels, offsets, sequence order, tick durations and loop modes retained.",
-  "webPolicy": "Head/body anchor and size fitted to actual rendered Digimon bounds. Effect playback follows the existing battle art clock and delayed visual state; no additional status rules.",
-  "unconnected": [
-    2,
-    4,
-    6,
-    11,
+  "mappingBasis": "Verified overlay19 status switch -> model+0x6cc (object+4 alias) -> ARM9 object+0x6d0 switch -> NANR setter 0x02046e18. Source pixels, offsets, sequence order, tick durations and loop modes retained.",
+  "headAnchor": "ARM9 0x020645b8..0x020645e8: floor(model height/5)*4 above feet; web projects the 0.8 ratio onto current sprite bounds. Ice/paralysis branches omit this subtraction.",
+  "webPolicy": "Effect scale fitted to rendered Digimon bounds; not a port of the NDS 3D camera. Existing battle art clock and delayed visual state; no additional status rules.",
+  "noAttachedSprite": [
     12,
-    14
-  ]
+    13
+  ],
+  "unconnected": [
+    3
+  ],
+  "remaining": "Stone/curse select mode 0 in this attached-sprite dispatcher. Separate material/palette effects have not been traced; status 3 is unused by the web engine."
 }
