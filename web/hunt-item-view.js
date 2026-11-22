@@ -20,4 +20,21 @@
   }).join('');
   return `<section class="hunt-items" aria-label="사냥 아이템 장비"><h3>사냥 아이템 <span>${now.length}/${C.HUNT_ITEM_SLOTS}칸</span></h3><div class="hunt-item-rack">${rack}</div><p class="hint">${now.length>=C.HUNT_ITEM_SLOTS?'5칸을 모두 장비했습니다. 위 아이템을 눌러 빼고 다른 아이템을 골라 주세요.':'아래 보유 목록에서 아이템을 골라 장비하세요. 위 아이템을 누르면 해제됩니다.'}</p>${groups||'<p class="hint">가진 사냥 아이템이 없습니다. 상점에서 구입할 수 있어요.</p>'}<p class="hint">장비한 아이템만 사냥터에서 사용할 수 있습니다. 로프와 기본 와이어는 별도로 가져갑니다.</p></section>`;
  };
+
+ // 사냥 중에는 출발할 때의 5칸 순서를 유지한다. 체커가 없는 수량은 툴팁/접근성 이름에도 노출하지 않는다.
+ root.huntItemHudHtml=function(C,save,hunt,selected,esc){
+  if(!hunt)return '';
+  const all=[...C.SHOTS,...C.BAITS,...C.GEARS],art=root.HUNT_ITEM_UI.icons;
+  const buttons=Array.from({length:C.HUNT_ITEM_SLOTS},(_,i)=>{
+   const id=hunt.items[i],x=all.find(x=>x.id===id),a=art[id],count=x?C.gearCount(save,id):0;
+   const active=hunt.tool==='gear'&&selected===id&&!!x;
+   const kind=a?.category===2?'shot':a?.category===3?'wire':[7,8].includes(a?.category)?'damage':'entrap';
+   const checked=!!hunt.plug?.check.has(kind),available=!!x&&count>0;
+   const description=x?`${x.name}${available?(checked?` · ${count}개`:''):' · 소진'}`:'빈 칸';
+   const icon=available&&a?`<span class="hunt-item-icon" aria-hidden="true" style="background-position:-${a.x*2}px -${a.y*2}px"></span>`:'';
+   return `<button type="button" class="hunt-hud-slot${active?' active':''}" data-hunt-gear="${esc(id||'')}" aria-pressed="${active}" aria-keyshortcuts="${i+1}" aria-label="${i+1}번 ${esc(description)}" title="${i+1} · ${esc(description)}"${available?'':' disabled'}><kbd>${i+1}</kbd><span class="hunt-hud-icon">${icon}</span><span class="hunt-hud-name">${x?esc(x.name):'빈 칸'}</span>${x&&!available?'<small>소진</small>':available&&checked?`<small>×${count}</small>`:''}</button>`;
+  }).join('');
+  const x=all.find(x=>x.id===selected),using=hunt.tool==='gear'&&x;
+  return `<div class="hunt-hud-rack" role="group" aria-label="사냥 장비 5칸">${buttons}</div><p class="hunt-hud-help">${using?`<b>${esc(x.name)}</b> · ${C.gearCount(save,x.id)<=0?'모두 사용했습니다. 다른 칸을 선택하세요.':x.kind==='wire'?'지도를 끌어 와이어를 설치하세요.':'지도에서 사용할 곳을 누르세요.'}`:'아이콘 또는 숫자키 1~5로 장비 선택'}</p>`;
+ };
 })(typeof window!=='undefined'?window:globalThis);

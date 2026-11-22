@@ -27,3 +27,29 @@ test('한글 이름은 HTML을 이스케이프하고 장비 그림/뷰는 아이
  assert.match(html,/&lt;&quot;이름>/);assert.equal(JSON.stringify(save),before);assert.doesNotMatch(html,/<canvas|onerror=/);
 });
 
+
+
+test('사냥 HUD는 출발 순서대로 5칸을 표시하고 소진한 칸을 당기거나 바꾸지 않는다',()=>{
+ const {C,art}=setup(),c=vm.createContext({window:{HUNT_ITEM_UI:art}});vm.runInContext(fs.readFileSync('web/hunt-item-view.js','utf8'),c);
+ const save={gear:{bomb1:0,hand1:12,wire2:3}},hunt={items:['bomb1','hand1','wire2'],tool:'gear',plug:{check:new Set()}};
+ const html=c.window.huntItemHudHtml(C,save,hunt,'bomb1',esc),slots=[...html.matchAll(/data-hunt-gear="([^"]*)"/g)].map(m=>m[1]);
+ assert.deepEqual(slots,['bomb1','hand1','wire2','','']);assert.match(html,/hunt-hud-slot active[^>]*data-hunt-gear="bomb1"[^>]* disabled/);assert.match(html,/모두 사용했습니다/);
+ assert.equal((html.match(/class="hunt-item-icon"/g)||[]).length,2);assert.equal((html.match(/aria-keyshortcuts=/g)||[]).length,5);
+});
+test('체커가 없는 수량은 사냥 HUD의 화면·툴팁·접근성 이름 어디에도 드러나지 않는다',()=>{
+ const {C,art}=setup(),c=vm.createContext({window:{HUNT_ITEM_UI:art}});vm.runInContext(fs.readFileSync('web/hunt-item-view.js','utf8'),c);
+ const save={gear:{hand1:12,bomb1:7}},hunt={items:['hand1','bomb1'],tool:'rope',plug:{check:new Set()}};
+ let html=c.window.huntItemHudHtml(C,save,hunt,'hand1',esc);assert.doesNotMatch(html,/12개|7개|×12|×7|aria-pressed="true"/);
+ hunt.plug.check.add('shot');html=c.window.huntItemHudHtml(C,save,hunt,'hand1',esc);assert.match(html,/12개/);assert.match(html,/×12/);assert.doesNotMatch(html,/7개|×7/);
+ hunt.plug.check.add('damage');assert.match(c.window.huntItemHudHtml(C,save,hunt,'hand1',esc),/×7/);
+});
+test('실제 장비 선택/소진 갱신은 다른 아이템을 자동 선택하지 않고 미완료 와이어를 취소한다',()=>{
+ const nodes={'#gear-select':{value:'',innerHTML:''}},noop=()=>{},c=vm.createContext({window:{},esc,$:id=>nodes[id]??={classList:{toggle:noop}},setHtml:(id,html)=>(nodes[id]??={}).html=html});
+ for(const file of ['web/core.js','web/assets/hunt/item-ui.js','web/hunt-item-view.js'])vm.runInContext(fs.readFileSync(file,'utf8'),c);
+ vm.runInContext(`globalThis.C=ChampCore;globalThis.GEAR=[...C.SHOTS,...C.BAITS,...C.GEARS];globalThis.save={gear:{hand1:1,bomb1:2,wire2:3,light1:4}};globalThis.hunt={items:['bomb1','hand1','wire2'],tool:'rope',plug:{check:new Set()},drawing:true,trail:[1,2],pull:{},pan:{},lastScreen:{}};globalThis.checkKind=x=>C.shotOf(x.id)?'shot':x.kind==='wire'?'wire':'damage';`,c);
+ const src=fs.readFileSync('web/game.js','utf8');vm.runInContext(src.slice(src.indexOf('  function setTool('),src.indexOf('  // 사냥 장비(샷')),c);
+ vm.runInContext(src.slice(src.indexOf('  function refreshGear()'),src.indexOf('  // 장비 사용:')),c);
+ c.refreshGear();assert.equal(nodes['#gear-select'].value,'bomb1');assert.equal(c.selectHuntGear('hand1'),true);assert.equal(c.hunt.tool,'gear');assert.equal(c.hunt.drawing,false);assert.equal(c.hunt.trail.length,0);
+ c.save.gear.hand1=0;c.refreshGear();assert.equal(nodes['#gear-select'].value,'hand1');assert.equal(c.save.gear.bomb1,2);assert.equal(c.selectHuntGear('light1'),false);assert.equal(c.selectHuntGear('hand1'),false);
+ c.setTool('rope');assert.doesNotMatch(nodes['#hunt-item-hud'].html,/aria-pressed="true"/);
+});

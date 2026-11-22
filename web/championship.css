@@ -389,3 +389,22 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .hunt-item-cards .hunt-item-card em{grid-column:2;margin:0;font-size:10px}
 @media(max-width:760px){.hunt-item-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.hunt-items{padding:8px;border-width:8px}.hunt-item-rack{gap:4px}.hunt-item-slot .hunt-item-copy b{font-size:10px;line-height:1.4}.hunt-item-slot .hunt-item-art{width:36px}.hunt-item-slot{padding:5px 2px}.hunt-item-cards{grid-template-columns:1fr}.hunt-items h3{font-size:16px}}
+
+/* 사냥 중 장비 5칸: 지도 입력 영역 밖에 두어 로프/설치 좌표를 가리지 않는다. */
+.hunt-item-hud{display:none}
+.hunting .hunt-item-hud{display:flex;align-items:center;gap:12px;flex:none;padding:6px 10px;background:#12362f;border-top:2px solid #eeb33d}
+.hunt-hud-rack{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;flex:1;max-width:540px}
+.hunt-hud-slot{position:relative;min-width:0;display:grid;grid-template-columns:36px minmax(0,1fr);align-items:center;gap:2px;padding:3px 5px;border:1px solid #6c8e7c;border-radius:4px;background:#193d34;color:#e8f6df;text-align:left}
+.hunt-hud-slot.active{border-color:#ffdd65;background:#416047;box-shadow:inset 0 0 0 1px #ffdd65}
+.hunt-hud-slot:disabled{opacity:.5;cursor:not-allowed}
+.hunt-hud-slot:focus-visible{outline:2px solid #fff0ac;outline-offset:2px}
+.hunt-hud-slot kbd{position:absolute;left:3px;top:2px;font:10px 'Malgun Gothic',sans-serif;color:#efda98;z-index:1}
+.hunt-hud-icon{grid-row:span 2;display:flex;align-items:center;justify-content:center;width:36px;height:64px;background:url('assets/hunt/item-empty.png') center/36px 24px no-repeat;image-rendering:pixelated}
+.hunt-hud-slot.active .hunt-hud-icon{background-image:url('assets/hunt/item-selected.png');background-size:40px 30px}
+.hunt-hud-name{font-size:11px;line-height:1.35;overflow-wrap:anywhere;min-width:0;max-width:100%}
+.hunt-hud-slot small{font:11px 'Malgun Gothic',sans-serif;color:#e4e0b9}
+.hunt-hud-help{font-size:11px;line-height:1.5;color:#bdd5be;margin:0;max-width:180px;flex:0 1 180px}
+.hunt-hud-help b{color:#ffe19b}
+.hunt-tools [hidden]{display:none!important}
+@media(max-width:999px){.hunting .hunt-item-hud{flex-direction:column;gap:4px}.hunt-hud-rack{width:100%;max-width:540px}.hunt-hud-help{max-width:none;flex:auto}}
+@media(max-width:600px){.hunt-hud-slot{grid-template-columns:1fr;justify-items:center;padding:3px 1px;text-align:center}.hunt-hud-icon{grid-row:auto;height:48px;overflow:hidden}.hunt-hud-slot .hunt-item-icon{transform:scale(.75)}.hunt-hud-name{font-size:9px}.hunt-hud-slot small{font-size:10px}.hunting .hunt-item-hud{padding:5px;gap:4px}.hunt-hud-rack{gap:4px}.hunt-tools{flex-wrap:wrap;margin:0;gap:4px}.hunt-tools button{font-size:11px;padding:5px 7px}}

@@ -283,6 +283,7 @@
     );
     $('#scene-title').textContent = battle ? '배틀 아레나' : hunt ? `사냥터 · ${hunt.field.id}` : '사육장';
     $('#next-day').disabled = !!battle || titleOpen || dayEnding;
+    if(hunt)refreshGear();
 
     setHtml(
       '#partner-tabs',
@@ -2024,9 +2025,9 @@
     $('#tool-wire').classList.toggle('active', tool === 'wire');
     $('#tool-move').classList.toggle('active', tool === 'move');
     $('#tool-gear').classList.toggle('active', tool === 'gear');
-    if (tool === 'gear') refreshGear();
+    refreshGear();
   }
-  // 사냥 장비(샷·고기) 선택 목록. 가진 것만 수량과 함께 보여 준다
+  // 사냥 장비(샷·고기) 선택값은 내부 select와 원본 아이콘 HUD가 공유한다
   const GEAR = [...C.SHOTS, ...C.BAITS, ...C.GEARS];
   // 장비 목록에서 고른 것이 와이어 종류면 그 장비 (끌어서 설치한다)
   const wireGear = () => (hunt && hunt.tool === 'gear' ? [C.gearOf($('#gear-select').value)].find((x) => x && x.kind === 'wire') : null);
@@ -2089,15 +2090,24 @@
     return x.kind === 'wire' ? 'wire' : x.kind === 'bomb' || x.kind === 'mine' ? 'damage' : 'entrap';
   }
   function refreshGear() {
-    const sel = $('#gear-select'), keep = sel.value;
-    // 수량은 그 장비 묶음의 체커 플러그인을 장비했을 때만 보인다 (원작 체커 설명)
-    // 장비 칸(5칸)에 넣어 온 아이템만 쓸 수 있다
-    const owned = GEAR.filter((x) => C.gearCount(save, x.id) > 0 && (hunt?.items ?? C.huntItems(save)).includes(x.id));
-    const html = owned.map((x) => `<option value="${x.id}">${esc(x.name)}${hunt?.plug?.check.has(checkKind(x)) ? ` ×${C.gearCount(save, x.id)}` : ''}</option>`).join('') || '<option value="">가져온 아이템 없음 (사냥 전에 장비)</option>';
-    if (sel.innerHTML !== html) sel.innerHTML = html;
-    if (owned.some((x) => x.id === keep)) sel.value = keep;
+    const sel=$('#gear-select'),keep=sel.value;
+    // 출발할 때 정한 순서와 소진한 칸도 유지한다. 마지막 하나를 썼다고 다음 종류로 바꾸지 않는다.
+    const equipped=(hunt?.items??C.huntItems(save)).map(id=>GEAR.find(x=>x.id===id)).filter(Boolean);
+    const html=equipped.map(x=>`<option value="${x.id}"${C.gearCount(save,x.id)>0?'':' disabled'}>${esc(x.name)}${hunt?.plug?.check.has(checkKind(x))?` ×${C.gearCount(save,x.id)}`:''}</option>`).join('')||'<option value="">가져온 아이템 없음</option>';
+    if(sel.innerHTML!==html)sel.innerHTML=html;
+    sel.value=equipped.some(x=>x.id===keep)?keep:(equipped.find(x=>C.gearCount(save,x.id)>0)?.id||'');
+    setHtml('#hunt-item-hud',window.huntItemHudHtml(C,save,hunt,sel.value,esc));
   }
-  // 장비 사용: 샷은 맞은 디지몬을 멈추고(위력 20 이상은 HP 1 감소), 고기는 근처 디지몬을 끌어들인다
+  function selectHuntGear(id) {
+    if(!hunt||!hunt.items.includes(id)||C.gearCount(save,id)<=0)return false;
+    const sel=$('#gear-select');
+    if(sel.value!==id){
+      // 와이어/로프를 그리는 중 장비를 바꾸면 이전 선이 설치되지 않게 취소한다.
+      hunt.drawing=false;hunt.trail=[];hunt.pull=null;hunt.pan=null;hunt.lastScreen=null;
+    }
+    sel.value=id;setTool('gear');return true;
+  }
+  // 장비 사용: 샷은 맞은 디지몬을 멈추고, 고기는 기존 엔진 확률대로 근처 개체를 끌어들인다
   function useGearAt(p) {
     const id = $('#gear-select').value, shot = C.shotOf(id), bait = C.baitOf(id), gear = C.gearOf(id);
     if (!shot && !bait && !gear) return huntNote('쓸 장비가 없습니다. 상점에서 사세요.');
@@ -3032,7 +3042,8 @@
   canvas.addEventListener('wheel', (e) => { if (hunt) huntWheel(e); }, { passive: false });
   canvas.addEventListener('contextmenu', (e) => { if (hunt) e.preventDefault(); });
   window.addEventListener('keydown', (e) => {
-    if (!hunt || e.target?.closest?.('input,textarea,select')) return;
+    if (!hunt || e.ctrlKey || e.metaKey || e.altKey || e.target?.closest?.('input,textarea,select') || $('#modal').open) return;
+    if(/^[1-5]$/.test(e.key)){selectHuntGear(hunt.items[Number(e.key)-1]);e.preventDefault();return;}
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'w', 'a', 's', 'd'].includes(k)) { huntKeys.add(k); e.preventDefault(); }
   });
@@ -3043,6 +3054,10 @@
   $('#tool-move').onclick = () => setTool('move');
   $('#tool-gear').onclick = () => setTool('gear');
   $('#gear-select').onchange = () => setTool('gear');
+  $('#hunt-item-hud').onclick = e => {
+    const button=e.target.closest('[data-hunt-gear]');
+    if(button&&!button.disabled)selectHuntGear(button.dataset.huntGear);
+  };
   $('#hunt-leave').onclick = () => endHunt();
 
   function frame(now) {
