@@ -3249,7 +3249,13 @@ var ChampCore = (function(exports) {
 	var shotOf = (id) => SHOTS.find((s) => s.id === id);
 	/** 한 번 살 때 들어오는 탄 수 (임시) */
 	var SHOT_PACK = 10;
-	var SHOT_SPREAD_RADIUS = 90;
+	/**
+	* 산탄(샷 건·스턴 샷): 한 번에 7발이 누른 곳 ±16px 사각형 안 아무 곳에 하나씩 떨어지고, 발마다 맞은 디지몬에게 멈춤을 더한다
+	* (원본 overlay9_0 0x2125C54~0x2125C94: 0~31 난수 − 16, 7회). 화면 효과 반경은 그 사각형 크기.
+	*/
+	var SHOT_PELLETS = 7;
+	var SHOT_JITTER = 16;
+	var SHOT_SPREAD_RADIUS = 22;
 	/**
 	* 샷에 맞아 멈추는 초 (원본 overlay9_0 0x2111CBC): 샷 내성 등급(종 표 +118, 0은 1) × (위력 1이면 1초, 2면 2초).
 	* 멈춰 있는 동안 또 맞으면 더해지고 15초(900프레임)를 넘지 않는다. 샷은 HP를 깎지 않는다(대미지 처리 없음).
@@ -3367,7 +3373,7 @@ var ChampCore = (function(exports) {
 			name: "미끼",
 			kind: "toy",
 			range: 96,
-			seconds: 15,
+			seconds: Infinity,
 			speed: 30,
 			price: 300,
 			minRank: 2,
@@ -3378,8 +3384,8 @@ var ChampCore = (function(exports) {
 			name: "미끼EV",
 			kind: "toy",
 			range: 96,
-			seconds: 20,
-			speed: 40,
+			seconds: Infinity,
+			speed: 30,
 			price: 700,
 			minRank: 4,
 			pack: 3
@@ -3389,7 +3395,7 @@ var ChampCore = (function(exports) {
 			name: "옐로우 라이트",
 			kind: "light",
 			range: 128,
-			seconds: 15,
+			seconds: 81,
 			nightOnly: true,
 			price: 400,
 			minRank: 2,
@@ -3400,7 +3406,7 @@ var ChampCore = (function(exports) {
 			name: "블루 라이트",
 			kind: "light",
 			range: 128,
-			seconds: 15,
+			seconds: 81,
 			nightOnly: true,
 			price: 800,
 			minRank: 4,
@@ -3711,8 +3717,23 @@ var ChampCore = (function(exports) {
 	var FLASH_RADIUS = 256;
 	/** 사냥터에 동시에 놓을 수 있는 와이어 수 (원본 와이어 관리 칸 2개, 0x2126C1C) */
 	var HUNT_WIRE_MAX = 2;
-	/** 마그넷·스파크 와이어에 한 번 걸린 뒤 다시 걸리기까지의 초 (임시) */
-	var WIRE_COOLDOWN = 3;
+	/**
+	* 마그넷·스파크 와이어에 다시 걸리기까지의 초: 원본에는 따로 기다림이 없다(0x2111910 매 프레임 판정).
+	* 걸리면 달라붙음(상태 13)·감전→마비(상태 14→17) 동안 움직이지 않아 다시 닿지 않는다.
+	*/
+	var WIRE_COOLDOWN = 0;
+	/**
+	* 미끼(장난감, 원본 미끼 관리 overlay9_0 0x212AF2C~): 하나만 놓인다(다시 쓰면 옮김). 놓고 3초(180프레임) 뒤
+	* 그때 보이는 화면 안 아무 곳 쪽으로 초당 30px(0x800/프레임)로 걸어가며, 55~64프레임마다 디지몬을 부른다(메시지 0x36).
+	* 지형이나 화면 끝에 막히거나 마인을 밟으면(마인은 터진다) 깜빡이다 사라진다(0x212B43C·0x212B688). 걷는 시간 제한은 없다.
+	* 라이트(원본 0x212758C~): 밤에만 25~34프레임마다 디지몬을 부르고(메시지 0x38), 32400×60÷400 = 4,860프레임(81초) 뒤 꺼진다(0x2127924).
+	* 디지몬은 부를 때마다 끌릴지 다시 판정한다.
+	*/
+	var DECOY_IDLE = 3;
+	var DECOY_SPEED = 30;
+	var decoyPulse = (rng = Math.random) => (55 + Math.floor(rng() * 10)) / 60;
+	var lightPulse = (rng = Math.random) => (25 + Math.floor(rng() * 10)) / 60;
+	var LIGHT_SECONDS = 81;
 	var ORIGINAL_ITEMS = {};
 	for (const line of shop_default.split(/\r?\n/)) {
 		if (!line.trim() || line.startsWith("#")) continue;
@@ -12039,6 +12060,8 @@ var ChampCore = (function(exports) {
 	exports.DAY_END_HOUR = DAY_END_HOUR;
 	exports.DAY_END_MINUTE = DAY_END_MINUTE;
 	exports.DAY_START_HOUR = DAY_START_HOUR;
+	exports.DECOY_IDLE = DECOY_IDLE;
+	exports.DECOY_SPEED = DECOY_SPEED;
 	exports.DEX_ORDER = DEX_ORDER;
 	exports.DYING_AFTER_MINUTES = DYING_AFTER_MINUTES;
 	exports.DYING_LOST_MINUTES = DYING_LOST_MINUTES;
@@ -12066,6 +12089,7 @@ var ChampCore = (function(exports) {
 	exports.ITEM_EFFECT = ITEM_EFFECT;
 	exports.LIFESPAN = LIFESPAN;
 	exports.LIGHT_REACH = LIGHT_REACH;
+	exports.LIGHT_SECONDS = LIGHT_SECONDS;
 	exports.LURE_REACH = LURE_REACH;
 	exports.MEAL_POOP_DELAY = MEAL_POOP_DELAY;
 	exports.MEAT_AMOUNT = MEAT_AMOUNT;
@@ -12120,7 +12144,9 @@ var ChampCore = (function(exports) {
 	exports.SEASONS = SEASONS;
 	exports.SEASON_CODE = SEASON_CODE;
 	exports.SHOTS = SHOTS;
+	exports.SHOT_JITTER = SHOT_JITTER;
 	exports.SHOT_PACK = SHOT_PACK;
+	exports.SHOT_PELLETS = SHOT_PELLETS;
 	exports.SHOT_SCATTER = SHOT_SCATTER;
 	exports.SHOT_SPREAD_RADIUS = SHOT_SPREAD_RADIUS;
 	exports.SHOT_STOP_MAX = SHOT_STOP_MAX;
@@ -12200,6 +12226,7 @@ var ChampCore = (function(exports) {
 	exports.curveIndexOf = curveIndexOf;
 	exports.curveStep = curveStep;
 	exports.dateOf = dateOf;
+	exports.decoyPulse = decoyPulse;
 	exports.defaultRng = defaultRng;
 	exports.dexCount = dexCount;
 	exports.dexEntries = dexEntries;
@@ -12261,6 +12288,7 @@ var ChampCore = (function(exports) {
 	exports.itemResist = itemResist;
 	exports.itemUnlocked = itemUnlocked;
 	exports.keepDistance = keepDistance;
+	exports.lightPulse = lightPulse;
 	exports.magnetSticks = magnetSticks;
 	exports.mailEvent = mailEvent;
 	exports.makeEnemies = makeEnemies;

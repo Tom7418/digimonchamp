@@ -97,5 +97,5 @@ test('사냥의 묶인 개체 클릭과 단발 샷도 같은 프레임·크기�
  s.spriteFrames.set(w,{speciesId:w.id,frame:0,flip:true});
  assert.equal(s.wildSpriteHit(w,world(a,pose,i%a.width+0.5,Math.floor(i/a.width)+0.5)),true);
  const bounds=s.spriteVisualBounds(a,pose);assert.equal(s.wildSpriteHit(w,{x:bounds.cx,y:bounds.top-20}),false);
- const source=fs.readFileSync('web/game.js','utf8');assert.match(source,/w.bound > 0 && wildSpriteHit\(w,p\)/);assert.match(source,/shot.spread\?.*:wildSpriteHit\(w,p\)/);
+ const source=fs.readFileSync('web/game.js','utf8');assert.match(source,/w.bound > 0 && wildSpriteHit\(w,p\)/);assert.match(source,/!x.gone && wildSpriteHit\(x, pt\)/);
 });

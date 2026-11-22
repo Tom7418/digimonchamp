@@ -274,7 +274,13 @@ export const SHOTS: Shot[] = SHOT_FAMILIES.flatMap((f) =>
 export const shotOf = (id: string) => SHOTS.find((s) => s.id === id);
 /** 한 번 살 때 들어오는 탄 수 (임시) */
 export const SHOT_PACK = 10;
-export const SHOT_SPREAD_RADIUS = 90;
+/**
+ * 산탄(샷 건·스턴 샷): 한 번에 7발이 누른 곳 ±16px 사각형 안 아무 곳에 하나씩 떨어지고, 발마다 맞은 디지몬에게 멈춤을 더한다
+ * (원본 overlay9_0 0x2125C54~0x2125C94: 0~31 난수 − 16, 7회). 화면 효과 반경은 그 사각형 크기.
+ */
+export const SHOT_PELLETS = 7;
+export const SHOT_JITTER = 16;
+export const SHOT_SPREAD_RADIUS = 22;
 /**
  * 샷에 맞아 멈추는 초 (원본 overlay9_0 0x2111CBC): 샷 내성 등급(종 표 +118, 0은 1) × (위력 1이면 1초, 2면 2초).
  * 멈춰 있는 동안 또 맞으면 더해지고 15초(900프레임)를 넘지 않는다. 샷은 HP를 깎지 않는다(대미지 처리 없음).
@@ -348,10 +354,10 @@ export const GEARS: Gear[] = [
   { id: 'spark2', name: '스파크 와이어β', kind: 'wire', length: 48, power: 20, price: 1000, minRank: 5, pack: 5 },
   { id: 'bait3', name: '독 고기', kind: 'bait', effect: '독', range: 128, seconds: 12, price: 400, minRank: 3, pack: 5 },
   { id: 'bait4', name: '마비 고기', kind: 'bait', effect: '마비', range: 128, seconds: 12, price: 400, minRank: 3, pack: 5 },
-  { id: 'toy1', name: '미끼', kind: 'toy', range: 96, seconds: 15, speed: 30, price: 300, minRank: 2, pack: 3 },
-  { id: 'toy2', name: '미끼EV', kind: 'toy', range: 96, seconds: 20, speed: 40, price: 700, minRank: 4, pack: 3 },
-  { id: 'light1', name: '옐로우 라이트', kind: 'light', range: 128, seconds: 15, nightOnly: true, price: 400, minRank: 2, pack: 3 },
-  { id: 'light2', name: '블루 라이트', kind: 'light', range: 128, seconds: 15, nightOnly: true, price: 800, minRank: 4, pack: 3 },
+  { id: 'toy1', name: '미끼', kind: 'toy', range: 96, seconds: Infinity, speed: 30, price: 300, minRank: 2, pack: 3 },
+  { id: 'toy2', name: '미끼EV', kind: 'toy', range: 96, seconds: Infinity, speed: 30, price: 700, minRank: 4, pack: 3 },
+  { id: 'light1', name: '옐로우 라이트', kind: 'light', range: 128, seconds: 81, nightOnly: true, price: 400, minRank: 2, pack: 3 },
+  { id: 'light2', name: '블루 라이트', kind: 'light', range: 128, seconds: 81, nightOnly: true, price: 800, minRank: 4, pack: 3 },
   { id: 'bomb1', name: '일반 폭탄', kind: 'bomb', power: 40, range: 96, price: 400, minRank: 3, pack: 3 },
   { id: 'bomb2', name: '슬립 폭탄', kind: 'bomb', power: 40, effect: '수면', range: 96, price: 600, minRank: 4, pack: 3 },
   { id: 'bomb3', name: '스턴 폭탄', kind: 'bomb', power: 40, effect: '마비', range: 96, price: 600, minRank: 4, pack: 3 },
@@ -512,8 +518,23 @@ export const BLAST_RADIUS = 96;
 export const FLASH_RADIUS = 256;
 /** 사냥터에 동시에 놓을 수 있는 와이어 수 (원본 와이어 관리 칸 2개, 0x2126C1C) */
 export const HUNT_WIRE_MAX = 2;
-/** 마그넷·스파크 와이어에 한 번 걸린 뒤 다시 걸리기까지의 초 (임시) */
-export const WIRE_COOLDOWN = 3;
+/**
+ * 마그넷·스파크 와이어에 다시 걸리기까지의 초: 원본에는 따로 기다림이 없다(0x2111910 매 프레임 판정).
+ * 걸리면 달라붙음(상태 13)·감전→마비(상태 14→17) 동안 움직이지 않아 다시 닿지 않는다.
+ */
+export const WIRE_COOLDOWN = 0;
+/**
+ * 미끼(장난감, 원본 미끼 관리 overlay9_0 0x212AF2C~): 하나만 놓인다(다시 쓰면 옮김). 놓고 3초(180프레임) 뒤
+ * 그때 보이는 화면 안 아무 곳 쪽으로 초당 30px(0x800/프레임)로 걸어가며, 55~64프레임마다 디지몬을 부른다(메시지 0x36).
+ * 지형이나 화면 끝에 막히거나 마인을 밟으면(마인은 터진다) 깜빡이다 사라진다(0x212B43C·0x212B688). 걷는 시간 제한은 없다.
+ * 라이트(원본 0x212758C~): 밤에만 25~34프레임마다 디지몬을 부르고(메시지 0x38), 32400×60÷400 = 4,860프레임(81초) 뒤 꺼진다(0x2127924).
+ * 디지몬은 부를 때마다 끌릴지 다시 판정한다.
+ */
+export const DECOY_IDLE = 3;
+export const DECOY_SPEED = 30;
+export const decoyPulse = (rng: () => number = Math.random) => (55 + Math.floor(rng() * 10)) / 60;
+export const lightPulse = (rng: () => number = Math.random) => (25 + Math.floor(rng() * 10)) / 60;
+export const LIGHT_SECONDS = 81;
 
 // ---------- 원본 가격·해금 조건 ----------
 // 원본 실행 코드의 아이템 표 값으로 위 목록의 가격을 덮어쓴다 (src/data/shop.txt, tools/extract_shop.py).

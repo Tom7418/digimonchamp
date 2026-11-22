@@ -20,7 +20,7 @@ import { seeded } from '../src/core/rng';
 import { DEX_ORDER, dexEntries, dexCount } from '../src/core/dex';
 import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent, rollMorningMail, rollBossMail, rivalBeaten, pickOfferCandidate, rollBattleOffer } from '../src/core/events';
 import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotCooldown, paralysisSeconds, wildSleepMax, wildSleepSeconds, wildBellyStart, wildBellyMax, wildHungry, meatBite, MEAT_AMOUNT, MINE_BOX, TRAP_BOX, inBox, itemDamage as itemDmg, WIRE_UNIT, BOMB_FUSE, useGear, gearCount, BAITS, GEARS, gearOf, itemResist, itemDamage, effectLands, magnetSticks, attracted, HUNT_ITEM_SLOTS, huntItems, toggleHuntItem } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotCooldown, paralysisSeconds, wildSleepMax, wildSleepSeconds, wildBellyStart, wildBellyMax, wildHungry, meatBite, MEAT_AMOUNT, MINE_BOX, TRAP_BOX, inBox, decoyPulse, lightPulse, LIGHT_SECONDS, DECOY_SPEED, SHOT_PELLETS, itemDamage as itemDmg, WIRE_UNIT, BOMB_FUSE, useGear, gearCount, BAITS, GEARS, gearOf, itemResist, itemDamage, effectLands, magnetSticks, attracted, HUNT_ITEM_SLOTS, huntItems, toggleHuntItem } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
 import { discardFloorFood, ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -861,6 +861,12 @@ describe('사냥 장비', () => {
     expect(meatBite('그레이몬')).toBe(2);
     expect(meatBite('워그레이몬')).toBe(4);
     expect(MEAT_AMOUNT).toEqual({ normal: 16, big: 32 });
+    // 미끼 55~64프레임·라이트 25~34프레임마다 부름, 라이트 81초, 미끼 초당 30px, 산탄 7발
+    expect(decoyPulse(() => 0)).toBeCloseTo(55 / 60);
+    expect(lightPulse(() => 0.99)).toBeCloseTo(34 / 60);
+    expect(LIGHT_SECONDS).toBe(81);
+    expect(DECOY_SPEED).toBe(30);
+    expect(SHOT_PELLETS).toBe(7);
     // 마인·함정 상자: 원본 첫 셀 크기의 절반, 경계는 들어가지 않는다
     expect(MINE_BOX.mine1).toEqual([16, 8]);
     expect(TRAP_BOX.trap2).toEqual([28, 16]);

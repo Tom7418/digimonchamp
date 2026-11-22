@@ -2068,10 +2068,10 @@
     // 고기는 배가 차면(종 크기 이상) 그만 먹고 떠난다
     if (m === true) return !(isMeatBait(b) && (w.belly ?? 0) >= C.wildBellyMax(w.id));
     const isMeat = isMeatBait(b);
-    if (m === false && !isMeat) return false;
     if (typeof m === 'number' && (memo[b.uid] = m - dt) > 0) return false;
     const ok = C.attracted(w.id, b.gearId || (b.big ? 'bait2' : 'bait1'), Math.random, C.wildHungry(w.id, w.belly ?? 0));
-    memo[b.uid] = ok ? true : isMeat ? 1 : false;
+    // 원본: 고기는 1초(61프레임), 미끼는 부를 때(55~64프레임), 라이트는 25~34프레임마다 다시 판정한다
+    memo[b.uid] = ok ? true : isMeat ? 1 : b.kind === 'toy' ? C.decoyPulse() : C.lightPulse();
     return ok;
   }
   // 효과(수면·마비·눈가리기·독)를 디지몬에게 건다. 걸리는지는 그 종의 아이템 내성 등급(원본)으로 정한다
@@ -2186,21 +2186,27 @@
         hunt.traps.push({ x: p.x, y: p.y, g: gear, left: Infinity, held: 0 });
         return huntNote(`${gear.name}을(를) 설치했다.`);
       }
-      // 특수 고기·미끼 장난감·라이트: 디지몬을 끌어들인다. 장난감은 스스로 걸어 다닌다
-      const a = Math.random() * Math.PI * 2;
+      // 특수 고기·미끼 장난감·라이트: 디지몬을 끌어들인다. 원본: 미끼와 라이트는 하나만 놓이고 다시 쓰면 옮긴다
+      if (gear.kind === 'toy' || gear.kind === 'light') hunt.baits = hunt.baits.filter((b) => b.kind !== gear.kind);
       hunt.baits.push({ x: p.x, y: p.y, range: gear.range, left: gear.kind === 'bait' ? Infinity : gear.seconds, gearId:gear.id, kind: gear.kind, effect: gear.effect, name: gear.name,
         amount: gear.kind === 'bait' ? C.MEAT_AMOUNT.normal : undefined,
-        vx: gear.speed ? Math.cos(a) * gear.speed : 0, vy: gear.speed ? Math.sin(a) * gear.speed * 0.6 : 0 });
+        // 미끼는 3초 서 있다가 보이는 화면 안 아무 곳 쪽으로 걸어간다
+        idle: gear.kind === 'toy' ? C.DECOY_IDLE : 0, vx: 0, vy: 0 });
       return huntNote(`${gear.name}을(를) 놓았다.`);
     }
     hunt.shotReady = now + C.shotCooldown(shot);
     hunt.fx.push({ x: p.x, y: p.y, r: shot.spread ? C.SHOT_SPREAD_RADIUS : 14, left: 0.25 });
-    const reach = shot.spread ? C.SHOT_SPREAD_RADIUS : 45;
-    let hits = hunt.wilds.filter((w) => !w.gone && (shot.spread?Math.hypot(p.x-w.x,p.y-(w.y-15))<reach:wildSpriteHit(w,p)));
-    if (!shot.spread) hits = hits.sort((a, b) => Math.hypot(p.x - a.x, p.y - a.y) - Math.hypot(p.x - b.x, p.y - b.y)).slice(0, 1);
+    // 원본: 산탄은 누른 곳 ±16px 안에 7발이 떨어지고 발마다 따로 맞는다. 보통 샷은 한 발
+    const points = shot.spread ? Array.from({ length: C.SHOT_PELLETS }, () => ({ x: p.x + Math.floor(Math.random() * 32) - C.SHOT_JITTER, y: p.y + Math.floor(Math.random() * 32) - C.SHOT_JITTER })) : [p];
+    const pellets = [];
+    for (const pt of points) {
+      const w = hunt.wilds.filter((x) => !x.gone && wildSpriteHit(x, pt)).sort((a, b) => Math.hypot(pt.x - a.x, pt.y - a.y) - Math.hypot(pt.x - b.x, pt.y - b.y))[0];
+      if (w) pellets.push(w);
+    }
+    const hits = [...new Set(pellets)];
     if (!hits.length) return huntNote('빗나갔다!');
     let landed = 0;
-    for (const w of hits) {
+    for (const w of pellets) {
       // 원본: 샷은 HP를 깎지 않고 멈추게만 한다. 멈춤은 쌓이며 15초까지. 효과 없는 샷은 풀린 뒤 근처로 달아난다
       wakeFromSleep(w);
       w.stun = Math.min(C.SHOT_STOP_MAX, (w.stun > 0 && !w.stunKind ? w.stun : 0) + C.shotStun(shot, w.id));
@@ -2210,7 +2216,7 @@
       if (applyEffect(w, shot.effect)) landed += 1;
       w.flash = 0.4;
     }
-    huntNote(`${shot.name} 명중! ${hits.map((w) => C.getSpecies(w.id).name).join(', ')}${shot.effect ? (landed ? ` ${shot.effect}` : ` (${shot.effect}에 걸리지 않았다)`) : ' 멈춤'}`);
+    huntNote(`${shot.name} 명중${pellets.length > 1 ? ` ×${pellets.length}` : ''}! ${hits.map((w) => C.getSpecies(w.id).name).join(', ')}${shot.effect ? (landed ? ` ${shot.effect}` : ` (${shot.effect}에 걸리지 않았다)`) : ' 멈춤'}`);
   }
 
   // 선분 교차 (와이어 충돌)
@@ -2474,11 +2480,20 @@
     }
     for (const b of hunt.baits) {
       b.left -= dt;
+      if (b.kind === 'toy' && b.idle > 0 && (b.idle -= dt) <= 0) {
+        // 원본: 3초 뒤 지금 보이는 화면 안 아무 곳 쪽으로 걷기 시작한다
+        const vw = 960 / hunt.zoom, vh = 560 / hunt.zoom, cam = hunt.cam || { x: AREA.x0, y: AREA.y0 };
+        const tx = cam.x + Math.random() * vw, ty = cam.y + Math.random() * vh, d = Math.hypot(tx - b.x, ty - b.y) || 1;
+        b.vx = ((tx - b.x) / d) * C.DECOY_SPEED; b.vy = ((ty - b.y) / d) * C.DECOY_SPEED;
+      }
       if (b.vx || b.vy) {
-        // 장난감은 걸어 다니다 가장자리에서 돌아선다
+        // 원본: 지형이나 끝에 막히거나 마인을 밟으면(마인은 터진다) 사라진다
         const x=b.x+b.vx*dt,y=b.y+b.vy*dt,target={x:Math.min(AREA.x1-20,Math.max(AREA.x0+20,x)),y:Math.min(AREA.y1-10,Math.max(AREA.y0+40,y))};
         const move=huntGroundMove(b,target);
-        b.x=move.x;b.y=move.y;if(move.blockedX||target.x!==x)b.vx=-b.vx;if(move.blockedY||target.y!==y)b.vy=-b.vy;
+        b.x=move.x;b.y=move.y;
+        if(move.blockedX||move.blockedY||target.x!==x||target.y!==y){b.left=0;huntNote(`${b.name}이(가) 막혀 사라졌다.`);}
+        const mine=hunt.traps.find((t)=>t.g.kind==='mine'&&C.inBox(b.x-t.x,b.y-t.y,C.MINE_BOX[t.g.id]||[16,12]));
+        if(mine){mine.left=0;blast(mine.x,mine.y,mine.g);b.left=0;}
       }
     }
     for (const t of hunt.traps) {

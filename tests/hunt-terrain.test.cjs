@@ -26,8 +26,8 @@ test('실제 사냥 시작은 배경 crop 좌표를 더한 안전한 칸에5마�
 });
 test('도주·미끼 장난감 이동도 잘라낸 지도 위치의 벽을 넘지 않고 와이어 충돌은 유지한다',()=>{
  const s=setup();s.barrier();const w={id:'깜몬',x:180,y:220,vx:600,vy:0,hp:1,max:1,flee:10,flash:0,turn:100,stun:0};s.ctx.hunt.wilds=[w];
- s.ctx.hunt.baits=[{x:180,y:300,vx:600,vy:0,left:10,range:0}];s.ctx.huntTick(0.05);
- assert.ok(w.x<=196);assert.ok(w.vx<0);assert.equal(w.gone,undefined);assert.ok(s.ctx.hunt.baits[0].x<=196);assert.ok(s.ctx.hunt.baits[0].vx<0);
+ const toy={x:180,y:220,vx:600,vy:0,left:10,range:0,kind:'toy',name:'미끼'};s.ctx.hunt.baits=[toy];s.ctx.huntTick(0.05);
+ assert.ok(w.x<=196);assert.ok(w.vx<0);assert.equal(w.gone,undefined);assert.ok(toy.x<=196);assert.ok(!s.ctx.hunt.baits.includes(toy)); // 원본: 미끼는 막히면 사라진다
  w.x=180;w.vx=600;s.ctx.hunt.wires=[{a:{x:190,y:180},b:{x:190,y:260}}];s.ctx.huntTick(0.05);assert.equal(w.x,180);assert.equal(w.movedX,0);
 });
 test('벽 건너 함정은 발동하지 않고 막힌 칸의 먹이 설치는 재고를 차감하지 않는다',()=>{
@@ -49,6 +49,8 @@ test('16지도에서 화면 경계 반사까지 거쳐도 개체와 장난감을
   const w={id:'깜몬',x:p.x-h.view.x,y:p.y-h.view.y,vx:0,vy:0,hp:1,max:1,flee:0,flash:0,turn:1000,stun:0};
   h.wilds=[w];h.respawn=1000;h.baits=[{x:w.x,y:w.y,vx:0,vy:0,left:1000,range:0}];
   for(let i=0;i<40;i++){
+   // 원본: 미끼는 막히면 사라지므로, 사라지면 새로 놓아 계속 확인한다
+   if(!h.baits.length)h.baits=[{x:w.x,y:w.y,vx:0,vy:0,left:1000,range:0}];
    w.vx=(rng()-0.5)*1000;w.vy=(rng()-0.5)*1000;const b=h.baits[0];b.vx=(rng()-0.5)*1000;b.vy=(rng()-0.5)*1000;
    s.ctx.huntTick(0.1);
    for(const actor of [w,b]){assert.equal(s.ctx.C.canStandOnHuntTerrain(h.terrain,s.ctx.huntMapPoint(actor)),true,field.id);const A=s.ctx.AREA;assert.ok(actor.x>=A.x0-1e-7&&actor.x<=A.x1+1e-7,JSON.stringify({field:field.id,i,x:actor.x,y:actor.y}));assert.ok(actor.y>=A.y0-1e-7&&actor.y<=A.y1+1e-7);}
