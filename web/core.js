@@ -4426,11 +4426,22 @@ var ChampCore = (function(exports) {
 	var WINTER = 3;
 	/** 프로틴을 먹은 채 훈련하면 1개당 부상 확률 +2% (help #138, 수치 임시) */
 	var PROTEIN_TRAIN_INJURY = .02;
-	/** 쓰다듬기 (help #143: 손 아이콘으로 쓰다듬을 수 있다). 효과는 원작에서 확인 못 한 임시 값: 게임 1시간에 한 번 스트레스 -3 */
-	var PET = {
-		relief: 3,
-		cooldown: 60
-	};
+	/**
+	* 쓰다듬기 (help #143). 효과는 원본: 쓰다듬는 상태(배우 +0x430=1, overlay18 0x2110100)인 동안 +0x198이 게임 분마다 늘고,
+	* 5를 넘으면(6분째) 0으로 돌리며 유대 +1·스트레스 -1 (0x21185C0~0x2118620). 세던 분은 손을 떼도 남는다.
+	* 조작은 웹판(형규 지정): 원본은 문지르기지만 웹판은 손 도구로 디지몬을 누르고 있는 동안이 쓰다듬는 상태.
+	* 짧게 눌러 그 사이 시간이 흐르지 않았으면 1분으로 친다(웹판).
+	*/
+	var PET = { every: 5 };
+	/** 쓰다듬는 상태의 1분 (원본 0x21185C0). 효과가 났으면 true */
+	function petMinute(d) {
+		d.petMinutes = (d.petMinutes ?? 0) + 1;
+		if (d.petMinutes <= PET.every) return false;
+		d.petMinutes = 0;
+		addBond(d, 1);
+		addStress(d, -1);
+		return true;
+	}
 	/** 동물원·목장이 먹이를 주는 배고픔 기준 (임시) */
 	var AUTO_FEED_BELOW = 50;
 	/** 스트레스가 풀리는 케이지. 온천·양호실·동물원·미니 동물원은 아직 게임에 없지만 추가되면 바로 적용된다 */
@@ -4446,7 +4457,7 @@ var ChampCore = (function(exports) {
 	*  - 빈사가 되면 -1 (0x211B138·0x211B160·0x211B19C), 스트레스 100으로 병이 나면 -5 (0x21187C0)
 	*  - 온천: 2시간마다 +1 (시설 표 명령6 종류3)
 	*  - 동거: 같은 케이지에 다른 디지몬이 있는 동안 720분이 넘을 때마다 정산 (0x21183A4~0x211848C, mateBond)
-	*  - 쓰다듬기: 원본은 손으로 문지르는 동안 6분마다 +1·스트레스 -1 (0x21185C0, 상태 0x2110100). 웹판 쓰다듬기는 아직 예전 방식
+	*  - 쓰다듬기: 쓰다듬는 동안 6분마다 +1·스트레스 -1 (0x21185C0, 상태 0x2110100, petMinute)
 	* 쓰임: 수명이 다할 때 50 이상이면 수명이 한 번 다음 세대 길이로 늘어난다 (0x21164BC·0x21168DC).
 	*/
 	var BOND = {
@@ -4624,6 +4635,11 @@ var ChampCore = (function(exports) {
 				}
 			}
 		} else d.contagionMinutes = Math.max(0, (d.contagionMinutes ?? 0) - 1);
+		if (ctx.petting && petMinute(d)) events.push({
+			type: "petted",
+			uid: d.uid,
+			name: sp.name
+		});
 		d.hpNow = Math.min(maxHp, Math.max(0, hp));
 		d.bowel = bowelAt(d, ctx.clock);
 		if (sleeping) d.fatigue = Math.max(0, d.fatigue - .3);
@@ -4836,7 +4852,8 @@ var ChampCore = (function(exports) {
 	}
 	/** 사육장 전체의 게임 시간 1분 */
 	/** dirtyCages: 상한 먹이가 놓인 설치 시설 ID (바닥 먹이는 화면이 관리한다) */
-	function tickFarm(save, rng = defaultRng, sleep = false, dirtyCages = []) {
+	/** petting: 이번 분에 손 도구로 누르고 있는 디지몬 uid (쓰다듬는 상태) */
+	function tickFarm(save, rng = defaultRng, sleep = false, dirtyCages = [], petting = /* @__PURE__ */ new Set()) {
 		const events = [];
 		const rank = tamerRank(save);
 		const season = dateOf(save.clock).season;
@@ -4880,7 +4897,8 @@ var ChampCore = (function(exports) {
 				clock: save.clock + 1,
 				dirty,
 				cageLevels: save.cageLevels,
-				mates
+				mates,
+				petting: petting.has(d.uid)
 			}, events);
 			if (!r) {
 				free += before;
@@ -5027,8 +5045,11 @@ var ChampCore = (function(exports) {
 			}
 		};
 	}
-	/** 쓰다듬기: 게임 1시간에 한 번 스트레스가 조금 풀린다 */
-	function pet(save, uid, rng = defaultRng) {
+	/**
+	* 쓰다듬기 (손 도구로 눌렀다 뗐을 때). 잠들어 있으면 깨우고, credit이면 쓰다듬은 1분을 센다(누르는 동안 시간이 흐르지 않은 짧은 터치).
+	* 누르고 있는 동안의 분은 tickFarm(petting)이 센다. soothed = 이번에 6분을 채워 유대 +1·스트레스 -1
+	*/
+	function pet(save, uid, rng = defaultRng, credit = true) {
 		const d = find(save, uid);
 		if (!d || d.isEgg) return fail(save, "아직 쓰다듬을 수 없어요.");
 		const name = getSpecies(d.speciesId).name;
@@ -5050,22 +5071,23 @@ var ChampCore = (function(exports) {
 			}));
 			awakened = true;
 		}
-		if (d.pettedAt != null && save.clock - d.pettedAt < PET.cooldown) return {
+		if (!credit) return {
 			ok: true,
 			save,
 			awakened,
 			message: awakened ? `${name}(이)가 잠에서 깨어났다.` : `${name}(은)는 기분이 좋아 보인다.`
 		};
+		const next = { ...find(save, uid) };
+		const soothed = petMinute(next);
+		const after = update(save, uid, () => next);
 		return {
 			ok: true,
-			soothed: true,
 			awakened,
-			message: `${name}(을)를 쓰다듬었다.`,
-			save: update(save, uid, (x) => ({
-				...x,
-				pettedAt: save.clock,
-				stress: Math.max(0, (x.stress ?? 0) - PET.relief)
-			}))
+			save: after,
+			...soothed ? {
+				soothed: true,
+				message: `${name}(은)는 쓰다듬어 주자 마음이 편해졌다.`
+			} : { message: awakened ? `${name}(이)가 잠에서 깨어났다.` : `${name}(은)는 기분이 좋아 보인다.` }
 		};
 	}
 	/** 바닥의 똥 하나 치우기 */
@@ -12468,6 +12490,7 @@ var ChampCore = (function(exports) {
 	exports.payEntryFee = payEntryFee;
 	exports.personalityTraining = personalityTraining;
 	exports.pet = pet;
+	exports.petMinute = petMinute;
 	exports.pick = pick;
 	exports.pickBattleSkill = pickBattleSkill;
 	exports.pickHuntSpawn = pickHuntSpawn;

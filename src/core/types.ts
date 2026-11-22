@@ -125,8 +125,10 @@ export interface Digimon {
   mateMinutes?: number;
   /** 전염 시간 (원본 +0x1B0): 같은 케이지에 병든 디지몬이 있으면 매분 +1, 없으면 -1. 240을 넘으면 전염 판정 */
   contagionMinutes?: number;
-  /** 마지막으로 쓰다듬은 시각(게임 분) */
+  /** 예전 쓰다듬기(1시간에 한 번)의 마지막 시각. 지금은 쓰지 않는다 */
   pettedAt?: number;
+  /** 쓰다듬은 분 (원본 +0x198). 5를 넘으면 유대 +1·스트레스 -1 후 0. 옛 저장은 없음 = 0 */
+  petMinutes?: number;
 }
 
 export interface SaveData {

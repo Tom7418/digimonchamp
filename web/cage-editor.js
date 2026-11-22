@@ -169,6 +169,8 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
      while(b.elapsed>=b.duration){b.elapsed-=b.duration;b.from=b.to;b.completed++;if(!nextBounce(b,p)){bounces.delete(uid);break;}}
    }},
    isDragging(uid){return drag?.pet!==undefined&&getState().team[drag.pet]?.uid===uid;},
+   // 손 도구로 디지몬을 누른 채 움직이지 않는 중(8px 미만) = 쓰다듬는 상태 (원본 배우 +0x430, 조작은 웹판)
+   pressingUid(){if(drag?.pet===undefined||isBlocked())return null;const p=drag.point??drag.start;if(Math.hypot(p.x-drag.start.x,p.y-drag.start.y)>=8)return null;return getState().team[drag.pet]?.uid??null;},
    reset(){selected=null;drag=null;tool=null;bounces.clear();roaming=new WeakMap();init();status();},
    world:WORLD, view:VIEW, cam, center, R, get zoom(){return zoom;},
    // 화면(캔버스) 좌표 이벤트 → 월드 좌표

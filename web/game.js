@@ -196,6 +196,10 @@
     } else if (e.type === 'revived') {
       log(`${e.name}이(가) 빈사 상태에서 회복했습니다.`);
       toast(`${e.name} 회복`);
+    } else if (e.type === 'petted') {
+      const p = view.team.find((x) => x.uid === e.uid);
+      if (p) startCareFx('pet', p, true);
+      log(`${e.name}(은)는 쓰다듬어 주자 마음이 편해졌다.`);
     } else if (e.type === 'extended') {
       // 원본 +0x4C 수명 연장 (랭크 때문에 못 한 진화, 또는 수명이 다할 때 유대 50 이상). 알림 문구는 웹판
       log(e.reason === 'rank' ? `${e.name}: 진화할 힘은 있지만 테이머 랭크가 낮아 기다립니다. 이번 세대의 수명이 늘어났습니다.` : `${e.name}: 테이머와의 유대 덕분에 이번 세대의 수명이 늘어났습니다.`);
@@ -2922,12 +2926,17 @@
     toast,
     () => !!battle || !!hunt || mailOpen || dayEnding || !!window.evolutionScene?.busy,
   );
-  // 손으로 디지몬을 움직이지 않고 누르면 쓰다듬는다 (원작 도움말 help #143)
+  // 손으로 디지몬을 움직이지 않고 누르고 있으면 쓰다듬는다 (원작 도움말 help #143, 효과는 원본 0x21185C0)
+  // 누르고 있는 동안 지난 사육 분은 tickFarm이 세었으니, 뗄 때는 그 사이 시간이 흐르지 않은 짧은 터치만 1분으로 센다
+  const petTicked = new Set();
   board.hitTest = pt=>petAt(pt)?.p; // 끌기·쓰다듬기·치료 도구가 같은 실제 몸 판정을 사용한다.
-  board.onGrab = (uid) => feeding.delete(uid); // 프레임 사이에 빠르게 드롭해도 먼 먹이를 소비하지 않는다.
+  board.onGrab = (uid) => { feeding.delete(uid); petTicked.clear(); }; // 프레임 사이에 빠르게 드롭해도 먼 먹이를 소비하지 않는다. 새로 누르면 쓰다듬은 시간 기록을 비운다
+  const pettingNow = () => { const uid = board.pressingUid?.(); if (uid == null) return new Set(); petTicked.add(uid); return new Set([uid]); };
   board.onPet = (index) => {
     const p = view.team[index];
-    const r = p && C.pet(save, p.uid, Math.random);
+    const credit = !!p && !petTicked.has(p.uid);
+    petTicked.clear();
+    const r = p && C.pet(save, p.uid, Math.random, credit);
     if (!r) return;
     save = r.save;
     if (r.ok&&!C.isSleeping(digi(p.uid))) startCareFx('pet', p, true);
@@ -3192,7 +3201,7 @@
           syncTeam();
           // 상한 먹이가 놓인 케이지에 오래 있으면 병 (help #139·#141)
           const dirtyCages = [...new Set(view.foods.filter((f) => f.kind === 'rotten' && f.cageId).map((f) => f.cageId))];
-          const r = C.tickFarm(save, undefined, false, dirtyCages);
+          const r = C.tickFarm(save, undefined, false, dirtyCages, pettingNow());
           save = r.save;
           r.events.forEach(logEvent);
           spoilFoods();

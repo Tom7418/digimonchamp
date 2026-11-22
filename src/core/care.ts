@@ -215,7 +215,9 @@ export type FarmEvent =
   | { type: 'trained'; uid: number; name: string; changes: string }
   | { type: 'blocked'; uid: number; name: string; reason: 'rank' | 'capacity' }
   /** 수명이 한 번 늘었다 (원본 +0x4C). rank: 랭크 때문에 못 한 진화, bond: 수명이 다할 때 유대 50 이상 */
-  | { type: 'extended'; uid: number; name: string; reason: 'rank' | 'bond' };
+  | { type: 'extended'; uid: number; name: string; reason: 'rank' | 'bond' }
+  /** 쓰다듬기가 6분을 채워 유대 +1·스트레스 -1 */
+  | { type: 'petted'; uid: number; name: string };
 
 /**
  * 기억 기록 (원본 ARM9 0x2062E80~0x2062F2C): 진화·디지에그화로 모습이 바뀔 때마다 바뀌기 전 종을
@@ -411,8 +413,22 @@ export const SUMMER = 1;
 export const WINTER = 3;
 /** 프로틴을 먹은 채 훈련하면 1개당 부상 확률 +2% (help #138, 수치 임시) */
 export const PROTEIN_TRAIN_INJURY = 0.02;
-/** 쓰다듬기 (help #143: 손 아이콘으로 쓰다듬을 수 있다). 효과는 원작에서 확인 못 한 임시 값: 게임 1시간에 한 번 스트레스 -3 */
-export const PET = { relief: 3, cooldown: 60 };
+/**
+ * 쓰다듬기 (help #143). 효과는 원본: 쓰다듬는 상태(배우 +0x430=1, overlay18 0x2110100)인 동안 +0x198이 게임 분마다 늘고,
+ * 5를 넘으면(6분째) 0으로 돌리며 유대 +1·스트레스 -1 (0x21185C0~0x2118620). 세던 분은 손을 떼도 남는다.
+ * 조작은 웹판(형규 지정): 원본은 문지르기지만 웹판은 손 도구로 디지몬을 누르고 있는 동안이 쓰다듬는 상태.
+ * 짧게 눌러 그 사이 시간이 흐르지 않았으면 1분으로 친다(웹판).
+ */
+export const PET = { every: 5 };
+/** 쓰다듬는 상태의 1분 (원본 0x21185C0). 효과가 났으면 true */
+export function petMinute(d: Digimon): boolean {
+  d.petMinutes = (d.petMinutes ?? 0) + 1;
+  if (d.petMinutes <= PET.every) return false;
+  d.petMinutes = 0;
+  addBond(d, 1);
+  addStress(d, -1);
+  return true;
+}
 /** 동물원·목장이 먹이를 주는 배고픔 기준 (임시) */
 export const AUTO_FEED_BELOW = 50;
 /** 스트레스가 풀리는 케이지. 온천·양호실·동물원·미니 동물원은 아직 게임에 없지만 추가되면 바로 적용된다 */
@@ -429,7 +445,7 @@ export function addStress(d: Digimon, amount: number) {
  *  - 빈사가 되면 -1 (0x211B138·0x211B160·0x211B19C), 스트레스 100으로 병이 나면 -5 (0x21187C0)
  *  - 온천: 2시간마다 +1 (시설 표 명령6 종류3)
  *  - 동거: 같은 케이지에 다른 디지몬이 있는 동안 720분이 넘을 때마다 정산 (0x21183A4~0x211848C, mateBond)
- *  - 쓰다듬기: 원본은 손으로 문지르는 동안 6분마다 +1·스트레스 -1 (0x21185C0, 상태 0x2110100). 웹판 쓰다듬기는 아직 예전 방식
+ *  - 쓰다듬기: 쓰다듬는 동안 6분마다 +1·스트레스 -1 (0x21185C0, 상태 0x2110100, petMinute)
  * 쓰임: 수명이 다할 때 50 이상이면 수명이 한 번 다음 세대 길이로 늘어난다 (0x21164BC·0x21168DC).
  */
 export const BOND = { max: 100, extend: 50, training: 1, cure: 2, evolve: 10, dying: -1, stressSick: -5, matePeriod: 720 };
@@ -514,7 +530,7 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
 }
 
 /** 디지몬 한 마리의 게임 시간 1분. null이면 로스트 */
-function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number; dirty?: boolean; cageLevels?: Record<string, number>; mates?: readonly Digimon[] }, events: FarmEvent[]): Digimon | null {
+function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number; dirty?: boolean; cageLevels?: Record<string, number>; mates?: readonly Digimon[]; petting?: boolean }, events: FarmEvent[]): Digimon | null {
   let d: Digimon = { ...prev, stats: { ...prev.stats }, ap: { ...prev.ap } };
   d.stageAge += 1;
 
@@ -571,6 +587,8 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
       }
     }
   } else d.contagionMinutes = Math.max(0, (d.contagionMinutes ?? 0) - 1);
+  // 쓰다듬는 중이면 6분마다 유대 +1·스트레스 -1 (0x21185C0)
+  if (ctx.petting && petMinute(d)) events.push({ type: 'petted', uid: d.uid, name: sp.name });
   d.hpNow = Math.min(maxHp, Math.max(0, hp));
   d.bowel = bowelAt(d, ctx.clock);
   if (sleeping) {
@@ -734,7 +752,8 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
 
 /** 사육장 전체의 게임 시간 1분 */
 /** dirtyCages: 상한 먹이가 놓인 설치 시설 ID (바닥 먹이는 화면이 관리한다) */
-export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, dirtyCages: readonly string[] = []): { save: SaveData; events: FarmEvent[] } {
+/** petting: 이번 분에 손 도구로 누르고 있는 디지몬 uid (쓰다듬는 상태) */
+export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, dirtyCages: readonly string[] = [], petting: ReadonlySet<number> = new Set()): { save: SaveData; events: FarmEvent[] } {
   const events: FarmEvent[] = [];
   const rank = tamerRank(save);
   const season = dateOf(save.clock).season;
@@ -762,7 +781,7 @@ export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, d
     if (crowdHour && !d.isEgg && inCage > getCage(d.cage).capacity) addStress(candidate, inCage - 1);
     const dirty = !!d.cageInstance && dirtyCages.includes(d.cageInstance);
     const mates = key === null || d.isEgg ? [] : save.digimon.filter((o) => o.uid !== d.uid && !o.isEgg && group(o) === key);
-    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1, dirty, cageLevels: save.cageLevels, mates }, events);
+    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1, dirty, cageLevels: save.cageLevels, mates, petting: petting.has(d.uid) }, events);
     if (!r) {
       free += before;
       return;
@@ -881,8 +900,11 @@ export function feedRotten(save: SaveData, uid: number): ActionResult {
   return { ok: true, message: events.length ? '썩은 고기를 먹고 병에 걸렸다! (페널티 +1)' : '썩은 고기를 먹었다…', save: { ...s, rotten: save.rotten - 1 } };
 }
 
-/** 쓰다듬기: 게임 1시간에 한 번 스트레스가 조금 풀린다 */
-export function pet(save: SaveData, uid: number, rng: Rng = defaultRng): ActionResult & { soothed?: boolean; awakened?: boolean } {
+/**
+ * 쓰다듬기 (손 도구로 눌렀다 뗐을 때). 잠들어 있으면 깨우고, credit이면 쓰다듬은 1분을 센다(누르는 동안 시간이 흐르지 않은 짧은 터치).
+ * 누르고 있는 동안의 분은 tickFarm(petting)이 센다. soothed = 이번에 6분을 채워 유대 +1·스트레스 -1
+ */
+export function pet(save: SaveData, uid: number, rng: Rng = defaultRng, credit = true): ActionResult & { soothed?: boolean; awakened?: boolean } {
   const d = find(save, uid);
   if (!d || d.isEgg) return fail(save, '아직 쓰다듬을 수 없어요.');
   const name = getSpecies(d.speciesId).name;
@@ -893,8 +915,11 @@ export function pet(save: SaveData, uid: number, rng: Rng = defaultRng): ActionR
     save = update(save,uid,x=>({...x,restCycle:{species:x.speciesId,sleepLeft:0,awakeLeft:cycleMinutes(originalSpecies(x.speciesId)?.awake ?? [120,180],rng)}}));
     awakened = true;
   }
-  if (d.pettedAt != null && save.clock - d.pettedAt < PET.cooldown) return { ok: true, save, awakened, message: awakened ? `${name}(이)가 잠에서 깨어났다.` : `${name}(은)는 기분이 좋아 보인다.` };
-  return { ok: true, soothed: true, awakened, message: `${name}(을)를 쓰다듬었다.`, save: update(save, uid, (x) => ({ ...x, pettedAt: save.clock, stress: Math.max(0, (x.stress ?? 0) - PET.relief) })) };
+  if (!credit) return { ok: true, save, awakened, message: awakened ? `${name}(이)가 잠에서 깨어났다.` : `${name}(은)는 기분이 좋아 보인다.` };
+  const next = { ...find(save, uid)! };
+  const soothed = petMinute(next);
+  const after = update(save, uid, () => next);
+  return { ok: true, awakened, save: after, ...(soothed ? { soothed: true, message: `${name}(은)는 쓰다듬어 주자 마음이 편해졌다.` } : { message: awakened ? `${name}(이)가 잠에서 깨어났다.` : `${name}(은)는 기분이 좋아 보인다.` }) };
 }
 
 /** 바닥의 똥 하나 치우기 */

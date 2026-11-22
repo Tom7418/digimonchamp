@@ -403,13 +403,27 @@ describe('evolution', () => {
     const risky = (clock: number, i: number) => { let s = withMon({ ...freshSave(0), clock }, { hunger: 100, personality: '쿨', injuryRisk: 80 }); s = { ...s, cages: [...s.cages, '미니 화산'] }; s = setCage(s, 1, '미니 화산').save; return only(advance(s, 20, seeded(i)).save).injured; };
     expect(Array.from({ length: 50 }, (_, i) => risky(noon, i + 1)).filter(Boolean).length).toBeGreaterThan(20);
   });
-  it('쓰다듬으면 스트레스가 조금 풀리고, 게임 1시간 안에는 다시 풀리지 않는다', () => {
-    const s = withMon(freshSave(0), { stress: 50 });
-    const a = pet(s, 1);
-    expect(only(a.save).stress).toBe(50 - PET.relief);
-    expect(only(pet(a.save, 1).save).stress).toBe(50 - PET.relief);
-    expect(only(pet({ ...a.save, clock: a.save.clock + PET.cooldown }, 1).save).stress).toBe(50 - 2 * PET.relief);
+  it('쓰다듬은 분이 5를 넘을 때마다 유대 +1·스트레스 -1 (원본 0x21185C0). 짧은 터치는 1분', () => {
+    let s = withMon(freshSave(0), { stress: 50 });
+    for (let i = 0; i < PET.every; i++) {
+      const r = pet(s, 1);
+      expect(r.soothed).not.toBe(true);
+      s = r.save;
+    }
+    expect(only(s)).toMatchObject({ stress: 50, petMinutes: 5 });
+    const sixth = pet(s, 1);
+    expect(sixth.soothed).toBe(true);
+    expect(only(sixth.save)).toMatchObject({ stress: 49, bond: 1, petMinutes: 0 });
+    // 누르는 동안 시간이 흘렀으면 뗄 때는 세지 않는다
+    expect(only(pet(sixth.save, 1, () => 0.5, false).save).petMinutes).toBe(0);
     expect(pet(withMon(s, { isEgg: true }), 1).ok).toBe(false);
+  });
+  it('누르고 있는 디지몬은 사육 시간 1분마다 쓰다듬은 분이 는다', () => {
+    const s = withMon(freshSave(0), { stress: 50, petMinutes: 5 });
+    const r = tickFarm(s, seeded(1), false, [], new Set([1]));
+    expect(r.events).toContainEqual({ type: 'petted', uid: 1, name: getSpecies(only(s).speciesId).name });
+    expect(only(r.save)).toMatchObject({ bond: 1, petMinutes: 0 });
+    expect(only(tickFarm(s, seeded(1)).save).petMinutes).toBe(5);
   });
   it('바닥에 오래 둔 고기·프로틴은 상한 먹이가 된다', () => {
     const s = { ...freshSave(0), meat: 2, pills: 1, rotten: 0 };

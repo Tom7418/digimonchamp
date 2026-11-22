@@ -36,7 +36,7 @@ test('실제 화면 틱은 2초마다 게임 2분을 진행하고(10초에 10분
  const a=source.indexOf('  function frame(now)'),b=source.indexOf("  document.addEventListener('visibilitychange'",a);
  const ctx=vm.createContext({window:{},document:{hidden:false},titleOpen:false,selectedItem:null,
    lastTime:1,battle:null,paused:false,board:{editing:false},mailOpen:false,dayEnding:false,hunt:null,
-   clock:0,speed:1,view:{foods:[]},drawTitleArt(){},farmInputBlocked(){return false},syncTeam(){},logEvent(){},
+   clock:0,speed:1,view:{foods:[]},drawTitleArt(){},farmInputBlocked(){return false},syncTeam(){},pettingNow(){return new Set()},logEvent(){},
    spoilFoods(){},checkSchedule(){},render(){},persist(){},drawFarm(){},drawPortrait(){},requestAnimationFrame(){}});
  vm.runInContext(fs.readFileSync('web/core.js','utf8'),ctx);
  vm.runInContext('const C=ChampCore;globalThis.save={...C.freshSave(0),clock:510};const MINUTES_PER_SECOND=C.MINUTES_PER_SECOND;'+source.slice(a,b),ctx);
