@@ -1,0 +1,34 @@
+{
+  "source": "overlay9_0 + common/e002_hunt_decoy/decoy2",
+  "codeSha256": {
+    "arm9": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
+    "overlay0": "32cf7bfd1acd9ddafd22dacdfced421ea2cc0cebfbbea335cef2891d5ad34ec3"
+  },
+  "instructionChecks": {
+    "0x212afdc": "0xe3a00005",
+    "0x212b3a0": "0xe3a01000",
+    "0x212b760": "0xe3a01001",
+    "0x212b6b8": "0xe3a01002",
+    "0x212b774": "0xe3a02014",
+    "0x212b70c": "0xe2422002",
+    "0x212b744": "0x3a00000",
+    "0x212b720": "0x8bd8038"
+  },
+  "idleSequence": 0,
+  "retireSequence": 1,
+  "blinkSequence": 2,
+  "blinkPeriodsTicks": [
+    20,
+    18,
+    16,
+    14,
+    12,
+    10,
+    8,
+    6,
+    4,
+    2
+  ],
+  "tickRate": 60,
+  "policy": "Original removal poses and accelerating blink timing. Web keeps a non-interactive visual copy after the active lure is removed. Movement, attraction, mine damage and replacement rules are unchanged. This does not verify the separate explosion particle composition."
+}

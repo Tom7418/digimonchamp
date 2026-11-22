@@ -2503,6 +2503,8 @@
         const mine=hunt.traps.find((t)=>t.g.kind==='mine'&&C.inBox(b.x-t.x,b.y-t.y,C.MINE_BOX[t.g.id]||[16,12]));
         if(mine){mine.left=0;blast(mine.x,mine.y,mine.g);b.left=0;}
       }
+      // 판정에서는 즉시 제거하되 원본 미끼 소멸 동작과 가속 점멸은 끝까지 그린다.
+      if(b.kind==='toy'&&b.left<=0)hunt.fx.push(huntEquipmentArt.retirement(b));
     }
     for (const t of hunt.traps) {
       t.left -= dt;
@@ -2847,6 +2849,7 @@
       }
     }
     for (const f of hunt.fx) {
+      if(f.retiring){huntEquipmentArt.drawRetiring(ctx,f,dt);continue;}
       if(f.artSequence!==undefined){huntEquipmentArt.draw(ctx,f,dt,f.artSequence);continue;}
       ctx.strokeStyle = '#fff4b0';
       ctx.lineWidth = 3;

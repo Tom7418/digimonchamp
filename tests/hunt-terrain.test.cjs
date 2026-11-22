@@ -6,6 +6,9 @@ function setup(){
   huntIsNight:()=>false,wireMode:()=>ctx.hunt.tool==='wire',wireGear:()=>null,canvasPoint:e=>({x:e.clientX,y:e.clientY}),canvas:{setPointerCapture:noop},BIND_SECONDS:4,PULL_DISTANCE:70,
   applyEffect:noop,wildSleepMax:()=>1e9,wakeFromSleep:noop,blast:noop,wrapRope:noop,endHunt:noop,pullRope:noop,wildSpriteHit:()=>true});
  vm.runInContext(fs.readFileSync('web/core.js','utf8'),ctx);vm.runInContext('globalThis.C=ChampCore;globalThis.save=C.freshSave(0);save.clock=480;save.bits=90000;save.wires=2;save.gear.bait1=2;Math.random=C.seeded(38);',ctx);
+ ctx.Image=function(){this.complete=true;this.naturalWidth=100;};
+ for(const f of ['web/assets/hunt/equipment.js','web/hunt-equipment.js'])vm.runInContext(fs.readFileSync(f,'utf8'),ctx);
+ ctx.huntEquipmentArt=ctx.window.createHuntEquipmentRenderer();
  const source=fs.readFileSync('web/game.js','utf8');
  function part(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);assert.ok(a>0&&b>a);vm.runInContext(source.slice(a,b),ctx);}
  part('  function huntMapPoint(','  function endHunt(');
@@ -28,13 +31,25 @@ test('도주·미끼 장난감 이동도 잘라낸 지도 위치의 벽을 넘�
  const s=setup();s.barrier();const w={id:'깜몬',x:180,y:220,vx:600,vy:0,hp:1,max:1,flee:10,flash:0,turn:100,stun:0};s.ctx.hunt.wilds=[w];
  const toy={x:180,y:220,vx:600,vy:0,left:10,range:0,kind:'toy',name:'미끼'};s.ctx.hunt.baits=[toy];s.ctx.huntTick(0.05);
  assert.ok(w.x<=196);assert.ok(w.vx<0);assert.equal(w.gone,undefined);assert.ok(toy.x<=196);assert.ok(!s.ctx.hunt.baits.includes(toy)); // 원본: 미끼는 막히면 사라진다
+ assert.equal(s.ctx.hunt.fx.length,1);assert.equal(s.ctx.hunt.fx[0].retiring,true);assert.notEqual(s.ctx.hunt.fx[0],toy);
+ assert.equal(s.ctx.hunt.fx[0].x,toy.x);assert.ok(s.ctx.hunt.fx[0].left>2);
  w.x=180;w.vx=600;s.ctx.hunt.wires=[{a:{x:190,y:180},b:{x:190,y:260}}];s.ctx.huntTick(0.05);assert.equal(w.x,180);assert.equal(w.movedX,0);
+ assert.equal(s.ctx.hunt.fx.length,1);s.ctx.huntTick(3);assert.equal(s.ctx.hunt.fx.length,0);
 });
 test('벽 건너 함정은 발동하지 않고 막힌 칸의 먹이 설치는 재고를 차감하지 않는다',()=>{
  const s=setup();s.barrier();const w={id:'깜몬',x:196,y:220,vx:0,vy:0,hp:1,max:1,flee:0,flash:0,turn:100,stun:0};s.ctx.hunt.wilds=[w];
  const trap={x:212,y:220,g:{kind:'trap',range:60,holds:1,seconds:2,name:'함정'},left:60,held:0};s.ctx.hunt.traps=[trap];s.ctx.huntTick(0.05);assert.equal(trap.held,0);assert.equal(w.stun,0);
  const before=s.ctx.save.gear.bait1;s.ctx.useGearAt({x:204,y:220});assert.equal(s.ctx.save.gear.bait1,before);assert.equal(s.ctx.hunt.baits.length,0);
  s.ctx.useGearAt({x:180,y:220});assert.equal(s.ctx.save.gear.bait1,before-1);assert.equal(s.ctx.hunt.baits.length,1);
+});
+
+test('마인을 밟은 미끼는 판정에서 빠지고 소멸 그림만 남아 폭발을 반복하지 않는다',()=>{
+ const s=setup();s.barrier();let blasts=0;s.ctx.blast=()=>blasts++;
+ const toy={kind:'toy',gearId:'toy2',x:100,y:220,vx:1,vy:0,left:Infinity,range:0};
+ s.ctx.hunt.baits=[toy];s.ctx.hunt.traps=[{x:100,y:220,g:{id:'mine1',kind:'mine'},left:Infinity}];
+ s.ctx.huntTick(.05);assert.equal(blasts,1);assert.equal(s.ctx.hunt.baits.length,0);assert.equal(s.ctx.hunt.traps.length,0);
+ assert.equal(s.ctx.hunt.fx.length,1);assert.equal(s.ctx.hunt.fx[0].gearId,'toy2');assert.equal(s.ctx.hunt.fx[0].retiring,true);
+ s.ctx.huntTick(.1);assert.equal(blasts,1);assert.equal(s.ctx.hunt.fx.length,1);
 });
 test('와이어가 벽을 가로지르면 설치·소비를 막고 통행 가능한 구간은 설치한다',()=>{
  const s=setup();s.barrier();s.ctx.hunt.tool='wire';const run=(a,b)=>{s.ctx.huntPointer('down',s.event(a));s.ctx.huntPointer('move',s.event(b));s.ctx.huntPointer('up',s.event(b));};

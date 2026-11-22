@@ -32,3 +32,25 @@ test('실제 폭발 이벤트는 원본 도트를 예약하고 기존 범위·�
  assert.equal(hunt.fx.length,3);assert.equal(hunt.fx[0].artSequence,2);assert.equal(hunt.fx[0].left,.6);
  assert.equal(hunt.wilds[0].hp,8);assert.equal(hunt.wilds[1].hp,10);assert.equal(events.length,1);
 });
+
+
+test('미끼 두 종류는 소멸1 뒤 정지2로 전환하고 원본 20→2틱 가속 점멸을 마친다',()=>{
+ const c=vm.createContext({window:{},Image:function(){this.complete=true;this.naturalWidth=1000;}});
+ for(const f of ['web/assets/hunt/equipment.js','web/hunt-equipment.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);
+ const r=c.window.createHuntEquipmentRenderer();
+ for(const id of ['toy1','toy2']){
+  const a={kind:'toy',gearId:id,x:50,y:60,left:0},before=JSON.stringify(a),f=r.retirement(a);
+  assert.equal(JSON.stringify(a),before);assert.ok(Math.abs(f.left-140/60)<1e-9);
+  assert.equal(r.retirementFrame(f,.49).sequence,1);assert.equal(r.retirementFrame(f,.5).sequence,2);
+  let tick=0;for(const period of [20,18,16,14,12,10,8,6,4,2]){
+   assert.equal(r.retirementFrame(f,.5+tick/60).visible,true);
+   assert.equal(r.retirementFrame(f,.5+(tick+period/2)/60).visible,false);tick+=period;
+  }
+  assert.equal(r.retirementFrame(f,140/60).visible,false);
+  const frames=[],ctx={drawImage:(...v)=>frames.push(v)};
+  r.drawRetiring(ctx,f,0);const first=frames.at(-1)[1];r.drawRetiring(ctx,f,.26);assert.notEqual(frames.at(-1)[1],first);
+  const paused=frames.at(-1)[1];r.drawRetiring(ctx,f,0);assert.equal(frames.at(-1)[1],paused);
+  r.drawRetiring(ctx,f,.25);const count=frames.length;r.drawRetiring(ctx,f,.2);assert.equal(frames.length,count);
+  r.drawRetiring(ctx,f,1/6);assert.ok(frames.length>count);r.drawRetiring(ctx,f,3);const end=frames.length;r.drawRetiring(ctx,f,0);assert.equal(frames.length,end);
+ }
+});
