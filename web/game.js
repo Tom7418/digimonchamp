@@ -1281,7 +1281,7 @@
     );
     battleBackdrop.preload(map);
     for(const u of state.units)spriteOf(u.speciesId,false); // 배경과 출전 그림을 함께 미리 읽는다.
-    battle = { setup, state, map, health:window.createHpBars?.(), assetWait:0, presentation:window.createBattlePresentation(), acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
+    battle = { setup, state, map, statusEffects:window.createBattleStatusEffects?.(), health:window.createHpBars?.(), assetWait:0, presentation:window.createBattlePresentation(), acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
     if(holderFoes)log(`${setup.title} 홀더 「${C.titleHolder(setup.match.id).name}」 등장`);
     log(`${setup.title} 출전: ${team.map(nameOf).join(', ')}`);
     showModal(
@@ -1311,13 +1311,14 @@
     }
     function tickBattleArt(b,dt) {
       b.effects.tick(dt);
+      b.statusEffects?.tick(dt);
       for(const e of b.effects.drain?.()||[])battleHitVisual(b,e,true);
     }
     const b = battle;
     if (!b) return;
     // 그림을 읽는 동안 보이지 않는 전투가 먼저 진행되지 않는다. 실패/지연은 최대4초만 기다린다.
     if(!b.done&&b.map&&(b.assetWait??0)<4&&
-      (b.effects.ready===false||battleBackdrop.status(b.map)==='loading'||b.state.units.some(u=>{const a=spriteOf(u.speciesId,false);return a&&!a.image.complete;}))){
+      (b.effects.ready===false||b.statusEffects?.ready===false||battleBackdrop.status(b.map)==='loading'||b.state.units.some(u=>{const a=spriteOf(u.speciesId,false);return a&&!a.image.complete;}))){
       b.assetWait=(b.assetWait??0)+dt;drawArena(0);return;
     }
     // 강조 중에는 다음 전투 틱을 보류한다. 이미 발생한 피해/TP는 재계산하지 않는다.
@@ -1546,6 +1547,10 @@
       const art=spriteOf(u.speciesId,false),scale=battleBackdrop.spriteScale(art);
       ctx.fillStyle='#081c3044';ctx.beginPath();ctx.ellipse(u.x,u.y+14,Math.max(10,(art?.body||24)*scale*.4),5,0,0,Math.PI*2);ctx.fill();
       body(ctx,u.speciesId,false,u.x,u.y+14,scale,frame,action?.flip??pose.flip);
+      if(battle.statusEffects){
+        const bounds=spriteVisualBounds(art,{x:u.x,y:u.y+14,scale,frame,flip:action?.flip??pose.flip});
+        battle.statusEffects.draw(ctx,u,s.t,bounds);
+      }
       ctx.globalAlpha = 1;
       if(!u.alive){ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle='#5c6570';ctx.fillText('전투 불능',u.x,u.y-25);}
       battle.health?.draw(ctx,u.id,u.hp,u.maxHp,u.x-27,u.y+18,54,8,u.team===1);

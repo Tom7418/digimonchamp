@@ -1,0 +1,209 @@
+{
+  "source": "common/e003_battle",
+  "sha256": {
+    ".ncer": "b4739afad0212f002c556e7c19ff746ab0459f97114ed25958670af32b09ed21",
+    ".ncbr": "72a4a46981ccd89692578edf1cf64530d0e7cd0bc047e3a238daebb10be0c341",
+    ".nclr": "335d7326d1cc1944bf850d80db873800ddebe52e8277c9bb5b729f4c8d6059ef",
+    ".nanr": "0c1e44e19784bbdda93bc06a20f9df9653ae63048b1fb09d0c587829230e5b8f"
+  },
+  "statusChecks": {
+    "0x2118be4": "0xe3a01005",
+    "0x2118bf4": "0xe3a01007",
+    "0x2118c08": "0xe3a0100a",
+    "0x2118c20": "0xe3a01009",
+    "0x2118c48": "0xe3a01008",
+    "0x2118c80": "0xe3a0100d",
+    "0x2118ca0": "0xe3a01001"
+  },
+  "states": {
+    "1": {
+      "name": "anger",
+      "sequence": 27,
+      "anchor": "head",
+      "frames": [
+        [
+          76,
+          15
+        ],
+        [
+          77,
+          15
+        ],
+        [
+          78,
+          15
+        ],
+        [
+          79,
+          15
+        ]
+      ],
+      "loop": true,
+      "start": 0
+    },
+    "5": {
+      "name": "confusion",
+      "sequence": 6,
+      "anchor": "head",
+      "frames": [
+        [
+          28,
+          7
+        ],
+        [
+          29,
+          7
+        ],
+        [
+          30,
+          7
+        ],
+        [
+          31,
+          7
+        ],
+        [
+          32,
+          7
+        ],
+        [
+          33,
+          7
+        ],
+        [
+          34,
+          7
+        ]
+      ],
+      "loop": true,
+      "start": 0
+    },
+    "7": {
+      "name": "poison",
+      "sequence": 23,
+      "anchor": "body",
+      "frames": [
+        [
+          64,
+          15
+        ],
+        [
+          65,
+          15
+        ],
+        [
+          66,
+          15
+        ],
+        [
+          67,
+          15
+        ]
+      ],
+      "loop": true,
+      "start": 0
+    },
+    "8": {
+      "name": "ice",
+      "sequence": 22,
+      "anchor": "body",
+      "frames": [
+        [
+          61,
+          15
+        ],
+        [
+          62,
+          15
+        ],
+        [
+          63,
+          15
+        ]
+      ],
+      "loop": true,
+      "start": 0
+    },
+    "9": {
+      "name": "sleep",
+      "sequence": 4,
+      "anchor": "head",
+      "frames": [
+        [
+          22,
+          10
+        ],
+        [
+          23,
+          10
+        ],
+        [
+          24,
+          10
+        ]
+      ],
+      "loop": true,
+      "start": 0
+    },
+    "10": {
+      "name": "paralysis",
+      "sequence": 2,
+      "anchor": "body",
+      "frames": [
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          10,
+          18
+        ],
+        [
+          11,
+          4
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          13,
+          18
+        ]
+      ],
+      "loop": true,
+      "start": 0
+    },
+    "13": {
+      "name": "curse",
+      "sequence": 26,
+      "anchor": "head",
+      "frames": [
+        [
+          74,
+          15
+        ],
+        [
+          75,
+          15
+        ]
+      ],
+      "loop": true,
+      "start": 0
+    }
+  },
+  "mappingBasis": "Original engine status IDs checked in overlay19; visual roles classified from source cells. Native status-to-effect dispatch is not fully traced. Source pixels, offsets, sequence order, tick durations and loop modes retained.",
+  "webPolicy": "Head/body anchor and size fitted to actual rendered Digimon bounds. Effect playback follows the existing battle art clock and delayed visual state; no additional status rules.",
+  "unconnected": [
+    2,
+    4,
+    6,
+    11,
+    12,
+    14
+  ]
+}
