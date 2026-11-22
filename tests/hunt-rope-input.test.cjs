@@ -7,7 +7,7 @@ function setup(){
  vm.runInContext(fs.readFileSync('web/core.js','utf8'),ctx);
  vm.runInContext('globalThis.C=ChampCore;globalThis.save=C.freshSave(0);save.clock=540;globalThis.huntKeys=new Set();',ctx);
  const src=fs.readFileSync('web/game.js','utf8');
- for(const [start,end] of [['  function huntMapPoint(','  function spawnWild('],['  function setTool(','  // 사냥 장비'],['  function crosses(','  // 로프를 감는다'],['  // 로프를 감는다','  // 미니맵:'],['  function huntPanPointer(','  /** 화면 오른쪽 아래'],['  function huntWheel(','  function drawHunt(']]){
+ for(const [start,end] of [['  function huntMapPoint(','  function spawnWild('],['  function setTool(','  // 사냥 장비'],['  function crosses(','  // 로프를 감는다'],['  // 로프를 감는다','  // 미니맵:'],['  function huntPanPointer(','  function huntMinimapBox('],['  function huntWheel(','  function drawHunt(']]){
   const a=src.indexOf(start),b=src.indexOf(end,a);assert.ok(a>0&&b>a,start);vm.runInContext(src.slice(a,b),ctx);
  }
  ctx.hunt={tool:'rope',cam:{x:200,y:300},size:{w:1024,h:1024},zoom:2,view:{x:0,y:0},trail:[],wilds:[],wires:[],baits:[],traps:[],fx:[],respawn:1000,notes:[],carried:0};

@@ -2011,7 +2011,7 @@
     const spawnPoints=C.huntSpawnPoints(terrain,{x0:AREA.x0+24,y0:AREA.y0+24,x1:AREA.x1-24,y1:AREA.y1-24});
     if(!spawnPoints.length)return toast('이 구역에 출현 가능한 바닥이 없습니다. 다시 선택해 주세요.');
     save = { ...save, bits: save.bits - field.fee };
-    hunt = { field,terrain,view:viewport,spawnPoints,health:window.createHpBars?.(), plug: C.pluginView(save), items: C.huntItems(save), wilds: [], wires: [], baits: [], traps: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0,
+    hunt = { field,terrain,view:viewport,spawnPoints,health:window.createHpBars?.(), pluginHud:window.createHuntPluginHud?.(), plug: C.pluginView(save), items: C.huntItems(save), wilds: [], wires: [], baits: [], traps: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0,
       size:{w:W,h:H}, zoom:HUNT_ZOOM.start, cam:{x:0,y:0}, pan:null };
     // 첫 화면은 출현 가능한 바닥 아무 곳을 가운데에 둔다
     const first=C.pickHuntSpawn(spawnPoints,Math.random)||{x:W/2,y:H/2};
@@ -2600,6 +2600,11 @@
     if (huntPanPointer(type, e)) return;
     if (canvas.getBoundingClientRect) hunt.lastScreen = type === 'up' ? null : screenPoint(e);
     const p = canvasPoint(e);
+    // 분석 대상만 바꾼다. 클릭/드래그의 로프·장비 조작은 아래 경로를 그대로 따른다.
+    if(type==='down'||type==='move'){
+      const pointed=[...hunt.wilds].sort((a,b)=>b.y-a.y).find(w=>!w.gone&&wildSpriteHit(w,p));
+      if(pointed)hunt.inspectWild=pointed;
+    }
     if (type === 'down') {
       const ko = [...hunt.wilds].sort((a,b)=>b.y-a.y).find((w) => !w.gone && w.ko && (wildSpriteHit(w,p) || Math.hypot(p.x - w.x, p.y - (w.y - 6)) < 18)); // 쓰러진 그림은 작아서 넉넉히 잡는다
       if (ko) return captureFainted(ko);
@@ -2669,25 +2674,18 @@
     return [a.has('stage') ? C.STAGE_LABEL[sp.stage] : '', a.has('family') ? sp.family : '', a.has('attr') ? sp.attr : '',
       a.has('hp') ? `최대HP ${C.typicalStats(w.id).hp}` : '', a.has('personality') ? w.personality : '', a.has('size') ? `${sp.size}G` : ''].filter(Boolean).join(' · ');
   }
+  // 원본 보조 화면은 한 개체의 분석 창이다. 웹은 포인터/당기는 개체를 우선 표시한다.
+  function huntAnalysisTarget(){
+    const cam=hunt.cam||{x:0,y:0},zoom=hunt.zoom||1;
+    const visible=w=>w&&!w.gone&&w.x>=cam.x&&w.x<=cam.x+960/zoom&&w.y>=cam.y&&w.y<=cam.y+560/zoom;
+    for(const w of [hunt.pull?.w,hunt.inspectWild])if(hunt.wilds.includes(w)&&visible(w))return w;
+    const x=cam.x+480/zoom,y=cam.y+280/zoom;
+    return hunt.wilds.filter(visible).sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y))[0]||null;
+  }
   function drawHuntMinimap() {
     const mm = huntMinimapBox();
     if (!mm) return;
-    ctx.save();
-    ctx.globalAlpha = 0.9;
-    ctx.fillStyle = '#0b1d2a';
-    ctx.fillRect(mm.x - 3, mm.y - 3, mm.w + 6, mm.h + 6);
-    if (hunt.map?.complete && hunt.map.naturalWidth) ctx.drawImage(hunt.map, 0, 0, hunt.size.w, hunt.size.h, mm.x, mm.y, mm.w, mm.h);
-    ctx.globalAlpha = 1;
-    for (const w of hunt.wilds) {
-      // 레이더 플러그인(제너레이터·서치·레이더)에 맞는 디지몬만 미니맵에 보인다. 로프에 감긴 디지몬은 늘 보인다
-      if (w.gone || !(w.bound > 0 || hunt.plug?.onRadar(C.getSpecies(w.id)))) continue;
-      ctx.fillStyle = w.bound > 0 ? '#ffd36a' : '#ff6a5a';
-      ctx.fillRect(mm.x + w.x * mm.k - 2, mm.y + w.y * mm.k - 2, 4, 4);
-    }
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(mm.x + hunt.cam.x * mm.k, mm.y + hunt.cam.y * mm.k, (960 / hunt.zoom) * mm.k, (560 / hunt.zoom) * mm.k);
-    ctx.restore();
+    hunt.pluginHud?.radar(ctx,hunt,mm,C.getSpecies);
   }
   // 사냥 화면 이동: '이동' 도구 왼쪽 끌기, 오른쪽·가운데 버튼 끌기, 미니맵 누르기. 처리했으면 true
   function huntPanPointer(type, e) {
@@ -2713,12 +2711,11 @@
     if (type === 'up') hunt.pan = null;
     return true;
   }
-  /** 화면 오른쪽 아래 미니맵의 위치와 배율. 원작은 사냥 플러그인(레이더 등)을 달아야 지도가 보이므로 지금은 끈다 */
-  const HUNT_MINIMAP = false;
+  /** 레이더류를 장착한 사냥에서만 지도 표시. 기존 엔진 장착/탐지 규칙을 사용한다. */
   function huntMinimapBox() {
-    if (!HUNT_MINIMAP || !hunt?.size) return null;
+    if (!hunt?.size || !C.equippedPlugins(save).some(p=>p.category===3)) return null;
     const k = 150 / Math.max(hunt.size.w, hunt.size.h);
-    return { x: 960 - hunt.size.w * k - 12, y: 560 - hunt.size.h * k - 12, w: hunt.size.w * k, h: hunt.size.h * k, k };
+    return { x: 960 - hunt.size.w * k - 24, y: 560 - hunt.size.h * k - 12, w: hunt.size.w * k, h: hunt.size.h * k, k };
   }
   function huntWheel(e) {
     if (!hunt?.cam) return;
@@ -2802,6 +2799,7 @@
       huntEquipmentArt.draw(ctx,b,dt);
     }
     const order = [...hunt.wilds].sort((a, b) => a.y - b.y);
+    const analysisTarget=huntAnalysisTarget();
     for (const w of order) {
       const rx = footprint(w.id, false, HUNT_SPRITE_SCALE);
       ctx.fillStyle = '#00000033';
@@ -2837,8 +2835,12 @@
       ctx.fillStyle = weak ? '#ffd0c0' : '#ffffff';
       // 종 이름과 정보는 애널라이저 플러그인이 있어야 보인다 (원작 설명: 디지몬의 종류와 ○○를 알 수 있다)
       ctx.fillText((hunt.plug?.species ? sp.name : '???') + (w.ko ? ' (기절 · 눌러서 포획)' : weak ? ` (${C.ropeFor(w.id)?.name ?? '포획 불가'} 필요)` : ''), w.x, w.y + 11);
-      const info = analyzeText(w, sp);
-      if (info) { ctx.font = '7px "Noto Sans KR",sans-serif'; ctx.fillStyle = '#d8eef5'; ctx.fillText(info, w.x, w.y + 26); }
+      const info = w===analysisTarget?analyzeText(w, sp):'';
+      if (info) {
+        ctx.font = '7px "Noto Sans KR",sans-serif'; ctx.fillStyle = '#d8eef5'; ctx.fillText(info, w.x, w.y + 26);
+        // 속성 애널라이저를 장착했을 때만 원본 Va/Vi/Da/Fr 표시를 덧붙인다.
+        if(hunt.plug?.analyze.has('attr'))hunt.pluginHud?.attribute(ctx,sp.attr,w.x-ctx.measureText(info).width/2-15,w.y+17,12);
+      }
       hunt.health?.draw(ctx,w,w.hp,w.max,w.x-27,w.y+14,54,8);
       if (w.stun > 0) {
         ctx.font = 'bold 10px "Noto Sans KR",sans-serif';
@@ -2899,7 +2901,8 @@
     ctx.fillText(`사냥 · ${hunt.field.id}`, 16, 32);
     ctx.fillStyle = '#e6f2f5';
     ctx.font = '13px "Noto Sans KR",sans-serif';
-    ctx.fillText(`${d.seasonName} ${d.day}일 ${pad(d.hour)}:${pad(d.minute - d.minute % 10)} (22:00 종료) · ${C.ropeOf(save.rope).name}${hunt.plug?.check.has('wire') ? ` · 와이어 ${save.wires}개` : ''}${hunt.plug?.memory ? ` · 카드 ${hunt.carried}/${save.memoryCard}G` : ''}`, 230, 31);
+    const memory=hunt.plug?.memory?hunt.pluginHud?.memory(ctx,hunt.carried,save.memoryCard):null;
+    ctx.fillText(`${d.seasonName} ${d.day}일 ${pad(d.hour)}:${pad(d.minute - d.minute % 10)} (22:00 종료) · ${C.ropeOf(save.rope).name}${hunt.plug?.check.has('wire') ? ` · 와이어 ${save.wires}개` : ''}`,230,31,memory?memory.x-240:710);
     const now = performance.now();
     hunt.notes = hunt.notes.filter((n) => n.until > now);
     ctx.textAlign = 'left';

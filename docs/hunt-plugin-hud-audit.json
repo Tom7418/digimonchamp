@@ -1,0 +1,148 @@
+{
+  "source": "ui/hunt/hunting/hunting_obj_sub + hunt_sub_scene + hunting_bg_sub",
+  "sha256": {
+    "hunting_obj_sub.ncer": "2f8ca40e281df52c3522c1d0c53d1aeffe79987c9c360157c8490d3b8e4aa019",
+    "hunting_obj_sub.ncgr": "e7e3f82be3ae30137f45c5c42488d68ad7a0621f1288f33423de2d76b58923b4",
+    "hunting_obj_sub.nclr": "41fb19d0c42faa6941163a89f525021d0c6aefea743a3373aba294324131bd22",
+    "hunting_obj_sub.nanr": "fb53b503f5773189a0cc1864a05e2aed0eee9d5544317e687882d7bf183e328d",
+    "hunt_sub_scene.nxr": "c89bf24e9fe6c054e161091e20e32f0716b3a8d1c106b69c46f787f525664524",
+    "hunting_bg_sub.ncgr": "c7e7013d856f89919b88f4df9a49c4048775b135a928cf8f81a0ed92698ada53",
+    "hunting_bg_sub.nclr": "3f8a2d2e1f7c36940f332d757bd3ea9f30ef61e3eec07fe24161e06758430a18",
+    "hunting_bg_sub.nscr": "642324203a40e78567eeae79e34c6834b9be639199c909432efe5b3f7fc07884"
+  },
+  "sceneNodes": {
+    "map_marker0": {
+      "resource": 0,
+      "sequence": 1,
+      "x": 260.0,
+      "y": 180.0,
+      "scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "map_inner_frame": {
+      "resource": 4294967295,
+      "sequence": 0,
+      "x": 15.0,
+      "y": 63.0,
+      "scale": [
+        2.049999952316284,
+        1.5499999523162842
+      ]
+    },
+    "align_node": {
+      "resource": 0,
+      "sequence": 12,
+      "x": 246.0,
+      "y": 122.0,
+      "scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "mc_cur0": {
+      "resource": 0,
+      "sequence": 3,
+      "x": 186.0,
+      "y": 165.0,
+      "scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "mc_div": {
+      "resource": 0,
+      "sequence": 10,
+      "x": 210.0,
+      "y": 165.0,
+      "scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "mc_max0": {
+      "resource": 0,
+      "sequence": 3,
+      "x": 217.0,
+      "y": 165.0,
+      "scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "mc_cur_g": {
+      "resource": 0,
+      "sequence": 2,
+      "x": 202.0,
+      "y": 171.0,
+      "scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "digimon_name": {
+      "resource": 4294967295,
+      "sequence": 2,
+      "x": 235.0,
+      "y": 115.0,
+      "scale": [
+        1.0,
+        1.0
+      ]
+    },
+    "gen_title": {
+      "resource": 4294967295,
+      "sequence": 0,
+      "x": 177.0,
+      "y": 27.0,
+      "scale": [
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "usedCells": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    20,
+    23,
+    24,
+    25,
+    26
+  ],
+  "markerSequence": {
+    "frames": [
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        2
+      ]
+    ],
+    "loop": false,
+    "start": 0
+  },
+  "radarFrameCrop": [
+    0,
+    46,
+    68,
+    62
+  ],
+  "mappingBasis": "Named NXR map_marker0/align_node/mc_* nodes identify marker/attribute/number/G/divider NANR roles. Va/Vi/Da/Fr cells identify attribute labels visually.",
+  "webPolicy": "Radar gated by existing equipped category3 plugins; existing onRadar/bound filtering retained. Source yellow/pink marker cells retain the web bound/detected distinction; nonloop NANR is not forced to blink. World map thumbnail and camera viewport use the web camera. Gold frame cropped from hunt-only background; corners retained with a 9-slice fit (source inset left3/top2/right9/bottom4). Analyzer gains native icon beside permitted Korean text for one visible target (pointer/rope, otherwise nearest screen center); this selection policy is web input mapping. Memory checker uses source number/G/divider cells in a web top-right strip. Native secondary-screen layout and native live selector code are not fully ported."
+}
