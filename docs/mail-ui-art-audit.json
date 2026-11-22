@@ -1,0 +1,116 @@
+{
+  "source": "ui/menu_main + ui/mailer_scene.nxr",
+  "sha256": {
+    "menu_main.ncer": "2e8c949882a61a9d212fb67265c17098452814506fee77f7ee4d1e9e6ac5ffd7",
+    "menu_main.ncbr": "93f2f5b1f760c1aea5173f1e6c45ac16556c12936aafcede493fb0e020d987d9",
+    "menu_main.nclr": "3d384d80b6c864ed66b49dff5e21916850acbe07a70a52d7caee2383fa813f51",
+    "menu_main.nanr": "0ed3255f0e8169f68aebbf87693ce99501361cf11517f62dc40de879be9abbb4",
+    "mailer_scene.nxr": "f8aacdae4615e48cce31d59bc138c638fcb6c1c0f7b5a207e0f1164253a2cd37"
+  },
+  "codeSha256": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
+  "sceneNodes": {
+    "window": {
+      "resource": 0,
+      "sequence": 35,
+      "x": 128.0,
+      "y": 153.0,
+      "scale": [
+        32.0,
+        1.0
+      ]
+    },
+    "text": {
+      "resource": 4294967295,
+      "sequence": 0,
+      "x": 0.0,
+      "y": 147.0,
+      "scale": [
+        16.0,
+        1.0
+      ]
+    },
+    "icon": {
+      "resource": 0,
+      "sequence": 39,
+      "x": 238.0,
+      "y": 126.0,
+      "scale": [
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "codeChecks": {
+    "0x0208bf08": "select sequence35 (open)",
+    "0x0208c124": "select sequence36 (close)"
+  },
+  "open": {
+    "frames": [
+      [
+        62,
+        2
+      ],
+      [
+        63,
+        2
+      ],
+      [
+        64,
+        2
+      ],
+      [
+        65,
+        2
+      ],
+      [
+        66,
+        2
+      ],
+      [
+        67,
+        2
+      ]
+    ],
+    "loop": false,
+    "start": 0
+  },
+  "close": {
+    "frames": [
+      [
+        68,
+        2
+      ],
+      [
+        69,
+        2
+      ],
+      [
+        65,
+        2
+      ],
+      [
+        64,
+        2
+      ],
+      [
+        63,
+        2
+      ],
+      [
+        70,
+        2
+      ]
+    ],
+    "loop": false,
+    "start": 0
+  },
+  "envelopeCell": 73,
+  "fixedSourceBox": [
+    -4,
+    -8,
+    8,
+    16
+  ],
+  "senderPortrait": "No portrait node in the verified three-node base mail scene (window/text/envelope). This does not prove no portrait exists in every event-specific screen.",
+  "webPolicy": "Source monochrome strip stretched to a responsive bottom message panel; source frame order/60Hz timing retained. Envelope is the native scene icon. Existing sender/body text retained. Long text scrolls; click/Enter/Space closes once after animation; early opening input only completes opening. Gift/read/offer callbacks remain in the existing mail queue and run after close completion."
+}

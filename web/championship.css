@@ -50,10 +50,18 @@ dialog h3{font-size:13px;margin:10px 0 2px;color:#ffd36a}
 .hunting #world{cursor:crosshair;touch-action:none}
 /* 안내 편지 (원작 'From: 안내' 창) */
 .canvas-wrap{position:relative}
-.mail{position:absolute;left:3%;top:4%;width:46%;z-index:5;background:#f3e6b8;border:3px solid #8a6a2c;border-radius:8px;padding:10px 14px;color:#3a2a10;box-shadow:0 4px 0 #00000055;cursor:pointer;font-size:14px;line-height:1.55}
-.mail-from{font-weight:700;border-bottom:2px solid #8a6a2c;margin-bottom:6px;padding-bottom:2px}
-.mail-text{white-space:pre-line}
-.mail-next{text-align:right;font-size:11px;color:#8a6a2c;margin-top:4px}
+.mail{position:absolute;left:3%;right:3%;bottom:3%;max-height:92%;box-sizing:border-box;z-index:5;padding:24px 22px 16px;color:#fff;cursor:pointer;font-size:14px;line-height:1.55;display:flex;flex-direction:column;isolation:isolate}
+.mail[hidden]{display:none}
+.canvas-wrap:has(>.mail:not([hidden])){overflow:hidden}
+.mail-art{position:absolute;inset:0;width:100%!important;height:100%!important;max-width:none;max-height:none;aspect-ratio:auto;image-rendering:pixelated;pointer-events:none;z-index:-1;filter:drop-shadow(0 3px 2px #0006)}
+.mail-content{display:flex;flex-direction:column;min-height:0}
+.mail-from{font-family:var(--game-display-font);font-weight:400;color:#ffe28a;display:flex;align-items:center;gap:9px;margin-bottom:7px;flex:none}
+.mail-envelope{width:32px;height:32px;image-rendering:pixelated;object-fit:contain;flex:none}
+.mail-text{white-space:pre-wrap;overflow:auto;min-height:0;overflow-wrap:anywhere;touch-action:pan-y;scrollbar-width:thin}
+.mail-next{text-align:right;font-size:11px;color:#e2e6ed;margin-top:7px;flex:none}
+.mail[data-mail-phase="opening"] .mail-content,.mail[data-mail-phase="closing"] .mail-content{visibility:hidden}
+.mail:focus-visible{outline:2px solid #ffe28a;outline-offset:-4px}
+@media(max-width:600px){.mail{left:2%;right:2%;padding:18px 14px 12px;font-size:13px;line-height:1.5}.mail-from{margin-bottom:4px}.mail-envelope{width:24px;height:24px}.mail-next{margin-top:4px;font-size:10px}}
 /* 아이템 칸 */
 .tray{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 4px;padding:8px;border:1px solid #33515f;border-radius:8px;background:#0f2533}
 .tray-item{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid #4d6f80;border-radius:6px;background:#173447;color:#eef6f8;cursor:grab;touch-action:none;user-select:none}

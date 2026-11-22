@@ -431,12 +431,21 @@
     if (!m) {
       mailOpen = false;
       box.hidden = true;
+      globalThis.ChampMailView?.hide(box);
       return;
     }
     mailOpen = true;
     box.hidden = false;
-    box.querySelector('.mail-from').textContent = `From: ${m.from}`;
+    (box.querySelector('#mail-sender')||box.querySelector('.mail-from')).textContent = `From: ${m.from}`;
     box.querySelector('.mail-text').textContent = m.text;
+    globalThis.ChampMailView?.open(box);
+  }
+  // 닫힘 연출이 끝난 뒤 기존 큐를 한 번만 진행한다. 선물/읽음 처리는 nextMail에 남긴다.
+  function advanceMail(){
+    if(!mailOpen)return;
+    if(globalThis.getSelection?.()?.toString())return;
+    if(globalThis.ChampMailView)globalThis.ChampMailView.advance($('#mail'),nextMail);
+    else nextMail();
   }
 
   // 랭크 업 사장 메일 등 예약된 원본 이벤트를 메일함에 띄운다
@@ -957,7 +966,10 @@
 
       if (e.key === 'Escape' && selectedItem) { e.preventDefault(); clearItemTool(); }
     });
-    $('#mail').onclick = nextMail;
+    $('#mail').onclick = () => advanceMail();
+    $('#mail').onkeydown = e => {
+      if((e.key==='Enter'||e.key===' ')&&!e.repeat){e.preventDefault();e.stopPropagation();advanceMail();}
+    };
   }
   // 먹는 동안의 예약은 화면에서만 유지한다. 저장 후 재접속하면 바닥 먹이는 남고 다시 접근한다.
   const feeding = new Map();
