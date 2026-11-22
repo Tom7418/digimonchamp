@@ -25,232 +25,318 @@
       "category": 2,
       "index": 0,
       "x": 192,
-      "y": 0
+      "y": 0,
+      "width": 16,
+      "height": 16
     },
     "hand2": {
       "cell": 13,
       "category": 2,
       "index": 1,
       "x": 208,
-      "y": 0
+      "y": 0,
+      "width": 16,
+      "height": 16
     },
     "rapid1": {
       "cell": 14,
       "category": 2,
       "index": 2,
       "x": 224,
-      "y": 0
+      "y": 0,
+      "width": 16,
+      "height": 16
     },
     "rapid2": {
       "cell": 15,
       "category": 2,
       "index": 3,
       "x": 240,
-      "y": 0
+      "y": 0,
+      "width": 16,
+      "height": 16
     },
     "sleep1": {
       "cell": 16,
       "category": 2,
       "index": 4,
       "x": 0,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 16
     },
     "sleep2": {
       "cell": 17,
       "category": 2,
       "index": 5,
       "x": 16,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 32
     },
     "stun1": {
       "cell": 18,
       "category": 2,
       "index": 6,
       "x": 32,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 16
     },
     "stun2": {
       "cell": 19,
       "category": 2,
       "index": 7,
       "x": 48,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 32
     },
     "shotgun1": {
       "cell": 20,
       "category": 2,
       "index": 8,
       "x": 64,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 16
     },
     "shotgun2": {
       "cell": 21,
       "category": 2,
       "index": 9,
       "x": 80,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 16
     },
     "stunshot1": {
       "cell": 22,
       "category": 2,
       "index": 10,
       "x": 96,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 16
     },
     "stunshot2": {
       "cell": 23,
       "category": 2,
       "index": 11,
       "x": 112,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 16
     },
     "wire2": {
       "cell": 25,
       "category": 3,
       "index": 1,
       "x": 144,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 16
     },
     "magnet1": {
       "cell": 26,
       "category": 3,
       "index": 2,
       "x": 160,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 16
     },
     "magnet2": {
       "cell": 27,
       "category": 3,
       "index": 3,
       "x": 176,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 16
     },
     "spark1": {
       "cell": 28,
       "category": 3,
       "index": 4,
       "x": 192,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 16
     },
     "spark2": {
       "cell": 29,
       "category": 3,
       "index": 5,
       "x": 208,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 16
     },
     "bait1": {
       "cell": 30,
       "category": 4,
       "index": 0,
       "x": 224,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 16
     },
     "bait2": {
       "cell": 31,
       "category": 4,
       "index": 1,
       "x": 240,
-      "y": 32
+      "y": 32,
+      "width": 16,
+      "height": 16
     },
     "bait3": {
       "cell": 32,
       "category": 4,
       "index": 2,
       "x": 0,
-      "y": 64
+      "y": 64,
+      "width": 16,
+      "height": 16
     },
     "bait4": {
       "cell": 33,
       "category": 4,
       "index": 3,
       "x": 16,
-      "y": 64
+      "y": 64,
+      "width": 16,
+      "height": 16
     },
     "toy1": {
       "cell": 34,
       "category": 5,
       "index": 0,
       "x": 32,
-      "y": 64
+      "y": 64,
+      "width": 16,
+      "height": 16
     },
     "toy2": {
       "cell": 35,
       "category": 5,
       "index": 1,
       "x": 48,
-      "y": 64
+      "y": 64,
+      "width": 16,
+      "height": 16
     },
     "light1": {
       "cell": 36,
       "category": 6,
       "index": 0,
       "x": 64,
-      "y": 64
+      "y": 64,
+      "width": 16,
+      "height": 16
     },
     "light2": {
       "cell": 37,
       "category": 6,
       "index": 1,
       "x": 80,
-      "y": 64
+      "y": 64,
+      "width": 16,
+      "height": 16
     },
     "bomb1": {
       "cell": 38,
       "category": 7,
       "index": 0,
       "x": 96,
-      "y": 64
+      "y": 64,
+      "width": 16,
+      "height": 16
     },
     "bomb2": {
       "cell": 39,
       "category": 7,
       "index": 1,
       "x": 112,
-      "y": 64
+      "y": 64,
+      "width": 16,
+      "height": 16
     },
     "bomb3": {
       "cell": 40,
       "category": 7,
       "index": 2,
       "x": 128,
-      "y": 64
+      "y": 64,
+      "width": 16,
+      "height": 16
     },
     "bomb4": {
       "cell": 41,
       "category": 7,
       "index": 3,
       "x": 144,
-      "y": 64
+      "y": 64,
+      "width": 16,
+      "height": 16
     },
     "mine1": {
       "cell": 42,
       "category": 8,
       "index": 0,
       "x": 160,
-      "y": 64
+      "y": 64,
+      "width": 16,
+      "height": 16
     },
     "mine2": {
       "cell": 43,
       "category": 8,
       "index": 1,
       "x": 176,
-      "y": 64
+      "y": 64,
+      "width": 16,
+      "height": 16
     },
     "trap1": {
       "cell": 44,
       "category": 9,
       "index": 0,
       "x": 192,
-      "y": 64
+      "y": 64,
+      "width": 16,
+      "height": 16
     },
     "trap2": {
       "cell": 45,
       "category": 9,
       "index": 1,
       "x": 208,
-      "y": 64
+      "y": 64,
+      "width": 16,
+      "height": 16
     }
   },
+  "shutter": {
+    "cells": [
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "sourceTicks": [
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    "frameWidth": 24,
+    "frameHeight": 16,
+    "durationMs": 500
+  },
+  "shutterPolicy": "Visible source cells2-6 in their original order. Cell1 is excluded. Display duration500ms is web presentation policy for readability, not original playback speed.",
   "policy": "Original item table category/index selects NANR category-1 and frame index. Original pixels and aspect ratios retained. Responsive five-slot rack, grouping, badges and focus styles are web layout policy."
 }

@@ -47,9 +47,30 @@ test('실제 장비 선택/소진 갱신은 다른 아이템을 자동 선택하
  const nodes={'#gear-select':{value:'',innerHTML:''}},noop=()=>{},c=vm.createContext({window:{},esc,$:id=>nodes[id]??={classList:{toggle:noop}},setHtml:(id,html)=>(nodes[id]??={}).html=html});
  for(const file of ['web/core.js','web/assets/hunt/item-ui.js','web/hunt-item-view.js'])vm.runInContext(fs.readFileSync(file,'utf8'),c);
  vm.runInContext(`globalThis.C=ChampCore;globalThis.GEAR=[...C.SHOTS,...C.BAITS,...C.GEARS];globalThis.save={gear:{hand1:1,bomb1:2,wire2:3,light1:4}};globalThis.hunt={items:['bomb1','hand1','wire2'],tool:'rope',plug:{check:new Set()},drawing:true,trail:[1,2],pull:{},pan:{},lastScreen:{}};globalThis.checkKind=x=>C.shotOf(x.id)?'shot':x.kind==='wire'?'wire':'damage';`,c);
+ c.window.renderHuntItemHud=(node,html)=>node.html=html;
  const src=fs.readFileSync('web/game.js','utf8');vm.runInContext(src.slice(src.indexOf('  function setTool('),src.indexOf('  // 사냥 장비(샷')),c);
  vm.runInContext(src.slice(src.indexOf('  function refreshGear()'),src.indexOf('  // 장비 사용:')),c);
  c.refreshGear();assert.equal(nodes['#gear-select'].value,'bomb1');assert.equal(c.selectHuntGear('hand1'),true);assert.equal(c.hunt.tool,'gear');assert.equal(c.hunt.drawing,false);assert.equal(c.hunt.trail.length,0);
  c.save.gear.hand1=0;c.refreshGear();assert.equal(nodes['#gear-select'].value,'hand1');assert.equal(c.save.gear.bomb1,2);assert.equal(c.selectHuntGear('light1'),false);assert.equal(c.selectHuntGear('hand1'),false);
  c.setTool('rope');assert.doesNotMatch(nodes['#hunt-item-hud'].html,/aria-pressed="true"/);
+});
+
+
+test('첨부 원본 셔터의 2~6 셀과 원래 아이콘 비율을 보존한다',()=>{
+ const {art}=setup();assert.deepEqual(Array.from(art.shutter.cells),[2,3,4,5,6]);assert.deepEqual(Array.from(art.shutter.sourceTicks),[2,2,2,2,2]);assert.equal(art.shutter.durationMs,500);
+ const png=fs.readFileSync('web/assets/hunt/item-shutter.png');assert.equal(png.readUInt32BE(16),120);assert.equal(png.readUInt32BE(20),16);assert.equal(art.icons.sleep2.height,32);assert.equal(art.icons.hand1.height,16);
+});
+test('소진 셔터는 한 번만 시작하고 닫히는 동안 아이콘을 유지한 뒤 제거한다',async()=>{
+ const {art}=setup(),c=vm.createContext({window:{HUNT_ITEM_UI:art}});vm.runInContext(fs.readFileSync('web/hunt-item-view.js','utf8'),c);
+ let finish,removed=0,calls=0,frames,options;const animation={finished:new Promise(resolve=>finish=resolve)};
+ const shutter={hidden:true,animate:(f,o)=>{calls++;frames=f;options=o;return animation;}},icon={dataset:{},querySelector:s=>s==='.hunt-shutter'?shutter:{remove:()=>removed++}};
+ c.window.playHuntShutter(icon);c.window.playHuntShutter(icon);
+ assert.equal(calls,1);assert.equal(shutter.hidden,false);assert.equal(icon.dataset.closed,'true');assert.equal(removed,0);assert.equal(options.duration,500);assert.equal(frames[0].backgroundPosition,'-0px 0px');assert.equal(frames.at(-1).backgroundPosition,'-192px 0px');
+ finish();await Promise.resolve();assert.equal(removed,1);
+});
+test('모션 감소 설정에서는 즉시 닫으며 사냥 종료는 진행 중 셔터를 정리한다',()=>{
+ const {art}=setup(),c=vm.createContext({window:{HUNT_ITEM_UI:art,matchMedia:()=>({matches:true})}});vm.runInContext(fs.readFileSync('web/hunt-item-view.js','utf8'),c);
+ let removed=0,animated=0,cancelled=0,cleared=0;const shutter={hidden:true,animate:()=>animated++},icon={dataset:{},querySelector:s=>s==='.hunt-shutter'?shutter:{remove:()=>removed++}};
+ c.window.playHuntShutter(icon);assert.equal(animated,0);assert.equal(removed,1);assert.equal(shutter.hidden,false);
+ c.window.resetHuntItemHud({getAnimations:()=>[{cancel:()=>cancelled++}],replaceChildren:()=>cleared++});assert.equal(cancelled,1);assert.equal(cleared,1);
 });

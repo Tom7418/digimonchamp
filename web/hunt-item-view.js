@@ -31,10 +31,47 @@
    const kind=a?.category===2?'shot':a?.category===3?'wire':[7,8].includes(a?.category)?'damage':'entrap';
    const checked=!!hunt.plug?.check.has(kind),available=!!x&&count>0;
    const description=x?`${x.name}${available?(checked?` · ${count}개`:''):' · 소진'}`:'빈 칸';
-   const icon=available&&a?`<span class="hunt-item-icon" aria-hidden="true" style="background-position:-${a.x*2}px -${a.y*2}px"></span>`:'';
-   return `<button type="button" class="hunt-hud-slot${active?' active':''}" data-hunt-gear="${esc(id||'')}" aria-pressed="${active}" aria-keyshortcuts="${i+1}" aria-label="${i+1}번 ${esc(description)}" title="${i+1} · ${esc(description)}"${available?'':' disabled'}><kbd>${i+1}</kbd><span class="hunt-hud-icon">${icon}</span><span class="hunt-hud-name">${x?esc(x.name):'빈 칸'}</span>${x&&!available?'<small>소진</small>':available&&checked?`<small>×${count}</small>`:''}</button>`;
+   const icon=available&&a?`<span class="hunt-item-icon${a.height>16?' tall':''}" aria-hidden="true" style="background-position:-${a.x*2}px -${a.y*2}px"></span>`:'';
+   return `<button type="button" class="hunt-hud-slot${active?' active':''}" data-hunt-gear="${esc(id||'')}" aria-pressed="${active}" aria-keyshortcuts="${i+1}" aria-label="${i+1}번 ${esc(description)}" title="${i+1} · ${esc(description)}"${available?'':' disabled'}><kbd>${i+1}</kbd><span class="hunt-hud-icon" data-closed="${!!x&&!available}"><span class="hunt-hud-window">${icon}<span class="hunt-shutter" aria-hidden="true"${x&&!available?'':' hidden'}></span></span></span><span class="hunt-hud-name">${x?esc(x.name):'빈 칸'}</span>${x&&!available?'<small>소진</small>':available&&checked?`<small>×${count}</small>`:''}</button>`;
   }).join('');
   const x=all.find(x=>x.id===selected),using=hunt.tool==='gear'&&x;
   return `<div class="hunt-hud-rack" role="group" aria-label="사냥 장비 5칸">${buttons}</div><p class="hunt-hud-help">${using?`<b>${esc(x.name)}</b> · ${C.gearCount(save,x.id)<=0?'모두 사용했습니다. 다른 칸을 선택하세요.':x.kind==='wire'?'지도를 끌어 와이어를 설치하세요.':'지도에서 사용할 곳을 누르세요.'}`:'아이콘 또는 숫자키 1~5로 장비 선택'}</p>`;
+ };
+
+ const hudCache=new WeakMap(),closing=new WeakMap();
+ root.playHuntShutter=function(icon){
+  if(closing.has(icon))return;
+  const shutter=icon.querySelector('.hunt-shutter'),item=icon.querySelector('.hunt-item-icon');
+  icon.dataset.closed='true';shutter.hidden=false;
+  if(!shutter.animate||root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){item?.remove();return;}
+  const {cells,frameWidth,durationMs}=root.HUNT_ITEM_UI.shutter,n=cells.length;
+  const keyframes=cells.map((_,i)=>({offset:i/n,backgroundPosition:`-${i*frameWidth*2}px 0px`}));
+  keyframes.push({offset:1,backgroundPosition:`-${(n-1)*frameWidth*2}px 0px`});
+  const animation=shutter.animate(keyframes,{duration:durationMs,easing:'steps(1, end)'});
+  closing.set(icon,animation);
+  animation.finished.then(()=>{item?.remove();closing.delete(icon);},()=>closing.delete(icon));
+ };
+ root.renderHuntItemHud=function(target,html){
+  if(hudCache.get(target)===html)return;
+  const previous=new Map([...target.querySelectorAll('[data-hunt-gear]')].map(b=>[b.dataset.huntGear,b]));
+  const focus=target.contains(document.activeElement)?document.activeElement.dataset.huntGear:null;
+  const staging=document.createElement('div'),toClose=[];staging.innerHTML=html;
+  for(const button of staging.querySelectorAll('[data-hunt-gear]')){
+   const old=previous.get(button.dataset.huntGear);
+   if(!button.dataset.huntGear||!old)continue;
+   const icon=old.querySelector('.hunt-hud-icon');
+   // 같은 칸의 노드를 옮겨 진행 중인 셔터를 유지한다. 선택/수량 갱신으로 처음부터 재생하지 않는다.
+   if(icon&&(old.disabled===button.disabled||!old.disabled&&button.disabled)){
+    button.querySelector('.hunt-hud-icon').replaceWith(icon);
+    if(!old.disabled&&button.disabled)toClose.push(icon);
+   }
+  }
+  target.replaceChildren(...staging.childNodes);hudCache.set(target,html);
+  for(const icon of toClose)root.playHuntShutter(icon);
+  if(focus)target.querySelector(`[data-hunt-gear="${focus}"]`)?.focus({preventScroll:true});
+ };
+ root.resetHuntItemHud=function(target){
+  for(const animation of target.getAnimations?.({subtree:true})||[])animation.cancel();
+  target.replaceChildren();hudCache.delete(target);
  };
 })(typeof window!=='undefined'?window:globalThis);

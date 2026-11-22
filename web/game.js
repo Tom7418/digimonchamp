@@ -1991,6 +1991,7 @@
     // 첫 화면은 출현 가능한 바닥 아무 곳을 가운데에 둔다
     const first=C.pickHuntSpawn(spawnPoints,Math.random)||{x:W/2,y:H/2};
     huntCenter(first.x,first.y);
+    window.resetHuntItemHud($('#hunt-item-hud'));
     hunt.map = huntMapImage(field);
     for (let i = 0; i < C.HUNT_WILD_COUNT; i++) {
       const w = spawnWild(field);
@@ -2005,6 +2006,7 @@
   }
   function endHunt(reason) {
     if (!hunt) return;
+    window.resetHuntItemHud($('#hunt-item-hud'));
     log(`${hunt.field.id} 사냥 종료${reason ? ` (${reason})` : ''}`);
     hunt = null;
     document.body.classList.remove('hunting');
@@ -2096,7 +2098,7 @@
     const html=equipped.map(x=>`<option value="${x.id}"${C.gearCount(save,x.id)>0?'':' disabled'}>${esc(x.name)}${hunt?.plug?.check.has(checkKind(x))?` ×${C.gearCount(save,x.id)}`:''}</option>`).join('')||'<option value="">가져온 아이템 없음</option>';
     if(sel.innerHTML!==html)sel.innerHTML=html;
     sel.value=equipped.some(x=>x.id===keep)?keep:(equipped.find(x=>C.gearCount(save,x.id)>0)?.id||'');
-    setHtml('#hunt-item-hud',window.huntItemHudHtml(C,save,hunt,sel.value,esc));
+    window.renderHuntItemHud($('#hunt-item-hud'),window.huntItemHudHtml(C,save,hunt,sel.value,esc));
   }
   function selectHuntGear(id) {
     if(!hunt||!hunt.items.includes(id)||C.gearCount(save,id)<=0)return false;

@@ -30,13 +30,28 @@ for v in icons.values():
  assert w<=16 and h<=32
  for row in range(h):
   dst=((y+(32-h)//2+row)*W+x)*4;rgba[dst:dst+w*4]=b[row*w*4:(row+1)*w*4]
- v.update(x=x,y=y)
+ v.update(x=x,y=y,width=w,height=h)
 write(out/'item-icons.png',W,H,rgba)
 art.OUT=out
 art.cells(source/'ui/hunt/setting/setting_obj_main',{0:'item-panel',11:'item-selected'})
 art.cells(source/'ui/hunt/setting/setting_obj_sub',{0:'item-empty'},gfx='.ncgr')
-(out/'item-ui.js').write_text('window.HUNT_ITEM_UI='+json.dumps({'icons':icons,'sheet':{'width':W,'height':H,'tileWidth':16,'tileHeight':32}},separators=(',',':'))+';\n',encoding='utf8')
+# 첨부 화면과 같은 양옆 셔터의 보이는 닫힘 단계만 원본 좌표로 추출한다.
+# NANR1 첫 셀1(8×8 별도 표시)은 제외하며 셀2~6의 원점/크기를 유지한다.
+shutter_base=source/'ui/hunt/setting/setting_obj_sub'
+closing=decode(shutter_base.with_suffix('.nanr'),11)[1]['frames'][1:]
+assert closing==[[2,2],[3,2],[4,2],[5,2],[6,2]]
+frames=[];art.png=lambda p,w,h,b:frames.append((w,h,b))
+try:art.cells(shutter_base,{cell:str(cell) for cell,ticks in closing},gfx='.ncgr',box=(-12,-8,24,16))
+finally:art.png=write
+strip=bytearray(120*16*4)
+for i,(w,h,b) in enumerate(frames):
+ for row in range(h):
+  dst=(row*120+i*24)*4;strip[dst:dst+24*4]=b[row*24*4:(row+1)*24*4]
+write(out/'item-shutter.png',120,16,strip)
+shutter={'cells':[cell for cell,ticks in closing],'sourceTicks':[ticks for cell,ticks in closing],'frameWidth':24,'frameHeight':16,'durationMs':500}
+
+(out/'item-ui.js').write_text('window.HUNT_ITEM_UI='+json.dumps({'icons':icons,'sheet':{'width':W,'height':H,'tileWidth':16,'tileHeight':32},'shutter':shutter},separators=(',',':'))+';\n',encoding='utf8')
 # 변환 자산의 대응과 해시만 기록하며 원본 파일은 포함하지 않는다.
-audit={'sources':{str(b.relative_to(source)): {ext:hashlib.sha256(b.with_suffix(ext).read_bytes()).hexdigest() for ext in ['.ncer','.nclr','.nanr',('.ncgr' if b.with_suffix('.ncgr').exists() else '.ncbr')]} for b in [base,source/'ui/hunt/setting/setting_obj_main',source/'ui/hunt/setting/setting_obj_sub']},'icons':icons,'policy':'Original item table category/index selects NANR category-1 and frame index. Original pixels and aspect ratios retained. Responsive five-slot rack, grouping, badges and focus styles are web layout policy.'}
+audit={'sources':{str(b.relative_to(source)): {ext:hashlib.sha256(b.with_suffix(ext).read_bytes()).hexdigest() for ext in ['.ncer','.nclr','.nanr',('.ncgr' if b.with_suffix('.ncgr').exists() else '.ncbr')]} for b in [base,source/'ui/hunt/setting/setting_obj_main',source/'ui/hunt/setting/setting_obj_sub']},'icons':icons,'shutter':shutter,'shutterPolicy':'Visible source cells2-6 in their original order. Cell1 is excluded. Display duration500ms is web presentation policy for readability, not original playback speed.','policy':'Original item table category/index selects NANR category-1 and frame index. Original pixels and aspect ratios retained. Responsive five-slot rack, grouping, badges and focus styles are web layout policy.'}
 (R/'docs/hunt-item-ui-audit.json').write_text(json.dumps(audit,indent=2)+'\n',encoding='utf8')
-print('33 original item icons and three panel/slot images extracted')
+print('33 original item icons, panel/slot art and five shutter stages extracted')

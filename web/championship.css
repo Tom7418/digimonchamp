@@ -366,7 +366,7 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .hunt-item-rack{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 .hunt-item-card,.hunt-item-empty{box-sizing:border-box;min-width:0;border:1px solid #587a72;border-radius:5px;background:#173e35;color:#eef6df}
 .hunt-item-card{display:flex;align-items:center;gap:8px;position:relative;padding:8px;text-align:left}
-.hunt-item-card.active{border-color:#ffdb69;background:#315143}
+.hunt-item-card.active{border-color:#ffdb69;background:#173e35}
 .hunt-item-card:disabled{opacity:.45;cursor:not-allowed}
 .hunt-item-card:focus-visible{outline:2px solid #fff0ac;outline-offset:3px}
 .hunt-item-card em{font:11px 'Malgun Gothic',sans-serif;font-style:normal;color:#ffd976;margin-left:auto;white-space:nowrap}
@@ -374,7 +374,7 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .hunt-item-copy b{font-size:13px;line-height:1.5;overflow-wrap:anywhere}
 .hunt-item-copy small{font:12px 'Malgun Gothic',sans-serif;color:#bfd4bf}
 .hunt-item-art{width:48px;height:64px;display:flex;align-items:center;justify-content:center;flex:none;background:url('assets/hunt/item-empty.png') center/48px 32px no-repeat;image-rendering:pixelated}
-.active .hunt-item-art{background-image:url('assets/hunt/item-selected.png');background-size:48px 36px}
+
 .hunt-item-icon{display:block;width:32px;height:64px;flex:none;background:url('assets/hunt/item-icons.png') no-repeat;background-size:512px 192px;image-rendering:pixelated}
 .hunt-item-slot{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;padding:8px 4px;text-align:center;gap:3px}
 .hunt-item-slot .hunt-item-copy{gap:2px;width:100%;align-items:center}
@@ -395,12 +395,12 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .hunting .hunt-item-hud{display:flex;align-items:center;gap:12px;flex:none;padding:6px 10px;background:#12362f;border-top:2px solid #eeb33d}
 .hunt-hud-rack{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;flex:1;max-width:540px}
 .hunt-hud-slot{position:relative;min-width:0;display:grid;grid-template-columns:36px minmax(0,1fr);align-items:center;gap:2px;padding:3px 5px;border:1px solid #6c8e7c;border-radius:4px;background:#193d34;color:#e8f6df;text-align:left}
-.hunt-hud-slot.active{border-color:#ffdd65;background:#416047;box-shadow:inset 0 0 0 1px #ffdd65}
+.hunt-hud-slot.active{border-color:#ffdd65;background:#193d34;box-shadow:inset 0 0 0 1px #ffdd65}
 .hunt-hud-slot:disabled{opacity:.5;cursor:not-allowed}
 .hunt-hud-slot:focus-visible{outline:2px solid #fff0ac;outline-offset:2px}
 .hunt-hud-slot kbd{position:absolute;left:3px;top:2px;font:10px 'Malgun Gothic',sans-serif;color:#efda98;z-index:1}
-.hunt-hud-icon{grid-row:span 2;display:flex;align-items:center;justify-content:center;width:36px;height:64px;background:url('assets/hunt/item-empty.png') center/36px 24px no-repeat;image-rendering:pixelated}
-.hunt-hud-slot.active .hunt-hud-icon{background-image:url('assets/hunt/item-selected.png');background-size:40px 30px}
+.hunt-hud-icon{grid-row:span 2;display:flex;align-items:center;justify-content:center;width:36px;height:64px;image-rendering:pixelated}
+
 .hunt-hud-name{font-size:11px;line-height:1.35;overflow-wrap:anywhere;min-width:0;max-width:100%}
 .hunt-hud-slot small{font:11px 'Malgun Gothic',sans-serif;color:#e4e0b9}
 .hunt-hud-help{font-size:11px;line-height:1.5;color:#bdd5be;margin:0;max-width:180px;flex:0 1 180px}
@@ -408,3 +408,12 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .hunt-tools [hidden]{display:none!important}
 @media(max-width:999px){.hunting .hunt-item-hud{flex-direction:column;gap:4px}.hunt-hud-rack{width:100%;max-width:540px}.hunt-hud-help{max-width:none;flex:auto}}
 @media(max-width:600px){.hunt-hud-slot{grid-template-columns:1fr;justify-items:center;padding:3px 1px;text-align:center}.hunt-hud-icon{grid-row:auto;height:48px;overflow:hidden}.hunt-hud-slot .hunt-item-icon{transform:scale(.75)}.hunt-hud-name{font-size:9px}.hunt-hud-slot small{font-size:10px}.hunting .hunt-item-hud{padding:5px;gap:4px}.hunt-hud-rack{gap:4px}.hunt-tools{flex-wrap:wrap;margin:0;gap:4px}.hunt-tools button{font-size:11px;padding:5px 7px}}
+
+/* 아이콘 바탕은 선택 여부와 관계없이 같게 유지하고 바깥 테두리로만 선택을 표시한다. */
+.hunt-hud-window{position:relative;display:block;width:48px;height:32px;flex:none;overflow:hidden;background:url('assets/hunt/item-empty.png') center/48px 32px no-repeat;image-rendering:pixelated}
+.hunt-hud-window .hunt-item-icon{position:absolute;left:8px;top:-16px;transform:none}
+.hunt-hud-window .hunt-item-icon.tall{transform:scale(.5)}
+.hunt-shutter{position:absolute;inset:0;background:url('assets/hunt/item-shutter.png') -192px 0/240px 32px no-repeat;image-rendering:pixelated;pointer-events:none}
+.hunt-shutter[hidden]{display:none}
+.hunt-hud-slot:disabled{opacity:.75}
+@media(max-width:600px){.hunt-hud-icon{overflow:visible}.hunt-hud-window{transform:scale(.75)}.hunt-hud-slot .hunt-hud-window .hunt-item-icon{transform:none}.hunt-hud-slot .hunt-hud-window .hunt-item-icon.tall{transform:scale(.5)}}

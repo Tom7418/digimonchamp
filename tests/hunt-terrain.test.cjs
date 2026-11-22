@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 function setup(){
  const nodes={'#modal':{close(){}},'#gear-select':{value:'bait1'}},messages=[],noop=()=>{};
- const ctx=vm.createContext({window:{},hunt:null,AREA:{x0:40,y0:70,x1:920,y1:530},HUNT_ZOOM:{start:1.5,min:1,max:3},HUNT_SPRITE_SCALE:1,performance:{now:()=>0},document:{body:{classList:{add:noop,remove:noop}}},$:k=>nodes[k],
+ const ctx=vm.createContext({window:{resetHuntItemHud:noop},hunt:null,AREA:{x0:40,y0:70,x1:920,y1:530},HUNT_ZOOM:{start:1.5,min:1,max:3},HUNT_SPRITE_SCALE:1,performance:{now:()=>0},document:{body:{classList:{add:noop,remove:noop}}},$:k=>nodes[k],
   huntMapImage:()=>null,setTool:noop,log:noop,render:noop,persist:noop,toast:x=>messages.push(x),huntNote:x=>messages.push(x),refreshGear:noop,
   huntIsNight:()=>false,wireMode:()=>ctx.hunt.tool==='wire',wireGear:()=>null,canvasPoint:e=>({x:e.clientX,y:e.clientY}),canvas:{setPointerCapture:noop},BIND_SECONDS:4,PULL_DISTANCE:70,
   applyEffect:noop,blast:noop,wrapRope:noop,endHunt:noop,pullRope:noop,wildSpriteHit:()=>true});
