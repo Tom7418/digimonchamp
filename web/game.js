@@ -1988,6 +1988,8 @@
       id, x:spot.x-hunt.view.x, y:spot.y-hunt.view.y,
       vx: (side < 0.5 ? -1 : 1) * (15 + Math.random() * 20), vy: (Math.random() - 0.5) * 30,
       hp: C.wildHp(id), max: C.wildHp(id), personality: C.newDigimon(0, id, Math.random, true).personality, flee: 0, flash: 0, turn: 1 + Math.random() * 3,
+      // 원본 생성 함수: 배 = ⌊크기 ÷ 5⌋ × 4, 졸음 0
+      belly: C.wildBellyStart(id), sleepy: 0, hungerTick: C.WILD_HUNGER_TICK,
     };
   }
   function startHunt(field) {
@@ -2052,15 +2054,23 @@
   const huntIsNight = () => C.dateOf(save.clock).hour >= C.HUNT_NIGHT_HOUR;
   // 미끼·라이트·고기에 끌리는지 디지몬마다 판정한다 (원본 확률). 끌리지 않으면 미끼·라이트는 그 미끼를 무시하고,
   // 고기는 1초마다 다시 판정한다
+  const isMeatBait = (b) => !b.kind || b.kind === 'bait';
+  // 함정에서 디지몬을 풀어 준다 (함정을 옮기거나 포획했을 때)
+  function releaseTrap(t) {
+    const w = t.heldWild;
+    if (w && w.trapped === t) { w.trapped = null; w.stun = 0; w.stunKind = ''; }
+    t.heldWild = null; t.held = 0;
+  }
   function lureTakes(w, b, dt) {
     if (!b.uid) b.uid = hunt.lureSeq = (hunt.lureSeq || 0) + 1;
     const memo = (w.lureMemo ??= {});
     const m = memo[b.uid];
-    if (m === true) return true;
-    const isMeat = !b.kind || b.kind === 'bait';
+    // 고기는 배가 차면(종 크기 이상) 그만 먹고 떠난다
+    if (m === true) return !(isMeatBait(b) && (w.belly ?? 0) >= C.wildBellyMax(w.id));
+    const isMeat = isMeatBait(b);
     if (m === false && !isMeat) return false;
     if (typeof m === 'number' && (memo[b.uid] = m - dt) > 0) return false;
-    const ok = C.attracted(w.id, b.gearId || (b.big ? 'bait2' : 'bait1'));
+    const ok = C.attracted(w.id, b.gearId || (b.big ? 'bait2' : 'bait1'), Math.random, C.wildHungry(w.id, w.belly ?? 0));
     memo[b.uid] = ok ? true : isMeat ? 1 : false;
     return ok;
   }
@@ -2076,6 +2086,8 @@
     w.flee = 0;
     return true;
   }
+  // 먹기 동작(원본 동작 14번) 한 바퀴 초. 원본은 이 동작이 한 바퀴 돌 때마다 한 입 먹는다(0x2113BB8)
+  function eatLoopSeconds(w) { return (w.eatLoop ??= Math.max(0.2, animations.duration(SPRITE_BY_NAME[C.getSpecies(w.id).id], 'eat') || 1)); }
   // 야생 디지몬의 졸음 최대치(초, 원본 종 표 +38 ÷ 10)
   function wildSleepMax(w) { return (w.sleepMax ??= C.wildSleepMax(w.id)); }
   // 자는 동안 무언가에 맞으면 깬다. 졸음은 최대치의 70%까지 내려간다 (원본 0x21138C0 등)
@@ -2143,6 +2155,9 @@
     if (gear && gear.nightOnly && !huntIsNight()) return huntNote(`${gear.name}는 밤에만 쓸 수 있습니다.`);
     // 바닥에 놓는 장비는 차단된 칸에 설치하거나 재고를 소비하지 않는다. 샷/투척 폭탄의 범위 판정은 유지한다.
     if((bait||(gear&&gear.kind!=='bomb'))&&!huntGroundClear(p))return huntNote('이곳에는 장비를 놓을 수 없습니다.');
+    // 원본: 고기·마인은 동시에 10개까지
+    if ((bait || gear?.kind === 'bait') && hunt.baits.filter((b) => b.amount !== undefined).length >= C.MEAT_MAX) return huntNote('고기를 더 놓을 수 없습니다.');
+    if (gear?.kind === 'mine' && hunt.traps.filter((t) => t.g.kind === 'mine').length >= C.MINE_MAX) return huntNote('마인을 더 놓을 수 없습니다.');
     const now = performance.now() / 1000;
     if (shot && now < (hunt.shotReady || 0)) return;
     const next = C.useGear(save, id);
@@ -2150,7 +2165,8 @@
     save = next;
     refreshGear();
     if (bait) {
-      hunt.baits.push({ x: p.x, y: p.y, range: bait.range, left: bait.seconds, big: bait.id === 'bait2' });
+      // 원본: 고기는 다 먹힐 때까지 남는다(큰 고기 32, 일반 16)
+      hunt.baits.push({ x: p.x, y: p.y, range: bait.range, left: Infinity, big: bait.id === 'bait2', amount: bait.id === 'bait2' ? C.MEAT_AMOUNT.big : C.MEAT_AMOUNT.normal });
       return huntNote(`${bait.name}를 놓았다. 냄새에 디지몬이 모여든다.`);
     }
     if (gear) {
@@ -2159,13 +2175,21 @@
         hunt.traps.push({ x: p.x, y: p.y, g: gear, left: 1e9, held: 0, fuse: C.BOMB_FUSE });
         return huntNote(`${gear.name}을(를) 놓았다. 곧 터진다!`);
       }
-      if (gear.kind === 'mine' || gear.kind === 'trap') {
-        hunt.traps.push({ x: p.x, y: p.y, g: gear, left: gear.kind === 'trap' ? 60 : 1e9, held: 0 });
+      if (gear.kind === 'trap') {
+        // 원본: 함정은 종류마다 하나. 다시 쓰면 새 자리로 옮기고, 붙잡던 디지몬은 풀린다
+        const old = hunt.traps.find((t) => t.g.id === gear.id);
+        if (old) { releaseTrap(old); old.left = 0; }
+        hunt.traps.push({ x: p.x, y: p.y, g: gear, left: Infinity, held: 0 });
+        return huntNote(`${gear.name}을(를) ${old ? '옮겨 ' : ''}설치했다.`);
+      }
+      if (gear.kind === 'mine') {
+        hunt.traps.push({ x: p.x, y: p.y, g: gear, left: Infinity, held: 0 });
         return huntNote(`${gear.name}을(를) 설치했다.`);
       }
       // 특수 고기·미끼 장난감·라이트: 디지몬을 끌어들인다. 장난감은 스스로 걸어 다닌다
       const a = Math.random() * Math.PI * 2;
-      hunt.baits.push({ x: p.x, y: p.y, range: gear.range, left: gear.seconds, gearId:gear.id, kind: gear.kind, effect: gear.effect, name: gear.name,
+      hunt.baits.push({ x: p.x, y: p.y, range: gear.range, left: gear.kind === 'bait' ? Infinity : gear.seconds, gearId:gear.id, kind: gear.kind, effect: gear.effect, name: gear.name,
+        amount: gear.kind === 'bait' ? C.MEAT_AMOUNT.normal : undefined,
         vx: gear.speed ? Math.cos(a) * gear.speed : 0, vy: gear.speed ? Math.sin(a) * gear.speed * 0.6 : 0 });
       return huntNote(`${gear.name}을(를) 놓았다.`);
     }
@@ -2289,6 +2313,17 @@
         if (w.paraWait <= 0) { w.paraWait = 0; w.stun = Math.max(w.stun || 0, C.paralysisSeconds()); w.stunKind = '마비'; w.flee = 0; }
       }
       w.wireCd = Math.max(0, (w.wireCd || 0) - dt);
+      // 6초마다 배 −1, 독이 아니면 HP 최대치의 5% 회복 (원본 0x2110AFC)
+      if (!w.ko && (w.hungerTick = (w.hungerTick ?? C.WILD_HUNGER_TICK) - dt) <= 0) {
+        w.hungerTick += C.WILD_HUNGER_TICK;
+        w.belly = Math.max(0, (w.belly ?? 0) - 1);
+        if (!(w.poisonLeft > 0)) w.hp = Math.min(w.max, w.hp + (w.max * C.WILD_HP_REGEN_PERCENT) / 100);
+      }
+      if (w.trapped) {
+        // 함정에 걸린 디지몬은 포획하거나 함정을 옮길 때까지 빠져나가지 못한다 (원본)
+        if (hunt.traps.includes(w.trapped)) { w.stun = Math.max(w.stun || 0, 0.1); w.stunKind = '포획'; continue; }
+        w.trapped = null; w.stun = 0; w.stunKind = '';
+      }
       if (w.stuckWire) {
         // 마그넷 와이어: 그 와이어가 없어질 때까지 붙어 있다 (원본 상태 13)
         if (hunt.wires.includes(w.stuckWire)) continue;
@@ -2310,9 +2345,9 @@
         }
         continue;
       }
-      // 졸음: 깨어 있는 동안 1초에 1씩 오르고, 최대치에 닿으면 그 자리에서 잠든다 (원본 상태 1·2 → 4)
+      // 졸음: 깨어 있는 동안 1초에 1씩 오르고(배가 가득이면 2씩), 최대치에 닿으면 그 자리에서 잠든다 (원본 상태 1·2 → 4)
       if (!w.waking) {
-        w.sleepy = (w.sleepy || 0) + dt;
+        w.sleepy = (w.sleepy || 0) + dt * ((w.belly ?? 0) >= C.wildBellyMax(w.id) ? 2 : 1);
         if (w.sleepy >= wildSleepMax(w)) {
           w.stun = C.wildSleepSeconds(); w.stunKind = '수면'; w.flee = 0; w.vx = 0; w.vy = 0; w.scatter = null;
           continue;
@@ -2320,18 +2355,22 @@
       }
       const drowsy = !w.waking && w.sleepy >= wildSleepMax(w) * C.SLEEP_DROWSY_RATIO;
       // 마인은 밟으면 터지고, 함정은 밟은 디지몬을 붙잡는다
-      const trap = hunt.traps.find((t) => t.g.kind !== 'bomb' && Math.hypot(t.x - w.x, t.y - w.y) < (t.g.kind === 'mine' ? 26 : t.g.range)&&huntGroundLine(w,t));
+      // 원본: 마인·함정 그림 첫 셀 크기의 절반 상자 안에 들어오면 발동
+      const trap = hunt.traps.find((t) => t.g.kind !== 'bomb' && C.inBox(w.x - t.x, w.y - t.y, (t.g.kind === 'mine' ? C.MINE_BOX : C.TRAP_BOX)[t.g.id] || [16, 12]) && huntGroundLine(w,t));
       if (trap && trap.g.kind === 'mine') {
         trap.left = 0;
         blast(trap.x, trap.y, trap.g);
         continue;
       }
-      if (trap && trap.held < trap.g.holds) {
-        trap.held += 1;
+      if (trap && trap.heldWild && trap.heldWild !== w) {
+        // 다른 디지몬을 붙잡은 함정은 벽처럼 지나가지 못한다 (원본 0x2112510)
+        w.vx = -w.vx; w.vy = -w.vy; w.x -= Math.sign(w.x - trap.x || 1) * -2; w.turn = Math.min(w.turn, 0.3);
+      }
+      if (trap && trap.g.kind === 'trap' && !trap.heldWild) {
+        trap.held = 1; trap.heldWild = w; w.trapped = trap;
         // 포획 펼침은 원본1번. 웹판 포획 이벤트에 연결하며 판정/지속시간은 그대로 둔다.
         hunt.fx.push({x:trap.x,y:trap.y,g:trap.g,artSequence:1,left:huntEquipmentArt.duration(trap,1)||.5});
-        if (trap.held >= trap.g.holds) trap.left = Math.min(trap.left, trap.g.seconds);
-        w.stun = trap.g.seconds;
+        w.stun = 0.1;
         w.stunKind = '포획';
         w.flee = 0;
         huntNote(`${C.getSpecies(w.id).name}이(가) ${trap.g.name}에 걸렸다! 로프로 감으세요.`);
@@ -2370,13 +2409,23 @@
         w.vx = dist > 14 ? ((lure.x - w.x) / dist) * 45 : 0;
         w.vy = dist > 14 ? ((lure.y - w.y) / dist) * 45 : 0;
         w.turn = 1;
-        // 독·마비 고기는 다가와 먹은 디지몬에게 효과를 건다 (한 마리가 먹으면 사라진다)
-        if (dist <= 14 && lure.effect && huntGroundLine(w,lure)) {
-          // 독은 내성 등급에 따른 확률(원본), 마비는 등급 3만 버틴다(원본). 효과는 조금 뒤에 나타난다
-          const took = lure.effect === '독' ? applyEffect(w, '독') : C.itemResist(w.id, 'paralysis') < 3 && (w.paraWait = C.PARALYSIS_MEAT_DELAY);
-          lure.left = 0;
-          huntNote(`${C.getSpecies(w.id).name}이(가) ${lure.name}를 먹었다!${took ? '' : ` (${lure.effect}에 걸리지 않았다)`}`);
-        }
+        // 고기에 닿으면 먹는다: 먹기 동작이 한 바퀴 돌 때마다 세대별 한 입(원본). 독·마비 고기는 한 입마다 효과 판정
+        if (dist <= 14 && lure.amount !== undefined && huntGroundLine(w,lure)) {
+          w.eatTime = (w.eatTime || 0) + dt;
+          const loop = eatLoopSeconds(w);
+          if (w.eatTime >= loop) {
+            w.eatTime -= loop;
+            const bite = Math.min(lure.amount, C.meatBite(w.id));
+            lure.amount -= bite;
+            w.belly = (w.belly ?? 0) + bite;
+            if (lure.amount <= 0) lure.left = 0;
+            if (lure.effect === '독' && !(w.poisonWait > 0) && !(w.poisonLeft > 0) && applyEffect(w, '독')) huntNote(`${C.getSpecies(w.id).name}이(가) ${lure.name}를 먹었다! 독`);
+            if (lure.effect === '마비' && !(w.paraWait > 0) && w.stunKind !== '마비' && C.itemResist(w.id, 'paralysis') < 3) {
+              w.paraWait = C.PARALYSIS_MEAT_DELAY;
+              huntNote(`${C.getSpecies(w.id).name}이(가) ${lure.name}를 먹었다! 곧 마비된다`);
+            }
+          }
+        } else w.eatTime = 0;
       } else if (w.flee > 0) {
         w.flee -= dt;
       } else {
@@ -2434,6 +2483,8 @@
     }
     for (const t of hunt.traps) {
       t.left -= dt;
+      // 붙잡은 디지몬을 포획하면 함정도 거둔다 (원본 0x21155C0 → 0x212906C)
+      if (t.heldWild?.gone) { t.heldWild = null; t.left = 0; }
       if (t.fuse > 0 && (t.fuse -= dt) <= 0) { t.left = 0; blast(t.x, t.y, t.g); }
     }
     hunt.traps = hunt.traps.filter((t) => t.left > 0);

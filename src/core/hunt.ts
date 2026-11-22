@@ -359,7 +359,7 @@ export const GEARS: Gear[] = [
   { id: 'mine1', name: '일반 마인', kind: 'mine', power: 50, range: 96, price: 500, minRank: 4, pack: 3 },
   { id: 'mine2', name: '휴즈 마인', kind: 'mine', power: 70, range: 96, price: 900, minRank: 6, pack: 3 },
   { id: 'trap1', name: '디지 캐치', kind: 'trap', range: 30, seconds: 15, holds: 1, price: 600, minRank: 3, pack: 2 },
-  { id: 'trap2', name: '디지 프리즌', kind: 'trap', range: 60, seconds: 15, holds: 4, price: 1500, minRank: 6, pack: 2 },
+  { id: 'trap2', name: '디지 프리즌', kind: 'trap', range: 60, seconds: 15, holds: 1, price: 1500, minRank: 6, pack: 2 },
 ];
 export const gearOf = (id: string) => GEARS.find((g) => g.id === id);
 /** 원작 글의 길이 1이 사냥 지도에서 차지하는 px: 원본 와이어 표 +4의 최대 길이가 α 64px·β 128px(0x21270E4)라 24 → 64 */
@@ -470,6 +470,37 @@ export const wildSleepMax = (speciesId: string) => Math.floor((originalSpecies(s
 export const SLEEP_DROWSY_RATIO = 0.8;
 export const SLEEP_HIT_RATIO = 0.7;
 export const wildSleepSeconds = (rng: () => number = Math.random) => 10 + Math.floor(rng() * 20);
+
+/**
+ * 야생 디지몬의 배(포만감)와 고기 먹기 (원본 overlay9_0).
+ *  - 야생도 육성 디지몬과 같은 생성 함수(arm9 0x0206159C, 0x211DA64 등에서 호출)로 만든다: 배(+0x08) = ⌊종 크기 ÷ 5⌋ × 4, 졸음 0.
+ *  - 6초(360프레임)마다 배 −1(0 미만 없음), 같은 때에 독이 아니면 HP를 최대치의 5% 회복(0x2110AFC~0x2110B6C).
+ *  - 배가 종 크기의 절반(크기 >> 1) 이하일 때만 1초(61프레임)마다 고기에 끌릴지 판정한다(0x21129C8).
+ *  - 배가 종 크기 이상(가득)이면 졸음이 프레임마다 1 더 오른다(0x2112988) — 졸음이 두 배로 빨리 찬다.
+ *  - 고기 양: 큰 고기 32, 나머지 16(0x2116E7C). 먹기 동작(14번)이 한 바퀴 돌 때마다 세대별로
+ *    [알 0, 유년기I 1, 유년기II 1, 성장기 1, 성숙기 2, 완전체 3, 궁극체 4](0x212B7C4)씩 먹어 배에 더한다. 고기는 다 먹을 때까지 남는다(시간 제한 없음).
+ *    배가 종 크기에 닿으면 그만 먹는다(0x2113D0C). 독·마비 고기는 한 입마다 효과를 판정한다(0x2113C0C).
+ *  - 고기는 동시에 10개까지(0x2116B64).
+ */
+export const wildBellyStart = (speciesId: string) => Math.floor((originalSpecies(speciesId)?.size ?? 10) / 5) * 4;
+export const wildBellyMax = (speciesId: string) => originalSpecies(speciesId)?.size ?? 10;
+export const wildHungry = (speciesId: string, belly: number) => belly <= wildBellyMax(speciesId) >> 1;
+export const WILD_HUNGER_TICK = 6;
+export const WILD_HP_REGEN_PERCENT = 5;
+export const MEAT_AMOUNT = { normal: 16, big: 32 };
+const BITE_BY_STAGE = [0, 1, 1, 1, 2, 3, 4];
+export const meatBite = (speciesId: string) => BITE_BY_STAGE[originalSpecies(speciesId)?.stage ?? 1] ?? 1;
+export const MEAT_MAX = 10;
+/** 마인: 동시에 10개(0x2128614). 밟힘 = 마인 그림 첫 셀 크기의 절반 상자 안(0x2127DF8·0x21289C8): 일반 마인 ±16×±8, 휴즈 마인 ±16×±12 */
+export const MINE_MAX = 10;
+export const MINE_BOX: Record<string, [number, number]> = { mine1: [16, 8], mine2: [16, 12] };
+/**
+ * 함정: 종류마다 하나만 놓인다 — 다시 쓰면 그 함정을 새 자리로 옮기고 붙잡던 디지몬은 풀린다(0x2128E38, 0x212906C).
+ * 걸림 = 함정 그림 첫 셀 크기의 절반 상자 안(0x2128C6C·0x2128DA8): 디지 캐치 ±16×±12, 디지 프리즌 ±28×±16.
+ * 한 마리를 붙잡으면(+0x38) 포획하거나 함정을 옮길 때까지 놓지 않고(시간 제한 없음, 0x21155C0), 다른 디지몬은 그 상자를 벽처럼 지나가지 못한다(0x2112510).
+ */
+export const TRAP_BOX: Record<string, [number, number]> = { trap1: [16, 12], trap2: [28, 16] };
+export const inBox = (dx: number, dy: number, box: [number, number]) => Math.abs(dx) < box[0] && Math.abs(dy) < box[1];
 /** 마비(상태 17) 초: 20 + rand(10) (원본 0x21163B0 진입, 0x21161FC에서 매 프레임 줄여 0이면 풀림) */
 export const paralysisSeconds = (rng: () => number = Math.random) => 20 + Math.floor(rng() * 10);
 /** 스파크 와이어 감전(상태 14) 0.5초 뒤 마비로 넘어간다 (0x2115A68 30프레임, 0x2115864) */

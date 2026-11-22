@@ -20,7 +20,7 @@ import { seeded } from '../src/core/rng';
 import { DEX_ORDER, dexEntries, dexCount } from '../src/core/dex';
 import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent, rollMorningMail, rollBossMail, rivalBeaten, pickOfferCandidate, rollBattleOffer } from '../src/core/events';
 import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotCooldown, paralysisSeconds, wildSleepMax, wildSleepSeconds, itemDamage as itemDmg, WIRE_UNIT, BOMB_FUSE, useGear, gearCount, BAITS, GEARS, gearOf, itemResist, itemDamage, effectLands, magnetSticks, attracted, HUNT_ITEM_SLOTS, huntItems, toggleHuntItem } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotCooldown, paralysisSeconds, wildSleepMax, wildSleepSeconds, wildBellyStart, wildBellyMax, wildHungry, meatBite, MEAT_AMOUNT, MINE_BOX, TRAP_BOX, inBox, itemDamage as itemDmg, WIRE_UNIT, BOMB_FUSE, useGear, gearCount, BAITS, GEARS, gearOf, itemResist, itemDamage, effectLands, magnetSticks, attracted, HUNT_ITEM_SLOTS, huntItems, toggleHuntItem } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
 import { discardFloorFood, ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -853,6 +853,19 @@ describe('사냥 장비', () => {
     expect(wildSleepMax('즈루몬')).toBe(42);
     expect(wildSleepMax('아구몬')).toBe(102);
     expect(wildSleepSeconds(() => 0)).toBe(10);
+    // 야생 배: 생성 함수 ⌊크기÷5⌋×4, 크기 절반 이하면 배고픔. 한 입은 세대별 [0,1,1,1,2,3,4]
+    expect(wildBellyStart('즈루몬')).toBe(Math.floor(wildBellyMax('즈루몬') / 5) * 4);
+    expect(wildHungry('아구몬', wildBellyMax('아구몬') >> 1)).toBe(true);
+    expect(wildHungry('아구몬', (wildBellyMax('아구몬') >> 1) + 1)).toBe(false);
+    expect(meatBite('즈루몬')).toBe(1);
+    expect(meatBite('그레이몬')).toBe(2);
+    expect(meatBite('워그레이몬')).toBe(4);
+    expect(MEAT_AMOUNT).toEqual({ normal: 16, big: 32 });
+    // 마인·함정 상자: 원본 첫 셀 크기의 절반, 경계는 들어가지 않는다
+    expect(MINE_BOX.mine1).toEqual([16, 8]);
+    expect(TRAP_BOX.trap2).toEqual([28, 16]);
+    expect(inBox(15, 7, MINE_BOX.mine1)).toBe(true);
+    expect(inBox(16, 0, MINE_BOX.mine1)).toBe(false);
     expect(wildSleepSeconds(() => 0.99)).toBe(29);
     expect(paralysisSeconds(() => 0)).toBe(20);
     expect(paralysisSeconds(() => 0.99)).toBe(29);
