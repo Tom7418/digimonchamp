@@ -1927,17 +1927,16 @@
     );
     $('#modal-body').querySelectorAll('[data-field]').forEach((b) => (b.onclick = () => startHunt(fields[+b.dataset.field])));
     $('#modal-body').querySelectorAll('[data-plugin]').forEach((b) => (b.onclick = () => { save = C.togglePlugin(save, b.dataset.plugin); persist(); huntMenu(); }));
-    $('#modal-body').querySelectorAll('[data-hunt-item]').forEach((b) => (b.onclick = () => { save = C.toggleHuntItem(save, b.dataset.huntItem); persist(); huntMenu(); }));
+    $('#modal-body').querySelectorAll('[data-hunt-item]').forEach((b) => (b.onclick = () => {
+      const scroll=$('#modal').scrollTop,id=b.dataset.huntItem;
+      save=C.toggleHuntItem(save,id);persist();huntMenu();
+      $('#modal-body').querySelector(`[data-hunt-item="${id}"]`)?.focus({preventScroll:true});
+      $('#modal').scrollTop=scroll;
+    }));
   }
-  // 원작처럼 사냥에 가져갈 아이템 종류를 5칸에 장비한다 (원본 테이머 +0xA00 × 5, overlay9_12 0x2113584)
-  // 그림·배치는 임시 글자 버튼 (GPT 그림 메모 참고)
+  // 원본 아이콘을 사용한 준비 화면. 5칸/보유 수량 판정은 기존 엔진을 그대로 호출한다.
   function huntItemsHtml() {
-    const now = C.huntItems(save), owned = GEAR.filter((x) => C.gearCount(save, x.id) > 0 || now.includes(x.id));
-    const list = owned.map((x) => {
-      const on = now.includes(x.id);
-      return `<button type="button" data-hunt-item="${x.id}" class="${on ? 'active' : ''}" aria-pressed="${on}"${!on && now.length >= C.HUNT_ITEM_SLOTS ? ' disabled' : ''}>${on ? '✔ ' : ''}${esc(x.name)} ×${C.gearCount(save, x.id)}</button>`;
-    }).join('');
-    return `<section class="hunt-items"><h3>사냥 아이템 <span>${now.length}/${C.HUNT_ITEM_SLOTS}칸</span></h3><div class="load-list">${list || '<p class="hint">가진 사냥 아이템이 없습니다. 상점에서 살 수 있어요.</p>'}</div><p class="hint">장비한 아이템만 사냥터에서 쓸 수 있습니다. 로프와 기본 와이어는 칸과 상관없이 가져갑니다.</p></section>`;
+    return window.huntItemLoadoutHtml(C,save,esc);
   }
   // 원작처럼 사냥 전에 플러그인을 장비한다. 칸 수는 랭크에 따라 2·3·4칸 (원본 랭크 표 +20)
   function loadoutHtml() {
