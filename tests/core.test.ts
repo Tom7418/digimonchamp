@@ -20,7 +20,7 @@ import { seeded } from '../src/core/rng';
 import { DEX_ORDER, dexEntries, dexCount } from '../src/core/dex';
 import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent, rollMorningMail, rollBossMail, rivalBeaten, pickOfferCandidate, rollBattleOffer } from '../src/core/events';
 import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';
-import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotCooldown, paralysisSeconds, itemDamage as itemDmg, WIRE_UNIT, BOMB_FUSE, useGear, gearCount, BAITS, GEARS, gearOf, itemResist, itemDamage, effectLands, magnetSticks, attracted, HUNT_ITEM_SLOTS, huntItems, toggleHuntItem } from '../src/core/hunt';
+import { canHuntNow, huntFields, huntPool, pickWild, ropeDamage, ropeDrainSeconds, ropeHoldSeconds, ropeSnapDistance, ropeTick, wildRegen, faintWakeSeconds, ropeFor, ROPES, wildHp, SHOTS, shotOf, shotStun, shotCooldown, paralysisSeconds, wildSleepMax, wildSleepSeconds, itemDamage as itemDmg, WIRE_UNIT, BOMB_FUSE, useGear, gearCount, BAITS, GEARS, gearOf, itemResist, itemDamage, effectLands, magnetSticks, attracted, HUNT_ITEM_SLOTS, huntItems, toggleHuntItem } from '../src/core/hunt';
 import type { Digimon, SaveData, Stage } from '../src/core/types';
 import { discardFloorFood, ageFloorFood, SPOIL_MINUTES, biteFloorFood, availableFood, restoreFloorFood, feedFromTray, eatFloorFood, type FloorFood } from '../src/core/food';
 
@@ -849,6 +849,11 @@ describe('사냥 장비', () => {
     expect(effectLands(flash3.id, '눈가리기', () => 0)).toBe(false); // 등급 3 → 0%
     expect(magnetSticks('즈루몬')).toBe(true);
     expect(magnetSticks('문몬')).toBe(false); // 마그넷 등급 3
+    // 야생 졸음 최대치 = 종 표 +38 ÷ 10초 (즈루몬 420 → 42초, 아구몬 1020 → 102초), 잠은 10~29초
+    expect(wildSleepMax('즈루몬')).toBe(42);
+    expect(wildSleepMax('아구몬')).toBe(102);
+    expect(wildSleepSeconds(() => 0)).toBe(10);
+    expect(wildSleepSeconds(() => 0.99)).toBe(29);
     expect(paralysisSeconds(() => 0)).toBe(20);
     expect(paralysisSeconds(() => 0.99)).toBe(29);
     expect(itemDmg('즈루몬', 'bomb4', 10)).toBe(0); // 플래시 폭탄은 대미지 없음

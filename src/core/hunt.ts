@@ -456,8 +456,20 @@ export function attracted(speciesId: string, itemId: string, rng: () => number =
   return hungry && rollPercent(byLevel(ITEM_EFFECT.meatChance, itemResist(speciesId, 'meat')), rng);
 }
 
-/** 수면으로 멈추는 초 (임시: 원본 수면은 졸음 수치를 최대치(+0x51C)의 80%로 올려 잠들게 한다 — 0x2111DE4. 종별 졸음 최대치 미확인) */
-export const SLEEP_SECONDS = 12;
+/**
+ * 야생 디지몬의 졸음 (원본 overlay9_0).
+ *  - 졸음 최대치(+0x51C) = 종 표 +38(u16, 육성의 각성 범위 둘째 값) ÷ 10초 (0x210EFD8: ÷10 × 60프레임)
+ *  - 깨어 있는 동안(상태 1·2) 1초에 1씩 오른다(0x2113140·0x2113548). 최대치의 80% 이상이면 졸려서 천천히 걷고(0x2112A94),
+ *    최대치에 닿으면 잠든다(상태 4, 0x2112AE8).
+ *  - 잠은 10 + rand(20)초(0x2113AF0) 뒤 졸음 0으로 깬다(0x2113AD4). 자는 동안 샷·폭탄·와이어 등을 맞으면
+ *    졸음을 최대치의 70%로 낮추고 깬다(0x21138C0 등).
+ *  - 수면 샷·수면 폭탄은 졸음을 최대치의 80%로 맞춘다(0x2111DE4) — 바로 잠들지 않고 졸린 상태가 되어, 남은 20%가 차면 잔다.
+ *  처음 졸음 값은 원본 생성 함수(디지몬 칸 +0x0C = 0, arm9 0x02061A8x)를 따라 0으로 둔다.
+ */
+export const wildSleepMax = (speciesId: string) => Math.floor((originalSpecies(speciesId)?.awake?.[1] ?? 600) / 10);
+export const SLEEP_DROWSY_RATIO = 0.8;
+export const SLEEP_HIT_RATIO = 0.7;
+export const wildSleepSeconds = (rng: () => number = Math.random) => 10 + Math.floor(rng() * 20);
 /** 마비(상태 17) 초: 20 + rand(10) (원본 0x21163B0 진입, 0x21161FC에서 매 프레임 줄여 0이면 풀림) */
 export const paralysisSeconds = (rng: () => number = Math.random) => 20 + Math.floor(rng() * 10);
 /** 스파크 와이어 감전(상태 14) 0.5초 뒤 마비로 넘어간다 (0x2115A68 30프레임, 0x2115864) */

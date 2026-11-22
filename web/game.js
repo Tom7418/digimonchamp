@@ -2068,11 +2068,21 @@
   function applyEffect(w, effect) {
     if (!effect || !C.effectLands(w.id, effect)) return false;
     if (effect === '독') { w.poisonWait = C.POISON_DELAY; w.poisonLeft = 0; return true; }
-    w.stun = Math.max(w.stun || 0, effect === '눈가리기' ? C.flashSeconds() : effect === '마비' ? C.paralysisSeconds() : C.SLEEP_SECONDS);
+    // 수면: 바로 재우지 않고 졸음을 최대치의 80%로 맞춘다. 남은 20%가 차면 잠든다 (원본 0x2111DE4)
+    if (effect === '수면') { w.sleepy = wildSleepMax(w) * C.SLEEP_DROWSY_RATIO; return true; }
+    w.stun = Math.max(w.stun || 0, effect === '눈가리기' ? C.flashSeconds() : C.paralysisSeconds());
     w.scatter = null;
     w.stunKind = effect;
     w.flee = 0;
     return true;
+  }
+  // 야생 디지몬의 졸음 최대치(초, 원본 종 표 +38 ÷ 10)
+  function wildSleepMax(w) { return (w.sleepMax ??= C.wildSleepMax(w.id)); }
+  // 자는 동안 무언가에 맞으면 깬다. 졸음은 최대치의 70%까지 내려간다 (원본 0x21138C0 등)
+  function wakeFromSleep(w) {
+    if (w.stunKind !== '수면') return;
+    w.sleepy = Math.min(w.sleepy || 0, wildSleepMax(w) * C.SLEEP_HIT_RATIO);
+    w.stun = 0; w.stunKind = '';
   }
   // 아이템 대미지(HP 최대치의 %, 원본). 0이 되면 기절한다
   function itemHit(w, id) {
@@ -2093,6 +2103,7 @@
     }
     const hits = hunt.wilds.filter((w) => !w.gone && Math.hypot(x - w.x, y - (w.y - 15)) < g.range);
     for (const w of hits) {
+      wakeFromSleep(w);
       itemHit(w, g.id);
       if (w.ko) continue;
       applyEffect(w, g.effect);
@@ -2167,6 +2178,7 @@
     let landed = 0;
     for (const w of hits) {
       // 원본: 샷은 HP를 깎지 않고 멈추게만 한다. 멈춤은 쌓이며 15초까지. 효과 없는 샷은 풀린 뒤 근처로 달아난다
+      wakeFromSleep(w);
       w.stun = Math.min(C.SHOT_STOP_MAX, (w.stun > 0 && !w.stunKind ? w.stun : 0) + C.shotStun(shot, w.id));
       w.stunKind = '';
       w.flee = 0;
@@ -2285,7 +2297,10 @@
       if (w.stun > 0) {
         // 샷·폭탄·함정에 걸려 멈춘 동안은 움직이지 않는다
         w.stun -= dt;
-        if (w.stun <= 0 && w.spark) {
+        if (w.stun <= 0 && w.stunKind === '수면') {
+          // 잠은 10 + rand(20)초 뒤 졸음 0으로 깬다 (원본 0x2113AD4)
+          w.sleepy = 0; w.stunKind = '';
+        } else if (w.stun <= 0 && w.spark) {
           // 스파크 감전 0.5초 뒤 마비 (원본 상태 14 → 17)
           w.spark = false; w.stun = C.paralysisSeconds(); w.stunKind = '마비';
         } else if (w.stun <= 0 && w.scatter) {
@@ -2295,6 +2310,15 @@
         }
         continue;
       }
+      // 졸음: 깨어 있는 동안 1초에 1씩 오르고, 최대치에 닿으면 그 자리에서 잠든다 (원본 상태 1·2 → 4)
+      if (!w.waking) {
+        w.sleepy = (w.sleepy || 0) + dt;
+        if (w.sleepy >= wildSleepMax(w)) {
+          w.stun = C.wildSleepSeconds(); w.stunKind = '수면'; w.flee = 0; w.vx = 0; w.vy = 0; w.scatter = null;
+          continue;
+        }
+      }
+      const drowsy = !w.waking && w.sleepy >= wildSleepMax(w) * C.SLEEP_DROWSY_RATIO;
       // 마인은 밟으면 터지고, 함정은 밟은 디지몬을 붙잡는다
       const trap = hunt.traps.find((t) => t.g.kind !== 'bomb' && Math.hypot(t.x - w.x, t.y - w.y) < (t.g.kind === 'mine' ? 26 : t.g.range)&&huntGroundLine(w,t));
       if (trap && trap.g.kind === 'mine') {
@@ -2359,7 +2383,8 @@
         w.turn -= dt;
         if (w.turn <= 0) {
           w.turn = 1.5 + Math.random() * 3;
-          const a = Math.random() * Math.PI * 2, v = 15 + Math.random() * 25;
+          // 졸리면(졸음 80% 이상) 천천히 걷는다 (원본 0x2112A94, 속도는 웹판 졸린 걸음)
+          const a = Math.random() * Math.PI * 2, v = drowsy ? WAKE_DROWSY_SPEED : 15 + Math.random() * 25;
           w.vx = Math.cos(a) * v;
           w.vy = Math.sin(a) * v * 0.6;
         }
@@ -2373,6 +2398,7 @@
         w.vx = -w.vx;
         w.vy = -w.vy;
         if (wire.g && !w.wireCd) {
+          wakeFromSleep(w);
           // 마그넷은 달라붙고, 스파크는 전격 대미지
           // 원본: 마그넷은 내성 등급 1·2면 와이어가 없어질 때까지 달라붙고(3은 튕김),
           // 스파크는 HP 최대치의 %만큼 전격 후 0.5초 감전 → 마비
