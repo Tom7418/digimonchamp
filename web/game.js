@@ -2378,8 +2378,7 @@
       }
       if (trap && trap.g.kind === 'trap' && !trap.heldWild) {
         trap.held = 1; trap.heldWild = w; w.trapped = trap;
-        // 포획 펼침은 원본1번. 웹판 포획 이벤트에 연결하며 판정/지속시간은 그대로 둔다.
-        hunt.fx.push({x:trap.x,y:trap.y,g:trap.g,artSequence:1,left:huntEquipmentArt.duration(trap,1)||.5});
+        // 원본 여러 층의 포획 그림은 heldWild를 따라 시작하고 붙잡고 있는 동안 유지한다.
         w.stun = 0.1;
         w.stunKind = '포획';
         w.flee = 0;
@@ -2786,7 +2785,8 @@
     ctx.strokeRect(AREA.x0, AREA.y0, AREA.x1 - AREA.x0, AREA.y1 - AREA.y0);
     ctx.setLineDash([]);
     for (const t of hunt.traps) {
-      if(!hunt.fx.some(f=>f.artSequence===1&&f.x===t.x&&f.y===t.y))huntEquipmentArt.draw(ctx,t,dt);
+      if(t.g.kind==='trap')huntEquipmentArt.drawTrap(ctx,t,dt,'back');
+      else huntEquipmentArt.draw(ctx,t,dt);
     }
     for (const l of hunt.wires) {
       ctx.strokeStyle = !l.g ? '#d8dde0' : l.g.sticky ? '#e58bd8' : l.g.power ? '#ffe36a' : '#d8dde0';
@@ -2828,6 +2828,8 @@
       spriteFrames.set(w,{frame:motion.frame,speciesId:w.id,flip:motion.flip});
       body(ctx, w.id, false, w.x, w.y, HUNT_SPRITE_SCALE, motion.frame, motion.flip);
       ctx.globalAlpha = 1;
+      // 앞쪽 고리는 해당 디지몬 위, 이름·HP 안내 아래에 그려 갇힌 모습을 유지한다.
+      if(w.trapped&&hunt.traps.includes(w.trapped))huntEquipmentArt.drawTrap(ctx,w.trapped,0,'front');
       const sp = C.getSpecies(w.id);
       const weak = !C.ropeDamage(save, w.id);
       ctx.font = 'bold 8px "Noto Sans KR",sans-serif';

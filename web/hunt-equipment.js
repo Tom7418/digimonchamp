@@ -58,6 +58,22 @@
    // 원본 플래시 분기의 화면 밝기 변경을 사냥 화면에만 투영한다. 강도·완급은 웹판 표시 정책.
    return Math.max(0,Math.min(1,t/.08,(.45-t)/.25))*.55;
   }
+  // 원본 overlay0 0x02129124: 디지캐치2층(1/2), 프리즌4층(1/2/3/7).
+  // 캐치는 닫기2가 끝나면 앞쪽만4로 반복한다(0x021290ec). 3D 깊이는 앞뒤 그리기로 옮긴다.
+  function trapLayers(a,age){
+   if(!a.heldWild||a.heldWild.gone)return [{sequence:0,layer:'back',age:0}];
+   if(resource(a)==='digiprison')return [{sequence:1,layer:'back',age},{sequence:3,layer:'back',age},{sequence:7,layer:'front',age},{sequence:2,layer:'front',age}];
+   const closed=duration(a,2);
+   return [{sequence:1,layer:'back',age},{sequence:age<closed?2:4,layer:'front',age:age<closed?age:age-closed}];
+  }
+  const trapAges=new WeakMap();
+  function drawTrap(ctx,a,dt,layer='back'){
+   const held=a.heldWild&&!a.heldWild.gone?a.heldWild:null;
+   let state=trapAges.get(a);
+   if(!state||state.held!==held){state={held,age:0};trapAges.set(a,state);}
+   else if(layer==='back')state.age+=Math.max(0,dt);
+   for(const p of trapLayers(a,state.age))if(p.layer===layer)draw(ctx,a,0,p.sequence,p.age);
+  }
   function draw(ctx,a,dt,sequence=0,playbackAge){
    const key=resource(a),meta=data?.[key];if(!meta)return false;
    if(!images.has(key)){const im=new Image();im.src=`assets/hunt/${key}.png`;images.set(key,im);}
@@ -70,6 +86,6 @@
    ctx.drawImage(image,frame*meta.width,0,meta.width,meta.height,a.x+meta.left,a.y+meta.top,meta.width,meta.height);
    return true;
   }
-  return {draw,resource,duration,retirement,drawRetiring,retirementFrame,explosion,drawExplosion,flashAlpha};
+  return {draw,resource,duration,retirement,drawRetiring,retirementFrame,explosion,drawExplosion,flashAlpha,trapLayers,drawTrap};
  };
 })(typeof window!=='undefined'?window:globalThis);

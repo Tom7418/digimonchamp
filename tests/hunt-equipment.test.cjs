@@ -83,3 +83,28 @@ test('플래시 폭탄은 화염을 그리지 않고 별도 밝기 연출만 재
  assert.equal(e.particles.length,0);assert.equal(r.flashAlpha(e),0);r.drawExplosion(ctx,e,.08);assert.ok(r.flashAlpha(e)>0);assert.equal(draws.length,0);
  const paused=r.flashAlpha(e);r.drawExplosion(ctx,e,0);assert.equal(r.flashAlpha(e),paused);r.drawExplosion(ctx,e,1);assert.equal(r.flashAlpha(e),0);
 });
+
+
+test('디지캐치는 닫힘 뒤 앞쪽4번이 반복되고 뒤쪽 닫힌 그림을 유지한다',()=>{
+ const r=explosionSetup(),a={g:{id:'trap1',kind:'trap'},x:100,y:120,heldWild:{id:'아구몬'}},calls=[],ctx={drawImage:(...v)=>calls.push(v)};
+ r.drawTrap(ctx,a,0,'back');r.drawTrap(ctx,a,0,'front');assert.equal(calls.length,2);
+ const open=calls.map(v=>v[1]);calls.length=0;r.drawTrap(ctx,a,.55,'back');r.drawTrap(ctx,a,0,'front');const closed=calls.map(v=>v[1]);assert.notEqual(closed[0],open[0]);assert.notEqual(closed[1],open[1]);
+ assert.equal(r.trapLayers(a,.55)[1].sequence,4);
+ calls.length=0;r.drawTrap(ctx,a,.12,'back');r.drawTrap(ctx,a,0,'front');assert.equal(calls[0][1],closed[0]);assert.notEqual(calls[1][1],closed[1]);
+ const paused=JSON.stringify(calls);calls.length=0;r.drawTrap(ctx,a,0,'back');r.drawTrap(ctx,a,0,'front');assert.equal(JSON.stringify(calls),paused);
+});
+test('디지프리즌 네 층은 앞뒤를 나눠 그리고 포획 중 설치 그림으로 돌아가지 않는다',()=>{
+ const r=explosionSetup(),a={g:{id:'trap2',kind:'trap'},x:100,y:120,heldWild:{id:'아구몬'}},calls=[],ctx={drawImage:(...v)=>calls.push(v)};
+ r.drawTrap(ctx,a,0,'back');assert.equal(calls.length,2);r.drawTrap(ctx,a,0,'front');assert.equal(calls.length,4);
+ assert.deepEqual(Array.from(r.trapLayers(a,0),p=>p.sequence),[1,3,7,2]);
+ calls.length=0;r.drawTrap(ctx,a,2,'back');r.drawTrap(ctx,a,0,'front');assert.equal(calls.length,4);assert.ok(calls.every(v=>v[1]>0));
+ const closed=JSON.stringify(calls);calls.length=0;r.drawTrap(ctx,a,2,'back');r.drawTrap(ctx,a,0,'front');assert.equal(JSON.stringify(calls),closed);
+});
+test('함정 해제·새 개체·새 설치는 이전 포획 동작을 남기지 않고 다시 시작한다',()=>{
+ const r=explosionSetup(),a={g:{id:'trap1',kind:'trap'},x:100,y:120},calls=[],ctx={drawImage:(...v)=>calls.push(v)};
+ r.drawTrap(ctx,a,0,'back');r.drawTrap(ctx,a,0,'front');assert.equal(calls.length,1);const idle=calls[0][1];
+ a.heldWild={};calls.length=0;r.drawTrap(ctx,a,0,'back');r.drawTrap(ctx,a,0,'front');const first=JSON.stringify(calls);
+ r.drawTrap(ctx,a,1,'back');a.heldWild=null;calls.length=0;r.drawTrap(ctx,a,0,'back');r.drawTrap(ctx,a,0,'front');assert.equal(calls.length,1);assert.equal(calls[0][1],idle);
+ a.heldWild={};calls.length=0;r.drawTrap(ctx,a,0,'back');r.drawTrap(ctx,a,0,'front');assert.equal(JSON.stringify(calls),first);
+ a.heldWild.gone=true;calls.length=0;r.drawTrap(ctx,a,0,'back');r.drawTrap(ctx,a,0,'front');assert.equal(calls.length,1);assert.equal(calls[0][1],idle);
+});

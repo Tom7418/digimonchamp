@@ -1,0 +1,233 @@
+{
+  "source": "overlay9_0 + common/e002_hunt_digicach/digiprison",
+  "codeSha256": {
+    "arm9": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
+    "overlay0": "32cf7bfd1acd9ddafd22dacdfced421ea2cc0cebfbbea335cef2891d5ad34ec3"
+  },
+  "instructionChecks": {
+    "0x2128c04": "0xe3a00002",
+    "0x2128bf8": "0x3a00004",
+    "0x2128c40": "0xe3a05009",
+    "0x2129148": "0xe3a01001",
+    "0x2129154": "0xe3a01002",
+    "0x2129168": "0xe3a01001",
+    "0x2129174": "0xe3a01002",
+    "0x2129184": "0xe3a01003",
+    "0x2129194": "0xe3a01007",
+    "0x21290f8": "0x5910150",
+    "0x2129108": "0xe3a01004",
+    "0x2128fc4": "0xe2800902",
+    "0x2128fe8": "0xe2800801",
+    "0x2129008": "0xe2400801",
+    "0x2129028": "0xe2800902"
+  },
+  "captureLayers": {
+    "digicach": [
+      1,
+      2
+    ],
+    "digiprison": [
+      1,
+      2,
+      3,
+      7
+    ]
+  },
+  "heldTransition": {
+    "digicach": "Auxiliary sequence2 completion -> sequence4 loop; base sequence1 holds its last cell.",
+    "digiprison": "All four capture sequences hold their last cell; no return to idle until reset."
+  },
+  "states": {
+    "digicach": {
+      "1": {
+        "frames": [
+          [
+            1,
+            3
+          ],
+          [
+            2,
+            5
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            4,
+            6
+          ],
+          [
+            5,
+            6
+          ],
+          [
+            6,
+            6
+          ]
+        ],
+        "loop": false,
+        "start": 0
+      },
+      "2": {
+        "frames": [
+          [
+            7,
+            3
+          ],
+          [
+            7,
+            5
+          ],
+          [
+            7,
+            5
+          ],
+          [
+            8,
+            6
+          ],
+          [
+            9,
+            6
+          ],
+          [
+            10,
+            6
+          ]
+        ],
+        "loop": false,
+        "start": 0
+      },
+      "4": {
+        "frames": [
+          [
+            9,
+            7
+          ],
+          [
+            10,
+            7
+          ]
+        ],
+        "loop": true,
+        "start": 0
+      }
+    },
+    "digiprison": {
+      "1": {
+        "frames": [
+          [
+            1,
+            7
+          ],
+          [
+            2,
+            7
+          ],
+          [
+            3,
+            7
+          ],
+          [
+            4,
+            7
+          ],
+          [
+            5,
+            7
+          ],
+          [
+            6,
+            7
+          ],
+          [
+            7,
+            7
+          ]
+        ],
+        "loop": false,
+        "start": 0
+      },
+      "2": {
+        "frames": [
+          [
+            8,
+            7
+          ],
+          [
+            8,
+            7
+          ],
+          [
+            9,
+            7
+          ],
+          [
+            10,
+            7
+          ],
+          [
+            11,
+            7
+          ],
+          [
+            12,
+            7
+          ],
+          [
+            13,
+            7
+          ]
+        ],
+        "loop": false,
+        "start": 0
+      },
+      "3": {
+        "frames": [
+          [
+            14,
+            7
+          ],
+          [
+            14,
+            7
+          ],
+          [
+            15,
+            7
+          ],
+          [
+            16,
+            7
+          ],
+          [
+            17,
+            7
+          ],
+          [
+            18,
+            7
+          ],
+          [
+            19,
+            7
+          ]
+        ],
+        "loop": false,
+        "start": 0
+      },
+      "7": {
+        "frames": [
+          [
+            22,
+            7
+          ]
+        ],
+        "loop": false,
+        "start": 0
+      }
+    }
+  },
+  "webPolicy": "Original pixels, per-cell timing and sequence selection retained. NDS depth offsets are projected into back/front passes around the held Digimon: catch 1/back + 2-or-4/front; prison 1,3/back + 7,2/front. Fixed source size and common source origin retained; not a full NDS 3D projection. Capture/lure/movement rules and held positions are unchanged."
+}

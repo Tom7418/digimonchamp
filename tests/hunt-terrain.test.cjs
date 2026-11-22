@@ -72,3 +72,12 @@ test('16지도에서 화면 경계 반사까지 거쳐도 개체와 장난감을
   }
  }
 });
+
+
+test('실제 함정 포획은 한 번 시작해 소속을 유지하고 단발 효과 종료로 그림이 풀리지 않는다',()=>{
+ const s=setup();s.barrier();const h=s.ctx.hunt,w={id:'아구몬',x:100,y:220,vx:0,vy:0,hp:100,max:100,flee:0,flash:0,turn:100,stun:0},t={x:100,y:220,g:s.ctx.C.gearOf('trap2'),left:Infinity,held:0};
+ h.wilds=[w];h.traps=[t];s.ctx.huntTick(.05);assert.equal(t.heldWild,w);assert.equal(w.trapped,t);assert.equal(h.fx.length,0);
+ for(let i=0;i<30;i++)s.ctx.huntTick(.1);assert.equal(t.heldWild,w);assert.equal(w.trapped,t);assert.equal(h.fx.length,0);
+ assert.equal(s.ctx.huntEquipmentArt.trapLayers(t,3).length,4);assert.equal(w.x,100);assert.equal(w.y,220);
+ w.gone=true;s.ctx.huntTick(.1);assert.equal(h.traps.length,0);
+});
