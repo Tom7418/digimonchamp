@@ -417,3 +417,10 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .hunt-shutter[hidden]{display:none}
 .hunt-hud-slot:disabled{opacity:.75}
 @media(max-width:600px){.hunt-hud-icon{overflow:visible}.hunt-hud-window{transform:scale(.75)}.hunt-hud-slot .hunt-hud-window .hunt-item-icon{transform:none}.hunt-hud-slot .hunt-hud-window .hunt-item-icon.tall{transform:scale(.5)}}
+
+/* 원본 육성 HP 틀/채움. 표시 폭만 바꾸며 엔진 HP는 바꾸지 않는다. */
+.original-hp{display:block;position:relative;min-width:20px;width:100%;height:auto;aspect-ratio:58/8;background:url('assets/ui/hp-frame.png') center/100% 100% no-repeat;image-rendering:pixelated}
+.original-hp .hp-fill{position:absolute;left:6.896552%;top:25%;width:86.206897%;height:37.5%;background:url('assets/ui/hp-green.png') center/100% 100% no-repeat;transform-origin:left center;border-radius:0;image-rendering:pixelated}
+.original-hp.enemy-hp .hp-fill{background-image:url('assets/ui/hp-red.png')}
+.hp-row .original-hp{max-height:12px}
+.vital .original-hp{max-height:16px}

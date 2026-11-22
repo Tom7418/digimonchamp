@@ -76,6 +76,7 @@
   });
   window.evolutionScene=evolutionScene;
   const trainingFloats = new Map();
+  const farmHealth=window.createHpBars?.();
 
   // ---------- 저장 ----------
   function freshView() {
@@ -320,7 +321,9 @@
       ]
         .map(
           ([n, v, max]) =>
-            `<div class="vital"><span>${n}</span><div class="track"><i style="width:${clamp(max ? (v / max) * 100 : 0)}%"></i></div><span>${Math.round(v)} / ${max}</span></div>`,
+            n==='HP'&&window.hpBarHtml
+              ? `<div class="vital" data-pet-hp="${d.uid}"><span>HP</span>${window.hpBarHtml(v,max,farmHealth?.sample(d.uid,v,max)??v)}<span class="hp-number">${Math.round(v)} / ${max}</span></div>`
+              : `<div class="vital"><span>${n}</span><div class="track"><i style="width:${clamp(max ? (v / max) * 100 : 0)}%"></i></div><span>${Math.round(v)} / ${max}</span></div>`,
         )
         .join(''),
     );
@@ -1278,7 +1281,7 @@
     );
     battleBackdrop.preload(map);
     for(const u of state.units)spriteOf(u.speciesId,false); // 배경과 출전 그림을 함께 미리 읽는다.
-    battle = { setup, state, map, assetWait:0, presentation:window.createBattlePresentation(), acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
+    battle = { setup, state, map, health:window.createHpBars?.(), assetWait:0, presentation:window.createBattlePresentation(), acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
     if(holderFoes)log(`${setup.title} 홀더 「${C.titleHolder(setup.match.id).name}」 등장`);
     log(`${setup.title} 출전: ${team.map(nameOf).join(', ')}`);
     showModal(
@@ -1332,7 +1335,7 @@
       tickBattleArt(b,dt);
       for(const [id,a] of b.actions){a.left-=dt;if(a.left<=0)b.actions.delete(id);}
       drawArena(dt);
-      if(b.state.over&&!b.effects.busy)finishBattle();
+      if(b.state.over&&!b.effects.busy&&!b.health?.busy())finishBattle();
       return;
     }
     if(b.done){
@@ -1406,7 +1409,8 @@
     }
     for(const [id,a] of b.actions){a.left-=dt;if(a.left<=0)b.actions.delete(id);}
     drawArena(dt);
-    if (b.state.over&&!b.effects.busy&&!b.presentation?.busy) finishBattle();
+    // 마지막 명중의 HP 감소를 보여 준 뒤 결과로 넘어간다. 대기 중 엔진 틱은 진행하지 않는다.
+    if (b.state.over&&!b.effects.busy&&!b.presentation?.busy&&!b.health?.busy()) finishBattle();
   }
   function battleLog(t) {
     const el = $('#battle-log');
@@ -1498,7 +1502,9 @@
     ctx.imageSmoothingEnabled = false;
     window.HDText?.begin(ctx);
     const s = battle.state;
-    const units=s.units.map(u=>(battle.effects.visualUnit?.(u)||u));
+    const units=s.units.map(u=>battle.effects.visualUnit?.(u)||u);
+    // 동작 플레이어가 개체 객체를 추적하므로 복제하지 않고 표시 HP를 별도 맵에 둔다.
+    const shownHp=new Map(units.map(u=>[u.id,battle.health?.sample(u.id,u.hp,u.maxHp)??u.hp]));
     const focus=battle.presentation?.snapshot();
     let camera=null;
     ctx.save();
@@ -1542,10 +1548,7 @@
       body(ctx,u.speciesId,false,u.x,u.y+14,scale,frame,action?.flip??pose.flip);
       ctx.globalAlpha = 1;
       if(!u.alive){ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle='#5c6570';ctx.fillText('전투 불능',u.x,u.y-25);}
-      ctx.fillStyle = '#30404a';
-      ctx.fillRect(u.x - 20, u.y + 18, 40, 4);
-      ctx.fillStyle = u.team === 0 ? '#58c27d' : '#e0795b';
-      ctx.fillRect(u.x - 20, u.y + 18, 40 * Math.max(0, u.hp / u.maxHp), 4);
+      battle.health?.draw(ctx,u.id,u.hp,u.maxHp,u.x-27,u.y+18,54,8,u.team===1);
     }
     battle.effects.draw(ctx,1/viewport.scale);
     const now = performance.now();
@@ -1583,7 +1586,7 @@
           `<div>${t === 0 ? '내 팀' : '상대'}${team(t)
             .map(
               (u) =>
-                `<div class="hp-row"><span>${esc(u.name)}</span><div class="track"><i style="width:${clamp((u.hp / u.maxHp) * 100)}%${t ? ';background:#d19772' : ''}"></i></div><span>${Math.max(0, Math.round(u.hp))}</span></div>`,
+                `<div class="hp-row"><span>${esc(u.name)}</span>${window.hpBarHtml?.(u.hp,u.maxHp,shownHp.get(u.id),!!t)||'<div class="track"></div>'}<span>${Math.max(0, Math.round(u.hp))}</span></div>`,
             )
             .join('')}</div>`,
       )
@@ -1656,6 +1659,7 @@
   portrait.imageSmoothingEnabled = false;
 
   function drawFarm(t, dt) {
+    farmHealth?.begin();
     window.HDText?.begin(ctx);
     const animDt = !titleOpen && !battle && !hunt && !paused && !mailOpen && !dayEnding && !board.editing && !window.evolutionScene?.busy ? dt : 0;
     // 로스트·놓아주기·새 게임으로 사라진 개체의 먹이 예약을 해제한다.
@@ -1732,6 +1736,7 @@
       const frame = animations.pose(p, animationId(d), state, animDt);
       spriteFrames.set(p,{frame,speciesId:d.speciesId,isEgg:!!d.isEgg});
       body(ctx, d.speciesId, d.isEgg && eggName(d), p.x, p.y, scale, frame, p.direction > 0); // 원본 도트는 왼쪽을 향하므로 오른쪽 이동에서만 반전
+      if(!d.isEgg)farmHealth?.draw(ctx,d.uid,C.hpOf(d),d.stats.hp,p.x-32,p.y+12,64,9);
       // 머리 위 상태 말풍선 (배고픔·병·부상·똥·피로)
       const bub = bubbleOf(d);
       // 병·부상·스트레스·배고픔은 원작 말풍선 그림(common/e001_ikusei 30·31·34·36)
@@ -1793,6 +1798,11 @@
       ctx.font = 'bold 22px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('일시 정지', 480, 280);
+    }
+    if(farmHealth){
+      const partner=current(),hp=partner.isEgg?0:C.hpOf(partner),maxHp=partner.isEgg?0:partner.stats.hp;
+      window.updateHpBar?.($('#vitals .original-hp'),hp,maxHp,farmHealth.sample(partner.uid,hp,maxHp));
+      farmHealth.end();
     }
     window.HDText?.end(ctx);
   }
@@ -1986,7 +1996,7 @@
     const spawnPoints=C.huntSpawnPoints(terrain,{x0:AREA.x0+24,y0:AREA.y0+24,x1:AREA.x1-24,y1:AREA.y1-24});
     if(!spawnPoints.length)return toast('이 구역에 출현 가능한 바닥이 없습니다. 다시 선택해 주세요.');
     save = { ...save, bits: save.bits - field.fee };
-    hunt = { field,terrain,view:viewport,spawnPoints, plug: C.pluginView(save), items: C.huntItems(save), wilds: [], wires: [], baits: [], traps: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0,
+    hunt = { field,terrain,view:viewport,spawnPoints,health:window.createHpBars?.(), plug: C.pluginView(save), items: C.huntItems(save), wilds: [], wires: [], baits: [], traps: [], fx: [], trail: [], drawing: false, tool: 'rope', respawn: 0, notes: [], carried: 0,
       size:{w:W,h:H}, zoom:HUNT_ZOOM.start, cam:{x:0,y:0}, pan:null };
     // 첫 화면은 출현 가능한 바닥 아무 곳을 가운데에 둔다
     const first=C.pickHuntSpawn(spawnPoints,Math.random)||{x:W/2,y:H/2};
@@ -2645,6 +2655,7 @@
   }
 
   function drawHunt(t, dt) {
+    hunt.health?.begin();
     window.HDText?.begin(ctx);
     huntScroll(dt);
     const [c1, c2] = FIELD_LOOK[hunt.field.id] || ['#7fb069', '#6a9a57'];
@@ -2723,10 +2734,7 @@
       ctx.fillText((hunt.plug?.species ? sp.name : '???') + (w.ko ? ' (기절 · 눌러서 포획)' : weak ? ` (${C.ropeFor(w.id)?.name ?? '포획 불가'} 필요)` : ''), w.x, w.y + 11);
       const info = analyzeText(w, sp);
       if (info) { ctx.font = '7px "Noto Sans KR",sans-serif'; ctx.fillStyle = '#d8eef5'; ctx.fillText(info, w.x, w.y + 26); }
-      for (let k = 0; k < w.max; k++) {
-        ctx.fillStyle = k < Math.ceil(w.hp) ? '#e0574b' : '#00000055';
-        ctx.fillRect(w.x - w.max * 4 + k * 8, w.y + 14, 7, 3);
-      }
+      hunt.health?.draw(ctx,w,w.hp,w.max,w.x-27,w.y+14,54,8);
       if (w.stun > 0) {
         ctx.font = 'bold 10px "Noto Sans KR",sans-serif';
         ctx.fillStyle = w.stunKind === '수면' ? '#bfe3ff' : '#ffe36a';
@@ -2792,6 +2800,7 @@
       ctx.fillStyle = '#fff';
       ctx.fillText(n.text, 26, 520 - i * 26 - 2);
     });
+    hunt.health?.end();
     window.HDText?.end(ctx);
   }
 
@@ -2922,6 +2931,7 @@
     checkSchedule(); // 하루 마감·경기 안내는 이어하기를 누른 뒤에 띄운다
   }
   function startNewGame() {
+    farmHealth?.clear();
     endHunt();
     evolutionScene.clear();
     save = C.freshSave(Date.now());

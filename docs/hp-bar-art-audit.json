@@ -1,0 +1,42 @@
+{
+  "source": "training/training_sub",
+  "cells": {
+    "frame": 0,
+    "green": 1,
+    "red": 3,
+    "hpLabel": 20
+  },
+  "frameCrop": [
+    6,
+    0,
+    58,
+    8
+  ],
+  "fillCrops": {
+    "green": [
+      0,
+      0,
+      50,
+      3
+    ],
+    "red": [
+      7,
+      0,
+      50,
+      3
+    ]
+  },
+  "fillInset": [
+    4,
+    2,
+    50,
+    3
+  ],
+  "sha256": {
+    ".ncer": "21d6f2b1119f5d44ec26481d2e8ef6f0002a1313aa2856e2457c972aa74d7b56",
+    ".ncgr": "8a2d560a2ac0647011a3fd73931227b58a74ed8f5e1dd0006fb880756cd3cccb",
+    ".nclr": "85df5d5a0073fd65248304253a49f3ff7419610b4ad9a8005df98722f6fa43eb",
+    ".nanr": "1de7eb735c18288262db0c78d5cfdcf25013419b44d59897c492fd5dadf6e5f9"
+  },
+  "policy": "Original gauge pixels. Shared use in farm/hunt/battle, enemy red color and 350ms interpolation are web display policy. Engine HP and impact timing are unchanged."
+}

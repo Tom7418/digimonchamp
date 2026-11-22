@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 function setup(){
  const noop=()=>{},texts=[],poses=[],nodes={},toolbar={classList:{toggle:noop},querySelector:k=>nodes[k]??={},querySelectorAll:()=>[]};
  const window={DIGIMON_ANIMATIONS:{training:{cm16:32}}},math=Object.create(Math);math.random=()=>.25;
- const ctx=vm.createContext({window,Math:math,document:{createElement:()=>toolbar},Image:function(){},performance:{now:()=>0},eggName:()=>'디지에그',
+ const ctx=vm.createContext({farmHealth:undefined,window,Math:math,document:{createElement:()=>toolbar},Image:function(){},performance:{now:()=>0},eggName:()=>'디지에그',
   ctx:new Proxy({fillText(text){texts.push(text);}}, {get:(t,k)=>k in t?t[k]:noop}),
   titleOpen:false,battle:null,hunt:null,paused:false,mailOpen:false,dayEnding:false,feeding:new Map(),hatching:new Map(),trainingFloats:new Map(),spriteFrames:new WeakMap(),effect:null,
   drawFood:noop,drawPoop:noop,updateSweeps:noop,drawSweeps:noop,drawCareFx:noop,bubbleOf:()=>null,footprint:()=>20,body:noop,asset:()=>null,
