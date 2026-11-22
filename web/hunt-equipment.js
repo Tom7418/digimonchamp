@@ -22,6 +22,42 @@
    const state=retirementFrame(a,age);if(!state.visible)return false;
    return draw(ctx,a,0,state.sequence,state.sequence===1?age:age-duration(a,1));
   }
+  // overlay0의 화염5칸/불티3칸 풀과 5틱/3틱 간격, 40틱 생성 구간.
+  // 원본 연기는 한 프레임에 하나씩 10개를 방사한다. NDS 3D 좌표는 웹 평면으로 투영한다.
+  function explosion(x,y,g,rng=Math.random){
+   const effect={x,y,g,explosion:true,particles:[]};
+   if(g.id==='bomb4'){effect.flash=true;effect.left=.45;return effect;}
+   const offset=()=> (16+Math.floor(rng()*16))*(rng()<.5?-1:1);
+   function add(sequence,tick,dx=0,dy=0){effect.particles.push({x:x+dx,y:y+dy,g,sequence,delay:tick/60,life:duration(effect,sequence)});}
+   add(3,0);
+   // 원본은 풀의 각 칸에 좌표를 한 번 정하고 재활성화할 때 같은 좌표를 사용한다.
+   const positions={3:[[0,0],...Array.from({length:4},()=>[offset(),offset()])],4:Array.from({length:3},()=>[offset(),offset()])};
+   const fire=[duration(effect,3)*60,-Infinity,-Infinity,-Infinity,-Infinity],sparks=[-Infinity,-Infinity,-Infinity];
+   for(let tick=0;tick<=40;tick++){
+    for(const [pool,first,interval,seq] of [[fire,1,5,3],[sparks,0,3,4]]){
+     if(tick%interval)continue;
+     const index=pool.findIndex((until,i)=>i>=first&&until<tick);
+     if(index>=0){add(seq,tick,...positions[seq][index]);pool[index]=tick+duration(effect,seq)*60;}
+    }
+    if(tick<10){
+     // 방향/거리 난수의 고정소수점·삼각함수 표 전체 대신 웹 평면의 방사 배치를 사용한다.
+     const angle=(tick/10+rng()/10)*Math.PI*2,radius=10+Math.floor(rng()*80);
+     add(2,tick,Math.cos(angle)*radius,Math.sin(angle)*radius);
+    }
+   }
+   effect.left=Math.max(...effect.particles.map(p=>p.delay+p.life));return effect;
+  }
+  const explosionAges=new WeakMap();
+  function drawExplosion(ctx,e,dt){
+   const age=(explosionAges.get(e)||0)+Math.max(0,dt);explosionAges.set(e,age);
+   if(e.flash)return;
+   for(const p of e.particles){const t=age-p.delay;if(t>=0&&t<p.life)draw(ctx,p,0,p.sequence,t);}
+  }
+  function flashAlpha(e){
+   if(!e.flash)return 0;const t=explosionAges.get(e)||0;
+   // 원본 플래시 분기의 화면 밝기 변경을 사냥 화면에만 투영한다. 강도·완급은 웹판 표시 정책.
+   return Math.max(0,Math.min(1,t/.08,(.45-t)/.25))*.55;
+  }
   function draw(ctx,a,dt,sequence=0,playbackAge){
    const key=resource(a),meta=data?.[key];if(!meta)return false;
    if(!images.has(key)){const im=new Image();im.src=`assets/hunt/${key}.png`;images.set(key,im);}
@@ -34,6 +70,6 @@
    ctx.drawImage(image,frame*meta.width,0,meta.width,meta.height,a.x+meta.left,a.y+meta.top,meta.width,meta.height);
    return true;
   }
-  return {draw,resource,duration,retirement,drawRetiring,retirementFrame};
+  return {draw,resource,duration,retirement,drawRetiring,retirementFrame,explosion,drawExplosion,flashAlpha};
  };
 })(typeof window!=='undefined'?window:globalThis);

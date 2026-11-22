@@ -2115,12 +2115,8 @@
   }
   // 폭발: 범위 안 디지몬에게 대미지와 효과
   function blast(x, y, g) {
-    // 원본 그림2=연기,3=화염,4=불티를 함께 표시하는 것은 웹판 합성 정책.
-    // 원작에서 각 요소를 배치/선택하는 조건은 아직 미확인이다.
-    for(const artSequence of [2,3,4]){
-      const visual={x,y,g,artSequence};
-      hunt.fx.push({...visual,r:g.range,left:huntEquipmentArt.duration(visual,artSequence)||.6});
-    }
+    // 원본 입자 풀의 시퀀스·생성 간격을 재생한다. 피해/효과 판정은 아래에서 한 번만 한다.
+    hunt.fx.push(huntEquipmentArt.explosion(x,y,g));
     const hits = hunt.wilds.filter((w) => !w.gone && Math.hypot(x - w.x, y - (w.y - 15)) < g.range);
     for (const w of hits) {
       wakeFromSleep(w);
@@ -2849,6 +2845,7 @@
       }
     }
     for (const f of hunt.fx) {
+      if(f.explosion){huntEquipmentArt.drawExplosion(ctx,f,dt);continue;}
       if(f.retiring){huntEquipmentArt.drawRetiring(ctx,f,dt);continue;}
       if(f.artSequence!==undefined){huntEquipmentArt.draw(ctx,f,dt,f.artSequence);continue;}
       ctx.strokeStyle = '#fff4b0';
@@ -2887,6 +2884,9 @@
     }
     ctx.restore();
     drawHuntMinimap();
+    // 카메라 이동/줌과 관계없이 플래시는 사냥 캔버스 안에서만 밝힌다. 정보 글자는 뒤에 그린다.
+    const flash=Math.max(0,...hunt.fx.map(f=>huntEquipmentArt.flashAlpha(f)));
+    if(flash){ctx.save();ctx.globalAlpha=flash;ctx.fillStyle='#fff';ctx.fillRect(0,0,960,560);ctx.restore();}
     // 상단 정보
     const d = C.dateOf(save.clock);
     ctx.fillStyle = '#0b1d2acc';

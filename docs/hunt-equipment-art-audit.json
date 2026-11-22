@@ -104,5 +104,5 @@
       ".nanr": "665b1e8cb368eeeaf8cc4a7f97c6cdd8e3d7d37f91ebbb06066beab384e595d6"
     }
   },
-  "policy": "Floor display uses sequence0. Item/resource names identify variants. Explosion sequences2 smoke/3 flame/4 sparks are composited by web policy; trap sequence1 is also a web event mapping. Original placement/selector remains unverified."
+  "policy": "Floor display uses sequence0. Source pixel/sequence extraction only. Explosion dispatch/pools and decoy removal are checked separately by check_hunt_explosion_sources.py and check_hunt_decoy_sources.py. Trap sequence1 remains a web event mapping."
 }

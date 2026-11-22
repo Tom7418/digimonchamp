@@ -27,9 +27,10 @@ test('폭발은 원본36틱을 재생하고 정지·상태전환·마지막프�
 test('실제 폭발 이벤트는 원본 도트를 예약하고 기존 범위·피해를 한 번만 적용한다',()=>{
  const src=fs.readFileSync('web/game.js','utf8'),a=src.indexOf('  function blast('),b=src.indexOf('  // 체커 묶음:',a),events=[];
  const hunt={fx:[],wilds:[{x:10,y:15,hp:10},{x:500,y:500,hp:10}]};
- const c=vm.createContext({hunt,huntEquipmentArt:{duration:()=>.6},C:{},itemHit:(w)=>{w.hp-=2;return true},wakeFromSleep(){},applyEffect:(...v)=>events.push(v),huntNote(){}});
+ const c=vm.createContext({hunt,window:{},Image:function(){this.complete=true;this.naturalWidth=1000;},C:{},itemHit:(w)=>{w.hp-=2;return true},wakeFromSleep(){},applyEffect:(...v)=>events.push(v),huntNote(){}});
+ for(const f of ['web/assets/hunt/equipment.js','web/hunt-equipment.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);c.huntEquipmentArt=c.window.createHuntEquipmentRenderer();
  vm.runInContext(src.slice(a,b),c);c.blast(10,0,{id:'mine1',name:'마인',power:50,range:70});
- assert.equal(hunt.fx.length,3);assert.equal(hunt.fx[0].artSequence,2);assert.equal(hunt.fx[0].left,.6);
+ assert.equal(hunt.fx.length,1);assert.equal(hunt.fx[0].explosion,true);assert.ok(hunt.fx[0].left>1);assert.equal(hunt.fx[0].particles.length,20);
  assert.equal(hunt.wilds[0].hp,8);assert.equal(hunt.wilds[1].hp,10);assert.equal(events.length,1);
 });
 
@@ -53,4 +54,32 @@ test('미끼 두 종류는 소멸1 뒤 정지2로 전환하고 원본 20→2틱 
   r.drawRetiring(ctx,f,.25);const count=frames.length;r.drawRetiring(ctx,f,.2);assert.equal(frames.length,count);
   r.drawRetiring(ctx,f,1/6);assert.ok(frames.length>count);r.drawRetiring(ctx,f,3);const end=frames.length;r.drawRetiring(ctx,f,0);assert.equal(frames.length,end);
  }
+});
+
+function explosionSetup(){
+ const c=vm.createContext({window:{},Image:function(){this.complete=true;this.naturalWidth=4096;}});
+ for(const f of ['web/assets/hunt/equipment.js','web/hunt-equipment.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);
+ return c.window.createHuntEquipmentRenderer();
+}
+test('폭탄·마인은 원본 5칸/3칸 풀의 생성 간격으로 시간차 입자를 배치한다',()=>{
+ const r=explosionSetup();
+ for(const id of ['bomb1','bomb2','bomb3','mine1','mine2']){
+  const g={id,power:50},before=JSON.stringify(g),e=r.explosion(100,120,g,()=>.5),by=seq=>e.particles.filter(p=>p.sequence===seq);
+  assert.equal(JSON.stringify(g),before);assert.equal(by(2).length,10);assert.equal(by(3).length,6);assert.equal(by(4).length,4);
+  assert.ok(Math.abs(by(3).at(-1).delay-40/60)<1e-9);assert.ok(Math.abs(e.left-76/60)<1e-9);
+  assert.equal(by(3)[0].x,100);assert.equal(by(3)[0].y,120);assert.ok(by(3).some(p=>p.x!==100));
+  assert.equal(new Set(by(2).map(p=>p.delay)).size,10);
+  for(const p of e.particles){assert.equal(p.life,.6);assert.equal(r.resource(p),r.resource(e));}
+ }
+});
+test('폭발은 미래 입자를 숨기고 일시정지·각 폭발 시계·마지막 소멸을 보존한다',()=>{
+ const r=explosionSetup(),a=r.explosion(20,30,{id:'bomb1'},()=>.25),b=r.explosion(20,30,{id:'bomb1'},()=>.25),draws=[],ctx={drawImage:(...v)=>draws.push(v)};
+ r.drawExplosion(ctx,a,0);assert.equal(draws.length,4);const start=JSON.stringify(draws);draws.length=0;r.drawExplosion(ctx,a,0);assert.equal(JSON.stringify(draws),start);
+ draws.length=0;r.drawExplosion(ctx,a,.3);assert.ok(draws.length>4);draws.length=0;r.drawExplosion(ctx,b,0);assert.equal(JSON.stringify(draws),start);
+ draws.length=0;r.drawExplosion(ctx,a,2);assert.equal(draws.length,0);r.drawExplosion(ctx,a,0);assert.equal(draws.length,0);
+});
+test('플래시 폭탄은 화염을 그리지 않고 별도 밝기 연출만 재생한다',()=>{
+ const r=explosionSetup(),e=r.explosion(20,30,{id:'bomb4'}),draws=[],ctx={drawImage:(...v)=>draws.push(v)};
+ assert.equal(e.particles.length,0);assert.equal(r.flashAlpha(e),0);r.drawExplosion(ctx,e,.08);assert.ok(r.flashAlpha(e)>0);assert.equal(draws.length,0);
+ const paused=r.flashAlpha(e);r.drawExplosion(ctx,e,0);assert.equal(r.flashAlpha(e),paused);r.drawExplosion(ctx,e,1);assert.equal(r.flashAlpha(e),0);
 });
