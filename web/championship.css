@@ -299,7 +299,14 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .battle-side{min-width:0;padding-top:28px}
 .battle-modal .battle-health{display:flex;flex-direction:column;gap:12px}
 .battle-modal .hp-row{grid-template-columns:minmax(66px,1fr) minmax(34px,1fr) 38px}
-.battle-modal .battle-log{max-height:145px;overflow:auto;margin-top:14px;overscroll-behavior:contain}
+.battle-log-panel{margin-top:14px}
+.battle-log-controls{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:11px}
+.battle-log-controls button{padding:3px 7px;border:1px solid #45617a;border-radius:4px;background:#182f43;color:#e5f7ff;font:inherit}
+.battle-log-panel :focus-visible{outline:2px solid #ffd96c;outline-offset:2px}
+.battle-result-record{margin-top:12px}
+.battle-result-record summary{cursor:pointer;font-size:12px}
+.battle-result-record .battle-log{margin-top:4px;overscroll-behavior:contain}
+.battle-modal .battle-log{max-height:145px;overflow:auto;margin-top:4px;overscroll-behavior:contain}
 .battle-modal .battle-log p{font-size:11px;line-height:1.45;margin:0 0 6px}
 #arena{height:auto;aspect-ratio:26/17}
 @media(min-width:1200px) and (min-height:860px){
@@ -313,7 +320,8 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
  .battle-side{padding-top:0}
  .battle-modal .battle-health{display:grid;grid-template-columns:1fr 1fr;gap:10px}
  .battle-modal .hp-row{grid-template-columns:minmax(45px,1fr) 1fr 26px;font-size:10px;gap:3px}
- .battle-modal .battle-log{max-height:66px;margin-top:8px}
+ .battle-log-panel{margin-top:8px}
+ .battle-modal .battle-log{max-height:66px}
 }
 
 /* 직접 고른 출전 순서/건강 상태를 표시한다. */

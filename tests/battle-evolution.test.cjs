@@ -39,7 +39,13 @@ test('최초 타이틀 승리만 메달을 안내하고 재우승은 상금과 �
  const src=fs.readFileSync('web/game.js','utf8'),start=src.indexOf('  function finishBattle()'),end=src.indexOf('  function drawArena(',start);
  for(const repeat of [false,true]){
   const nodes={},messages=[],classes=new Set(['battle-modal']);
-  const c=vm.createContext({window:{},esc:String,$:key=>nodes[key]??={classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)}},battleLog:()=>{},log:s=>messages.push(s),toast:()=>{},render:()=>{},persist:()=>{},logEvent:()=>{}});
+  const recordPanel={},resultDetails=[];
+  nodes['#modal-body']={
+   querySelector:selector=>selector==='.battle-log-panel'?recordPanel:null,
+   append:detail=>resultDetails.push(detail),
+  };
+  const document={createElement:tag=>({tag,append(...children){this.children=children;}})};
+  const c=vm.createContext({window:{},document,esc:String,$:key=>nodes[key]??={classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)}},battleLog:()=>{},log:s=>messages.push(s),toast:()=>{},render:()=>{},persist:()=>{},logEvent:()=>{}});
   for(const file of ['web/core.js','web/day-result-view.js'])vm.runInContext(fs.readFileSync(file,'utf8'),c);
   vm.runInContext(`globalThis.C=ChampCore;globalThis.save=C.freshSave(0);globalThis.m=C.TITLES[0];save.titles=${repeat?'[m.id]':'[]'};globalThis.oldBits=save.bits;
    globalThis.battle={done:false,state:{winner:0,reason:'hp',units:[]},setup:{match:m,prize:0,title:m.name}};`+src.slice(start,end),c);
@@ -47,6 +53,31 @@ test('최초 타이틀 승리만 메달을 안내하고 재우승은 상금과 �
   const html=nodes['#modal-body'].innerHTML;
   assert.equal(c.save.titles.filter(x=>x===c.m.id).length,1);assert.equal(c.save.bits,c.oldBits+c.m.prize);
   assert.equal(/class="title-medal"/.test(html),!repeat);assert.equal(messages.some(x=>x.startsWith('타이틀 메달 획득:')), !repeat);
+  assert.equal(resultDetails.length,1);assert.equal(resultDetails[0].tag,'details');
+  assert.equal(resultDetails[0].children[1],recordPanel);
   assert.equal(classes.has('title-result-modal'),true);assert.equal(classes.has('battle-modal'),false);assert.doesNotMatch(html,/<canvas|battle-layout/);
  }
+});
+
+
+test('전투 기록은 위를 읽는 동안 이동하지 않고 최신 위치에서만 따라간다',()=>{
+ const rows=[];
+ const record={
+  clientHeight:40,scrollTop:0,
+  get scrollHeight(){return rows.length*20;},
+  insertAdjacentHTML(_position,html){rows.push(html);},
+ };
+ const ctx=vm.createContext({$:()=>record,esc:String});
+ const src=fs.readFileSync('web/game.js','utf8');
+ vm.runInContext(src.slice(src.indexOf('  function battleLog('),src.indexOf('  function finishBattle(')),ctx);
+ for(let i=0;i<40;i++)ctx.battleLog('기록 '+i);
+ assert.equal(record.scrollTop,record.scrollHeight);
+ record.scrollTop=120;
+ ctx.battleLog('기상');
+ assert.equal(record.scrollTop,120);
+ assert.equal(rows.length,41);
+ assert.equal(rows[0],'<p>기록 0</p>');
+ record.scrollTop=record.scrollHeight-record.clientHeight;
+ ctx.battleLog('경기 종료');
+ assert.equal(record.scrollTop,record.scrollHeight);
 });

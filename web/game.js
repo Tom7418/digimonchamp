@@ -1306,11 +1306,15 @@
     log(`${setup.title} 출전: ${team.map(nameOf).join(', ')}`);
     showModal(
       setup.title,
-      '<div class="battle-layout"><div class="battle-stage"><div class="battle-map-info"><b id="battle-map-name"></b><div class="battle-controls"><span id="battle-time"></span><button type="button" id="battle-pause" aria-controls="arena">일시 정지</button></div></div><canvas id="arena" width="416" height="272" aria-label="배틀 경기장"></canvas></div><div class="battle-side"><div class="battle-health" id="battle-hp"></div><div class="battle-log" id="battle-log" aria-label="전투 기록"></div></div></div>',
+      '<div class="battle-layout"><div class="battle-stage"><div class="battle-map-info"><b id="battle-map-name"></b><div class="battle-controls"><span id="battle-time"></span><button type="button" id="battle-pause" aria-controls="arena">일시 정지</button></div></div><canvas id="arena" width="416" height="272" aria-label="배틀 경기장"></canvas></div><div class="battle-side"><div class="battle-health" id="battle-hp"></div><div class="battle-log-panel"><div class="battle-log-controls"><b id="battle-log-label">전투 기록</b><button type="button" id="battle-log-latest" aria-controls="battle-log">최신 기록 ↓</button></div><div class="battle-log" id="battle-log" role="region" aria-labelledby="battle-log-label" tabindex="0"></div></div></div></div>',
       'AUTO BATTLE',
       '결과 확인',
     );
     $('#modal').classList?.add('battle-modal');
+    const battleRecord = $('#battle-log');
+    $('#battle-log-latest').onclick = () => {
+      battleRecord.scrollTop = battleRecord.scrollHeight;
+    };
     const pauseButton = $('#battle-pause');
     pauseButton.onclick = () => {
       if (!battle || battle.done || battle.state.over) return;
@@ -1451,9 +1455,10 @@
   function battleLog(t) {
     const el = $('#battle-log');
     if (!el) return;
+    // 바닥에 있을 때만 새 기록을 따라간다. 배틀 창을 닫을 때까지 이전 기록도 보존한다.
+    const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight <= 2;
     el.insertAdjacentHTML('beforeend', `<p>${esc(t)}</p>`);
-    while(el.children.length>40)el.firstElementChild.remove();
-    el.scrollTop = el.scrollHeight;
+    if (atEnd) el.scrollTop = el.scrollHeight;
   }
   function finishBattle() {
     if (!battle || battle.done) return; // 같은 결과를 두 번 반영해 배틀 횟수/진화가 중복되지 않게 한다.
@@ -1514,7 +1519,17 @@
     // mN corresponds to original item_badge(N+1); prelim/final have no title medal.
     if(won && /^m\d+$/.test(m?.id||'')){
       // 경기장 위에 끼워 넣지 않고 NDS 두 화면을 위아래로 쌓은 별도 결과 화면으로 전환한다.
-      $('#modal-body').innerHTML=window.titleMedalHtml(m,esc,{firstWin:firstTitleWin,prize:gained});
+      const modalBody = $('#modal-body');
+      const recordPanel = modalBody.querySelector?.('.battle-log-panel');
+      modalBody.innerHTML=window.titleMedalHtml(m,esc,{firstWin:firstTitleWin,prize:gained});
+      if (recordPanel) {
+        const details = document.createElement('details');
+        details.className = 'battle-result-record';
+        const summary = document.createElement('summary');
+        summary.textContent = '전투 기록 보기';
+        details.append(summary, recordPanel);
+        modalBody.append(details);
+      }
       $('#modal').classList?.remove('battle-modal');
       $('#modal').classList?.add('title-result-modal');
       $('#modal-kicker').textContent='TITLE MATCH RESULT';
