@@ -1327,7 +1327,8 @@
   }
   function battleTick(dt) {
     // 엔진 피해는 한 번만 계산한다. 비행 중 HP/쓰러짐 표시는 이전 상태를 유지하고 도착 때 반영한다.
-    function battleHitVisual(b,e,delayed=false) {
+    function battleHitVisual(b,e) {
+      const attacker=b.state.units.find(u=>u.id===e.from);
       const target=b.state.units.find(u=>u.id===e.to);
       const id=SPRITE_BY_NAME[C.getSpecies(target.speciesId).id];
       const state=e.damage===0?'guard2':Math.random()<0.5?'hurt':'hurtAlt';
@@ -1335,14 +1336,17 @@
       b.actions.set(e.to,{kind:'hit',left:duration,duration,state});
       const text=e.damage===0?'막음':`-${e.damage}${e.critical?' 크리티컬!':e.special?'!':''}`;
       b.flashes.push({id:e.to,text,until:b.visualTime+700,color:e.critical?'#ff9a6a':e.special?'#ffd36a':'#fff'});
-      if(e.damage===0)battleLog(`${target.name}: 공격을 막아 냄 (피해 0)`);
-      else if(e.critical)battleLog(`크리티컬! ${target.name}에게 ${e.damage}`);
-      if(delayed&&!target.alive)battleLog(`${target.name} 쓰러짐!`);
+      const attack=e.skill?.name ?? (e.special ? '필살기' : '일반 공격');
+      const outcome=e.damage===0 ? '막음 · 피해 0' : e.critical ? `크리티컬 · ${e.damage}` : String(e.damage);
+      const cost=Number.isFinite(e.skill?.tpCost) ? ` · TP ${e.skill.tpCost}` : '';
+      battleLog(`${attacker.name} · ${attack} → ${target.name} (${outcome}${cost})`);
+      for (const message of b.pendingHitLogs?.get(e) ?? []) battleLog(message);
+      b.pendingHitLogs?.delete(e);
     }
     function tickBattleArt(b,dt) {
       b.effects.tick(dt);
       b.statusEffects?.tick(dt);
-      for(const e of b.effects.drain?.()||[])battleHitVisual(b,e,true);
+      for(const e of b.effects.drain?.()||[])battleHitVisual(b,e);
     }
     const b = battle;
     if (!b || b.paused) return;
@@ -1386,6 +1390,8 @@
         const p=before.get(u.id);
         b.motion.set(u.id,{dx:u.x-p.x,dy:u.y-p.y});
       }
+      // 지연된 공격의 상태·쓰러짐 기록은 같은 공격이 화면에 닿을 때 이어서 출력한다.
+      const hitLogsByTarget = new Map();
       for (const e of events) {
         const caster=b.state.units.find(u=>u.id===e.from);
         const skillState=e.type==='hit'&&e.special?(e.skill?.animation??'attack1'):null;
@@ -1404,18 +1410,30 @@
           const holdUntil=effect?.lockActor?effect.hold:0;
           const actionDuration=holdUntil?(animations.castDuration?.(attackId,attackState,holdUntil)||Math.max(attackDuration,holdUntil)):attackDuration;
           if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:actionDuration,duration:actionDuration,state:attackState,holdUntil,flip:target.x>attacker.x});
-          if(!effect?.lead)battleHitVisual(b,e);
+          hitLogsByTarget.delete(e.to);
+          if (effect?.lead) {
+            const messages = [];
+            (b.pendingHitLogs ??= new Map()).set(e, messages);
+            hitLogsByTarget.set(e.to, messages);
+          } else {
+            battleHitVisual(b,e);
+          }
           if(e.special&&e.skill){
             b.flashes.push({id:e.from,text:e.skill.name,until:b.visualTime+700,color:'#a9e7ff',skill:true});
-            const cost=Number.isFinite(e.skill.tpCost)?` · TP ${e.skill.tpCost}`:'';
-            battleLog(`${attacker.name} · ${e.skill.name} → ${target.name} (${e.damage}${cost})`);
           }
         }
         if (e.type === 'status') {
           b.flashes.push({ id: e.id, text: e.status, until: b.visualTime + 900, color: '#c79bff' });
-          battleLog(`${b.state.units[e.id].name}: ${e.status} 상태`);
+          const message = `${b.state.units[e.id].name}: ${e.status} 상태`;
+          const pending = hitLogsByTarget.get(e.id);
+          if (pending) pending.push(message);
+          else battleLog(message);
         }
-        if (e.type === 'statusDamage') b.flashes.push({ id: e.id, text: `-${e.damage} ${e.status}`, until: b.visualTime + 700, color: '#a6e36b' });
+        if (e.type === 'statusDamage') {
+          hitLogsByTarget.delete(e.id);
+          b.flashes.push({ id: e.id, text: `-${e.damage} ${e.status}`, until: b.visualTime + 700, color: '#a6e36b' });
+          battleLog(`${b.state.units[e.id].name}: ${e.status} 피해 ${e.damage}`);
+        }
         if (e.type === 'heal') {
           b.flashes.push({ id: e.to, text: `+${e.amount}`, until: b.visualTime + 700, color: '#8ef0a0' });
           if(e.support)battleLog(`${b.state.units[e.from].name} · ${e.support.name} → ${b.state.units[e.to].name} +${e.amount}`);
@@ -1444,7 +1462,12 @@
             b.actions.set(e.from,{kind:'attack',left:duration,duration,state});
           }
         }
-        if (e.type === 'ko'&&!b.effects.busy) battleLog(`${b.state.units[e.id].name} 쓰러짐!`);
+        if (e.type === 'ko') {
+          const message = `${b.state.units[e.id].name} 쓰러짐!`;
+          const pending = hitLogsByTarget.get(e.id);
+          if (pending) pending.push(message);
+          else battleLog(message);
+        }
       }
     }
     for(const [id,a] of b.actions){a.left-=dt;if(a.left<=0)b.actions.delete(id);}

@@ -215,3 +215,39 @@ test('복합 빔은 발사 프레임을 연장하고 기술이 끝나기 전 복
  assert.equal(player.sampleCast(id,'attack3',holdUntil+.001,holdUntil),q.frames[2][0]);
  assert.equal(player.castDuration(id,'attack3',holdUntil),player.duration(id,'attack3')+.5);
 });
+
+
+test('공격 결과는 명중 때 한 번 기록하고 상태 피해로 인한 쓰러짐도 빠뜨리지 않는다',()=>{
+ const source=fs.readFileSync('web/game.js','utf8');
+ const logs=[];
+ const c=vm.createContext({battleLog:text=>logs.push(text),drawArena(){},finishBattle(){}});
+ vm.runInContext(`
+  const units=[
+   {id:0,name:'공격자',speciesId:'a',x:0,y:0},
+   {id:1,name:'대상',speciesId:'b',x:10,y:0},
+   {id:2,name:'동료',speciesId:'c',x:15,y:0},
+  ];
+  const delayed={type:'hit',from:0,to:1,damage:12,special:true,skill:{name:'필살기 A',tpCost:4}};
+  const C={getSpecies:id=>({id}),stepBattle:()=>[
+   {type:'hit',from:0,to:2,damage:3},
+   {type:'hit',from:2,to:0,damage:0},
+   {type:'hit',from:0,to:2,damage:6,critical:true},
+   delayed,{type:'ko',id:1},
+   {type:'statusDamage',id:2,status:'독',damage:2},{type:'ko',id:2},
+  ]};
+  const SPRITE_BY_NAME={},animations={duration:()=>1},battleBackdrop={spriteScale:()=>1},spriteOf=()=>({});
+  const effects={busy:false,add(e){if(e===delayed){this.busy=true;return {lead:1};}},tick(){},drain(){if(!this.busy)return [];this.busy=false;return [delayed];}};
+  const battle={acc:0,state:{units,over:false},motion:new Map(),actions:new Map(),flashes:[],effects};
+ `+source.slice(source.indexOf('  function battleTick('),source.indexOf('  function battleLog(')),c);
+ c.battleTick(.1);
+ assert.deepEqual(logs,[
+  '공격자 · 일반 공격 → 동료 (3)',
+  '동료 · 일반 공격 → 공격자 (막음 · 피해 0)',
+  '공격자 · 일반 공격 → 동료 (크리티컬 · 6)',
+  '동료: 독 피해 2','동료 쓰러짐!',
+ ]);
+ c.battleTick(.02);
+ assert.deepEqual(logs.slice(5),['공격자 · 필살기 A → 대상 (12 · TP 4)','대상 쓰러짐!']);
+ c.battleTick(.02);
+ assert.equal(logs.length,7);
+});
