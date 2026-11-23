@@ -300,8 +300,11 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .battle-modal .battle-health{display:flex;flex-direction:column;gap:12px}
 .battle-modal .hp-row{grid-template-columns:minmax(66px,1fr) minmax(34px,1fr) 38px}
 .battle-log-panel{margin-top:14px}
-.battle-log-controls{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:11px}
+.battle-log-controls{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;font-size:11px}
+.battle-log-buttons{display:flex;flex-wrap:wrap;gap:4px}
 .battle-log-controls button{padding:3px 7px;border:1px solid #45617a;border-radius:4px;background:#182f43;color:#e5f7ff;font:inherit}
+.battle-log-controls button[aria-pressed="true"]{background:#345c76;border-color:#a5c9e1}
+.battle-log-key-only .battle-log-routine{display:none}
 .battle-log-panel :focus-visible{outline:2px solid #ffd96c;outline-offset:2px}
 .battle-result-record{margin-top:12px}
 .battle-result-record summary{cursor:pointer;font-size:12px}

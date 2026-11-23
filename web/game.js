@@ -1306,15 +1306,12 @@
     log(`${setup.title} 출전: ${team.map(nameOf).join(', ')}`);
     showModal(
       setup.title,
-      '<div class="battle-layout"><div class="battle-stage"><div class="battle-map-info"><b id="battle-map-name"></b><div class="battle-controls"><span id="battle-time"></span><button type="button" id="battle-pause" aria-controls="arena">일시 정지</button></div></div><canvas id="arena" width="416" height="272" aria-label="배틀 경기장"></canvas></div><div class="battle-side"><div class="battle-health" id="battle-hp"></div><div class="battle-log-panel"><div class="battle-log-controls"><b id="battle-log-label">전투 기록</b><button type="button" id="battle-log-latest" aria-controls="battle-log">최신 기록 ↓</button></div><div class="battle-log" id="battle-log" role="region" aria-labelledby="battle-log-label" tabindex="0"></div></div></div></div>',
+      '<div class="battle-layout"><div class="battle-stage"><div class="battle-map-info"><b id="battle-map-name"></b><div class="battle-controls"><span id="battle-time"></span><button type="button" id="battle-pause" aria-controls="arena">일시 정지</button></div></div><canvas id="arena" width="416" height="272" aria-label="배틀 경기장"></canvas></div><div class="battle-side"><div class="battle-health" id="battle-hp"></div><div class="battle-log-panel"><div class="battle-log-controls"><b id="battle-log-label">전투 기록</b><div class="battle-log-buttons"><button type="button" id="battle-log-filter" aria-controls="battle-log" aria-pressed="false">주요 기록만</button><button type="button" id="battle-log-latest" aria-controls="battle-log">최신 기록 ↓</button></div></div><div class="battle-log" id="battle-log" role="region" aria-labelledby="battle-log-label" tabindex="0"></div></div></div></div>',
       'AUTO BATTLE',
       '결과 확인',
     );
     $('#modal').classList?.add('battle-modal');
-    const battleRecord = $('#battle-log');
-    $('#battle-log-latest').onclick = () => {
-      battleRecord.scrollTop = battleRecord.scrollHeight;
-    };
+    bindBattleLogControls($('#battle-log'), $('#battle-log-filter'), $('#battle-log-latest'));
     const pauseButton = $('#battle-pause');
     pauseButton.onclick = () => {
       if (!battle || battle.done || battle.state.over) return;
@@ -1324,6 +1321,15 @@
     $('#modal-ok').disabled = true;
     $('#close-modal').disabled = true;
     render();
+  }
+  function bindBattleLogControls(record, filter, latest) {
+    const scrollToLatest = () => { record.scrollTop = record.scrollHeight; };
+    latest.onclick = scrollToLatest;
+    filter.onclick = () => {
+      const enabled = record.classList.toggle('battle-log-key-only');
+      filter.setAttribute('aria-pressed', String(enabled));
+      scrollToLatest();
+    };
   }
   function battleTick(dt) {
     // 엔진 피해는 한 번만 계산한다. 비행 중 HP/쓰러짐 표시는 이전 상태를 유지하고 도착 때 반영한다.
@@ -1339,7 +1345,7 @@
       const attack=e.skill?.name ?? (e.special ? '필살기' : '일반 공격');
       const outcome=e.damage===0 ? '막음 · 피해 0' : e.critical ? `크리티컬 · ${e.damage}` : String(e.damage);
       const cost=Number.isFinite(e.skill?.tpCost) ? ` · TP ${e.skill.tpCost}` : '';
-      battleLog(`${attacker.name} · ${attack} → ${target.name} (${outcome}${cost})`);
+      battleLog(`${attacker.name} · ${attack} → ${target.name} (${outcome}${cost})`, !e.special && !e.critical);
       for (const message of b.pendingHitLogs?.get(e) ?? []) battleLog(message);
       b.pendingHitLogs?.delete(e);
     }
@@ -1432,7 +1438,7 @@
         if (e.type === 'statusDamage') {
           hitLogsByTarget.delete(e.id);
           b.flashes.push({ id: e.id, text: `-${e.damage} ${e.status}`, until: b.visualTime + 700, color: '#a6e36b' });
-          battleLog(`${b.state.units[e.id].name}: ${e.status} 피해 ${e.damage}`);
+          battleLog(`${b.state.units[e.id].name}: ${e.status} 피해 ${e.damage}`, true);
         }
         if (e.type === 'heal') {
           b.flashes.push({ id: e.to, text: `+${e.amount}`, until: b.visualTime + 700, color: '#8ef0a0' });
@@ -1475,12 +1481,12 @@
     // 마지막 명중의 HP 감소를 보여 준 뒤 결과로 넘어간다. 대기 중 엔진 틱은 진행하지 않는다.
     if (b.state.over&&!b.effects.busy&&!b.presentation?.busy&&!b.health?.busy(b.visualTime)) finishBattle();
   }
-  function battleLog(t) {
+  function battleLog(t, routine = false) {
     const el = $('#battle-log');
     if (!el) return;
     // 바닥에 있을 때만 새 기록을 따라간다. 배틀 창을 닫을 때까지 이전 기록도 보존한다.
     const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight <= 2;
-    el.insertAdjacentHTML('beforeend', `<p>${esc(t)}</p>`);
+    el.insertAdjacentHTML('beforeend', `<p${routine ? ' class="battle-log-routine"' : ''}>${esc(t)}</p>`);
     if (atEnd) el.scrollTop = el.scrollHeight;
   }
   function finishBattle() {

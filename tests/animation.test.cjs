@@ -219,8 +219,8 @@ test('복합 빔은 발사 프레임을 연장하고 기술이 끝나기 전 복
 
 test('공격 결과는 명중 때 한 번 기록하고 상태 피해로 인한 쓰러짐도 빠뜨리지 않는다',()=>{
  const source=fs.readFileSync('web/game.js','utf8');
- const logs=[];
- const c=vm.createContext({battleLog:text=>logs.push(text),drawArena(){},finishBattle(){}});
+ const logs=[],routineFlags=[];
+ const c=vm.createContext({battleLog:(text,routine=false)=>{logs.push(text);routineFlags.push(routine);},drawArena(){},finishBattle(){}});
  vm.runInContext(`
   const units=[
    {id:0,name:'공격자',speciesId:'a',x:0,y:0},
@@ -250,4 +250,5 @@ test('공격 결과는 명중 때 한 번 기록하고 상태 피해로 인한 �
  assert.deepEqual(logs.slice(5),['공격자 · 필살기 A → 대상 (12 · TP 4)','대상 쓰러짐!']);
  c.battleTick(.02);
  assert.equal(logs.length,7);
+ assert.deepEqual(routineFlags,[true,true,false,true,false,false,false]);
 });

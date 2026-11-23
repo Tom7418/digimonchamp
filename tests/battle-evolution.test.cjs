@@ -73,11 +73,32 @@ test('전투 기록은 위를 읽는 동안 이동하지 않고 최신 위치에
  for(let i=0;i<40;i++)ctx.battleLog('기록 '+i);
  assert.equal(record.scrollTop,record.scrollHeight);
  record.scrollTop=120;
- ctx.battleLog('기상');
+ ctx.battleLog('일반 공격',true);
  assert.equal(record.scrollTop,120);
  assert.equal(rows.length,41);
  assert.equal(rows[0],'<p>기록 0</p>');
+ assert.equal(rows.at(-1),'<p class="battle-log-routine">일반 공격</p>');
  record.scrollTop=record.scrollHeight-record.clientHeight;
  ctx.battleLog('경기 종료');
  assert.equal(record.scrollTop,record.scrollHeight);
+});
+
+test('주요 기록 표시를 켜고 끄며 최신 기록으로 이동할 수 있다',()=>{
+ const classes=new Set(),filter={setAttribute(key,value){this[key]=value;}},latest={};
+ const record={scrollTop:0,scrollHeight:90,classList:{toggle(name){
+  if(classes.delete(name))return false;
+  classes.add(name);return true;
+ }}};
+ const ctx=vm.createContext({});
+ const src=fs.readFileSync('web/game.js','utf8');
+ vm.runInContext(src.slice(src.indexOf('  function bindBattleLogControls('),src.indexOf('  function battleTick(')),ctx);
+ ctx.bindBattleLogControls(record,filter,latest);
+ filter.onclick();
+ assert.equal(filter['aria-pressed'],'true');
+ assert.deepEqual([...classes],['battle-log-key-only']);
+ assert.equal(record.scrollTop,90);
+ filter.onclick();
+ assert.equal(filter['aria-pressed'],'false');
+ assert.equal(classes.size,0);
+ record.scrollTop=10;latest.onclick();assert.equal(record.scrollTop,90);
 });
