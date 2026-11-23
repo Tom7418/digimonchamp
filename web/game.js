@@ -1531,6 +1531,14 @@
     window.HDText?.begin(ctx);
     const s = battle.state;
     const units=s.units.map(u=>battle.effects.visualUnit?.(u)||u);
+    const downLabel = (u) => {
+      if (u.alive) return '';
+      // 시뮬레이션 시간과 표시용 개체를 사용해 필살기 연출 중에도 상태가 앞서지 않는다.
+      if (!s.over && u.riseAt !== undefined) {
+        return `기상 판정까지 ${Math.max(1, Math.ceil(u.riseAt - s.t))}초`;
+      }
+      return '전투 불능';
+    };
     // 동작 플레이어가 개체 객체를 추적하므로 복제하지 않고 표시 HP를 별도 맵에 둔다.
     const shownHp=new Map(units.map(u=>[u.id,battle.health?.sample(u.id,u.hp,u.maxHp)??u.hp]));
     const focus=battle.presentation?.snapshot();
@@ -1579,7 +1587,16 @@
         battle.statusEffects.draw(ctx,u,s.t,bounds);
       }
       ctx.globalAlpha = 1;
-      if(!u.alive){ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle='#5c6570';ctx.fillText('전투 불능',u.x,u.y-25);}
+      const label = downLabel(u);
+      if (label) {
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = '#122337';
+        ctx.lineWidth = 3;
+        ctx.strokeText(label, u.x, u.y - 25);
+        ctx.fillStyle = !s.over && u.riseAt !== undefined ? '#ffe0a1' : '#d4dbe3';
+        ctx.fillText(label, u.x, u.y - 25);
+      }
       battle.health?.draw(ctx,u.id,u.hp,u.maxHp,u.x-27,u.y+18,54,8,u.team===1);
     }
     battle.effects.draw(ctx,1/viewport.scale);
@@ -1618,7 +1635,7 @@
           `<div>${t === 0 ? '내 팀' : '상대'}${team(t)
             .map(
               (u) =>
-                `<div class="hp-row"><span>${esc(u.name)}</span>${window.hpBarHtml?.(u.hp,u.maxHp,shownHp.get(u.id),!!t)||'<div class="track"></div>'}<span>${Math.max(0, Math.round(u.hp))}</span></div>`,
+                `<div class="hp-row"><span>${esc(u.name)}</span>${window.hpBarHtml?.(u.hp,u.maxHp,shownHp.get(u.id),!!t)||'<div class="track"></div>'}<span>${Math.max(0, Math.round(u.hp))}</span></div>${downLabel(u) ? `<small>${downLabel(u)}</small>` : ''}`,
             )
             .join('')}</div>`,
       )

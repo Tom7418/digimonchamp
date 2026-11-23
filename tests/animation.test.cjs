@@ -145,8 +145,8 @@ test('피해0은 방어34, 치료/강화는35, 부활은33을 종별 원본 길�
 });
 
 test('실제 경기장은 상태이상 지속·해제·KO·정지에서 올바른 원본 자세를 그린다',()=>{
- const source=fs.readFileSync('web/game.js','utf8'),frames=[],els={};
- const paint={save(){},restore(){},translate(){},scale(){},beginPath(){},ellipse(){},fill(){},fillRect(){},fillText(){},strokeText(){}};
+ const source=fs.readFileSync('web/game.js','utf8'),frames=[],labels=[],els={};
+ const paint={save(){},restore(){},translate(){},scale(){},beginPath(){},ellipse(){},fill(){},fillRect(){},fillText(text){labels.push(text);},strokeText(){}};
  els['#arena']={width:416,height:272,getContext:()=>paint};
  const c=vm.createContext({window:{},performance:{now:()=>0},body:(...args)=>frames.push(args[6]),$:sel=>els[sel]??(els[sel]={}),esc:String,clamp:n=>Math.max(0,Math.min(100,n))});
  for(const f of ['core.js','assets/sprites.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),c);
@@ -164,6 +164,24 @@ test('실제 경기장은 상태이상 지속·해제·KO·정지에서 올바�
  }
  u.status={id:9,until:10};u.alive=false;frames.length=0;c.drawArena(.1);assert.equal(frames[0],player.sample(id,'ko',0));
  u.alive=true;u.status=undefined;c.b.motion.set(0,{dx:2,dy:0});frames.length=0;c.drawArena(.1);assert.equal(frames[0],player.sample(id,'walk',0));
+ // 카운트다운은 필살기 연출이 보류한 개체/시뮬레이션 시각을 따른다.
+ u.alive=false;u.hp=0;u.riseAt=6.17;
+ c.b.effects.visualUnit=actor=>actor.id===u.id?{...actor,alive:true,hp:10,riseAt:undefined}:actor;
+ c.drawArena(.1);assert.doesNotMatch(els['#battle-hp'].innerHTML,/기상 판정/);
+ delete c.b.effects.visualUnit;
+ labels.length=0;c.drawArena(.1);
+ assert.ok(labels.includes('기상 판정까지 6초'));
+ assert.match(els['#battle-hp'].innerHTML,/기상 판정까지 6초/);
+ c.b.state.t=4;c.drawArena(.1);
+ assert.match(els['#battle-hp'].innerHTML,/기상 판정까지 3초/);
+ c.b.state.over=true;c.drawArena(.1);
+ assert.match(els['#battle-hp'].innerHTML,/전투 불능/);
+ assert.doesNotMatch(els['#battle-hp'].innerHTML,/기상 판정/);
+ c.b.state.over=false;u.riseAt=undefined;c.drawArena(.1);
+ assert.match(els['#battle-hp'].innerHTML,/전투 불능/);
+ u.alive=true;u.hp=5;c.drawArena(.1);
+ assert.doesNotMatch(els['#battle-hp'].innerHTML,/전투 불능|기상 판정/);
+
 });
 
 test('공격 대상 바라보기는 정지·일시정지에서도 유지되고 다음 이동 때만 방향을 바꾼다',()=>{
