@@ -12,8 +12,10 @@
    if(!['hit','heal'].includes(event.type))return;
    const target=units.find(u=>u.id===event.to);if(!target)return;
    const delay=event.type==='hit'&&event.special?windup:0;
-   const duration=event.type==='heal'?1:data.hit.frames.reduce((s,f)=>s+f[1],0)/data.tickRate;
-   effects.push({kind:event.type,x:target.x,y:target.y-10,age:-delay,duration,pending:delay>0,event,before:before?.get(target.id)});
+   const blocked=event.type==='hit'&&event.damage===0;
+   if(blocked&&!delay)return;
+   const duration=blocked?0:event.type==='heal'?1:data.hit.frames.reduce((s,f)=>s+f[1],0)/data.tickRate;
+   effects.push({kind:blocked?'guard':event.type,x:target.x,y:target.y-10,age:-delay,duration,pending:delay>0,event,before:before?.get(target.id)});
    if(delay)return {lead:delay,hold:delay+duration};
   }
   function tick(dt){
@@ -24,7 +26,7 @@
   function draw(ctx,scale=1){
    skills?.draw(ctx,scale);
    for(const e of effects){
-    if(e.age<0)continue;
+    if(e.age<0||e.kind==='guard')continue;
     if(e.kind==='hit'){
      let t=e.age*data.tickRate,cell=data.hit.frames[0][0];
      for(const f of data.hit.frames){cell=f[0];if(t<f[1])break;t-=f[1];}

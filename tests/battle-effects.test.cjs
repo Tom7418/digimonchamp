@@ -9,3 +9,15 @@ test('아직 공통 타격광을 쓰는 기술도 준비 중에는 피해·그�
  const e={type:'hit',special:true,from:0,to:1};fx.add(e,u,before,1,.25);fx.draw({drawImage:(...a)=>draws.push(a)});assert.equal(draws.length,0);assert.equal(fx.visualUnit(u[1]).hp,100);assert.equal(fx.busy,true);
  fx.tick(.251);assert.equal(fx.drain()[0],e);assert.equal(fx.visualUnit(u[1]).hp,0);fx.draw({drawImage:(...a)=>draws.push(a)});assert.equal(draws.length,1);assert.equal(fx.drain().length,0);
 });
+
+test('방어 성공은 타격광을 생략하되 기술 준비 시간과 명중 통지는 보존한다',()=>{
+ const fx=setup(),u=[{id:1,x:90,y:60,hp:100}],draws=[];
+ const ctx={drawImage:(...a)=>draws.push(a)};
+ fx.add({type:'hit',to:1,damage:0},u);
+ fx.draw(ctx);assert.equal(draws.length,0);
+ const blocked={type:'hit',special:true,to:1,damage:0};
+ assert.equal(fx.add(blocked,u,undefined,1,.2).lead,.2);
+ fx.tick(.19);assert.equal(fx.drain().length,0);
+ fx.tick(.02);assert.equal(fx.drain()[0],blocked);
+ fx.draw(ctx);assert.equal(draws.length,0);assert.equal(fx.busy,false);
+});

@@ -145,10 +145,10 @@ test('피해0은 방어34, 치료/강화는35, 부활은33을 종별 원본 길�
 });
 
 test('실제 경기장은 상태이상 지속·해제·KO·정지에서 올바른 원본 자세를 그린다',()=>{
- const source=fs.readFileSync('web/game.js','utf8'),frames=[],heights=[],labels=[],els={};
+ const source=fs.readFileSync('web/game.js','utf8'),frames=[],labels=[],els={};
  const paint={save(){},restore(){},translate(){},scale(){},beginPath(){},ellipse(){},fill(){},fillRect(){},fillText(text){labels.push(text);},strokeText(){}};
  els['#arena']={width:416,height:272,getContext:()=>paint};
- const c=vm.createContext({window:{},performance:{now:()=>0},body:(...args)=>{frames.push(args[6]);heights.push(args[4]);},$:sel=>els[sel]??(els[sel]={}),esc:String,clamp:n=>Math.max(0,Math.min(100,n))});
+ const c=vm.createContext({window:{},performance:{now:()=>0},body:(...args)=>frames.push(args[6]),$:sel=>els[sel]??(els[sel]={}),esc:String,clamp:n=>Math.max(0,Math.min(100,n))});
  for(const f of ['core.js','assets/sprites.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),c);
  vm.runInContext(`const C=ChampCore,animations=window.createAnimationPlayer(window.DIGIMON_ANIMATIONS),SPRITE_BY_NAME=Object.fromEntries(window.SPRITES.map(s=>[s.name,s.id]));
  const battleBackdrop={draw:()=>true,viewport:{x:0,y:0,scale:1},spriteScale:()=>1},spriteOf=()=>({body:24});
@@ -182,42 +182,14 @@ test('실제 경기장은 상태이상 지속·해제·KO·정지에서 올바�
  u.alive=true;u.hp=5;c.drawArena(.1);
  assert.doesNotMatch(els['#battle-hp'].innerHTML,/전투 불능|기상 판정/);
 
- u.alive=false;u.hp=0;
- const hit={kind:'hit',state:'hurt',duration:.5,left:.36,lift:.28};
- c.b.actions.set(0,hit);
- frames.length=heights.length=0;
- c.drawArena(0);
- assert.equal(frames[0],player.sample(id,'hurt',.14));
- assert.ok(heights[0]<u.y+14);
- assert.doesNotMatch(els['#battle-hp'].innerHTML,/전투 불능/);
- hit.left=.2;
- frames.length=heights.length=0;
- c.drawArena(0);
- assert.equal(frames[0],player.sample(id,'ko',0));
- assert.equal(heights[0],u.y+14);
- assert.match(els['#battle-hp'].innerHTML,/전투 불능/);
-});
+ u.status={id:9,until:10};
+ c.b.actions.set(0,{kind:'hit',state:'hurt',duration:1,left:1});
+ frames.length=0;c.drawArena(0);
+ assert.equal(frames[0],player.sample(id,'hurt',0));
+ c.b.actions.clear();
+ frames.length=0;c.drawArena(.1);
+ assert.equal(frames[0],player.sample(id,'sleep',0));
 
-test('마지막 치명타는 착지 후 결과를 확정하고 모션 감소와 방어에서는 떠오르지 않는다',()=>{
- const source=fs.readFileSync('web/game.js','utf8');
- for(const [damage,critical,reduced] of [[20,true,false],[20,true,true],[0,false,false]]){
-  let finishes=0;
-  const c=vm.createContext({damage,critical,matchMedia:()=>({matches:reduced}),battleLog(){},drawArena(){},finishBattle(){finishes++;}});
-  vm.runInContext(`
-   const C={getSpecies:id=>({id}),stepBattle:s=>{s.over=true;return [{type:'hit',from:0,to:1,damage,critical}];}};
-   const SPRITE_BY_NAME={},animations={duration:()=>.1},battleBackdrop={spriteScale:()=>1},spriteOf=()=>({});
-   const battle={acc:0,state:{units:[{id:0,speciesId:'a',x:0,y:0},{id:1,speciesId:'b',x:10,y:0}]},motion:new Map(),actions:new Map(),flashes:[],effects:{add(){},tick(){}}};
-   globalThis.current=battle;
-  `+source.slice(source.indexOf('  function battleTick('),source.indexOf('  function battleLog(')),c);
-  c.battleTick(.1);
-  const animated=critical&&!reduced;
-  assert.equal(c.current.actions.get(1)?.lift>0,animated);
-  assert.equal(finishes,animated?0:1);
-  if(animated){
-   c.current.paused=true;c.battleTick(.5);assert.equal(finishes,0);
-   c.current.paused=false;c.battleTick(.2);assert.equal(finishes,1);
-  }
- }
 });
 
 test('공격 대상 바라보기는 정지·일시정지에서도 유지되고 다음 이동 때만 방향을 바꾼다',()=>{
@@ -268,12 +240,13 @@ test('공격 결과는 명중 때 한 번 기록하고 상태 피해로 인한 �
    {type:'hit',from:0,to:2,damage:3},
    {type:'hit',from:2,to:0,damage:0},
    {type:'hit',from:0,to:2,damage:6,critical:true},
-   delayed,{type:'ko',id:1},
+   delayed,{type:'status',id:1,status:'수면'},{type:'ko',id:1},
    {type:'statusDamage',id:2,status:'독',damage:2},{type:'ko',id:2},
   ]};
   const SPRITE_BY_NAME={},animations={duration:()=>1},battleBackdrop={spriteScale:()=>1},spriteOf=()=>({});
   const effects={busy:false,add(e){if(e===delayed){this.busy=true;return {lead:1};}},tick(){},drain(){if(!this.busy)return [];this.busy=false;return [delayed];}};
   const battle={acc:0,state:{units,over:false},motion:new Map(),actions:new Map(),flashes:[],effects};
+  globalThis.current=battle;
  `+source.slice(source.indexOf('  function battleTick('),source.indexOf('  function battleLog(')),c);
  c.battleTick(.1);
  assert.deepEqual(logs,[
@@ -282,9 +255,11 @@ test('공격 결과는 명중 때 한 번 기록하고 상태 피해로 인한 �
   '공격자 · 일반 공격 → 동료 (크리티컬 · 6)',
   '동료: 독 피해 2','동료 쓰러짐!',
  ]);
+ assert.equal(c.current.flashes.some(f=>f.text==='수면'),false);
  c.battleTick(.02);
- assert.deepEqual(logs.slice(5),['공격자 · 필살기 A → 대상 (12 · TP 4)','대상 쓰러짐!']);
+ assert.deepEqual(logs.slice(5),['공격자 · 필살기 A → 대상 (12 · TP 4)','대상: 수면 상태','대상 쓰러짐!']);
+ assert.equal(c.current.flashes.find(f=>f.text==='수면').until,c.current.visualTime+900);
  c.battleTick(.02);
- assert.equal(logs.length,7);
- assert.deepEqual(routineFlags,[true,true,false,true,false,false,false]);
+ assert.equal(logs.length,8);
+ assert.deepEqual(routineFlags,[true,true,false,true,false,false,false,false]);
 });

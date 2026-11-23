@@ -28,6 +28,21 @@ test('해석되지 않은 기술을 투사체로 꾸미지 않고 기본 공격�
  const {fx}=setup();assert.equal(fx.add({type:'hit',special:false},units()),null);assert.equal(fx.add(event(99999),units()),null);
 });
 
+test('막힌 투사체도 도착 알림은 보내며 전용 타격 그림만 생략한다',()=>{
+ const {data}=setup();
+ const record=Number(Object.keys(data.records).find(k=>data.records[k].kind==='projectile'&&data.records[k].finish&&data.records[k].impact));
+ const run=damage=>{
+  const {fx}=setup(),u=units(),e={...event(record),damage},draws=[];
+  const ctx={save(){},restore(){},translate(){},scale(){},drawImage(...a){draws.push(a);}};
+  const time=fx.add(e,u,undefined,1,.1);
+  fx.tick(time.lead+.001);assert.equal(fx.drain()[0],e);
+  fx.draw(ctx);
+  return draws.length;
+ };
+ assert.equal(run(10),run(0)+1);
+ assert.ok(run(0)>0);
+});
+
 test('왼쪽 기준 투사체는 오른쪽 표적일 때만 반전하고 출발 오프셋은 진행 방향을 따른다',()=>{
  for(const right of [true,false]){
   const {fx}=setup(),u=units();u[0].x=150;u[1].x=right?290:10;fx.add(event(60),u);const scales=[],positions=[];
