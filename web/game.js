@@ -1849,18 +1849,29 @@
       if(!d.isEgg)farmHealth?.draw(ctx,d.uid,C.hpOf(d),d.stats.hp,p.x-32,p.y+12,64,9);
       // 머리 위 상태 말풍선 (배고픔·병·부상·똥·피로)
       const bub = bubbleOf(d);
-      // 빈사 표시는 별도 경고로, 개체 크기와 일시 정지에 맞춰 그린다.
+      // 웹판 빈사 표시. 현재 몸 경계를 기준으로 배치하고 육성 애니메이션 시계를 공유한다.
       if (d.dying && !d.isEgg) {
-        p.dyingCueTime = (p.dyingCueTime ?? 0) + animDt;
-        const staticCue = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-        const phase = staticCue ? 1 : Math.floor(p.dyingCueTime*4)%3;
-        const top = petVisualBounds(p,d).top - (bub ? 22 : 0);
+        const period = 1.2;
+        p.dyingCueTime = ((p.dyingCueTime ?? 0) + animDt) % period;
+        const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+        const angle = reducedMotion ? 0 : p.dyingCueTime / period * Math.PI * 2;
+        const bounds = petVisualBounds(p,d);
+        const radius = Math.max(9,Math.min(22,bounds.width*.28));
+        const centerY = bounds.top - (bub ? 39 : 26);
+        ctx.save();
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.font = 'bold 13px sans-serif';
-        for (let i=0;i<3;i++) {
-          ctx.fillStyle = i===phase ? '#ffe597' : '#aa7350';
-          ctx.fillText('◆',p.x+(i-1)*12,top-27-(i===1?4:0));
+        ctx.fillStyle = '#ffac8b';
+        ctx.fillText('!',bounds.cx,centerY);
+        for (const [offset, color] of [[0,'#abefff'],[Math.PI,'#ecf6fc']]) {
+          const phase = angle + offset;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(bounds.cx+Math.cos(phase)*radius,centerY+Math.sin(phase)*4,2,0,Math.PI*2);
+          ctx.fill();
         }
+        ctx.restore();
       } else {
         p.dyingCueTime = 0;
       }
