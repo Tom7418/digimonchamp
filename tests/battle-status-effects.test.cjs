@@ -11,7 +11,7 @@ test('수면·치료·만료·KO·재적용은 별도 엔진 상태 변경 없�
 });
 test('상태 변경은 즉시 새 그림으로 시작하고 미확인 상태에 임의 도형을 그리지 않는다',()=>{
  const {fx,ctx,draws}=setup(),u={id:1,alive:true,status:{id:7,until:10}};assert.equal(fx.draw(ctx,u,0,bounds).cell,64);fx.tick(.3);u.status={id:1,until:10};assert.equal(fx.draw(ctx,u,.3,bounds).cell,76);
- const n=draws.length;for(const id of [3,12,13]){u.status.id=id;assert.equal(fx.draw(ctx,u,.3,bounds),null);}assert.equal(draws.length,n);
+ const n=draws.length;for(const id of [3]){u.status.id=id;assert.equal(fx.draw(ctx,u,.3,bounds),null);}assert.equal(draws.length,n);
 });
 test('머리 효과는 원본 높이 비율, 얼음·마비는 발끝에 맞추며 개체 크기에 따라 조절한다',()=>{
  const {fx,ctx}=setup(),u={id:0,alive:true,status:{id:9,until:10}};const head=fx.draw(ctx,u,0,bounds);assert.equal(head.y,bounds.bottom-bounds.height*.8);u.status.id=8;const body=fx.draw(ctx,u,0,bounds);assert.equal(body.y,bounds.bottom);
@@ -34,4 +34,37 @@ test('혼란·수면·다운과 추가 상태는 원본 선택 시퀀스를 사�
  const audit=JSON.parse(fs.readFileSync('docs/status-effects-audit.json','utf8'));
  for(const [id,s] of Object.entries(states)){assert.equal(audit.nativeDispatch[id].sequence,s.sequence);assert.equal(audit.nativeDispatch[id].anchor,s.anchor);}
  for(const id of [12,13])assert.equal(audit.nativeDispatch[id].mode,0);
+});
+
+
+test('석화·저주·기상 대기 웹판 효과는 현재 상태에 반응하고 기존 그림을 참조하지 않는다',()=>{
+ const {c,fx,draws}=setup(),paths=[];
+ const ctx={
+  save(){},restore(){},beginPath(){},closePath(){},
+  moveTo(...xy){paths.push(xy);},lineTo(){},stroke(){},fill(){},
+  fillRect(...xy){paths.push([...xy,this.fillStyle]);},
+ };
+ const u={id:1,alive:true,status:{id:12,until:9}};
+ assert.equal(fx.draw(ctx,u,0,bounds).kind,'petrified');
+ const stoneStart=paths.splice(0);
+ fx.tick(.3);fx.draw(ctx,u,.3,bounds);
+ assert.notDeepEqual(paths.splice(0),stoneStart);
+ u.status.id=13;assert.equal(fx.draw(ctx,u,.3,bounds).kind,'cursed');
+ const curseStart=paths.splice(0);
+ fx.tick(0);fx.draw(ctx,u,.3,bounds);
+ assert.deepEqual(paths.splice(0),curseStart);
+ fx.tick(.25);fx.draw(ctx,u,.55,bounds);
+ assert.notDeepEqual(paths.splice(0),curseStart);
+ u.alive=false;u.riseAt=6;
+ assert.equal(fx.draw(ctx,u,.55,bounds).kind,'revival');
+ assert.equal(fx.draw(ctx,u,.55,bounds,true),null);
+ assert.equal(fx.draw(ctx,u,6,bounds),null);
+ u.alive=true;assert.equal(fx.draw(ctx,u,9,bounds),null);
+ assert.equal(draws.length,0);
+
+ c.window.matchMedia=()=>({matches:true});
+ const calm=c.window.createBattleStatusEffects();
+ paths.length=0;calm.draw(ctx,u,0,bounds);
+ const initial=paths.splice(0);calm.tick(1);calm.draw(ctx,u,1,bounds);
+ assert.deepEqual(paths,initial);
 });

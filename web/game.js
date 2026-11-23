@@ -1635,9 +1635,10 @@
       const art=spriteOf(u.speciesId,false),scale=battleBackdrop.spriteScale(art);
       ctx.fillStyle='#081c3044';ctx.beginPath();ctx.ellipse(u.x,u.y+14,Math.max(10,(art?.body||24)*scale*.4),5,0,0,Math.PI*2);ctx.fill();
       body(ctx,u.speciesId,false,u.x,u.y+14,scale,frame,action?.flip??pose.flip);
+      if(!u.alive) ctx.globalAlpha = 1;
       if(battle.statusEffects){
         const bounds=spriteVisualBounds(art,{x:u.x,y:u.y+14,scale,frame,flip:action?.flip??pose.flip});
-        battle.statusEffects.draw(ctx,u,s.t,bounds);
+        battle.statusEffects.draw(ctx,u,s.t,bounds,s.over);
       }
       ctx.globalAlpha = 1;
       const label = downLabel(u);
