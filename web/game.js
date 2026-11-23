@@ -1338,8 +1338,11 @@
       const target=b.state.units.find(u=>u.id===e.to);
       const id=SPRITE_BY_NAME[C.getSpecies(target.speciesId).id];
       const state=e.damage===0?'guard2':Math.random()<0.5?'hurt':'hurtAlt';
-      const duration=animations.duration(id,state);
-      b.actions.set(e.to,{kind:'hit',left:duration,duration,state});
+      // 자체 피격 효과는 명중한 순간에만 시작하고 전투 좌표에는 영향을 주지 않는다.
+      const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+      const lift = e.damage > 0 && e.critical && !reducedMotion ? .28 : 0;
+      const duration = Math.max(lift, animations.duration(id,state));
+      b.actions.set(e.to,{kind:'hit',left:duration,duration,state,lift});
       const text=e.damage===0?'막음':`-${e.damage}${e.critical?' 크리티컬!':e.special?'!':''}`;
       b.flashes.push({id:e.to,text,until:b.visualTime+700,color:e.critical?'#ff9a6a':e.special?'#ffd36a':'#fff'});
       const attack=e.skill?.name ?? (e.special ? '필살기' : '일반 공격');
@@ -1353,6 +1356,11 @@
       b.effects.tick(dt);
       b.statusEffects?.tick(dt);
       for(const e of b.effects.drain?.()||[])battleHitVisual(b,e);
+    }
+    function finishAfterBattleArt(b) {
+      if (!b.state.over || b.effects.busy || b.presentation?.busy || b.health?.busy(b.visualTime)) return;
+      if ([...b.actions.values()].some(action => action.lift > action.duration-action.left)) return;
+      finishBattle();
     }
     const b = battle;
     if (!b || b.paused) return;
@@ -1378,7 +1386,7 @@
       tickBattleArt(b,dt);
       for(const [id,a] of b.actions){a.left-=dt;if(a.left<=0)b.actions.delete(id);}
       drawArena(dt);
-      if(b.state.over&&!b.effects.busy&&!b.health?.busy(b.visualTime))finishBattle();
+      finishAfterBattleArt(b);
       return;
     }
     if(b.done){
@@ -1479,7 +1487,7 @@
     for(const [id,a] of b.actions){a.left-=dt;if(a.left<=0)b.actions.delete(id);}
     drawArena(dt);
     // 마지막 명중의 HP 감소를 보여 준 뒤 결과로 넘어간다. 대기 중 엔진 틱은 진행하지 않는다.
-    if (b.state.over&&!b.effects.busy&&!b.presentation?.busy&&!b.health?.busy(b.visualTime)) finishBattle();
+    finishAfterBattleArt(b);
   }
   function battleLog(t, routine = false) {
     const el = $('#battle-log');
@@ -1584,8 +1592,9 @@
     const s = battle.state;
     const now = battle.visualTime ?? 0;
     const units=s.units.map(u=>battle.effects.visualUnit?.(u)||u);
+    const bodyLifts = new Map();
     const downLabel = (u) => {
-      if (u.alive) return '';
+      if (u.alive || bodyLifts.has(u.id)) return '';
       // 시뮬레이션 시간과 표시용 개체를 사용해 필살기 연출 중에도 상태가 앞서지 않는다.
       if (!s.over && u.riseAt !== undefined) {
         return `기상 판정까지 ${Math.max(1, Math.ceil(u.riseAt - s.t))}초`;
@@ -1619,25 +1628,29 @@
     ctx.translate(viewport.x,viewport.y);ctx.scale(viewport.scale,viewport.scale);
     // 아래쪽 개체를 나중에 그려 뒤쪽 디지몬이 앞쪽을 덮지 않게 한다.
     for (const u of [...units].sort((a,b)=>a.y-b.y||a.id-b.id)) {
-      ctx.globalAlpha = !u.alive?0.3:focus&&u.id!==focus.from?1-focus.dim:1;
       const m=battle.done?{dx:0,dy:0}:battle.motion.get(u.id)||{dx:u.team===0?0.001:-0.001,dy:0};
       const spriteId=SPRITE_BY_NAME[C.getSpecies(u.speciesId).id];
       // 원본 반응12의 착지 후 자세(0x2116e38..0x2116e78).
-      // 웹판은 원작의 공중 낙하 물리 대신 지속 자세를 바로 표시한다.
       const status=u.status?.until>s.t?u.status.id:0;
       const statusPose=({8:'sleep2',9:'sleep',10:'eyesClosed',12:'sleep2'})[status];
       const pose=animations.movement(u,spriteId,m.dx,m.dy,dt,!u.alive||!!statusPose,statusPose);
       const action=battle.actions.get(u.id);
-      // 피격 시 해당 종의 원본 셀을 원본 유지 시간으로 재생한다. 인위적 흔들림/점멸 없음.
       const actionAge=action?Math.max(0,action.duration-action.left):0;
       const actionFrame=action?.holdUntil&&animations.sampleCast?animations.sampleCast(spriteId,action.state,actionAge,action.holdUntil):action?animations.sample(spriteId,action.state,actionAge):pose.frame;
-      const frame=!u.alive?animations.sample(spriteId,'ko',0):statusPose?pose.frame:actionFrame;
       const art=spriteOf(u.speciesId,false),scale=battleBackdrop.spriteScale(art);
+      const airborne = action?.lift > actionAge;
+      const rise = airborne ? Math.min(24,Math.max(9,(art?.body??24)*scale*.35)) : 0;
+      const progress = airborne ? actionAge/action.lift : 0;
+      const lift = rise*4*progress*(1-progress);
+      if (airborne) bodyLifts.set(u.id,lift);
+      const frame = airborne ? actionFrame : !u.alive ? animations.sample(spriteId,'ko',0) : statusPose ? pose.frame : actionFrame;
+      const bodyY = u.y+14-lift;
+      ctx.globalAlpha = !u.alive&&!airborne ? .3 : focus&&u.id!==focus.from ? 1-focus.dim : 1;
       ctx.fillStyle='#081c3044';ctx.beginPath();ctx.ellipse(u.x,u.y+14,Math.max(10,(art?.body||24)*scale*.4),5,0,0,Math.PI*2);ctx.fill();
-      body(ctx,u.speciesId,false,u.x,u.y+14,scale,frame,action?.flip??pose.flip);
+      body(ctx,u.speciesId,false,u.x,bodyY,scale,frame,action?.flip??pose.flip);
       if(!u.alive) ctx.globalAlpha = 1;
       if(battle.statusEffects){
-        const bounds=spriteVisualBounds(art,{x:u.x,y:u.y+14,scale,frame,flip:action?.flip??pose.flip});
+        const bounds=spriteVisualBounds(art,{x:u.x,y:bodyY,scale,frame,flip:action?.flip??pose.flip});
         battle.statusEffects.draw(ctx,u,s.t,bounds,s.over);
       }
       ctx.globalAlpha = 1;
@@ -1662,7 +1675,7 @@
       ctx.fillStyle = f.color;
       ctx.strokeStyle = '#203040';
       ctx.lineWidth = 3;
-      const y = u.y - 40 - (700 - (f.until - now)) / 25;
+      const y = u.y - 40 - (bodyLifts.get(u.id)??0) - (700 - (f.until - now)) / 25;
       const half=f.skill?Math.min(110,ctx.measureText(f.text).width/2):0;
       const x=f.skill?Math.max(half+5,Math.min(475-half,u.x)):u.x;
       ctx.strokeText(f.text, x, y, f.skill?220:480);
