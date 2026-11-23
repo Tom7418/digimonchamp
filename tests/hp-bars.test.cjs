@@ -30,3 +30,41 @@ test('필살기 명중 대기 중에는 원본 HP바도 아직 줄어들지 않�
  fx.add({type:'hit',from:0,to:1,special:true},units,before,1,.25);fx.tick(.1);time(100);assert.equal(bars.sample(1,fx.visualUnit(units[1]).hp,100),100);assert.equal(bars.busy(),false);
  fx.tick(.151);time(251);assert.equal(bars.sample(1,fx.visualUnit(units[1]).hp,100),100);assert.equal(bars.busy(),true);time(601);assert.equal(bars.sample(1,fx.visualUnit(units[1]).hp,100),60);
 });
+
+
+test('배틀 정지는 효과·행동·HP 보간과 다음 전투 틱을 함께 멈춘다',()=>{
+ const {c,bars,time}=setup();
+ const visual=[];
+ let steps=0;
+ c.drawArena=()=>visual.push(bars.sample(0,20,100,c.battle.visualTime));
+ c.finishBattle=()=>assert.fail('진행 중인 배틀이 종료됨');
+ c.C={stepBattle:()=>{steps++;return [];}};
+ const state={over:false,units:[]};
+ const action={left:1};
+ const effects={busy:true,elapsed:0,tick(dt){this.elapsed+=dt;}};
+ c.battle={paused:false,done:false,visualTime:0,acc:0,state,effects,health:bars,actions:new Map([[0,action]]),motion:new Map(),flashes:[]};
+ bars.sample(0,100,100,0);
+ const s=fs.readFileSync('web/game.js','utf8');
+ vm.runInContext(s.slice(s.indexOf('  function battleTick('),s.indexOf('  function battleLog(')),c);
+
+ c.battleTick(.05);
+ const hp=visual.at(-1);
+ c.battle.paused=true;
+ time(8000);
+ c.battleTick(.05);
+ assert.equal(visual.length,1);
+ assert.equal(c.battle.visualTime,50);
+ assert.equal(effects.elapsed,.05);
+ assert.equal(action.left,.95);
+ assert.equal(bars.sample(0,20,100,c.battle.visualTime),hp);
+ assert.equal(steps,0);
+
+ c.battle.paused=false;
+ c.battleTick(.05);
+ assert.equal(c.battle.visualTime,100);
+ assert.ok(visual.at(-1)<hp&&visual.at(-1)>20);
+ assert.equal(effects.elapsed,.1);
+ effects.busy=false;
+ c.battleTick(.1);
+ assert.equal(steps,1);
+});

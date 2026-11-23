@@ -1132,7 +1132,7 @@
     if (!$('#modal').open) $('#modal').showModal();
   }
   function closeModal() {
-    if (battle && !battle.state.over) return;
+    if (battle && !battle.done) return;
     $('#modal').close();
     if (dayEnding) return finishDay();
     if (battle) {
@@ -1301,16 +1301,22 @@
     );
     battleBackdrop.preload(map);
     for(const u of state.units)spriteOf(u.speciesId,false); // 배경과 출전 그림을 함께 미리 읽는다.
-    battle = { setup, state, map, statusEffects:window.createBattleStatusEffects?.(), health:window.createHpBars?.(), assetWait:0, presentation:window.createBattlePresentation(), acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
+    battle = { setup, state, map, statusEffects:window.createBattleStatusEffects?.(), health:window.createHpBars?.(), assetWait:0, visualTime:0, paused:false, presentation:window.createBattlePresentation(), acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
     if(holderFoes)log(`${setup.title} 홀더 「${C.titleHolder(setup.match.id).name}」 등장`);
     log(`${setup.title} 출전: ${team.map(nameOf).join(', ')}`);
     showModal(
       setup.title,
-      '<div class="battle-layout"><div class="battle-stage"><div class="battle-map-info"><b id="battle-map-name"></b><span id="battle-time"></span></div><canvas id="arena" width="416" height="272" aria-label="배틀 경기장"></canvas></div><div class="battle-side"><div class="battle-health" id="battle-hp"></div><div class="battle-log" id="battle-log" aria-label="전투 기록"></div></div></div>',
+      '<div class="battle-layout"><div class="battle-stage"><div class="battle-map-info"><b id="battle-map-name"></b><div class="battle-controls"><span id="battle-time"></span><button type="button" id="battle-pause" aria-controls="arena">일시 정지</button></div></div><canvas id="arena" width="416" height="272" aria-label="배틀 경기장"></canvas></div><div class="battle-side"><div class="battle-health" id="battle-hp"></div><div class="battle-log" id="battle-log" aria-label="전투 기록"></div></div></div>',
       'AUTO BATTLE',
       '결과 확인',
     );
     $('#modal').classList?.add('battle-modal');
+    const pauseButton = $('#battle-pause');
+    pauseButton.onclick = () => {
+      if (!battle || battle.done || battle.state.over) return;
+      battle.paused = !battle.paused;
+      pauseButton.textContent = battle.paused ? '계속 진행' : '일시 정지';
+    };
     $('#modal-ok').disabled = true;
     $('#close-modal').disabled = true;
     render();
@@ -1324,7 +1330,7 @@
       const duration=animations.duration(id,state);
       b.actions.set(e.to,{kind:'hit',left:duration,duration,state});
       const text=e.damage===0?'막음':`-${e.damage}${e.critical?' 크리티컬!':e.special?'!':''}`;
-      b.flashes.push({id:e.to,text,until:performance.now()+700,color:e.critical?'#ff9a6a':e.special?'#ffd36a':'#fff'});
+      b.flashes.push({id:e.to,text,until:b.visualTime+700,color:e.critical?'#ff9a6a':e.special?'#ffd36a':'#fff'});
       if(e.damage===0)battleLog(`${target.name}: 공격을 막아 냄 (피해 0)`);
       else if(e.critical)battleLog(`크리티컬! ${target.name}에게 ${e.damage}`);
       if(delayed&&!target.alive)battleLog(`${target.name} 쓰러짐!`);
@@ -1335,7 +1341,9 @@
       for(const e of b.effects.drain?.()||[])battleHitVisual(b,e,true);
     }
     const b = battle;
-    if (!b) return;
+    if (!b || b.paused) return;
+    // 표시용 시간도 멈춰 HP와 피해 숫자가 재개 시 건너뛰지 않게 한다.
+    b.visualTime = (b.visualTime ?? 0) + dt * 1000;
     // 그림을 읽는 동안 보이지 않는 전투가 먼저 진행되지 않는다. 실패/지연은 최대4초만 기다린다.
     if(!b.done&&b.map&&(b.assetWait??0)<4&&
       (b.effects.ready===false||b.statusEffects?.ready===false||battleBackdrop.status(b.map)==='loading'||b.state.units.some(u=>{const a=spriteOf(u.speciesId,false);return a&&!a.image.complete;}))){
@@ -1356,7 +1364,7 @@
       tickBattleArt(b,dt);
       for(const [id,a] of b.actions){a.left-=dt;if(a.left<=0)b.actions.delete(id);}
       drawArena(dt);
-      if(b.state.over&&!b.effects.busy&&!b.health?.busy())finishBattle();
+      if(b.state.over&&!b.effects.busy&&!b.health?.busy(b.visualTime))finishBattle();
       return;
     }
     if(b.done){
@@ -1394,22 +1402,22 @@
           if(b.actions.get(e.from)?.kind!=='hit') b.actions.set(e.from,{kind:'attack',left:actionDuration,duration:actionDuration,state:attackState,holdUntil,flip:target.x>attacker.x});
           if(!effect?.lead)battleHitVisual(b,e);
           if(e.special&&e.skill){
-            b.flashes.push({id:e.from,text:e.skill.name,until:performance.now()+700,color:'#a9e7ff',skill:true});
+            b.flashes.push({id:e.from,text:e.skill.name,until:b.visualTime+700,color:'#a9e7ff',skill:true});
             const cost=Number.isFinite(e.skill.tpCost)?` · TP ${e.skill.tpCost}`:'';
             battleLog(`${attacker.name} · ${e.skill.name} → ${target.name} (${e.damage}${cost})`);
           }
         }
         if (e.type === 'status') {
-          b.flashes.push({ id: e.id, text: e.status, until: performance.now() + 900, color: '#c79bff' });
+          b.flashes.push({ id: e.id, text: e.status, until: b.visualTime + 900, color: '#c79bff' });
           battleLog(`${b.state.units[e.id].name}: ${e.status} 상태`);
         }
-        if (e.type === 'statusDamage') b.flashes.push({ id: e.id, text: `-${e.damage} ${e.status}`, until: performance.now() + 700, color: '#a6e36b' });
+        if (e.type === 'statusDamage') b.flashes.push({ id: e.id, text: `-${e.damage} ${e.status}`, until: b.visualTime + 700, color: '#a6e36b' });
         if (e.type === 'heal') {
-          b.flashes.push({ id: e.to, text: `+${e.amount}`, until: performance.now() + 700, color: '#8ef0a0' });
+          b.flashes.push({ id: e.to, text: `+${e.amount}`, until: b.visualTime + 700, color: '#8ef0a0' });
           if(e.support)battleLog(`${b.state.units[e.from].name} · ${e.support.name} → ${b.state.units[e.to].name} +${e.amount}`);
         }
         if(e.type==='support'){
-          b.flashes.push({id:e.from,text:e.skill.name,until:performance.now()+700,color:'#a3efdf',skill:true});
+          b.flashes.push({id:e.from,text:e.skill.name,until:b.visualTime+700,color:'#a3efdf',skill:true});
           battleLog(`${b.state.units[e.from].name} · ${e.skill.name} (${e.skill.tpCost}TP)`);
 
         }
@@ -1417,7 +1425,7 @@
           const actor=b.state.units.find(u=>u.id===e.id);
           const duration=animations.duration(SPRITE_BY_NAME[C.getSpecies(actor.speciesId).id],'shout');
           b.actions.set(e.id,{kind:'attack',left:duration,duration,state:'shout'});
-          b.flashes.push({id:e.id,text:`+${e.amount}`,until:performance.now()+900,color:'#8ef0a0'});
+          b.flashes.push({id:e.id,text:`+${e.amount}`,until:b.visualTime+900,color:'#8ef0a0'});
           battleLog(`${actor.name} 다시 일어났다!`);
         }
         // 치료도 지원 시전자 동작을 재생한다. 전원 치료의 대상별 이벤트는 같은 틱에 시작한다.
@@ -1438,7 +1446,7 @@
     for(const [id,a] of b.actions){a.left-=dt;if(a.left<=0)b.actions.delete(id);}
     drawArena(dt);
     // 마지막 명중의 HP 감소를 보여 준 뒤 결과로 넘어간다. 대기 중 엔진 틱은 진행하지 않는다.
-    if (b.state.over&&!b.effects.busy&&!b.presentation?.busy&&!b.health?.busy()) finishBattle();
+    if (b.state.over&&!b.effects.busy&&!b.presentation?.busy&&!b.health?.busy(b.visualTime)) finishBattle();
   }
   function battleLog(t) {
     const el = $('#battle-log');
@@ -1530,6 +1538,7 @@
     ctx.imageSmoothingEnabled = false;
     window.HDText?.begin(ctx);
     const s = battle.state;
+    const now = battle.visualTime ?? 0;
     const units=s.units.map(u=>battle.effects.visualUnit?.(u)||u);
     const downLabel = (u) => {
       if (u.alive) return '';
@@ -1540,7 +1549,7 @@
       return '전투 불능';
     };
     // 동작 플레이어가 개체 객체를 추적하므로 복제하지 않고 표시 HP를 별도 맵에 둔다.
-    const shownHp=new Map(units.map(u=>[u.id,battle.health?.sample(u.id,u.hp,u.maxHp)??u.hp]));
+    const shownHp=new Map(units.map(u=>[u.id,battle.health?.sample(u.id,u.hp,u.maxHp,now)??u.hp]));
     const focus=battle.presentation?.snapshot();
     let camera=null;
     ctx.save();
@@ -1597,10 +1606,9 @@
         ctx.fillStyle = !s.over && u.riseAt !== undefined ? '#ffe0a1' : '#d4dbe3';
         ctx.fillText(label, u.x, u.y - 25);
       }
-      battle.health?.draw(ctx,u.id,u.hp,u.maxHp,u.x-27,u.y+18,54,8,u.team===1);
+      battle.health?.draw(ctx,u.id,u.hp,u.maxHp,u.x-27,u.y+18,54,8,u.team===1,now);
     }
     battle.effects.draw(ctx,1/viewport.scale);
-    const now = performance.now();
     battle.flashes = battle.flashes.filter((f) => f.until > now);
     for (const f of battle.flashes) {
       const u = s.units[f.id];
@@ -1627,6 +1635,8 @@
       ctx.fillText(battleBackdrop.status(battle.map)==='failed'?'배경을 불러오지 못했습니다.':'경기장을 불러오는 중…',el.width/2,18);
     }
     $('#battle-map-name').textContent=battle.map.name;
+    const pauseButton = $('#battle-pause');
+    if (pauseButton) pauseButton.disabled = s.over;
     $('#battle-time').textContent=`TIME ${Math.max(0,Math.ceil(C.TIME_LIMIT-s.t))}`;
     const team = (t) => units.filter((u) => u.team === t);
     const hpHtml = [0, 1]
