@@ -18,6 +18,8 @@ assert struct.unpack_from('<I', overlay, 0x2129489-base)[0] == 0x2120F84
 assert struct.unpack_from('<I', overlay, 0x21294aa-base)[0] == 0x2120CC4
 
 links = {}
+# 투명 여백·색·기준 위치를 대조했다. 각각 세 장의 보이는 도착 셀이 일치한다.
+matching_finishes = {'346': (0x3903, [34, 2]), '385': (0x3E03, [54, 2])}
 for number, current in assets['records'].items():
     row = 0xD02CC + int(number) * 104
     if struct.unpack_from('<I', arm, row+40)[0] != family:
@@ -28,6 +30,14 @@ for number, current in assets['records'].items():
     flight_seq, finish_seq = (flight & 255)-1, (finish & 255)-1
     sequences = assets['banks'].get(str(bank), {}).get('sequences', {})
     if str(flight_seq) not in sequences or str(finish_seq) not in sequences:
+        if number in matching_finishes:
+            resource, alias = matching_finishes[number]
+            assert finish == resource
+            assert str(alias[1]) in assets['banks'][str(alias[0])]['sequences']
+            links[number] = {
+                'kind': 'impactOnly', 'finish': alias, 'finishFrameTicks': 6,
+                'flightOffset': [x, y, percent/100], 'impact': current['impact'],
+            }
         continue
     links[number] = {
         'kind': 'lob', 'speed': struct.unpack_from('<H', arm, row+8)[0]/100,
@@ -36,7 +46,7 @@ for number, current in assets['records'].items():
         'impact': current['impact'],
     }
 
-assert set(links) == {'90', '221', '242', '249', '300', '340'}
+assert set(links) == {'90', '221', '242', '249', '300', '340', *matching_finishes}
 data = json.dumps(links, ensure_ascii=False, separators=(',', ':'))
 (out / 'lob-effects.js').write_text(f'window.BATTLE_LOB_EFFECTS={data};\n', encoding='utf-8')
-print(f'Linked {len(links)} throwing effects using existing atlas frames.')
+print(f'Linked {len(links)-len(matching_finishes)} flights and {len(matching_finishes)} extra finishes.')

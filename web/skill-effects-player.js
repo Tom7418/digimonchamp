@@ -4,7 +4,7 @@
  root.createBattleSkillEffects=function(data=root.BATTLE_SKILL_EFFECTS,lobEffects=root.BATTLE_LOB_EFFECTS){
   const image=new Image();image.src='assets/battle/skill-effects.png';let jobs=[],clock=0;const arrivals=[];
   const sequence=ref=>data.banks[ref[0]].sequences[ref[1]];
-  const duration=ref=>ref?sequence(ref).frames.reduce((n,f)=>n+f[1],0)/data.tickRate:0;
+  const duration=(ref,frameTicks)=>ref?sequence(ref).frames.reduce((n,f)=>n+(frameTicks??f[1]),0)/data.tickRate:0;
   function add(event,units,before,actorScale=1,windup=0){
    if(event.type!=='hit'||!event.special)return null;
    const record=event.skill?.record;
@@ -12,7 +12,7 @@
    if(!d||!a||!t)return null;
    // 미해석 스크립트는 이미 확인한 대상 타격 그림만 사용한다. 비행 궤적을 임의로 만들지 않는다.
    const travels=d.kind==='projectile'||d.kind==='beam'||d.kind==='lob';
-   if(!travels&&(!d.impact||event.damage===0))return null;
+   if(!travels&&(!(d.impact||d.finish)||event.damage===0))return null;
    // 투사체 원본도 왼쪽을 본다. 그림 반전과 좌표 진행 부호를 분리한다.
    const flip=t.x>a.x,sign=flip?1:-1,off=d.flightOffset||[0,0,1];
    const sourceOrigin=data.actorOrigins?.[a.speciesId];
@@ -21,7 +21,7 @@
    const lead=travels?Math.hypot(end.x-start.x,end.y-start.y)/(d.speed*data.tickRate):0;
    const beam=d.kind==='beam'?data.beam:null;
    const activeEnd=beam?Math.max(lead,(beam.growDelayFrames+Math.ceil(1/beam.widthStep)-1)/data.tickRate):0;
-   const tail=beam?Math.max(activeEnd-lead+Math.ceil(1/beam.widthStep)/data.tickRate,duration(d.impact)):Math.max(duration(d.finish),duration(d.impact));
+   const tail=beam?Math.max(activeEnd-lead+Math.ceil(1/beam.widthStep)/data.tickRate,duration(d.impact)):Math.max(duration(d.finish,d.finishFrameTicks),duration(d.impact));
    jobs.push({d,event,from,actorScale,start,end,flip,begin:clock+windup,lead,tail,activeEnd,arrived:windup+lead===0,before:before?.get(t.id)});
    return {lead:windup+lead,hold:windup+lead+tail,lockActor:d.kind==='beam'};
   }
@@ -32,9 +32,10 @@
   }
   function drawRef(ctx,ref,x,y,age,scale=1,flip=false,options={}){
    if(!ref||!image.complete||!image.naturalWidth)return;
-   const s=sequence(ref),total=duration(ref)*data.tickRate;let tick=Math.max(0,age)*data.tickRate;
-   if(tick>=total){if(!s.loop&&!options.hold)return;if(!s.loop)tick=total-1e-6;else {const intro=s.frames.slice(0,s.start).reduce((n,f)=>n+f[1],0);tick=intro+(tick-total)%(total-intro);}}
-   let ci=s.frames.at(-1)[0];for(const [cell,ticks] of s.frames){ci=cell;if(tick<ticks)break;tick-=ticks;}
+   const {frameTicks}=options;
+   const s=sequence(ref),total=duration(ref,frameTicks)*data.tickRate;let tick=Math.max(0,age)*data.tickRate;
+   if(tick>=total){if(!s.loop&&!options.hold)return;if(!s.loop)tick=total-1e-6;else {const intro=s.frames.slice(0,s.start).reduce((n,f)=>n+(frameTicks??f[1]),0);tick=intro+(tick-total)%(total-intro);}}
+   let ci=s.frames.at(-1)[0];for(const [cell,hold] of s.frames){const ticks=frameTicks??hold;ci=cell;if(tick<ticks)break;tick-=ticks;}
    const c=data.banks[ref[0]].cells[ci];ctx.save();ctx.translate(x,y);if(options.angle)ctx.rotate(options.angle);ctx.scale((flip?-1:1)*(options.x??scale),options.y??scale);
    ctx.drawImage(image,c.x,c.y,c.w,c.h,c.left,c.top,c.w,c.h);ctx.restore();
   }
@@ -69,7 +70,7 @@
      }
      drawRef(ctx,d.flight,j.start.x+(j.end.x-j.start.x)*p,y,age,d.flightOffset[2]*scale,j.flip,{hold:d.kind==='lob'});
     }else{
-     drawRef(ctx,d.finish,j.end.x,j.end.y,age-j.lead,(d.flightOffset?.[2]||1)*scale,j.flip);
+     drawRef(ctx,d.finish,j.end.x,j.end.y,age-j.lead,(d.flightOffset?.[2]||1)*scale,j.flip,{frameTicks:d.finishFrameTicks});
      if(j.event.damage!==0)drawRef(ctx,d.impact,j.end.x,j.end.y,age-j.lead,scale,j.flip);
     }
    }

@@ -4,8 +4,9 @@ const units=()=>[{id:0,x:40,y:90,hp:100,alive:true},{id:1,x:180,y:100,hp:0,alive
 const event=record=>({type:'hit',special:true,from:0,to:1,skill:{record},damage:100});
 test('기존 그림을 가진 여섯 기술이 준비·곡선 비행·도착 그림을 재생한다',()=>{
  const {data,lobs}=setup();
- assert.deepEqual(Object.keys(lobs).map(Number),[90,221,242,249,300,340]);
- for(const [n,record] of Object.entries(lobs)){
+ const flights=Object.entries(lobs).filter(([,record])=>record.kind==='lob');
+ assert.deepEqual(flights.map(([n])=>Number(n)),[90,221,242,249,300,340]);
+ for(const [n,record] of flights){
   const {fx}=setup(),u=units(),e=event(+n),positions=[];
   const ctx={save(){},restore(){},translate(x,y){positions.push([x,y]);},scale(){},drawImage(){}};
   for(const [bank,seq] of [record.flight,record.finish]) assert.ok(data.banks[bank].sequences[seq]);
@@ -30,6 +31,24 @@ test('기존 그림을 가진 여섯 기술이 준비·곡선 비행·도착 그
  }
  // 같은 계열이어도 도착·비행 그림을 아직 보유하지 않은 기술에는 잘못된 그림을 붙이지 않는다.
  assert.equal(setup().fx.add(event(88),units()),null);
+});
+
+test('체리 봄과 비트 봄의 일치하는 도착 셀은 준비가 끝난 뒤 6틱 간격으로 표시된다',()=>{
+ for(const record of [346,385]){
+  const {fx,data,lobs}=setup(),u=units(),e=event(record);
+  const [bank,seq]=lobs[record].finish,art=data.banks[bank],draws=[];
+  const ctx={save(){},restore(){},translate(){},scale(){},drawImage(_img,x,y){draws.push([x,y]);}};
+  const timing=fx.add(e,u,new Map([[1,{...u[1],hp:100}]]),1,.2);
+  assert.equal(timing.lead,.2);assert.equal(fx.visualUnit(u[1]).hp,100);
+  fx.tick(.19);fx.draw(ctx);assert.equal(draws.length,0);
+  fx.tick(.011);assert.equal(fx.drain()[0],e);
+  const [first,second]=art.sequences[seq].frames.map(([id])=>art.cells[id]);
+  fx.draw(ctx);assert.deepEqual(draws[0],[first.x,first.y]);
+  draws.length=0;fx.tick(.09);fx.draw(ctx);
+  assert.deepEqual(draws[0],[first.x,first.y]);
+  draws.length=0;fx.tick(.012);fx.draw(ctx);
+  assert.deepEqual(draws[0],[second.x,second.y]);
+ }
 });
 test('361개 기술의 참조는 실제 원본 NANR/셀과 무손실 아틀라스 안에 있다',()=>{
  const {data}=setup();assert.equal(Object.keys(data.records).length,361);assert.equal(Object.values(data.records).filter(x=>x.kind==='projectile').length,122);
