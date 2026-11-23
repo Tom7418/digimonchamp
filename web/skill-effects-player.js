@@ -1,22 +1,24 @@
 'use strict';
 (function(root){
  // 원본 0x21285ee/0x2129611: 발사/비행/명중 NANR, 속도, 오프셋·배율. 대상 이동/충돌은 확정된 웹 이벤트를 따른다.
- root.createBattleSkillEffects=function(data=root.BATTLE_SKILL_EFFECTS){
+ root.createBattleSkillEffects=function(data=root.BATTLE_SKILL_EFFECTS,lobEffects=root.BATTLE_LOB_EFFECTS){
   const image=new Image();image.src='assets/battle/skill-effects.png';let jobs=[],clock=0;const arrivals=[];
   const sequence=ref=>data.banks[ref[0]].sequences[ref[1]];
   const duration=ref=>ref?sequence(ref).frames.reduce((n,f)=>n+f[1],0)/data.tickRate:0;
   function add(event,units,before,actorScale=1,windup=0){
    if(event.type!=='hit'||!event.special)return null;
-   const d=data?.records[event.skill?.record],a=units.find(u=>u.id===event.from),t=units.find(u=>u.id===event.to);
+   const record=event.skill?.record;
+   const d=lobEffects?.[record]??data?.records[record],a=units.find(u=>u.id===event.from),t=units.find(u=>u.id===event.to);
    if(!d||!a||!t)return null;
    // 미해석 스크립트는 이미 확인한 대상 타격 그림만 사용한다. 비행 궤적을 임의로 만들지 않는다.
-   if(!['projectile','beam'].includes(d.kind)&&(!d.impact||event.damage===0))return null;
+   const travels=d.kind==='projectile'||d.kind==='beam'||d.kind==='lob';
+   if(!travels&&(!d.impact||event.damage===0))return null;
    // 투사체 원본도 왼쪽을 본다. 그림 반전과 좌표 진행 부호를 분리한다.
    const flip=t.x>a.x,sign=flip?1:-1,off=d.flightOffset||[0,0,1];
    const sourceOrigin=data.actorOrigins?.[a.speciesId];
    const from=sourceOrigin?{x:a.x+(flip?-1:1)*sourceOrigin[0]*actorScale,y:a.y+14+sourceOrigin[1]*actorScale}:{x:a.x,y:a.y};
    const start={x:from.x+sign*off[0]*actorScale,y:from.y+off[1]*actorScale},end={x:t.x,y:t.y-10};
-   const lead=['projectile','beam'].includes(d.kind)?Math.hypot(end.x-start.x,end.y-start.y)/(d.speed*60):0;
+   const lead=travels?Math.hypot(end.x-start.x,end.y-start.y)/(d.speed*data.tickRate):0;
    const beam=d.kind==='beam'?data.beam:null;
    const activeEnd=beam?Math.max(lead,(beam.growDelayFrames+Math.ceil(1/beam.widthStep)-1)/data.tickRate):0;
    const tail=beam?Math.max(activeEnd-lead+Math.ceil(1/beam.widthStep)/data.tickRate,duration(d.impact)):Math.max(duration(d.finish),duration(d.impact));
@@ -53,8 +55,19 @@
      drawRef(ctx,d.origin,j.start.x,j.start.y,age,scale,false,{y:thickness*scale,hold:true});
      if(age>=j.lead&&j.event.damage!==0)drawRef(ctx,d.impact,j.end.x,j.end.y,age-j.lead,scale,j.flip);
     }else if(age<j.lead){
-     const o=d.muzzleOffset;drawRef(ctx,d.muzzle,j.from.x+(j.flip?1:-1)*o[0]*j.actorScale,j.from.y+o[1]*j.actorScale,age,o[2]*scale,j.flip);
-     const p=age/j.lead;drawRef(ctx,d.flight,j.start.x+(j.end.x-j.start.x)*p,j.start.y+(j.end.y-j.start.y)*p,age,d.flightOffset[2]*scale,j.flip);
+     if(d.muzzle){
+      const o=d.muzzleOffset;
+      drawRef(ctx,d.muzzle,j.from.x+(j.flip?1:-1)*o[0]*j.actorScale,j.from.y+o[1]*j.actorScale,age,o[2]*scale,j.flip);
+     }
+     const p=age/j.lead;
+     let y=j.start.y+(j.end.y-j.start.y)*p;
+     if(d.kind==='lob'){
+      // 원작 투척 계열의 속도와 비행 시간으로 상승량을 계산하고 웹의 확정 명중점에 맞춘다.
+      const ticks=j.lead*data.tickRate;
+      const gravity=10*d.speed/(data.tickRate*Math.sqrt(Math.max(1,ticks)));
+      y-=gravity*ticks*ticks*p*(1-p)/2;
+     }
+     drawRef(ctx,d.flight,j.start.x+(j.end.x-j.start.x)*p,y,age,d.flightOffset[2]*scale,j.flip,{hold:d.kind==='lob'});
     }else{
      drawRef(ctx,d.finish,j.end.x,j.end.y,age-j.lead,(d.flightOffset?.[2]||1)*scale,j.flip);
      if(j.event.damage!==0)drawRef(ctx,d.impact,j.end.x,j.end.y,age-j.lead,scale,j.flip);

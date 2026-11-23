@@ -1,7 +1,36 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-function setup(){const c=vm.createContext({window:{},Image:function(){this.complete=true;this.naturalWidth=2048;}});for(const p of ['assets/battle/skill-effects.js','skill-effects-player.js'])vm.runInContext(fs.readFileSync('web/'+p,'utf8'),c);return {data:c.window.BATTLE_SKILL_EFFECTS,fx:c.window.createBattleSkillEffects()};}
+function setup(){const c=vm.createContext({window:{},Image:function(){this.complete=true;this.naturalWidth=2048;}});for(const p of ['assets/battle/skill-effects.js','assets/battle/lob-effects.js','skill-effects-player.js'])vm.runInContext(fs.readFileSync('web/'+p,'utf8'),c);return {data:c.window.BATTLE_SKILL_EFFECTS,lobs:c.window.BATTLE_LOB_EFFECTS,fx:c.window.createBattleSkillEffects()};}
 const units=()=>[{id:0,x:40,y:90,hp:100,alive:true},{id:1,x:180,y:100,hp:0,alive:false}];
 const event=record=>({type:'hit',special:true,from:0,to:1,skill:{record},damage:100});
+test('기존 그림을 가진 여섯 기술이 준비·곡선 비행·도착 그림을 재생한다',()=>{
+ const {data,lobs}=setup();
+ assert.deepEqual(Object.keys(lobs).map(Number),[90,221,242,249,300,340]);
+ for(const [n,record] of Object.entries(lobs)){
+  const {fx}=setup(),u=units(),e=event(+n),positions=[];
+  const ctx={save(){},restore(){},translate(x,y){positions.push([x,y]);},scale(){},drawImage(){}};
+  for(const [bank,seq] of [record.flight,record.finish]) assert.ok(data.banks[bank].sequences[seq]);
+  const before=new Map([[1,{...u[1],hp:100,alive:true}]]),windup=.1;
+  const timing=fx.add(e,u,before,1,windup);
+  fx.draw(ctx);assert.equal(positions.length,0);
+  fx.tick(windup);
+  fx.draw(ctx);const startY=positions[0][1];
+  positions.length=0;
+  fx.tick((timing.lead-windup)*.5);
+  fx.draw(ctx);
+  assert.equal(positions.length,1);
+  assert.ok(positions[0][1]<(startY+u[1].y-10)/2);
+  assert.equal(fx.visualUnit(u[1]).hp,100);
+  assert.equal(fx.drain().length,0);
+  fx.tick((timing.lead-windup)*.5+.001);
+  positions.length=0;fx.draw(ctx);
+  assert.deepEqual(positions[0],[u[1].x,u[1].y-10]);
+  assert.equal(fx.visualUnit(u[1]).hp,0);
+  assert.equal(fx.drain()[0],e);
+  assert.equal(fx.drain().length,0);
+ }
+ // 같은 계열이어도 도착·비행 그림을 아직 보유하지 않은 기술에는 잘못된 그림을 붙이지 않는다.
+ assert.equal(setup().fx.add(event(88),units()),null);
+});
 test('361개 기술의 참조는 실제 원본 NANR/셀과 무손실 아틀라스 안에 있다',()=>{
  const {data}=setup();assert.equal(Object.keys(data.records).length,361);assert.equal(Object.values(data.records).filter(x=>x.kind==='projectile').length,122);
  for(const d of Object.values(data.records))for(const key of ['muzzle','flight','finish','impact','head','hitHead','origin'])if(d[key]){
