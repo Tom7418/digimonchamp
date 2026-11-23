@@ -7,6 +7,7 @@ test('원본216종 전용도감그림이실제도감의각종ID와맞고범위�
 test('등록한종만원본도트·이름·기술을표시하고미등록정보를숨긴다',()=>{
  const s=setup();s.save.seen=['아구몬'];const html=s.render(null);assert.match(html,/아구몬/);assert.match(html,/헤비 플레임/);assert.doesNotMatch(html,/토이아구몬/);
  assert.equal((html.match(/data-dex=/g)||[]).length,216);assert.equal((html.match(/ disabled/g)||[]).length,215);assert.equal((html.match(/class="dex-unknown"/g)||[]).length,215);
+ assert.doesNotMatch(html,/dex-unknown[^>]*>\?/);
 });
 test('등록종선택으로상세정보를바꾸며열람은등록상태를변경하지않는다',()=>{
  const s=setup();s.save.seen=['아구몬','가루다몬'];const row=s.C.dexEntries(s.save).find(e=>e.id==='가루다몬'),before=JSON.stringify(s.save),html=s.render(row.no);

@@ -27,6 +27,20 @@ test('실제 사냥 시작은 배경 crop 좌표를 더한 안전한 칸에5마�
  for(const w of s.ctx.hunt.wilds)assert.equal(s.ctx.C.canStandOnHuntTerrain(s.ctx.hunt.terrain,s.ctx.huntMapPoint(w)),true);
  const bits=s.ctx.save.bits;s.ctx.startHunt({id:'없는 필드',open:true,fee:100});assert.equal(s.ctx.save.bits,bits);
 });
+test('야생 디지몬은 졸음에 따라 감속하고 눈 감은 걸음에서 수면으로 전환한다',()=>{
+ const s=setup();s.barrier();
+ s.ctx.wildSleepMax=()=>10;s.ctx.WAKE_DROWSY_SPEED=10;
+ const w={id:'깜몬',x:100,y:220,vx:30,vy:0,hp:1,max:1,flash:0,turn:100,stun:0,sleepy:8,belly:0};
+ s.ctx.hunt.wilds=[w];
+ s.ctx.huntTick(.1);const early=w.movedX;
+ w.sleepy=9.8;s.ctx.huntTick(.1);
+ assert.ok(w.movedX>0&&w.movedX<early);
+ assert.equal(s.ctx.wildPose(w),'walkEyesClosed');
+ s.ctx.huntTick(.2);
+ assert.equal(w.stunKind,'수면');assert.equal(w.movedX,0);assert.equal(s.ctx.wildPose(w),'sleep');
+ w.stunKind='감전';assert.equal(s.ctx.wildPose(w),'zapped');
+ w.stun=0;w.eating=true;assert.equal(s.ctx.wildPose(w),'eat');
+});
 test('도주·미끼 장난감 이동도 잘라낸 지도 위치의 벽을 넘지 않고 와이어 충돌은 유지한다',()=>{
  const s=setup();s.barrier();const w={id:'깜몬',x:180,y:220,vx:600,vy:0,hp:1,max:1,flee:10,flash:0,turn:100,stun:0};s.ctx.hunt.wilds=[w];
  const toy={x:180,y:220,vx:600,vy:0,left:10,range:0,kind:'toy',name:'미끼'};s.ctx.hunt.baits=[toy];s.ctx.huntTick(0.05);

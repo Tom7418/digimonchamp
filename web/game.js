@@ -1784,15 +1784,19 @@
       const d = digi(p.uid);
       if (!d) continue;
       const oldX = p.x, oldY = p.y;
-      const trainingRun=!!p.cageId&&d.personality==='성급한'&&C.isTraining(d);
+      const dragging = board.isDragging(d.uid);
+      const trainingActive = !dragging && !!p.cageId && C.isTraining(d);
+      const trainingRun = trainingActive && d.personality === '성급한';
       // 잡고 옮기는 동안에는 자율 이동·먹기 예약이 드롭 위치를 덮어쓰지 않는다.
-      if (board.isDragging(d.uid)) feeding.delete(d.uid);
+      if (dragging) feeding.delete(d.uid);
       // 빈사: 돌아다니지 못한다 (help #124). 굶주려 빈사가 된 개체만 놓아 준 먹이까지 기어가 먹을 수 있다 (웹판 정책)
       if (d.dying && d.hunger > 0) feeding.delete(d.uid);
-      if (animDt > 0 && !board.isDragging(d.uid) && !board.isBouncing(d.uid) && !d.isEgg && !hatching.has(d.uid)) {
+      if (animDt > 0 && !dragging && !board.isBouncing(d.uid) && !d.isEgg && !hatching.has(d.uid)) {
         const eating = (!d.dying || d.hunger <= 0) && seekFood(p, d, animDt);
         // 케이지 안에서도 목표를 유지하며 걷는다. 식사/수면/드래그/튕기기가 우선한다.
-        if (!eating && !d.dying) board.roamPet(p,animDt,(trainingRun?48:16)*(d.fatigue>80?0.4:1),trainingRun?.15:1);
+        if (!eating && !d.dying && (!trainingActive || trainingRun)) {
+          board.roamPet(p,animDt,(trainingRun?48:16)*(d.fatigue>80?0.4:1),trainingRun?.15:1);
+        }
       }
       const selected = p.uid === view.pickedUid; // 고른 디지몬만 발밑 테두리를 표시
       const scale = d.isEgg ? 1.6 : 2;
@@ -1811,9 +1815,11 @@
       const facility=L.types[p.cage];
       const facilityNo=({field:'cm30',gym:'cm34',clinic:'cm16'})[p.cage] || facility?.img?.match(/cm[0-9]+/)?.[0];
       const trainingSequence=window.DIGIMON_ANIMATIONS.training[facilityNo];
-      // 훈련은 원작 시설 행동표의 동작으로 표시. 복합 행동의 첫 동작만 연결.
-      const state=board.isBouncing(d.uid) ? 'hurtAlt' : d.dying ? (d.hunger<=0&&['walk','eat'].includes(p.motion)?p.motion:'ko') : C.isSleeping(d) ? 'seq_13' : p.cageId&&p.motion==='idle'&&trainingSequence!==undefined&&!d.isEgg&&!d.trainDone
-        ? 'seq_'+trainingSequence : p.motion||'idle';
+      // 실제 훈련 중에 시설별 자세를 재생한다. 식사와 성급한 개체의 달리기가 우선한다.
+      const trainingPose = trainingActive && p.motion === 'idle'
+        ? (trainingSequence === undefined ? 'train' : 'seq_'+trainingSequence)
+        : null;
+      const state=board.isBouncing(d.uid) ? 'hurtAlt' : d.dying ? (d.hunger<=0&&['walk','eat'].includes(p.motion)?p.motion:'ko') : C.isSleeping(d) ? 'seq_13' : trainingPose || p.motion || 'idle';
       if (d.isEgg) asset(SPRITE_BY_NAME[C.getSpecies(d.originBaby || d.speciesId).id]); // 부화 전에 미리 불러 둔다
       // 안내 편지/다른 창 때문에 연출이 대기 중이어도 진화 후 모습을 먼저 보여 주지 않는다.
       const evolutionFrom=window.evolutionScene?.appearance(d.uid);
@@ -1843,6 +1849,21 @@
       if(!d.isEgg)farmHealth?.draw(ctx,d.uid,C.hpOf(d),d.stats.hp,p.x-32,p.y+12,64,9);
       // 머리 위 상태 말풍선 (배고픔·병·부상·똥·피로)
       const bub = bubbleOf(d);
+      // 빈사 표시는 별도 경고로, 개체 크기와 일시 정지에 맞춰 그린다.
+      if (d.dying && !d.isEgg) {
+        p.dyingCueTime = (p.dyingCueTime ?? 0) + animDt;
+        const staticCue = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+        const phase = staticCue ? 1 : Math.floor(p.dyingCueTime*4)%3;
+        const top = petVisualBounds(p,d).top - (bub ? 22 : 0);
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 13px sans-serif';
+        for (let i=0;i<3;i++) {
+          ctx.fillStyle = i===phase ? '#ffe597' : '#aa7350';
+          ctx.fillText('◆',p.x+(i-1)*12,top-27-(i===1?4:0));
+        }
+      } else {
+        p.dyingCueTime = 0;
+      }
       // 병·부상·스트레스·배고픔은 원작 말풍선 그림(common/e001_ikusei 30·31·34·36)
       const bubImage = bub && fxImage({ '🤢': 'bubble_sick', '🩹': 'bubble_injured', stress: 'bubble_stress', '🍖': 'bubble_hungry' }[bub] || 'bubble_stress');
       if (bub && (bub === 'stress' || '🤢🩹🍖'.includes(bub)) && bubImage.complete && bubImage.naturalWidth) {
@@ -2335,6 +2356,8 @@
       if (w.gone) continue;
       // 이번 틱의 실제 변위. 로프·와이어로 이동하지 못하면 걷기를 재생하지 않는다.
       w.movedX = 0; w.movedY = 0;
+      w.eating = false;
+      w.drowsyProgress = 0;
       const oldX = w.x, oldY = w.y;
       w.flash = Math.max(0, w.flash - dt);
       if (w.ko) {
@@ -2454,7 +2477,8 @@
           continue;
         }
       }
-      const drowsy = !w.waking && w.sleepy >= wildSleepMax(w) * C.SLEEP_DROWSY_RATIO;
+      const sleepyRatio = !w.waking ? w.sleepy / wildSleepMax(w) : 0;
+      const drowsiness = Math.max(0, Math.min(1, (sleepyRatio - C.SLEEP_DROWSY_RATIO) / (1 - C.SLEEP_DROWSY_RATIO)));
       // 마인은 밟으면 터지고, 함정은 밟은 디지몬을 붙잡는다
       // 원본: 마인·함정 그림 첫 셀 크기의 절반 상자 안에 들어오면 발동
       const trap = hunt.traps.find((t) => t.g.kind !== 'bomb' && C.inBox(w.x - t.x, w.y - t.y, (t.g.kind === 'mine' ? C.MINE_BOX : C.TRAP_BOX)[t.g.id] || [16, 12]) && huntGroundLine(w,t));
@@ -2511,6 +2535,7 @@
         w.turn = 1;
         // 고기에 닿으면 먹는다: 먹기 동작이 한 바퀴 돌 때마다 세대별 한 입(원본). 독·마비 고기는 한 입마다 효과 판정
         if (dist <= 14 && lure.amount !== undefined && huntGroundLine(w,lure)) {
+          w.eating = true;
           w.eatTime = (w.eatTime || 0) + dt;
           const loop = eatLoopSeconds(w);
           if (w.eatTime >= loop) {
@@ -2532,13 +2557,18 @@
         w.turn -= dt;
         if (w.turn <= 0) {
           w.turn = 1.5 + Math.random() * 3;
-          // 졸리면(졸음 80% 이상) 천천히 걷는다 (원본 0x2112A94, 속도는 웹판 졸린 걸음)
-          const a = Math.random() * Math.PI * 2, v = drowsy ? WAKE_DROWSY_SPEED : 15 + Math.random() * 25;
+          const a = Math.random() * Math.PI * 2, v = 15 + Math.random() * 25;
           w.vx = Math.cos(a) * v;
           w.vy = Math.sin(a) * v * 0.6;
         }
       }
-      const target={x:w.x+w.vx*dt,y:w.y+w.vy*dt},edgeX=!(w.flee>0)&&(target.x<AREA.x0||target.x>AREA.x1),edgeY=!(w.flee>0)&&(target.y<AREA.y0+20||target.y>AREA.y1);
+      // 졸음이 깊어질수록 이동을 줄인다. 도주·회복·먹이 접근은 별도 속도를 쓴다.
+      const speed = Math.hypot(w.vx,w.vy);
+      w.drowsyProgress = lure || w.flee>0 || w.waking || w.runAway>0 ? 0 : drowsiness;
+      w.drowsyAge = w.drowsyProgress ? (w.drowsyAge ?? 0)+dt : 0;
+      const stride = w.drowsyProgress > 0 && speed > WAKE_DROWSY_SPEED
+        ? 1-w.drowsyProgress*(1-WAKE_DROWSY_SPEED/speed) : 1;
+      const target={x:w.x+w.vx*dt*stride,y:w.y+w.vy*dt*stride},edgeX=!(w.flee>0)&&(target.x<AREA.x0||target.x>AREA.x1),edgeY=!(w.flee>0)&&(target.y<AREA.y0+20||target.y>AREA.y1);
       // 화면 경계 보정도 지형 검사 전에 수행해, 나중에 좌표를 잘라 벽 안으로 넣지 않는다.
       if(!(w.flee>0)){target.x=Math.min(AREA.x1,Math.max(AREA.x0,target.x));target.y=Math.min(AREA.y1,Math.max(AREA.y0+20,target.y));}
       const next = huntGroundMove(w,target);
@@ -2844,6 +2874,23 @@
     followHuntPointer();
   }
 
+  function wildPose(w) {
+    if (w.ko) return 'ko';
+    const bound = w.bound > 0;
+    const moving = !!(w.movedX || w.movedY);
+    if (w.stun > 0 && w.stunKind === '수면') return bound ? 'boundSleep' : 'sleep';
+    if (w.stun > 0 && w.stunKind === '감전') return 'zapped';
+    if (bound) return moving ? 'boundRun' : 'boundIdle';
+    if (w.eating) return 'eat';
+    if (w.runAway > 0) return moving ? 'run' : 'idle';
+    if (w.stun > 0 && w.stunKind === '마비') return 'eyesClosed';
+    // 한 주기에서 눈을 감는 비율은 졸음과 함께 커진다.
+    if (w.drowsyProgress > 0 && (w.drowsyAge ?? 0) % 1 < w.drowsyProgress) {
+      return moving ? 'walkEyesClosed' : 'eyesClosed';
+    }
+    return null;
+  }
+
   function drawHunt(t, dt) {
     hunt.health?.begin();
     window.HDText?.begin(ctx);
@@ -2907,13 +2954,9 @@
       }
       if (w.flash > 0 && Math.floor(w.flash * 20) % 2) ctx.globalAlpha = 0.4;
       const spriteId = SPRITE_BY_NAME[C.getSpecies(w.id).id];
-      const motion = w.ko
-        ? {frame:animations.pose(w,spriteId,'ko',dt),flip:w.vx>0}
-        : w.bound>0 || w.runAway>0
-        ? {frame:animations.pose(w,spriteId,(w.movedX||w.movedY)?'boundRun':'boundIdle',dt),flip:w.vx>0}
-        : w.waking && w.hp < w.max * C.WILD_WALK_RATIO
-        ? animations.movement(w, spriteId, w.movedX || 0, w.movedY || 0, dt * 0.5) // 졸린 듯 느린 걸음
-        : animations.movement(w, spriteId, w.movedX || 0, w.movedY || 0, dt);
+      const pose = wildPose(w);
+      const motion = animations.movement(w, spriteId, w.movedX || 0, w.movedY || 0,
+        w.waking && w.hp < w.max*C.WILD_WALK_RATIO ? dt*.5 : dt, !w.movedX&&!w.movedY, pose);
       spriteFrames.set(w,{frame:motion.frame,speciesId:w.id,flip:motion.flip});
       body(ctx, w.id, false, w.x, w.y, HUNT_SPRITE_SCALE, motion.frame, motion.flip);
       ctx.globalAlpha = 1;

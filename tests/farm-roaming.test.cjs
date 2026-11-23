@@ -23,6 +23,15 @@ test('실제 육성 화면은 소속 케이지 안에서 걸으며 걷기 대신
  assert.ok(Math.abs(s.p.y-y)>20);assert.ok(s.poses.includes('walk'));assert.equal(s.p.cageId,'c');
  assert.equal(s.texts.some(text=>String(text).includes('아구몬')),false);
 });
+test('실제 훈련을 시작할 때마다 자세를 재생하고 이미 끝났거나 아플 때는 훈련하지 않는다',()=>{
+ const s=setup(),d=s.ctx.save.digimon[0];
+ d.cage='미니 운동장';s.p.cage='field';
+ s.ctx.window.DIGIMON_ANIMATIONS.training.cm30=32;
+ s.ctx.drawFarm(0,.1);assert.equal(s.poses.at(-1),'seq_32');
+ d.trainDone=true;s.ctx.drawFarm(0,.1);assert.notEqual(s.poses.at(-1),'seq_32');
+ d.trainDone=false;s.ctx.drawFarm(0,.1);assert.equal(s.poses.at(-1),'seq_32');
+ d.sick=true;s.ctx.drawFarm(0,.1);assert.notEqual(s.poses.at(-1),'seq_32');
+});
 test('실제 육성 화면은 수면·식사·정지 화면·알 상태에서는 자율 이동하지 않는다',()=>{
  for(const mode of ['paused','mailOpen','dayEnding','titleOpen','food','sleep','egg']){
   const s=setup(),old={x:s.p.x,y:s.p.y};
@@ -41,6 +50,7 @@ test('빈사는 정지할 때KO, 굶주린 식사 접근 중 걷기, 도착하�
   const s=setup(),d=s.ctx.save.digimon[0];d.dying={};d.hunger=mode==='rest'?50:0;
   s.ctx.seekFood=()=>{if(mode==='walk')s.p.x+=1;if(mode!=='rest')s.ctx.feeding.set(d.uid,{});return true;};
   s.ctx.drawFarm(0,.1);const expected={rest:'ko',walk:'walk',eat:'eat'}[mode];assert.equal(s.poses.at(-1),expected);
+  assert.equal(s.texts.filter(text=>text==='◆').length,3);
   const source=fs.readFileSync('web/game.js','utf8'),a=source.indexOf('  const portraitActor ='),b=source.indexOf('  // ---------- 사냥',a);
   s.ctx.current=()=>d;s.ctx.portrait=s.ctx.ctx;s.ctx.spriteOf=()=>({baseline:40,body:24});
   vm.runInContext(source.slice(a,b),s.ctx);s.ctx.drawPortrait(.1);assert.equal(s.poses.at(-1),expected);
