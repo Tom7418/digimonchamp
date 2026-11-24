@@ -138,3 +138,24 @@ test('준비 동작 동안 기술 그림·피해를 보류하고 입이 열린 �
   fx.tick(t.lead-wait);assert.equal(fx.drain().length,1);assert.equal(fx.visualUnit(u[1]).hp,0);
  }
 });
+
+test('투척 기술 7종은 함께 배포한 아틀라스로 원본 속도·비행·도착 그림을 재생한다',()=>{
+ const c=vm.createContext({window:{},Image:function(){this.complete=true;this.naturalWidth=512;}});
+ for(const p of ['assets/battle/skill-effects.js','assets/battle/lob-effects.js','assets/battle/throw-effects.js','skill-effects-player.js'])vm.runInContext(fs.readFileSync('web/'+p,'utf8'),c);
+ const throws=c.window.BATTLE_THROW_EFFECTS,data=c.window.BATTLE_SKILL_EFFECTS;
+ assert.deepEqual(Object.keys(throws.records).map(Number).sort((a,b)=>a-b),[88,310,346,385,391,425,552]);
+ assert.ok(fs.existsSync('web/'+throws.image));
+ for(const [n,r] of Object.entries(throws.records)){
+  for(const [bank,seq] of [r.flight,r.finish]){assert.ok(!(bank in data.banks));const s=throws.banks[bank].sequences[seq];for(const [cell] of s.frames)assert.ok(throws.banks[bank].cells[cell]);}
+  const fx=c.window.createBattleSkillEffects(),u=units(),e=event(+n),images=[];
+  const ctx={save(){},restore(){},translate(){},scale(){},drawImage(img){images.push(img);}};
+  const timing=fx.add(e,u,new Map([[1,{...u[1],hp:100,alive:true}]]),1,.1);
+  assert.ok(timing&&timing.lead>.1,n);
+  fx.tick(.1+(timing.lead-.1)*.5);fx.draw(ctx);
+  assert.equal(images.length,1);assert.equal(fx.visualUnit(u[1]).hp,100);
+  fx.tick((timing.lead-.1)*.5+.001);
+  assert.equal(fx.visualUnit(u[1]).hp,0);assert.equal(fx.drain()[0],e);
+ }
+ // 체리 봄 레코드: 속도 2.5, 발사 위치 (16,-10), 배율 200% (ARM9 기술 레코드 +0x08/+0x32)
+ assert.equal(JSON.stringify([throws.records[346].speed,throws.records[346].flightOffset]),"[2.5,[16,-10,2]]");
+});

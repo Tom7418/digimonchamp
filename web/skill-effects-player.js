@@ -1,16 +1,18 @@
 'use strict';
 (function(root){
  // 원본 0x21285ee/0x2129611: 발사/비행/명중 NANR, 속도, 오프셋·배율. 대상 이동/충돌은 확정된 웹 이벤트를 따른다.
- root.createBattleSkillEffects=function(data=root.BATTLE_SKILL_EFFECTS,lobEffects=root.BATTLE_LOB_EFFECTS){
+ root.createBattleSkillEffects=function(data=root.BATTLE_SKILL_EFFECTS,lobEffects=root.BATTLE_LOB_EFFECTS,throwEffects=root.BATTLE_THROW_EFFECTS){
   const image=new Image();image.src='assets/battle/skill-effects.png';let jobs=[],clock=0;const arrivals=[];
-  const local=root.BattleLocalLobs?.current;
-  const bank=ref=>local?.banks[ref[0]]??data.banks[ref[0]];
+  // 투척 기술 7종(tools/extract_throw_effects.py): 따로 변환한 아틀라스. 뱅크 키는 't'+원본 뱅크 번호라 기존 뱅크와 겹치지 않는다.
+  const throwImage=throwEffects?Object.assign(new Image(),{src:throwEffects.image}):null;
+  const bank=ref=>throwEffects?.banks[ref[0]]??data.banks[ref[0]];
+  const throwRecord=record=>{const t=throwEffects?.records[record];return t&&{...t,impact:data?.records[record]?.impact??null};};
   const sequence=ref=>bank(ref).sequences[ref[1]];
   const duration=(ref,frameTicks)=>ref?sequence(ref).frames.reduce((n,f)=>n+(frameTicks??f[1]),0)/data.tickRate:0;
   function add(event,units,before,actorScale=1,windup=0){
    if(event.type!=='hit'||!event.special)return null;
    const record=event.skill?.record;
-   const d=local?.records[record]??lobEffects?.[record]??data?.records[record],a=units.find(u=>u.id===event.from),t=units.find(u=>u.id===event.to);
+   const d=throwRecord(record)??lobEffects?.[record]??data?.records[record],a=units.find(u=>u.id===event.from),t=units.find(u=>u.id===event.to);
    if(!d||!a||!t)return null;
    // 미해석 스크립트는 이미 확인한 대상 타격 그림만 사용한다. 비행 궤적을 임의로 만들지 않는다.
    const travels=d.kind==='projectile'||d.kind==='beam'||d.kind==='lob';
@@ -34,8 +36,8 @@
   }
   function drawRef(ctx,ref,x,y,age,scale=1,flip=false,options={}){
    if(!ref)return;
-   const art=bank(ref),source=art.image??image;
-   if(source===image&&(!image.complete||!image.naturalWidth))return;
+   const art=bank(ref),source=throwEffects?.banks[ref[0]]?throwImage:image;
+   if(!source.complete||!source.naturalWidth)return;
    const {frameTicks}=options;
    const s=sequence(ref),total=duration(ref,frameTicks)*data.tickRate;let tick=Math.max(0,age)*data.tickRate;
    if(tick>=total){if(!s.loop&&!options.hold)return;if(!s.loop)tick=total-1e-6;else {const intro=s.frames.slice(0,s.start).reduce((n,f)=>n+(frameTicks??f[1]),0);tick=intro+(tick-total)%(total-intro);}}

@@ -1,0 +1,168 @@
+{
+  "records": {
+    "346": {
+      "kind": "lob",
+      "speed": 2.5,
+      "flightOffset": [
+        16,
+        -10,
+        2.0
+      ],
+      "flight": [
+        "t57",
+        1
+      ],
+      "finish": [
+        "t57",
+        2
+      ]
+    },
+    "385": {
+      "kind": "lob",
+      "speed": 3.5,
+      "flightOffset": [
+        16,
+        -10,
+        1.0
+      ],
+      "flight": [
+        "t62",
+        1
+      ],
+      "finish": [
+        "t62",
+        2
+      ]
+    },
+    "88": {
+      "kind": "lob",
+      "speed": 2.5,
+      "flightOffset": [
+        16,
+        -16,
+        1.0
+      ],
+      "flight": [
+        "t24",
+        1
+      ],
+      "finish": [
+        "t24",
+        2
+      ]
+    },
+    "310": {
+      "kind": "lob",
+      "speed": 2.5,
+      "flightOffset": [
+        16,
+        -16,
+        1.0
+      ],
+      "flight": [
+        "t88",
+        1
+      ],
+      "finish": [
+        "t88",
+        2
+      ]
+    },
+    "391": {
+      "kind": "lob",
+      "speed": 2.5,
+      "flightOffset": [
+        16,
+        -10,
+        1.0
+      ],
+      "flight": [
+        "t37",
+        1
+      ],
+      "finish": [
+        "t37",
+        2
+      ]
+    },
+    "425": {
+      "kind": "lob",
+      "speed": 2.5,
+      "flightOffset": [
+        16,
+        -10,
+        1.0
+      ],
+      "flight": [
+        "t37",
+        1
+      ],
+      "finish": [
+        "t37",
+        2
+      ]
+    },
+    "552": {
+      "kind": "lob",
+      "speed": 2.5,
+      "flightOffset": [
+        5,
+        -24,
+        1.0
+      ],
+      "flight": [
+        "t11",
+        0
+      ],
+      "finish": [
+        "t11",
+        1
+      ]
+    }
+  },
+  "cells": 27,
+  "atlas": [
+    512,
+    50
+  ],
+  "sha256": {
+    "e003_banana00": {
+      ".ncer": "492a34ab4c2635bd0ba45fe4dcc7dd50280a57e038e81440303ba98fac4f59fb",
+      ".ncbr": "ad24871a1d375a3888299f108ab5f3ed65041e3a5a5c1a20bc14dcb5ccd69aef",
+      ".nclr": "2fcb64833836b44427d62c6f8dffba934ea116a8cba2809b95651f045a06e083",
+      ".nanr": "0a2a59daa1c8f28607a97fe658dcfe55a85894d0b4f155df68e1248c3e049d26"
+    },
+    "e003_rock00": {
+      ".ncer": "64381b369a80ad0c73e8bfc2fb85eec5cf79ccbd9a7928c6f754a92ca189a979",
+      ".ncbr": "1cf771848b2695c66ae33e5897aeee3c754c652eaa88ef9fa67500e539ddd079",
+      ".nclr": "4514acf21489ded1be7badeebfa31b35407c60dcd72406f6033170ad47d8feef",
+      ".nanr": "e55f468559d35bf1549aadd3455434767089308e30ad39e9281c7bef1eb55e5d"
+    },
+    "e003_hart00": {
+      ".ncer": "878a199e72b17b6acd2615802217a1f555bc67894d7b5ebf1b29b029288b849a",
+      ".ncbr": "575e44031338af71a88eab519631b0f74664e3172d5bc3fcad8e15bee0caf906",
+      ".nclr": "abefbc8cf15827cff02680f366473faa35b186f4cdd17dd4027ebaab283fabae",
+      ".nanr": "b94c3b739d3731d735edc8e1cfd5ba58165ed0e6b7c8df35593a7c6608ba0b41"
+    },
+    "e003_cherrybomb00": {
+      ".ncer": "505a5ae664a535c6c350999b41e0d1a8df60b8d71355c298ecfb8cc5fead0987",
+      ".ncbr": "0ac00ce0eb27c40047ce4b19f53222803cf483bc74595273c6b62da3b965130e",
+      ".nclr": "a04dc4155eb685e3cca15ad52fe34035153a638b79a0ccafc9aea6cf95107f29",
+      ".nanr": "debd5e0c9bffb21ad691256844d81b503688807797b0b75512c0167f7d7e347f"
+    },
+    "e003_bitbomb00": {
+      ".ncer": "0abdb4fa81d14d6240a24bd87b8746035bb2312fe538d6ce87555331a411fca6",
+      ".ncbr": "0051c37386753fccb013f3d768f7e48b708d830dbd521e196b4ec0b6189f447d",
+      ".nclr": "8844ac89904e2ee9544a6a3ce8e45e83d34a03f57ee52164b3983968e11c15e7",
+      ".nanr": "c56f00df0f76b957fb932ae4d4312d385326edeee75b8774fd04087bddd089b3"
+    },
+    "e003_icerock00": {
+      ".ncer": "64381b369a80ad0c73e8bfc2fb85eec5cf79ccbd9a7928c6f754a92ca189a979",
+      ".ncbr": "1cf771848b2695c66ae33e5897aeee3c754c652eaa88ef9fa67500e539ddd079",
+      ".nclr": "fc17f240c460d6886bb6320c5202c738e3240c0c5b69b2899ecf2b0a9034695c",
+      ".nanr": "e55f468559d35bf1549aadd3455434767089308e30ad39e9281c7bef1eb55e5d"
+    }
+  },
+  "arm9": "48db2d1f92e951fe3413f0ec50e5148e9e50082d05ecfbab4a6de5db434e8a09",
+  "overlay19": "02ef4c126fd11bd5e2bea21202442bd48575b2afcd29c045f70036940ebde671"
+}
