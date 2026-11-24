@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
 import { initialResistance, resistBounds, RESIST_ORDER } from '../src/core/data';
 import { evolvedResistance } from '../src/core/stats';
-import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy , relocate, trainingBlocker, BOND, CONTAGION, mateBond, settleMates } from '../src/core/care';
+import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy , relocate, trainingBlocker, BOND, CONTAGION, mateBond, settleMates, GRUMBLE } from '../src/core/care';
 import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank, lifespanOf } from '../src/core/evolution';
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, npcTeamFoes, npcTeam, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -2495,4 +2495,27 @@ it('실제 치명타 경로도 즉시 부활 대신 기상 대기를 예약한�
   expect(ev.some(e=>e.type==='ko'&&e.id===victim.id)).toBe(true);
   expect(victim.alive).toBe(false);expect(victim.riseAt).toBeCloseTo(s.t+310/60);
   expect(s.over).toBe(false);expect(ev.some(e=>e.type==='revive')).toBe(false);
+});
+
+describe('혼자인 겁쟁이 · 좁은 케이지의 완전체 (원본 +0x1A8·+0x1B4)', () => {
+  const mon = (uid: number, sp: string, patch: Partial<Digimon> = {}): Digimon => ({ ...newDigimon(uid, sp), hunger: 100, cage: '미니 운동장', cageInstance: 'c1', trainDone: true, stress: 10, ...patch });
+  const farm = (digimon: Digimon[]) => ({ ...freshEggSave(0), clock: 10 * 60 + 5, digimon }) as SaveData;
+  it('겁쟁이가 혼자 180분을 넘기면 스트레스 +1, 동거 디지몬이 있으면 시간이 준다', () => {
+    const r = tickFarm(farm([mon(1, '아구몬', { personality: '겁쟁이', lonelyMinutes: GRUMBLE.after })]), seeded(1));
+    expect(r.events).toContainEqual({ type: 'grumble', uid: 1, name: '아구몬', reason: 'lonely' });
+    expect(r.save.digimon[0]).toMatchObject({ lonelyMinutes: 0 });
+    expect(r.save.digimon[0].stress).toBeGreaterThan(10);
+    const shared = tickFarm(farm([mon(1, '아구몬', { personality: '겁쟁이', lonelyMinutes: 50 }), mon(2, '아구몬')]), seeded(1)).save.digimon[0];
+    expect(shared.lonelyMinutes).toBe(49);
+    const bold = tickFarm(farm([mon(1, '아구몬', { personality: '대담', lonelyMinutes: GRUMBLE.after })]), seeded(1));
+    expect(bold.events.some((e) => e.type === 'grumble')).toBe(false);
+  });
+  it('완전체·궁극체는 정원 2 이하 케이지에서 180분을 넘기면 스트레스 +1', () => {
+    const r = tickFarm(farm([mon(1, '안드로몬', { cage: '공터', crampedMinutes: GRUMBLE.after })]), seeded(1));
+    expect(r.events).toContainEqual({ type: 'grumble', uid: 1, name: '안드로몬', reason: 'cramped' });
+    const wide = tickFarm(farm([mon(1, '안드로몬', { cage: '운동장', crampedMinutes: 30 })]), seeded(1)).save.digimon[0];
+    expect(wide.crampedMinutes).toBe(29);
+    const young = tickFarm(farm([mon(1, '아구몬', { cage: '공터', crampedMinutes: GRUMBLE.after })]), seeded(1));
+    expect(young.events.some((e) => e.type === 'grumble')).toBe(false);
+  });
 });

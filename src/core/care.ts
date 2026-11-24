@@ -216,6 +216,8 @@ export type FarmEvent =
   | { type: 'blocked'; uid: number; name: string; reason: 'rank' | 'capacity' }
   /** 수명이 한 번 늘었다 (원본 +0x4C). rank: 랭크 때문에 못 한 진화, bond: 수명이 다할 때 유대 50 이상 */
   | { type: 'extended'; uid: number; name: string; reason: 'rank' | 'bond' }
+  /** 불만 반응 (원본 반응 18, overlay18 0x2118FF4: 스트레스 +1). lonely: 겁쟁이가 혼자, cramped: 완전체·궁극체가 좁은 케이지 */
+  | { type: 'grumble'; uid: number; name: string; reason: 'lonely' | 'cramped' }
   /** 쓰다듬기가 6분을 채워 유대 +1·스트레스 -1 */
   | { type: 'petted'; uid: number; name: string };
 
@@ -254,7 +256,7 @@ function evolveDigimon(d: Digimon, to: string, rng: Rng, bonus = false): Digimon
   // 원본 ARM9 0x2062258: 새 종 구조체(속성·종족 수치 0)를 만들고 능력치만 이월한다 → 진화하면 속성·종족 수치는 0부터
   const ap = Object.fromEntries(Object.keys(d.ap).map((k) => [k, 0])) as Record<ApKey, number>;
   // 부상 위험도(원본 +0x40)·수명 연장(+0x4C)·동거/전염 시간은 이월하지 않아 0. 스트레스(+0x1C)는 50까지만, 유대(+0x20)는 그대로(0x2062660~0x2062694)
-  const next: Digimon = { ...d, speciesId: to, stageAge: 0, stats: evolvedStats(d, to, d.eggs, rng), resistance: evolvedResistance(d, to, d.eggs, rng), statVersion: 1, ap, rottenEaten: 0, memory: remember(d), injuryRisk: 0, lifeExtended: false, mateMinutes: 0, contagionMinutes: 0, stress: Math.min(50, d.stress ?? 0) };
+  const next: Digimon = { ...d, speciesId: to, stageAge: 0, stats: evolvedStats(d, to, d.eggs, rng), resistance: evolvedResistance(d, to, d.eggs, rng), statVersion: 1, ap, rottenEaten: 0, memory: remember(d), injuryRisk: 0, lifeExtended: false, mateMinutes: 0, contagionMinutes: 0, lonelyMinutes: 0, crampedMinutes: 0, stress: Math.min(50, d.stress ?? 0) };
   if (bonus) addBond(next, BOND.evolve);
   return next;
 }
@@ -477,6 +479,14 @@ export function settleMates(d: Digimon, mates: readonly Digimon[]) {
     addBond(d, step);
   }
 }
+/**
+ * 혼자 있는 겁쟁이 · 좁은 케이지의 완전체·궁극체 (overlay18).
+ *  - 겁쟁이(성격 7): 같은 케이지에 자신뿐이면 +0x1A8이 매분 +1, 동거 디지몬이 있으면 -1(0 아래로 안 감) (0x21182DC·0x2118490)
+ *  - 완전체·궁극체: 정원(케이지 +9, 0x204F260)이 2 이하인 케이지면 +0x1B4가 매분 +1, 아니면 -1 (0x21184C0)
+ *  - 행동을 고를 때 180분(60×3)을 넘었으면 0으로 돌리고 불만 반응 18 → 스트레스 +1 (0x211AF30~0x211AFD0, 0x2118FF4).
+ *    좁은 케이지 판정이 먼저이고, 하나가 나면 그 판정에서 끝난다.
+ */
+export const GRUMBLE = { after: 180, crampedCapacity: 2 };
 /** 병 전염 (0x2118514~0x2118598): 4시간(240분)이 넘을 때마다 '병든 동거 디지몬 수 × 20'% 확률로 스트레스 100 */
 export const CONTAGION = { period: 240, chancePerSick: 20 };
 
@@ -526,11 +536,13 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
     lifeExtended: false,
     mateMinutes: 0,
     contagionMinutes: 0,
+    lonelyMinutes: 0,
+    crampedMinutes: 0,
   };
 }
 
 /** 디지몬 한 마리의 게임 시간 1분. null이면 로스트 */
-function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number; dirty?: boolean; cageLevels?: Record<string, number>; mates?: readonly Digimon[]; petting?: boolean }, events: FarmEvent[]): Digimon | null {
+function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number; dirty?: boolean; cageLevels?: Record<string, number>; mates?: readonly Digimon[]; petting?: boolean; caged?: boolean }, events: FarmEvent[]): Digimon | null {
   let d: Digimon = { ...prev, stats: { ...prev.stats }, ap: { ...prev.ap } };
   d.stageAge += 1;
 
@@ -587,6 +599,18 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
       }
     }
   } else d.contagionMinutes = Math.max(0, (d.contagionMinutes ?? 0) - 1);
+  // 혼자인 겁쟁이 · 좁은 케이지의 완전체·궁극체 (0x21182DC·0x2118490·0x21184C0, 판정 0x211AF30~0x211AFD0)
+  if (d.personality === '겁쟁이') d.lonelyMinutes = ctx.caged && !mates.length ? (d.lonelyMinutes ?? 0) + 1 : Math.max(0, (d.lonelyMinutes ?? 0) - 1);
+  if (sp.stage >= 5) d.crampedMinutes = ctx.caged && getCage(d.cage).capacity <= GRUMBLE.crampedCapacity ? (d.crampedMinutes ?? 0) + 1 : Math.max(0, (d.crampedMinutes ?? 0) - 1);
+  if (sp.stage >= 5 && ctx.caged && getCage(d.cage).capacity <= GRUMBLE.crampedCapacity && (d.crampedMinutes ?? 0) > GRUMBLE.after) {
+    d.crampedMinutes = 0;
+    addStress(d, 1);
+    events.push({ type: 'grumble', uid: d.uid, name: sp.name, reason: 'cramped' });
+  } else if (d.personality === '겁쟁이' && ctx.caged && !mates.length && (d.lonelyMinutes ?? 0) > GRUMBLE.after) {
+    d.lonelyMinutes = 0;
+    addStress(d, 1);
+    events.push({ type: 'grumble', uid: d.uid, name: sp.name, reason: 'lonely' });
+  }
   // 쓰다듬는 중이면 6분마다 유대 +1·스트레스 -1 (0x21185C0)
   if (ctx.petting && petMinute(d)) events.push({ type: 'petted', uid: d.uid, name: sp.name });
   d.hpNow = Math.min(maxHp, Math.max(0, hp));
@@ -781,7 +805,7 @@ export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, d
     if (crowdHour && !d.isEgg && inCage > getCage(d.cage).capacity) addStress(candidate, inCage - 1);
     const dirty = !!d.cageInstance && dirtyCages.includes(d.cageInstance);
     const mates = key === null || d.isEgg ? [] : save.digimon.filter((o) => o.uid !== d.uid && !o.isEgg && group(o) === key);
-    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1, dirty, cageLevels: save.cageLevels, mates, petting: petting.has(d.uid) }, events);
+    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1, dirty, cageLevels: save.cageLevels, mates, petting: petting.has(d.uid), caged: key !== null }, events);
     if (!r) {
       free += before;
       return;

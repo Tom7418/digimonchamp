@@ -198,6 +198,9 @@
     } else if (e.type === 'revived') {
       log(`${e.name}이(가) 빈사 상태에서 회복했습니다.`);
       toast(`${e.name} 회복`);
+    } else if (e.type === 'grumble') {
+      // 원본 불만 반응 18(스트레스 +1). 문구는 웹판
+      log(e.reason === 'lonely' ? `${e.name}: 혼자 있는 게 무서워 스트레스를 받고 있습니다.` : `${e.name}: 케이지가 비좁아 스트레스를 받고 있습니다.`);
     } else if (e.type === 'petted') {
       const p = view.team.find((x) => x.uid === e.uid);
       if (p) startCareFx('pet', p, true);

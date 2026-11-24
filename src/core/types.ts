@@ -127,6 +127,10 @@ export interface Digimon {
   contagionMinutes?: number;
   /** 예전 쓰다듬기(1시간에 한 번)의 마지막 시각. 지금은 쓰지 않는다 */
   pettedAt?: number;
+  /** 겁쟁이가 혼자 있던 시간 (원본 +0x1A8): 180을 넘으면 스트레스 +1. 옛 저장은 없음 = 0 */
+  lonelyMinutes?: number;
+  /** 완전체·궁극체가 정원 2 이하 케이지에 있던 시간 (원본 +0x1B4): 180을 넘으면 스트레스 +1. 옛 저장은 없음 = 0 */
+  crampedMinutes?: number;
   /** 쓰다듬은 분 (원본 +0x198). 5를 넘으면 유대 +1·스트레스 -1 후 0. 옛 저장은 없음 = 0 */
   petMinutes?: number;
 }
