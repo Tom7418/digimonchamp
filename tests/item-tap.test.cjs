@@ -10,7 +10,7 @@ function setup() {
   const canvas=Object.assign(target(),{setPointerCapture(){},getBoundingClientRect:()=>({left:0,right:960,top:0,bottom:560,width:960,height:560})});
   const modal={open:false},board={attachFloorItem:x=>x,canMove:()=>true,movePet(p,to){Object.assign(p,to);return true;},editing:false,cam:{x:0,y:0},roam:{x0:60,x1:1900,y0:120,y1:1150},toWorld(e){return {x:e.clientX+this.cam.x,y:e.clientY+this.cam.y};}},mail={};
   const ctx=vm.createContext({window,document,canvas,board,titleOpen:false,battle:null,hunt:null,mailOpen:false,dayEnding:false,
-    $:id=>({'#tray':tray,'#modal':modal,'#mail':mail})[id],renderTray(){},persist(){},nextMail(){},toast(){},render(){},log(){},syncTeam(){},nameOf:()=> '깜몬',performance:{now:()=>0},effect:null});
+    $:id=>({'#tray':tray,'#modal':modal,'#mail':mail})[id],renderTray(){},persist(){},nextMail(){},toast(){},render(){},log(){},syncTeam(){},nameOf:()=> '깜몬',logEvent(){},digi(uid){return ctx.save.digimon.find(d=>d.uid===uid);},performance:{now:()=>0},effect:null});
   vm.runInContext(fs.readFileSync(path.join(__dirname,'../web/core.js'),'utf8'),ctx);
   for (const file of ['assets/sprites.js', 'assets/animations.js', 'animation.js']) vm.runInContext(fs.readFileSync(path.join(__dirname,'../web',file),'utf8'),ctx);
   vm.runInContext('const animations=window.createAnimationPlayer(window.DIGIMON_ANIMATIONS); const SPRITE_BY_NAME=Object.fromEntries(window.SPRITES.map(s=>[s.name,s.id]));',ctx);

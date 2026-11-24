@@ -4527,8 +4527,44 @@ var ChampCore = (function(exports) {
 	*/
 	var GRUMBLE = {
 		after: 180,
-		crampedCapacity: 2
+		crampedCapacity: 2,
+		dirtyAfter: 60,
+		crowdedAfter: 180
 	};
+	/** 불만 반응 18 (0x2118FF4): 스트레스가 100 미만이면 +1 */
+	function grumbleReaction(d) {
+		if ((d.stress ?? 0) < 100) d.stress = Math.min(100, (d.stress ?? 0) + 1);
+	}
+	/**
+	* 치운 뒤 (원본: 똥·바닥 먹이가 빗자루 메시지 0x82를 받으면 사라지며 케이지 디지몬에게 0x8D를 보낸다, 0x2124D08·0x210F728).
+	* 행동을 고를 때 0x8D를 받았고 그 케이지에 더러운 것(똥 + 상한 먹이)이 없으면 반응 9 → 스트레스 -1 (0x211AD5C~0x211ADF0, 0x2118EB0).
+	* key: 케이지 묶음(cageInstance, 자유 활동 구역은 ''), rottenLeft: 그 케이지에 남은 상한 먹이 수
+	*/
+	function cleanRelief(save, key, rottenLeft) {
+		const inside = save.digimon.filter((d) => !d.isEgg && dirtKey(d) === key);
+		if (!inside.length || rottenLeft > 0 || inside.some((d) => d.poop > 0)) return {
+			save,
+			events: []
+		};
+		const uids = inside.map((d) => d.uid);
+		return {
+			save: {
+				...save,
+				digimon: save.digimon.map((d) => uids.includes(d.uid) && !d.isEgg ? {
+					...d,
+					stress: Math.max(0, (d.stress ?? 0) - 1)
+				} : d)
+			},
+			events: [{
+				type: "relieved",
+				uids
+			}]
+		};
+	}
+	/** 더러움을 세는 케이지 묶음: 설치 케이지 ID, 자유 활동 구역은 '' */
+	function dirtKey(d) {
+		return d.cageInstance === null ? "" : d.cageInstance ?? d.cage;
+	}
 	/** 병 전염 (0x2118514~0x2118598): 4시간(240분)이 넘을 때마다 '병든 동거 디지몬 수 × 20'% 확률로 스트레스 100 */
 	var CONTAGION = {
 		period: 240,
@@ -4652,24 +4688,49 @@ var ChampCore = (function(exports) {
 		} else d.contagionMinutes = Math.max(0, (d.contagionMinutes ?? 0) - 1);
 		if (d.personality === "겁쟁이") d.lonelyMinutes = ctx.caged && !mates.length ? (d.lonelyMinutes ?? 0) + 1 : Math.max(0, (d.lonelyMinutes ?? 0) - 1);
 		if (sp.stage >= 5) d.crampedMinutes = ctx.caged && getCage(d.cage).capacity <= GRUMBLE.crampedCapacity ? (d.crampedMinutes ?? 0) + 1 : Math.max(0, (d.crampedMinutes ?? 0) - 1);
-		if (sp.stage >= 5 && ctx.caged && getCage(d.cage).capacity <= GRUMBLE.crampedCapacity && (d.crampedMinutes ?? 0) > GRUMBLE.after) {
-			d.crampedMinutes = 0;
-			addStress(d, 1);
-			events.push({
-				type: "grumble",
-				uid: d.uid,
-				name: sp.name,
-				reason: "cramped"
-			});
-		} else if (d.personality === "겁쟁이" && ctx.caged && !mates.length && (d.lonelyMinutes ?? 0) > GRUMBLE.after) {
-			d.lonelyMinutes = 0;
-			addStress(d, 1);
-			events.push({
-				type: "grumble",
-				uid: d.uid,
-				name: sp.name,
-				reason: "lonely"
-			});
+		const dirt = ctx.dirt ?? 0, over = ctx.over ?? 0;
+		d.dirtMinutes = dirt > 0 ? (d.dirtMinutes ?? 0) + 1 : Math.max(0, (d.dirtMinutes ?? 0) - 1);
+		d.crowdMinutes = over > 0 ? (d.crowdMinutes ?? 0) + 1 : Math.max(0, (d.crowdMinutes ?? 0) - 1);
+		if (!sleeping) {
+			if (dirt > 0 && d.dirtMinutes > GRUMBLE.dirtyAfter) {
+				d.dirtMinutes = 0;
+				addStress(d, dirt - 1);
+				grumbleReaction(d);
+				events.push({
+					type: "grumble",
+					uid: d.uid,
+					name: sp.name,
+					reason: "dirty"
+				});
+			} else if (over > 0 && d.crowdMinutes > GRUMBLE.crowdedAfter) {
+				d.crowdMinutes = 0;
+				addStress(d, over - 1);
+				grumbleReaction(d);
+				events.push({
+					type: "grumble",
+					uid: d.uid,
+					name: sp.name,
+					reason: "crowded"
+				});
+			} else if (sp.stage >= 5 && ctx.caged && getCage(d.cage).capacity <= GRUMBLE.crampedCapacity && (d.crampedMinutes ?? 0) > GRUMBLE.after) {
+				d.crampedMinutes = 0;
+				grumbleReaction(d);
+				events.push({
+					type: "grumble",
+					uid: d.uid,
+					name: sp.name,
+					reason: "cramped"
+				});
+			} else if (d.personality === "겁쟁이" && ctx.caged && !mates.length && (d.lonelyMinutes ?? 0) > GRUMBLE.after) {
+				d.lonelyMinutes = 0;
+				grumbleReaction(d);
+				events.push({
+					type: "grumble",
+					uid: d.uid,
+					name: sp.name,
+					reason: "lonely"
+				});
+			}
 		}
 		if (ctx.petting && petMinute(d)) events.push({
 			type: "petted",
@@ -4715,11 +4776,7 @@ var ChampCore = (function(exports) {
 			makeSick(d, events, 0, BOND.stressSick);
 		}
 		d.starvingMinutes = d.hunger <= 0 ? d.starvingMinutes + (sleeping ? 0 : 1) : 0;
-		d.dirtyMinutes = (d.poop >= 3 || ctx.dirty) && !sleeping ? d.dirtyMinutes + 1 : 0;
-		if (d.starvingMinutes === 240 && !sleeping || d.dirtyMinutes >= 180 || d.fatigue >= 95 && ctx.rng() < .01) {
-			d.dirtyMinutes = 0;
-			makeSick(d, events);
-		}
+		if (d.starvingMinutes === 240 && !sleeping || d.fatigue >= 95 && ctx.rng() < .01) makeSick(d, events);
 		if (d.sick || d.injured) {
 			d.sickMinutes += 1;
 			if (cage.rest && d.injured && d.sickMinutes >= 120) {
@@ -4887,7 +4944,7 @@ var ChampCore = (function(exports) {
 		return d;
 	}
 	/** 사육장 전체의 게임 시간 1분 */
-	/** dirtyCages: 상한 먹이가 놓인 설치 시설 ID (바닥 먹이는 화면이 관리한다) */
+	/** dirtyCages: 상한 먹이 한 개마다 그것이 놓인 설치 시설 ID(자유 활동 구역은 ''). 같은 ID가 여러 번 나오면 그 수만큼 센다 (바닥 먹이는 화면이 관리한다) */
 	/** petting: 이번 분에 손 도구로 누르고 있는 디지몬 uid (쓰다듬는 상태) */
 	function tickFarm(save, rng = defaultRng, sleep = false, dirtyCages = [], petting = /* @__PURE__ */ new Set()) {
 		const events = [];
@@ -4898,11 +4955,12 @@ var ChampCore = (function(exports) {
 		const socialDay = Math.floor((save.clock + 1) / MIN_PER_DAY);
 		const next = [];
 		const seen = new Set(save.seen);
-		const crowdHour = (save.clock + 1) % 60 === 0;
 		const headcount = /* @__PURE__ */ new Map();
-		if (crowdHour) for (const d of save.digimon) {
+		const poops = /* @__PURE__ */ new Map();
+		for (const d of save.digimon) {
 			const k = group(d);
 			if (!d.isEgg && k) headcount.set(k, (headcount.get(k) ?? 0) + 1);
+			poops.set(dirtKey(d), (poops.get(dirtKey(d)) ?? 0) + (d.poop ?? 0));
 		}
 		save.digimon.forEach((d, i) => {
 			const before = d.isEgg ? 0 : getSpecies(d.speciesId).size;
@@ -4920,7 +4978,9 @@ var ChampCore = (function(exports) {
 			};
 			if (extra > 0) addStress(candidate, extra);
 			const inCage = key ? headcount.get(key) ?? 0 : 0;
-			if (crowdHour && !d.isEgg && inCage > getCage(d.cage).capacity) addStress(candidate, inCage - 1);
+			const over = key && !d.isEgg ? Math.max(0, inCage - getCage(d.cage).capacity) : 0;
+			const dk = dirtKey(d);
+			const dirt = (poops.get(dk) ?? 0) + dirtyCages.filter((id) => id === dk).length;
 			const dirty = !!d.cageInstance && dirtyCages.includes(d.cageInstance);
 			const mates = key === null || d.isEgg ? [] : save.digimon.filter((o) => o.uid !== d.uid && !o.isEgg && group(o) === key);
 			const r = tickOne(candidate, {
@@ -4935,7 +4995,9 @@ var ChampCore = (function(exports) {
 				cageLevels: save.cageLevels,
 				mates,
 				petting: petting.has(d.uid),
-				caged: key !== null
+				caged: key !== null,
+				dirt,
+				over
 			}, events);
 			if (!r) {
 				free += before;
@@ -4951,7 +5013,7 @@ var ChampCore = (function(exports) {
 			digimon: next,
 			seen: [...seen]
 		};
-		const changedIds = new Set(events.filter((e) => e.type === "evolved" || e.type === "hatched" || e.type === "egg").map((e) => e.uid));
+		const changedIds = new Set(events.flatMap((e) => e.type === "evolved" || e.type === "hatched" || e.type === "egg" ? [e.uid] : []));
 		const ready = evaluateEvolutions(current, rng, new Set(next.filter((d) => !changedIds.has(d.uid)).map((d) => d.uid)));
 		return {
 			save: ready.save,
@@ -12477,6 +12539,7 @@ var ChampCore = (function(exports) {
 	exports.chooseTarget = chooseTarget;
 	exports.clean = clean;
 	exports.cleanOne = cleanOne;
+	exports.cleanRelief = cleanRelief;
 	exports.createBattle = createBattle;
 	exports.critLevelOf = critLevelOf;
 	exports.cure = cure;
@@ -12488,6 +12551,7 @@ var ChampCore = (function(exports) {
 	exports.dexCount = dexCount;
 	exports.dexEntries = dexEntries;
 	exports.digimonResist = digimonResist;
+	exports.dirtKey = dirtKey;
 	exports.discardFloorFood = discardFloorFood;
 	exports.eatFloorFood = eatFloorFood;
 	exports.eatHp = eatHp;

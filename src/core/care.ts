@@ -217,7 +217,9 @@ export type FarmEvent =
   /** 수명이 한 번 늘었다 (원본 +0x4C). rank: 랭크 때문에 못 한 진화, bond: 수명이 다할 때 유대 50 이상 */
   | { type: 'extended'; uid: number; name: string; reason: 'rank' | 'bond' }
   /** 불만 반응 (원본 반응 18, overlay18 0x2118FF4: 스트레스 +1). lonely: 겁쟁이가 혼자, cramped: 완전체·궁극체가 좁은 케이지 */
-  | { type: 'grumble'; uid: number; name: string; reason: 'lonely' | 'cramped' }
+  | { type: 'grumble'; uid: number; name: string; reason: 'dirty' | 'crowded' | 'lonely' | 'cramped' }
+  /** 케이지를 치워 더러운 것이 하나도 없게 되자 기뻐함 (원본 반응 9: 스트레스 -1) */
+  | { type: 'relieved'; uids: number[] }
   /** 쓰다듬기가 6분을 채워 유대 +1·스트레스 -1 */
   | { type: 'petted'; uid: number; name: string };
 
@@ -486,7 +488,29 @@ export function settleMates(d: Digimon, mates: readonly Digimon[]) {
  *  - 행동을 고를 때 180분(60×3)을 넘었으면 0으로 돌리고 불만 반응 18 → 스트레스 +1 (0x211AF30~0x211AFD0, 0x2118FF4).
  *    좁은 케이지 판정이 먼저이고, 하나가 나면 그 판정에서 끝난다.
  */
-export const GRUMBLE = { after: 180, crampedCapacity: 2 };
+export const GRUMBLE = { after: 180, crampedCapacity: 2, dirtyAfter: 60, crowdedAfter: 180 };
+/** 불만 반응 18 (0x2118FF4): 스트레스가 100 미만이면 +1 */
+function grumbleReaction(d: Digimon) {
+  if ((d.stress ?? 0) < 100) d.stress = Math.min(100, (d.stress ?? 0) + 1);
+}
+/**
+ * 치운 뒤 (원본: 똥·바닥 먹이가 빗자루 메시지 0x82를 받으면 사라지며 케이지 디지몬에게 0x8D를 보낸다, 0x2124D08·0x210F728).
+ * 행동을 고를 때 0x8D를 받았고 그 케이지에 더러운 것(똥 + 상한 먹이)이 없으면 반응 9 → 스트레스 -1 (0x211AD5C~0x211ADF0, 0x2118EB0).
+ * key: 케이지 묶음(cageInstance, 자유 활동 구역은 ''), rottenLeft: 그 케이지에 남은 상한 먹이 수
+ */
+export function cleanRelief(save: SaveData, key: string, rottenLeft: number): { save: SaveData; events: FarmEvent[] } {
+  const inside = save.digimon.filter((d) => !d.isEgg && dirtKey(d) === key);
+  if (!inside.length || rottenLeft > 0 || inside.some((d) => d.poop > 0)) return { save, events: [] };
+  const uids = inside.map((d) => d.uid);
+  return {
+    save: { ...save, digimon: save.digimon.map((d) => (uids.includes(d.uid) && !d.isEgg ? { ...d, stress: Math.max(0, (d.stress ?? 0) - 1) } : d)) },
+    events: [{ type: 'relieved', uids }],
+  };
+}
+/** 더러움을 세는 케이지 묶음: 설치 케이지 ID, 자유 활동 구역은 '' */
+export function dirtKey(d: Digimon): string {
+  return d.cageInstance === null ? '' : d.cageInstance ?? d.cage;
+}
 /** 병 전염 (0x2118514~0x2118598): 4시간(240분)이 넘을 때마다 '병든 동거 디지몬 수 × 20'% 확률로 스트레스 100 */
 export const CONTAGION = { period: 240, chancePerSick: 20 };
 
@@ -542,7 +566,7 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
 }
 
 /** 디지몬 한 마리의 게임 시간 1분. null이면 로스트 */
-function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number; dirty?: boolean; cageLevels?: Record<string, number>; mates?: readonly Digimon[]; petting?: boolean; caged?: boolean }, events: FarmEvent[]): Digimon | null {
+function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number; dirty?: boolean; cageLevels?: Record<string, number>; mates?: readonly Digimon[]; petting?: boolean; caged?: boolean; dirt?: number; over?: number }, events: FarmEvent[]): Digimon | null {
   let d: Digimon = { ...prev, stats: { ...prev.stats }, ap: { ...prev.ap } };
   d.stageAge += 1;
 
@@ -602,14 +626,34 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   // 혼자인 겁쟁이 · 좁은 케이지의 완전체·궁극체 (0x21182DC·0x2118490·0x21184C0, 판정 0x211AF30~0x211AFD0)
   if (d.personality === '겁쟁이') d.lonelyMinutes = ctx.caged && !mates.length ? (d.lonelyMinutes ?? 0) + 1 : Math.max(0, (d.lonelyMinutes ?? 0) - 1);
   if (sp.stage >= 5) d.crampedMinutes = ctx.caged && getCage(d.cage).capacity <= GRUMBLE.crampedCapacity ? (d.crampedMinutes ?? 0) + 1 : Math.max(0, (d.crampedMinutes ?? 0) - 1);
-  if (sp.stage >= 5 && ctx.caged && getCage(d.cage).capacity <= GRUMBLE.crampedCapacity && (d.crampedMinutes ?? 0) > GRUMBLE.after) {
-    d.crampedMinutes = 0;
-    addStress(d, 1);
-    events.push({ type: 'grumble', uid: d.uid, name: sp.name, reason: 'cramped' });
-  } else if (d.personality === '겁쟁이' && ctx.caged && !mates.length && (d.lonelyMinutes ?? 0) > GRUMBLE.after) {
-    d.lonelyMinutes = 0;
-    addStress(d, 1);
-    events.push({ type: 'grumble', uid: d.uid, name: sp.name, reason: 'lonely' });
+  // 더러움 (+0x1A0, 0x2118254): 케이지에 똥·상한 먹이가 있는 동안(그것들이 1초마다 0x8C를 보내 +0x408이 켜짐) 매분 +1, 없으면 -1
+  const dirt = ctx.dirt ?? 0, over = ctx.over ?? 0;
+  d.dirtMinutes = dirt > 0 ? (d.dirtMinutes ?? 0) + 1 : Math.max(0, (d.dirtMinutes ?? 0) - 1);
+  // 정원 초과 (+0x1A4, 0x2118290): 케이지 인원이 정원을 넘은(+0x410 = 인원 - 정원, 0x211A1C0) 동안 매분 +1, 아니면 -1
+  d.crowdMinutes = over > 0 ? (d.crowdMinutes ?? 0) + 1 : Math.max(0, (d.crowdMinutes ?? 0) - 1);
+  // 행동을 고를 때(깨어 있을 때) 하나만 판정한다: 더러움 → 정원 초과 → 좁은 케이지 → 혼자인 겁쟁이 (0x211ADF4~0x211AFD0)
+  if (!sleeping) {
+    if (dirt > 0 && d.dirtMinutes > GRUMBLE.dirtyAfter) {
+      // 60분이 넘으면 '똥 + 상한 먹이 수 - 1'을 더하고 불만 반응(+1) → 합계 더러운 것의 수 (0x211AE00~0x211AEBC)
+      d.dirtMinutes = 0;
+      addStress(d, dirt - 1);
+      grumbleReaction(d);
+      events.push({ type: 'grumble', uid: d.uid, name: sp.name, reason: 'dirty' });
+    } else if (over > 0 && d.crowdMinutes > GRUMBLE.crowdedAfter) {
+      // 180분이 넘으면 '정원 초과 수 - 1'을 더하고 불만 반응(+1) → 합계 초과 수 (0x211AEC4~0x211AF2C)
+      d.crowdMinutes = 0;
+      addStress(d, over - 1);
+      grumbleReaction(d);
+      events.push({ type: 'grumble', uid: d.uid, name: sp.name, reason: 'crowded' });
+    } else if (sp.stage >= 5 && ctx.caged && getCage(d.cage).capacity <= GRUMBLE.crampedCapacity && (d.crampedMinutes ?? 0) > GRUMBLE.after) {
+      d.crampedMinutes = 0;
+      grumbleReaction(d);
+      events.push({ type: 'grumble', uid: d.uid, name: sp.name, reason: 'cramped' });
+    } else if (d.personality === '겁쟁이' && ctx.caged && !mates.length && (d.lonelyMinutes ?? 0) > GRUMBLE.after) {
+      d.lonelyMinutes = 0;
+      grumbleReaction(d);
+      events.push({ type: 'grumble', uid: d.uid, name: sp.name, reason: 'lonely' });
+    }
   }
   // 쓰다듬는 중이면 6분마다 유대 +1·스트레스 -1 (0x21185C0)
   if (ctx.petting && petMinute(d)) events.push({ type: 'petted', uid: d.uid, name: sp.name });
@@ -654,10 +698,9 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   }
   // 굶주림 시간은 잠든 동안 멈추기만 하고 지우지 않는다 (밤을 넘겨도 이어진다)
   d.starvingMinutes = d.hunger <= 0 ? d.starvingMinutes + (sleeping ? 0 : 1) : 0;
-  // 배설물이나 상한 먹이가 있는 케이지에 오래 있으면 병 (help #139·#141). 상한 먹이는 화면이 케이지별로 알려 준다
-  d.dirtyMinutes = (d.poop >= 3 || ctx.dirty) && !sleeping ? d.dirtyMinutes + 1 : 0;
-  if ((d.starvingMinutes === 240 && !sleeping) || d.dirtyMinutes >= 180 || (d.fatigue >= 95 && ctx.rng() < 0.01)) {
-    d.dirtyMinutes = 0;
+  // 배설물이나 상한 먹이가 있는 케이지에 오래 두면 병(help #139·#141)은 원본에서 위의 더러움 스트레스가 100에 닿아 나는 병이다.
+  // 예전 웹판 임시 규칙(똥 3개 이상·상한 먹이 180분이면 바로 병)은 없앴다. dirtyMinutes 칸은 옛 저장 호환으로만 남는다.
+  if ((d.starvingMinutes === 240 && !sleeping) || (d.fatigue >= 95 && ctx.rng() < 0.01)) {
     makeSick(d, events);
   }
   if (d.sick || d.injured) {
@@ -775,7 +818,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
 }
 
 /** 사육장 전체의 게임 시간 1분 */
-/** dirtyCages: 상한 먹이가 놓인 설치 시설 ID (바닥 먹이는 화면이 관리한다) */
+/** dirtyCages: 상한 먹이 한 개마다 그것이 놓인 설치 시설 ID(자유 활동 구역은 ''). 같은 ID가 여러 번 나오면 그 수만큼 센다 (바닥 먹이는 화면이 관리한다) */
 /** petting: 이번 분에 손 도구로 누르고 있는 디지몬 uid (쓰다듬는 상태) */
 export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, dirtyCages: readonly string[] = [], petting: ReadonlySet<number> = new Set()): { save: SaveData; events: FarmEvent[] } {
   const events: FarmEvent[] = [];
@@ -787,10 +830,14 @@ export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, d
   const socialDay = Math.floor((save.clock + 1) / MIN_PER_DAY);
   const next: Digimon[] = [];
   const seen = new Set(save.seen);
-  // 정원 초과 (원본 overlay18 0x211AE00~0x211AEB0): 1시간마다 정원을 넘긴 케이지의 디지몬은 '그 케이지의 디지몬 수 - 1'만큼 스트레스
-  const crowdHour = (save.clock + 1) % 60 === 0;
+  // 케이지별 인원(정원 초과, 0x211A1C0)과 더러운 것(똥 + 상한 먹이, 0x211AE20~0x211AE88)
   const headcount = new Map<string, number>();
-  if (crowdHour) for (const d of save.digimon) { const k = group(d); if (!d.isEgg && k) headcount.set(k, (headcount.get(k) ?? 0) + 1); }
+  const poops = new Map<string, number>();
+  for (const d of save.digimon) {
+    const k = group(d);
+    if (!d.isEgg && k) headcount.set(k, (headcount.get(k) ?? 0) + 1);
+    poops.set(dirtKey(d), (poops.get(dirtKey(d)) ?? 0) + (d.poop ?? 0));
+  }
   save.digimon.forEach((d, i) => {
     const before = d.isEgg ? 0 : getSpecies(d.speciesId).size;
     const isLast = next.length + (save.digimon.length - i) <= 1;
@@ -802,10 +849,12 @@ export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, d
     const candidate = {...d,socialStress:social};
     if(extra>0)addStress(candidate,extra);
     const inCage = key ? headcount.get(key) ?? 0 : 0;
-    if (crowdHour && !d.isEgg && inCage > getCage(d.cage).capacity) addStress(candidate, inCage - 1);
+    const over = key && !d.isEgg ? Math.max(0, inCage - getCage(d.cage).capacity) : 0;
+    const dk = dirtKey(d);
+    const dirt = (poops.get(dk) ?? 0) + dirtyCages.filter((id) => id === dk).length;
     const dirty = !!d.cageInstance && dirtyCages.includes(d.cageInstance);
     const mates = key === null || d.isEgg ? [] : save.digimon.filter((o) => o.uid !== d.uid && !o.isEgg && group(o) === key);
-    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1, dirty, cageLevels: save.cageLevels, mates, petting: petting.has(d.uid), caged: key !== null }, events);
+    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1, dirty, cageLevels: save.cageLevels, mates, petting: petting.has(d.uid), caged: key !== null, dirt, over }, events);
     if (!r) {
       free += before;
       return;
@@ -816,7 +865,7 @@ export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, d
   });
   const current = { ...save, clock: save.clock + 1, digimon: next, seen: [...seen] };
   // 같은 틱에서 로스트/디지에그화/작은 종으로 진화해 비워진 용량도 반영한다. 이미 변한 개체는 제외한다.
-  const changedIds = new Set(events.filter(e => e.type === 'evolved' || e.type === 'hatched' || e.type === 'egg').map(e => e.uid));
+  const changedIds = new Set(events.flatMap(e => e.type === 'evolved' || e.type === 'hatched' || e.type === 'egg' ? [e.uid] : []));
   const pending = new Set(next.filter(d => !changedIds.has(d.uid)).map(d => d.uid));
   const ready = evaluateEvolutions(current, rng, pending);
   return { save: ready.save, events: [...events, ...ready.events] };

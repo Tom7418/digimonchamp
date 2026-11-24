@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
 import { initialResistance, resistBounds, RESIST_ORDER } from '../src/core/data';
 import { evolvedResistance } from '../src/core/stats';
-import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy , relocate, trainingBlocker, BOND, CONTAGION, mateBond, settleMates, GRUMBLE } from '../src/core/care';
+import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy , relocate, trainingBlocker, BOND, CONTAGION, mateBond, settleMates, GRUMBLE, cleanRelief } from '../src/core/care';
 import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank, lifespanOf } from '../src/core/evolution';
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, npcTeamFoes, npcTeam, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
@@ -1059,12 +1059,27 @@ describe('illness', () => {
   it('디지에그 그림은 디지에그화 횟수로 고른다 (원본 0x2119B2C)', () => {
     expect([0, 1, 2, 6, 7, 8, 100].map(eggSpriteIndex)).toEqual([0, 1, 2, 6, 7, 7, 7]);
   });
-  it('상한 먹이가 놓인 케이지에 오래 있으면 병 (help #139·#141)', () => {
-    const s: SaveData = { ...freshSave(0), digimon: [{ ...newDigimon(1, '깜몬'), hunger: 100, cageInstance: 'c1' }] };
-    expect(advance({ ...s }, 180, seeded(1)).save.digimon[0].sick).toBe(false);
-    let cur = s;
+  it('똥·상한 먹이가 있는 케이지는 60분이 넘을 때마다 그 수만큼 스트레스 (원본 0x211AE00, help #139·#141)', () => {
+    const at = (patch: Partial<Digimon>, rotten: string[]) => tickFarm({ ...freshSave(0), clock: 10 * 60, digimon: [{ ...newDigimon(1, '깜몬'), hunger: 100, cageInstance: 'c1', stress: 10, dirtMinutes: 60, ...patch }] }, seeded(1), false, rotten);
+    const one = at({}, ['c1']);
+    expect(one.events).toContainEqual({ type: 'grumble', uid: 1, name: '깜몬', reason: 'dirty' });
+    expect(one.save.digimon[0].dirtMinutes).toBe(0);
+    const three = at({ poop: 1 }, ['c1', 'c1']); // 똥 1 + 상한 먹이 2
+    expect(three.save.digimon[0].stress! - one.save.digimon[0].stress!).toBeCloseTo(2, 5);
+    const clean = at({ dirtMinutes: 10 }, []);
+    expect(clean.save.digimon[0]).toMatchObject({ dirtMinutes: 9, sick: false });
+    // 예전 임시 규칙(180분이면 바로 병)은 없다
+    let cur = { ...freshSave(0), digimon: [{ ...newDigimon(1, '깜몬'), hunger: 100, cageInstance: 'c1' }] } as SaveData;
     for (let i = 0; i < 180; i++) cur = tickFarm(cur, seeded(i), false, ['c1']).save;
-    expect(cur.digimon[0].sick).toBe(true);
+    expect(cur.digimon[0].sick).toBe(false);
+  });
+  it('치워서 케이지에 더러운 것이 없어지면 스트레스 -1 (원본 반응 9)', () => {
+    const s = { ...freshSave(0), digimon: [{ ...newDigimon(1, '깜몬'), cageInstance: 'c1', stress: 5 }, { ...newDigimon(2, '깜몬'), cageInstance: 'c2', stress: 5 }] } as SaveData;
+    const r = cleanRelief(s, 'c1', 0);
+    expect(r.save.digimon.map((d) => d.stress)).toEqual([4, 5]);
+    expect(r.events).toEqual([{ type: 'relieved', uids: [1] }]);
+    expect(cleanRelief(s, 'c1', 1).events).toEqual([]);
+    expect(cleanRelief({ ...s, digimon: [{ ...s.digimon[0], poop: 1 }] }, 'c1', 0).events).toEqual([]);
   });
 });
 
@@ -1292,21 +1307,25 @@ describe('스트레스 (형규가 정한 값)', () => {
     expect(s.digimon[0].stress).toBeCloseTo(30, 5); // 0에 머물러도 더 쌓이지 않는다
   });
   it('병에 걸리면 +40, 상한 먹이는 +50 (그 병과 겹치지 않음)', () => {
-    let s = one({ poop: 5, dirtyMinutes: 179 });
+    let s = one({ hunger: 0, starvingMinutes: 239 });
     s = tickFarm(s, seeded(1)).save;
-    expect(s.digimon[0]).toMatchObject({ sick: true, stress: 40 });
+    expect(s.digimon[0]).toMatchObject({ sick: true, stress: 70 }); // 배고픔 0의 30 + 병 40
     const r = feedRotten({ ...one({ rottenEaten: 1 }), rotten: 1 }, 1);
     expect(r.save.digimon[0]).toMatchObject({ sick: true, stress: 50 });
   });
-  it('정원 초과면 1시간마다 그 케이지의 디지몬 수 - 1만큼 오른다 (원본 0x211AE94)', () => {
-    const mon = (uid: number) => ({ ...newDigimon(uid, '아구몬'), personality: '열혈' as const, hunger: 100, stress: 50, cage: '미니 양호실', cageInstance: 'c1' });
-    const base = { ...freshEggSave(0), clock: 10 * 60 + 59 } as SaveData; // 다음 분이 정각
-    const three = tickFarm({ ...base, digimon: [mon(1), mon(2), mon(3)] }, seeded(1)).save.digimon; // 정원 2에 3마리
+  it('정원 초과면 180분이 넘을 때마다 초과한 수만큼 오른다 (원본 0x211AEC4~0x211AF2C)', () => {
+    const mon = (uid: number, crowdMinutes = 180) => ({ ...newDigimon(uid, '아구몬'), personality: '열혈' as const, hunger: 100, stress: 50, cage: '미니 양호실', cageInstance: 'c1', crowdMinutes });
+    const base = { ...freshEggSave(0), clock: 10 * 60 + 10 } as SaveData;
     const two = tickFarm({ ...base, digimon: [mon(1), mon(2)] }, seeded(1)).save.digimon;
     const relief = two[0].stress!; // 정원 안: 시설 효과·자연 회복만
-    expect(three[0].stress).toBe(relief + 2);
-    const off = tickFarm({ ...base, clock: 10 * 60 + 10, digimon: [mon(1), mon(2), mon(3)] }, seeded(1)).save.digimon;
-    expect(off[0].stress).toBeLessThan(51); // 정각이 아니면 정원 초과 가산 없음
+    expect(two[0].crowdMinutes).toBe(179);
+    const three = tickFarm({ ...base, digimon: [mon(1), mon(2), mon(3)] }, seeded(1)); // 정원 2에 3마리 → 초과 1
+    expect(three.save.digimon[0]).toMatchObject({ stress: relief + 1, crowdMinutes: 0 });
+    expect(three.events).toContainEqual({ type: 'grumble', uid: 1, name: '아구몬', reason: 'crowded' });
+    const four = tickFarm({ ...base, digimon: [1, 2, 3, 4].map((u) => mon(u)) }, seeded(1)).save.digimon; // 초과 2
+    expect(four[0].stress).toBe(relief + 2);
+    const early = tickFarm({ ...base, digimon: [1, 2, 3].map((u) => mon(u, 10)) }, seeded(1)).save.digimon;
+    expect(early[0]).toMatchObject({ stress: relief, crowdMinutes: 11 });
   });
   it('100이 되면 병에 걸린다 (한 번만)', () => {
     const s = tickFarm(one({ stress: 100 }), seeded(1)).save;
@@ -2319,11 +2338,11 @@ describe('실행 코드의 시설 정원',()=>{
  it('동물원4·양호실4이며 다섯마리부터 실제 과밀효과를 적용한다',()=>{
   for(const cage of ['동물원','양호실']){
    expect(getCage(cage).capacity).toBe(4);
-   const mon=(uid:number)=>({...newDigimon(uid,'아구몬'),personality:'열혈' as const,hunger:100,stress:50,cage,cageInstance:'c1'});
-   const base={...freshEggSave(0),clock:10*60+59} as SaveData;
+   const mon=(uid:number)=>({...newDigimon(uid,'아구몬'),personality:'열혈' as const,hunger:100,stress:50,cage,cageInstance:'c1',crowdMinutes:180});
+   const base={...freshEggSave(0),clock:10*60+10} as SaveData;
    const four=tickFarm({...base,digimon:[1,2,3,4].map(mon)},seeded(1)).save.digimon;
    const five=tickFarm({...base,digimon:[1,2,3,4,5].map(mon)},seeded(1)).save.digimon;
-   expect(five[0].stress).toBe(four[0].stress!+4);
+   expect(five[0].stress).toBe(four[0].stress!+1);
   }
  });
 });

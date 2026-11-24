@@ -200,7 +200,11 @@
       toast(`${e.name} 회복`);
     } else if (e.type === 'grumble') {
       // 원본 불만 반응 18(스트레스 +1). 문구는 웹판
-      log(e.reason === 'lonely' ? `${e.name}: 혼자 있는 게 무서워 스트레스를 받고 있습니다.` : `${e.name}: 케이지가 비좁아 스트레스를 받고 있습니다.`);
+      const why = { dirty: '케이지가 더러워', crowded: '케이지 정원이 넘쳐', lonely: '혼자 있는 게 무서워', cramped: '케이지가 비좁아' }[e.reason];
+      log(`${e.name}: ${why} 스트레스를 받고 있습니다.`);
+    } else if (e.type === 'relieved') {
+      // 원본 반응 9(스트레스 -1). 문구는 웹판
+      log(`케이지가 깨끗해져 ${e.uids.map((u) => digi(u) ? C.getSpecies(digi(u).speciesId).name : '').filter(Boolean).join('·')}(이)가 기뻐합니다.`);
     } else if (e.type === 'petted') {
       const p = view.team.find((x) => x.uid === e.uid);
       if (p) startCareFx('pet', p, true);
@@ -790,14 +794,23 @@
       if (!sw.done && now - sw.start >= SWEEP_FRAME * 2 * SWEEP_LOOPS * 1000) {
         sw.done = true;
         sw.cleanedAt = now;
+        let cleanedKey = null;
         if (sw.food) {
           // 음식 종류가 청소 도중 상해 바뀌어도 현재 종류의 재고를 한 번만 차감한다.
           const res=C.discardFloorFood(save,view.foods,view.foods.indexOf(sw.food));
-          if(res.ok){save=res.save;view.foods=res.foods;}
+          if(res.ok){save=res.save;view.foods=res.foods;cleanedKey=sw.food.cageId??'';}
         } else {
+          const owner = digi(sw.poop.uid);
           const res = C.cleanOne(save, sw.poop.uid);
-          if (res.ok) save = res.save;
+          if (res.ok) { save = res.save; if (owner) cleanedKey = C.dirtKey(owner); }
           view.poops = view.poops.filter((x) => x !== sw.poop);
+        }
+        // 치운 뒤 그 케이지에 더러운 것이 없으면 기뻐하며 스트레스 -1 (원본 0x8D 메시지·반응 9)
+        if (cleanedKey !== null) {
+          const rotten = view.foods.filter((f) => f.kind === 'rotten' && (f.cageId ?? '') === cleanedKey).length;
+          const relief = C.cleanRelief(save, cleanedKey, rotten);
+          save = relief.save;
+          relief.events.forEach(logEvent);
         }
         renderTray();
         render();
@@ -3166,7 +3179,7 @@
     if (hunt) endHunt('다음 날로 넘김');
     for (let i = 0; i < 2 * 1440 && !dayEnding; i++) {
       syncTeam();
-      const dirtyCages = [...new Set(view.foods.filter((f) => f.kind === 'rotten' && f.cageId).map((f) => f.cageId))];
+      const dirtyCages = view.foods.filter((f) => f.kind === 'rotten').map((f) => f.cageId ?? '');
       const r = C.tickFarm(save, undefined, false, dirtyCages);
       save = r.save;
       r.events.forEach(logEvent);
@@ -3360,8 +3373,8 @@
           clock = Math.max(0,clock-C.CLOCK_STEP_MINUTES);
           for(let minute=0;minute<C.CLOCK_STEP_MINUTES&&!dayEnding;minute++){
           syncTeam();
-          // 상한 먹이가 놓인 케이지에 오래 있으면 병 (help #139·#141)
-          const dirtyCages = [...new Set(view.foods.filter((f) => f.kind === 'rotten' && f.cageId).map((f) => f.cageId))];
+          // 상한 먹이 한 개마다 그 케이지 ID(자유 활동 구역은 ''): 더러움 스트레스(원본 0x211AE00)에 똥과 함께 센다
+          const dirtyCages = view.foods.filter((f) => f.kind === 'rotten').map((f) => f.cageId ?? '');
           const r = C.tickFarm(save, undefined, false, dirtyCages, pettingNow());
           save = r.save;
           r.events.forEach(logEvent);
