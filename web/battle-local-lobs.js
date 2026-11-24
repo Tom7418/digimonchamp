@@ -12,8 +12,12 @@
     [552, 'banana', 2.5, [5, -24, 1], 0, 1],
   ];
   const signatures = {ncer: 'RECN', ncbr: 'RGCN', nclr: 'RLCN', nanr: 'RNAN'};
+  const storageKey = 'champion-battle-lob-files-v1';
+  const sourceNames = [...new Set(throws.map(([, key]) => key))]
+    .flatMap(key => Object.keys(signatures).map(ext => `e003_${key}00.${ext}`));
   const width = 96, height = 80;
   let current;
+  let saved = false;
 
   const sizes = [
     [[8,8],[16,16],[32,32],[64,64]],
@@ -90,19 +94,17 @@
     return pixels;
   }
 
-  async function readBank(files, key, sequenceIds) {
+  function readBank(files, key, sequenceIds) {
     const stem = 'e003_' + key + '00';
-    const entries = await Promise.all(Object.entries(signatures).map(async ([ext, signature]) => {
+    const data = Object.fromEntries(Object.entries(signatures).map(([ext, signature]) => {
       const name = stem + '.' + ext;
-      const file = files.get(name);
-      if (!file) throw new Error(name + ' 파일이 없습니다.');
-      if (file.size < 40 || file.size > 65536) throw new Error(name + ' 파일 크기가 올바르지 않습니다.');
-      const bytes = await file.arrayBuffer();
-      const header = String.fromCharCode(...new Uint8Array(bytes, 0, 4));
+      const bytes = files[name];
+      if (!bytes) throw new Error(name + ' 파일이 없습니다.');
+      if (bytes.length < 40 || bytes.length > 65536) throw new Error(name + ' 파일 크기가 올바르지 않습니다.');
+      const header = String.fromCharCode(...bytes.subarray(0, 4));
       if (header !== signature) throw new Error(name + ' 파일 형식이 올바르지 않습니다.');
-      return [ext, new DataView(bytes)];
+      return [ext, new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)];
     }));
-    const data = Object.fromEntries(entries);
     const sequences = Object.fromEntries(sequenceIds.map(id => [id, readSequence(data.nanr, id)]));
     const indices = [...new Set(Object.values(sequences).flatMap(sequence => sequence.frames.map(([id]) => id)))];
     const image = document.createElement('canvas');
@@ -120,20 +122,52 @@
     return {image, sequences, cells};
   }
 
-  async function load(input) {
-    const files = new Map(Array.from(input, file => [file.name.toLowerCase(), file]));
+  function apply(files) {
     const banks = {};
     const records = {};
     for (const [record, key, speed, flightOffset, flight, finish] of throws) {
-      banks[key] ??= await readBank(files, key, [flight, finish]);
+      banks[key] ??= readBank(files, key, [flight, finish]);
       records[record] = {
         kind: 'lob', speed, flightOffset, flight: [key, flight], finish: [key, finish],
         impact: root.BATTLE_SKILL_EFFECTS.records[record].impact,
       };
     }
     current = {banks, records};
+  }
+
+  async function load(input) {
+    const files = new Map(Array.from(input, file => [file.name.toLowerCase(), file]));
+    const bytes = Object.fromEntries(await Promise.all(sourceNames.map(async name => {
+      const file = files.get(name);
+      if (!file) throw new Error(name + ' 파일이 없습니다.');
+      if (file.size < 40 || file.size > 65536) throw new Error(name + ' 파일 크기가 올바르지 않습니다.');
+      return [name, new Uint8Array(await file.arrayBuffer())];
+    })));
+    apply(bytes);
+    // 선택한 24개 파일만 게임 저장과 별도의 브라우저 저장소에 기록한다.
+    saved = false;
+    try {
+      const encoded = Object.fromEntries(sourceNames.map(name =>
+        [name, btoa(Array.from(bytes[name], byte => String.fromCharCode(byte)).join(''))]));
+      localStorage.setItem(storageKey, JSON.stringify(encoded));
+      saved = true;
+    } catch {
+      // 저장이 차단된 브라우저에서도 이번 탭에서는 표시할 수 있다.
+    }
     return throws.length;
   }
 
-  root.BattleLocalLobs = {load, get current() { return current; }};
+  // 첫 배틀을 열기 전에 복원해 입장 시점과 관계없이 같은 효과를 사용한다.
+  try {
+    const encoded = JSON.parse(localStorage.getItem(storageKey));
+    if (encoded) {
+      const bytes = Object.fromEntries(sourceNames.map(name =>
+        [name, Uint8Array.from(atob(encoded[name]), character => character.charCodeAt(0))]));
+      apply(bytes);
+      saved = true;
+    }
+  } catch {
+    // 읽을 수 없는 저장에서는 일반 전투 효과로 시작한다.
+  }
+  root.BattleLocalLobs = {load, get current() { return current; }, get saved() { return saved; }};
 })(window);

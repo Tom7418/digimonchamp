@@ -1238,7 +1238,7 @@
        <p class="hint">작전: 특수공격은 필살기 위주, 지원은 SP를 쓰며 공격, 일반공격은 둘을 균형 있게 씁니다. 디지몬마다 정할 수 있고 다음 배틀에도 기억합니다.</p>
        <details>
          <summary>원본 투척 효과 불러오기</summary>
-         <p class="hint"><code>root/common</code> 폴더를 선택하면 이 탭에서 투척 기술 7종의 투사체와 명중 효과를 사용합니다.</p>
+         <p class="hint"><code>root/common</code> 폴더를 한 번 선택하면 이 브라우저에서 투척 효과를 자동 적용합니다.</p>
          <label>원본 common 폴더 <input id="battle-lob-folder" type="file" webkitdirectory></label>
          <p id="battle-lob-status" class="hint" role="status"></p>
        </details>
@@ -1250,7 +1250,7 @@
     const folder=body.querySelector('#battle-lob-folder');
     const lobStatus=body.querySelector('#battle-lob-status');
     const localLobs=window.BattleLocalLobs;
-    const loadedMessage=count=>`투척 기술 ${count}종 적용됨`;
+    const loadedMessage=count=>localLobs.saved?`투척 기술 ${count}종 자동 적용 중`:`투척 기술 ${count}종 적용됨 · 저장할 수 없어 이 탭에서만 사용합니다.`;
     if(localLobs.current)lobStatus.textContent=loadedMessage(Object.keys(localLobs.current.records).length);
     folder.onchange=async()=>{
       if(!folder.files.length)return;
