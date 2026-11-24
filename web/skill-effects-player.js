@@ -3,12 +3,14 @@
  // 원본 0x21285ee/0x2129611: 발사/비행/명중 NANR, 속도, 오프셋·배율. 대상 이동/충돌은 확정된 웹 이벤트를 따른다.
  root.createBattleSkillEffects=function(data=root.BATTLE_SKILL_EFFECTS,lobEffects=root.BATTLE_LOB_EFFECTS){
   const image=new Image();image.src='assets/battle/skill-effects.png';let jobs=[],clock=0;const arrivals=[];
-  const sequence=ref=>data.banks[ref[0]].sequences[ref[1]];
+  const local=root.BattleLocalLobs?.current;
+  const bank=ref=>local?.banks[ref[0]]??data.banks[ref[0]];
+  const sequence=ref=>bank(ref).sequences[ref[1]];
   const duration=(ref,frameTicks)=>ref?sequence(ref).frames.reduce((n,f)=>n+(frameTicks??f[1]),0)/data.tickRate:0;
   function add(event,units,before,actorScale=1,windup=0){
    if(event.type!=='hit'||!event.special)return null;
    const record=event.skill?.record;
-   const d=lobEffects?.[record]??data?.records[record],a=units.find(u=>u.id===event.from),t=units.find(u=>u.id===event.to);
+   const d=local?.records[record]??lobEffects?.[record]??data?.records[record],a=units.find(u=>u.id===event.from),t=units.find(u=>u.id===event.to);
    if(!d||!a||!t)return null;
    // 미해석 스크립트는 이미 확인한 대상 타격 그림만 사용한다. 비행 궤적을 임의로 만들지 않는다.
    const travels=d.kind==='projectile'||d.kind==='beam'||d.kind==='lob';
@@ -31,13 +33,15 @@
    jobs=jobs.filter(j=>clock-j.begin<j.lead+j.tail);
   }
   function drawRef(ctx,ref,x,y,age,scale=1,flip=false,options={}){
-   if(!ref||!image.complete||!image.naturalWidth)return;
+   if(!ref)return;
+   const art=bank(ref),source=art.image??image;
+   if(source===image&&(!image.complete||!image.naturalWidth))return;
    const {frameTicks}=options;
    const s=sequence(ref),total=duration(ref,frameTicks)*data.tickRate;let tick=Math.max(0,age)*data.tickRate;
    if(tick>=total){if(!s.loop&&!options.hold)return;if(!s.loop)tick=total-1e-6;else {const intro=s.frames.slice(0,s.start).reduce((n,f)=>n+(frameTicks??f[1]),0);tick=intro+(tick-total)%(total-intro);}}
    let ci=s.frames.at(-1)[0];for(const [cell,hold] of s.frames){const ticks=frameTicks??hold;ci=cell;if(tick<ticks)break;tick-=ticks;}
-   const c=data.banks[ref[0]].cells[ci];ctx.save();ctx.translate(x,y);if(options.angle)ctx.rotate(options.angle);ctx.scale((flip?-1:1)*(options.x??scale),options.y??scale);
-   ctx.drawImage(image,c.x,c.y,c.w,c.h,c.left,c.top,c.w,c.h);ctx.restore();
+   const c=art.cells[ci];ctx.save();ctx.translate(x,y);if(options.angle)ctx.rotate(options.angle);ctx.scale((flip?-1:1)*(options.x??scale),options.y??scale);
+   ctx.drawImage(source,c.x,c.y,c.w,c.h,c.left,c.top,c.w,c.h);ctx.restore();
   }
   function draw(ctx,scale=1){
    for(const j of jobs){

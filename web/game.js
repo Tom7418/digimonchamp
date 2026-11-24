@@ -1236,11 +1236,36 @@
        <p id="battle-roster-count" class="hint" role="status"></p>
        <div id="battle-tactics" class="mode-pick-list" aria-label="작전"></div>
        <p class="hint">작전: 특수공격은 필살기 위주, 지원은 SP를 쓰며 공격, 일반공격은 둘을 균형 있게 씁니다. 디지몬마다 정할 수 있고 다음 배틀에도 기억합니다.</p>
+       <details>
+         <summary>원본 투척 효과 불러오기</summary>
+         <p class="hint"><code>root/common</code> 폴더를 선택하면 이 탭에서 투척 기술 7종의 투사체와 명중 효과를 사용합니다.</p>
+         <label>원본 common 폴더 <input id="battle-lob-folder" type="file" webkitdirectory></label>
+         <p id="battle-lob-status" class="hint" role="status"></p>
+       </details>
        ${save.challenge?`<h3>도전장</h3><div class="menu-list"><button data-challenge-battle><b>⚔ ${esc(save.challenge.from)} 「${esc(save.challenge.name)}」</b><small>${C.npcTeam(save.challenge.team).members.length}:${C.npcTeam(save.challenge.team).members.length} · ${C.npcTeam(save.challenge.team).members.map(f=>esc(f.nick)).join('·')} · 상금 ${save.challenge.prize.toLocaleString('ko-KR')} ฿</small></button></div>`:''}
        <h3>타이틀 매치</h3><div class="menu-list">${titles.length?titles.map((m,i)=>`<button data-title="${i}"><b>★ ${esc(m.name)}</b><small>${esc(titleText(m))}</small></button>`).join(''):`<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은07:00~15:00, 일정: ${esc(C.upcoming(save)[0]||'-')}</p>`}</div>
        <h3>프리 배틀 ${freeOpen?'':'(08:00~21:00)'}</h3><div class="menu-list two">${free.map((f,i)=>`<button data-free="${i}"><b>${esc(f.label)} ${f.format}:${f.format}</b><small>${f.foes.map(x=>esc(C.getSpecies(x.speciesId).name)).join(' · ')} · ${f.prize.toLocaleString('ko-KR')} ฿</small></button>`).join('')}</div>`,
       'BATTLE ENTRY','취소');
     const body=$('#modal-body');
+    const folder=body.querySelector('#battle-lob-folder');
+    const lobStatus=body.querySelector('#battle-lob-status');
+    const localLobs=window.BattleLocalLobs;
+    const loadedMessage=count=>`투척 기술 ${count}종 적용됨`;
+    if(localLobs.current)lobStatus.textContent=loadedMessage(Object.keys(localLobs.current.records).length);
+    folder.onchange=async()=>{
+      if(!folder.files.length)return;
+      folder.disabled=true;
+      lobStatus.textContent='효과 파일을 읽는 중입니다.';
+      try{
+        lobStatus.textContent=loadedMessage(await localLobs.load(folder.files));
+      }catch(error){
+        const message=error.message.endsWith('니다.')?error.message:'효과 파일을 읽지 못했습니다.';
+        lobStatus.textContent=`${message} root/common 폴더를 확인해 주세요.`;
+      }finally{
+        folder.value='';
+        folder.disabled=false;
+      }
+    };
     function updateRoster(){
       // 메뉴를 열어 둔 사이 사육 상태가 바뀌어도 사라지거나 아픈 개체를 출전시키지 않는다.
       for(let i=roster.length-1;i>=0;i--){const d=save.digimon.find(d=>d.uid===roster[i]);if(!d||!canFight(d))roster.splice(i,1);}
