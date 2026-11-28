@@ -29,6 +29,7 @@
   sounds.protein = sounds.feed;
   sounds.spread = sounds.shot;
   sounds.buy = sounds.menu;
+  sounds.cancel = [['sine', 620, 420, .07, .15]];
   // 원작 대응표(sound-cues.js)와 음원 목록(assets/audio/manifest.js). 음원이 있으면 합성음 대신 재생한다.
   const cues = root.ORIGINAL_SOUND_CUES || {};
   const files = () => root.ORIGINAL_SOUND_FILES || {};
@@ -245,5 +246,7 @@
   for (const event of ['pointerdown', 'pointerup', 'keydown']) document.addEventListener(event, unlock, true);
   document.addEventListener('visibilitychange', update);
   update();
-  root.ChampSound = { play, setHunt, setMusic, setMenu, setBase, setLoop, cues, hasFile };
+    // 곡을 끄기만 하는 자리표시(음원 목록에 없는 이름이라 아무것도 틀지 않는다)
+  const SILENCE = '(silence)';
+  root.ChampSound = { play, setHunt, setMusic, setMenu, setBase, setLoop, cues, hasFile, SILENCE };
 })(window);

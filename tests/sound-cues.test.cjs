@@ -84,6 +84,10 @@ test('배틀 명중음은 기술 레코드별 원작 이름, 기본 화면·메�
  assert.equal(shop.stopped,true);assert.equal(w.started.at(-1).buffer.name,'assets/audio/arena.ogg');
  w.S.setMusic(null);w.S.setMenu(null);await w.flush();
  assert.equal(w.started.at(-1).buffer.name,'assets/audio/farm.ogg');
+ w.S.setMenu(w.S.SILENCE);await w.flush(); // 하루 결과 창: 육성 곡을 멈춘다
+ assert.equal(w.started.at(-1).stopped,true);
+ w.S.setMenu(null);await w.flush();
+ assert.equal(w.started.at(-1).buffer.name,'assets/audio/farm.ogg');
  w.S.setHunt('기계 공장');await w.flush(); // 사냥 중엔 육성 곡을 내린다
  assert.equal(w.started.at(-1).stopped,true);
 });

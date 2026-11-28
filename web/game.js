@@ -593,6 +593,9 @@
     );
     $('#close-modal').disabled = true;
     $('#modal').classList.add('day-change-modal');
+    // 원작 하루 결과 창: 육성 곡을 멈추고 징글(STRM_JINGLE_ME_S_003_MIX)을 튼다
+    globalThis.ChampSound?.setMenu?.(globalThis.ChampSound.SILENCE);
+    globalThis.ChampSound?.play('dayEnd');
   }
   function finishDay() {
     const r = C.endDay(save, Math.random, L.crowded(view));
@@ -1588,6 +1591,7 @@
     } else if (m?.id === 'final') {
       if (save.champion) {
         champLine('🏆 디지몬 챔피언십 우승! 진정한 디지몬 테이머가 되었습니다.');
+        globalThis.ChampSound?.setMusic?.(globalThis.ChampSound.cues?.sceneBgm?.champion); // 원작 우승 장면(overlay2) SEQ_N_16
         toast('챔피언십 우승!');
       } else if (won) champLine(`다음 라운드가 열렸습니다: ${C.FINAL_ROUNDS[save.finalRound].name} (배틀에서 이어서 출전)`);
       else champLine('본선 탈락… 다시 예선부터 도전해야 합니다.');
@@ -3223,7 +3227,7 @@
     }
   };
   $('#modal-ok').onclick = closeModal;
-  $('#close-modal').onclick = closeModal;
+  $('#close-modal').onclick = () => { globalThis.ChampSound?.play('cancel'); closeModal(); }; // 원작 닫기 UI_SE_015_2
   $('#modal').addEventListener('cancel', (e) => {
     e.preventDefault();
     closeModal();
