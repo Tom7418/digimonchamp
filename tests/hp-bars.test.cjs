@@ -69,3 +69,32 @@ test('배틀 정지는 효과·행동·HP 보간과 다음 전투 틱을 함께 
  c.battleTick(.1);
  assert.equal(steps,2);
 });
+
+test('육성 발밑 HP바는 개체별로 피해부터 완전 회복 후 5초까지 표시한다',()=>{
+ const {c,time}=setup(),bars=c.window.createHpBars({hideFullAfter:5000});
+ let draws=0;
+ const ctx={save(){},restore(){},drawImage(){draws++;}};
+ function visible(id,hp){
+  draws=0;
+  bars.draw(ctx,id,hp,100,0,0);
+  return draws>0;
+ }
+ assert.equal(visible('healthy',100),false);
+ assert.equal(visible('patient',50),true);
+ time(10000);
+ assert.equal(visible('patient',90),true);
+ assert.equal(visible('patient',100),true);
+ time(14999);
+ assert.equal(visible('patient',100),true);
+ assert.equal(visible('healthy',100),false);
+ assert.equal(visible('patient',70),true);
+ time(15000);
+ assert.equal(visible('patient',70),true);
+ assert.equal(visible('patient',100),true);
+ time(19999);
+ assert.equal(visible('patient',100),true);
+ time(20000);
+ assert.equal(visible('patient',100),false);
+ assert.equal(bars.sample('patient',100,100),100);
+ assert.equal(visible('patient',99),true);
+});

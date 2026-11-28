@@ -82,7 +82,7 @@
   window.evolutionScene=evolutionScene;
   const trainingFloats = new Map();
   const cageReactions = new WeakMap();
-  const farmHealth=window.createHpBars?.();
+  const farmHealth=window.createHpBars?.({hideFullAfter:5000});
 
   // ---------- 저장 ----------
   function freshView() {

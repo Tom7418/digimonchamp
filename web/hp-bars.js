@@ -2,15 +2,19 @@
 (function(root){
  const images=Object.fromEntries(['frame','green','red'].map(name=>{const image=new Image();image.src=`assets/ui/hp-${name}.png`;return [name,image];}));
  const clamp=(value,max)=>Math.max(0,Math.min(max,Number.isFinite(value)?value:0));
- root.createHpBars=function(){
+ root.createHpBars=function({hideFullAfter=0}={}){
   const states=new Map();let seen=null;
   const now=()=>performance.now();
   function displayed(s,time){const p=Math.max(0,Math.min(1,(time-s.start)/350));return s.from+(s.target-s.from)*(1-(1-p)**3);}
   function sample(key,value,max,time=now()){
    max=Math.max(0,Number.isFinite(max)?max:0);value=clamp(value,max);seen?.add(key);
    let s=states.get(key);
+   const wasDamaged=s&&s.target<s.max;
+   const hideAt=s?.hideAt??0;
    if(!s||s.max!==max){s={from:value,target:value,max,start:time};states.set(key,s);}
    else if(s.target!==value){s.from=displayed(s,time);s.target=value;s.start=time;}
+   // 육성 케이지는 현재 HP가 가득 찬 순간부터 실제 시간으로 숨김을 센다.
+   if(hideFullAfter)s.hideAt=value<max?Infinity:wasDamaged?time+hideFullAfter:hideAt;
    return displayed(s,time);
   }
   return {
@@ -18,7 +22,9 @@
    begin(){seen=new Set();},end(){if(seen)for(const key of states.keys())if(!seen.has(key))states.delete(key);seen=null;},clear(){states.clear();seen=null;},
    busy(time=now()){return [...states.values()].some(s=>Math.abs(displayed(s,time)-s.target)>.01);},
    draw(ctx,key,value,max,x,y,width=58,height=8,red=false,time=now()){
-    const shown=sample(key,value,max,time),ratio=max>0?shown/max:0,fill=red?images.red:images.green;
+    const shown=sample(key,value,max,time);
+    if(hideFullAfter&&time>=states.get(key).hideAt)return shown;
+    const ratio=max>0?shown/max:0,fill=red?images.red:images.green;
     ctx.save();ctx.imageSmoothingEnabled=false;
     if(images.frame.complete&&images.frame.naturalWidth&&fill.complete&&fill.naturalWidth){
      ctx.drawImage(images.frame,x,y,width,height);
