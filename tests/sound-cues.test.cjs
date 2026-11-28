@@ -20,7 +20,7 @@ test('원작 사운드 대응표는 사냥터 16곳·배틀 맵 11곳을 모두 
  assert.notEqual(cues.huntBgm['다이나 초원'],cues.huntBgm['모쥬라의 숲']);
 });
 
-function audioWorld(manifest){
+function audioWorld(manifest,saved=null){
  const listeners={},fetched=[],started=[],gains=[],pans=[],noop=()=>{};
  const param={value:0,setValueAtTime:noop,exponentialRampToValueAtTime:noop,cancelScheduledValues:noop,setTargetAtTime:noop,linearRampToValueAtTime:noop};
  class Ctx{constructor(){this.state='suspended';this.currentTime=0;this.sampleRate=16000;this.destination={};}
@@ -33,7 +33,7 @@ function audioWorld(manifest){
   createBiquadFilter(){return{type:'',Q:{},frequency:{...param},connect:noop,disconnect:noop};}
   createBufferSource(){const s={connect:noop,disconnect:noop,start(){started.push(s);},stop(){s.stopped=true;}};return s;}
   decodeAudioData(b){return Promise.resolve({name:b.name,duration:window.decodedDuration??100});}}
- const window={AudioContext:Ctx,localStorage:{getItem:()=>null,setItem:noop},ORIGINAL_SOUND_FILES:manifest,
+ const window={AudioContext:Ctx,localStorage:{getItem:()=>saved,setItem:noop},ORIGINAL_SOUND_FILES:manifest,
   createHuntAmbience:()=>({set(f){window.ambienceField=f;}}),
   document:{hidden:false,querySelectorAll:()=>[],querySelector:()=>null,addEventListener(t,f){listeners[t]=f;}}};
  const c=vm.createContext({window,fetch:(u)=>{fetched.push(u);return Promise.resolve({ok:true,arrayBuffer:()=>Promise.resolve({name:u})});}});
@@ -175,4 +175,14 @@ test('사냥이 멈춘 동안(메일 등)은 합성 환경음만 멈추고 사�
  assert.ok(!w.window.ambienceField); // 곡 음원이 없는 사냥터도 멈춘 동안엔 환경음 없음
  w.S.setHunt('기계 공장',false,false);await w.flush();
  assert.equal(w.window.ambienceField,'기계 공장');
+});
+
+test('발소리 끄기 설정이면 사냥 발소리만 내지 않는다',async()=>{
+ const files={DIGI_SE_036_3:{src:'assets/audio/DIGI_SE_036_3.mp3',dur:.3},HUNT_SE_061_1:{src:'assets/audio/HUNT_SE_061_1.mp3',dur:1}};
+ const off=audioWorld(files,JSON.stringify({enabled:true,volume:.4,footsteps:false}));await off.flush();
+ off.S.play('footstep',{sound:'DIGI_SE_036_3',volume:127,pan:0});off.S.play('explosion',{volume:127});await off.flush();
+ assert.equal(off.started.filter(x=>x!=='synth').length,1);
+ const on=audioWorld(files);await on.flush(); // 저장값이 없으면 켜짐
+ on.S.play('footstep',{sound:'DIGI_SE_036_3',volume:127,pan:0});await on.flush();
+ assert.equal(on.started.filter(x=>x!=='synth').length,1);
 });

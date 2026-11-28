@@ -38,16 +38,19 @@
   const infoOf = (name) => { const e = files()[name]; return typeof e === 'string' ? { src: e } : e || null; };
   const key = 'champion-sound-v1';
   const Audio = root.AudioContext || root.webkitAudioContext;
-  let preferences = { enabled: true, volume: .4 };
+  // footsteps: 사냥 야생 발소리(원작에 있음). 많이 겹치면 시끄러워 따로 끌 수 있다(웹판 옵션, 기본 켬)
+  let preferences = { enabled: true, volume: .4, footsteps: true };
   try {
     const saved = JSON.parse(root.localStorage.getItem(key));
     if (typeof saved?.enabled === 'boolean') preferences.enabled = saved.enabled;
     if (Number.isFinite(saved?.volume)) preferences.volume = Math.max(0, Math.min(1, saved.volume));
+    if (typeof saved?.footsteps === 'boolean') preferences.footsteps = saved.footsteps;
   } catch {} // 저장이 차단돼도 현재 페이지의 설정은 사용할 수 있다.
 
   const document = root.document;
   const toggles = [...document.querySelectorAll('[data-sound-toggle]')];
   const volume = document.querySelector('#sound-volume');
+  const stepToggles = [...document.querySelectorAll('[data-footstep-toggle]')];
   const lastPlayed = new Map();
   let context, master, noise, opening, ambience;
   let huntField = null, huntNight = false, huntPaused = false;
@@ -166,6 +169,11 @@
       toggle.textContent = preferences.enabled ? '소리 켜짐' : '소리 꺼짐';
       toggle.setAttribute('aria-pressed', String(preferences.enabled));
     }
+    for (const toggle of stepToggles) {
+      toggle.disabled = !Audio;
+      toggle.textContent = preferences.footsteps ? '발소리 켜짐' : '발소리 꺼짐';
+      toggle.setAttribute('aria-pressed', String(preferences.footsteps));
+    }
     if (volume) {
       volume.disabled = !Audio;
       volume.value = String(Math.round(preferences.volume * 100));
@@ -239,6 +247,7 @@
     const original = originalOf(name, detail);
     const layers = sounds[name];
     if ((!layers && !hasFile(original)) || !preferences.enabled || preferences.volume === 0 || document.hidden) return;
+    if (name === 'footstep' && !preferences.footsteps) return;
     if (opening) { opening.then(() => { if (context?.state === 'running') play(name, detail); }); return; }
     if (!master || context?.state !== 'running') return;
     const now = context.currentTime;
@@ -276,6 +285,11 @@
     preferences.enabled = !preferences.enabled;
     save();
     if (preferences.enabled) { unlock(); play('menu'); }
+  });
+  for (const toggle of stepToggles) toggle.addEventListener('click', () => {
+    preferences.footsteps = !preferences.footsteps;
+    save();
+    play('menu');
   });
   volume?.addEventListener('input', () => { preferences.volume = Number(volume.value) / 100; save(); });
   volume?.addEventListener('change', () => play('menu'));
