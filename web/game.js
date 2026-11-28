@@ -2267,6 +2267,7 @@
   function blast(x, y, g) {
     // 원본 입자 풀의 시퀀스·생성 간격을 재생한다. 피해/효과 판정은 아래에서 한 번만 한다.
     hunt.fx.push(huntEquipmentArt.explosion(x,y,g));
+    globalThis.ChampSound?.play(g.id === 'bomb4' ? 'flash' : 'explosion'); // 원작: 플래시 폭탄만 039_8, 나머지 폭탄·마인 061_1
     const hits = hunt.wilds.filter((w) => !w.gone && Math.hypot(x - w.x, y - (w.y - 15)) < g.range);
     for (const w of hits) {
       wakeFromSleep(w);
@@ -2685,6 +2686,7 @@
 
   // 로프를 감는다: 닫힌 고리 안의 디지몬을 묶는다. 로프 끝은 고리를 다 그린 곳
   function wrapRope(poly) {
+    globalThis.ChampSound?.play('ropeClose'); // 원작: 고리가 닫히면 안에 디지몬이 없어도 울린다
     let any = false;
     for (const w of hunt.wilds) {
       if (w.gone || w.ko || !inside(w, poly)) continue;
