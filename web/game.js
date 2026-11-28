@@ -2771,6 +2771,7 @@
     w.stun = 0;
     w.vx = 0; w.vy = 0;
     if (hunt.pull?.w === w) hunt.pull = null;
+    globalThis.ChampSound?.play('faint'); // 원작 HUNT_SE_002 (음원이 있을 때만)
     huntNote(`${C.getSpecies(w.id).name}이(가) 기절했다! 눌러서 포획하세요 (5초가 지나면 회복하기 시작해요)`);
   }
   function captureFainted(w) {

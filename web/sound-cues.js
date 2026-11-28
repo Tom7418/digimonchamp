@@ -45,6 +45,16 @@ window.ORIGINAL_SOUND_CUES = {
     // 하루 결과 창(overlay1 today_window, 장면15): 장면 표의 스트림 34. 육성 곡은 장면을 나갈 때 멈춘다(+0x8000)
     dayEnd: 'STRM_JINGLE_ME_S_003_MIX',
     hatch: 'TRAINING_SE_072_1', care: 'DIGI_SE_102', careFail: 'TRAINING_SE_006_3',
+    // 청소: 더러운 것 객체 overlay9_18 0x0210EA78(치우는 동작 0x1B 시작)에서 028_2, 20프레임 뒤 메시지 0x82 → 케이지가 0x8D(치움) 방송(0x0210F728)
+    clean: 'TRAINING_SE_028_2',
+    // 로프: 선 긋기 객체 overlay9_0 상태3(0x02117E40)이 감싼 디지몬마다 메시지 0x23을 보내며 023_3 (0x02117F6C)
+    rope: 'HUNT_SE_023_3',
+    // 포획: 야생 상태12 진입(0x0211553C)이 장면 관리자에 0x20 → 관리자 상태3 진입(0x0211AEA4)에서 스트림 30
+    capture: 'STRM_JINGLE_ME_S_002_3',
+    // 기절: 야생 상태10 진입(0x02114CB8, 동작 0xF·밀려남). 로프에 묶인 채 HP가 0이 되면(0x02114424) 이 상태로 간다
+    faint: 'HUNT_SE_002',
+    // 타이틀 메뉴(overlay13)는 공통 터치 버튼(ARM9 0x0208D4B0·0x0208DA78)을 쓴다: 누르면 UI_SE_005_1
+    start: 'UI_SE_005_1',
   },
   // 반복음: 사냥에서 선을 긋는 동안 overlay9_0 0x02117D78
   loops: { draw: 'HUNT_LOOP_DRAW_LOOP' },
