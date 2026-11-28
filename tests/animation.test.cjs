@@ -182,7 +182,7 @@ test('피해0은 방어34, 치료/강화는35, 부활은33을 종별 원본 길�
  }
 });
 
-test('일반 공격은 준비 동작 뒤 적중하고 교차 공격은 각자의 공격 뒤 반응을 재생한다',()=>{
+test('교차 공격은 명중 전 준비 자세를 표시하고 명중 즉시 막기·피격으로 전환한다',()=>{
  const source=fs.readFileSync('web/game.js','utf8'),logs=[];
  const c=vm.createContext({window:{},Image:function(){},battleLog:line=>logs.push(line),drawArena(){},finishBattle(){}});
  for(const f of ['assets/battle/effects.js','battle-effects.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),c);
@@ -197,9 +197,17 @@ test('일반 공격은 준비 동작 뒤 적중하고 교차 공격은 각자의
  c.battleTick(.1);
  assert.equal(c.b.actions.get(0).state,'attack4');assert.equal(c.b.actions.get(1).state,'attack4');
  c.battleTick(.19);assert.equal(logs.length,0);
+ assert.equal(c.b.actions.get(1).state,'attack4');
  c.battleTick(.02);assert.equal(logs.length,2);
- assert.equal(c.b.actions.get(1).state,'attack4');assert.equal(c.b.actions.get(1).reaction.state,'guard2');
- c.battleTick(.3);assert.equal(c.b.actions.get(1).state,'guard2');
+ assert.equal(c.b.actions.get(1).state,'guard2');
+ assert.ok(['hurt','hurtAlt'].includes(c.b.actions.get(0).state));
+ assert.equal(c.b.actions.get(1).left,.5);
+ c.battleTick(.51);assert.equal(c.b.actions.size,0);
+ // 지연이 없는 공격도 같은 틱의 이후 공격 이벤트가 막기를 덮지 않는다.
+ c.b.effects.add=()=>undefined;
+ vm.runInContext("events.push({type:'hit',from:0,to:1,damage:0},{type:'hit',from:1,to:0,damage:12})",c);
+ c.battleTick(.1);
+ assert.equal(c.b.actions.get(1).state,'guard2');
  assert.ok(['hurt','hurtAlt'].includes(c.b.actions.get(0).state));
 });
 
@@ -245,6 +253,9 @@ test('실제 경기장은 상태이상 지속·해제·KO·정지에서 올바�
  c.b.actions.set(0,{kind:'hit',state:'hurt',duration:1,left:1});
  frames.length=0;c.drawArena(0);
  assert.equal(frames[0],player.sample(id,'hurt',0));
+ c.b.actions.set(0,{kind:'hit',state:'guard2',duration:1,left:1});
+ frames.length=0;c.drawArena(0);
+ assert.equal(frames[0],player.sample(id,'guard2',0));
  c.b.actions.clear();
  frames.length=0;c.drawArena(.1);
  assert.equal(frames[0],player.sample(id,'sleep',0));

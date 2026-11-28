@@ -28,6 +28,12 @@
     "ordinaryReaction": "0x021189c8..0x021189f4 chooses reaction1/2; 0x02118a88 sets action15; dispatcher0x02116890",
     "exceptions": "status and attack-specific reactions use other sequences; not all special branches implemented"
   },
+  "guard": {
+    "sequence": 34,
+    "reaction": 13,
+    "select": "overlay19 0x021189fc and 0x02116b90",
+    "replaceAction": "0x02118a88 -> 0x02115fec; exits previous action before storing action15"
+  },
   "ko": {
     "sequence": 37,
     "source": "user-provided GIF classification: Knocked Out",

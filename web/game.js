@@ -1337,12 +1337,8 @@
       // 원작 명중음은 기술 레코드 +0x64(overlay9_19 0x02118540), 막기·회피는 BATTLE_SE_067_2
       globalThis.ChampSound?.play(e.damage===0?'guard':e.critical?'critical':'hit',{record:e.skill?.record??(attacker&&C.basicRecordOf?C.basicRecordOf(attacker.speciesId):null)});
       const duration=animations.duration(id,state);
-      const reaction={kind:'hit',left:duration,duration,state};
-      const action=b.actions.get(e.to);
-      // 교차 공격 중에는 자기 공격을 끝까지 그린 뒤 남겨 둔 반응을 재생한다.
-      if(action?.kind==='attack'){
-        if(!action.reaction||action.reaction.state==='guard2')action.reaction=reaction;
-      }else b.actions.set(e.to,reaction);
+      // 원작 overlay19 0x02118a88: 명중하면 기존 행동을 끝내고 반응 상태로 바로 전환한다.
+      b.actions.set(e.to,{kind:'hit',left:duration,duration,state});
       const text=e.damage===0?'막음':`-${e.damage}${e.critical?' 크리티컬!':e.special?'!':''}`;
       b.flashes.push({id:e.to,text,until:b.visualTime+700,color:e.critical?'#ff9a6a':e.special?'#ffd36a':'#fff'});
       const attack=e.skill?.name ?? (e.special ? '필살기' : '일반 공격');
@@ -1355,9 +1351,7 @@
     function tickBattleArt(b,dt) {
       for(const [id,action] of b.actions){
         action.left-=dt;
-        if(action.left>0)continue;
-        if(action.reaction)b.actions.set(id,action.reaction);
-        else b.actions.delete(id);
+        if(action.left<=0)b.actions.delete(id);
       }
       b.effects.tick(dt);
       b.statusEffects?.tick(dt);
@@ -1406,6 +1400,7 @@
       b.motionAge=Math.min(stepSeconds,b.acc);
       // 지연된 공격의 상태 문구와 기록은 해당 명중에서 함께 표시한다.
       const hitFeedbackByTarget = new Map();
+      const hitThisStep = new Set();
       for (const e of events) {
         const caster=b.state.units.find(u=>u.id===e.from);
         const attackState=e.type==='hit'?(e.special?(e.skill?.animation??'attack1'):'attack4'):null;
@@ -1418,14 +1413,14 @@
         if(e.type==='hit'){
           const attacker=b.state.units.find(u=>u.id===e.from),target=b.state.units.find(u=>u.id===e.to);
           // 필살기는원본 표+16에서 확인한7~10.기본 공격10은 사용자 지정 정책을 유지한다.
-          b.presentation?.add(e,b.state.units,Math.max(attackDuration,effect?.hold||0));
-          animations.face?.(attacker,attackId,target.x-attacker.x);
-          // 원본 빔은 0x212073c로 시전자를 잠근다. 빔이 끝날 때까지 공격 자세를 유지한다.
-          const holdUntil=effect?.lockActor?effect.hold:0;
-          const actionDuration=holdUntil?(animations.castDuration?.(attackId,attackState,holdUntil)||Math.max(attackDuration,holdUntil)):attackDuration;
-          const previous=b.actions.get(e.from);
-          const reaction=previous?.kind==='hit'&&previous.left===previous.duration?previous:previous?.reaction;
-          b.actions.set(e.from,{kind:'attack',left:actionDuration,duration:actionDuration,state:attackState,holdUntil,flip:target.x>attacker.x,reaction});
+          if(!hitThisStep.has(e.from)){
+            b.presentation?.add(e,b.state.units,Math.max(attackDuration,effect?.hold||0));
+            animations.face?.(attacker,attackId,target.x-attacker.x);
+            // 원본 빔은 0x212073c로 시전자를 잠근다. 빔이 끝날 때까지 공격 자세를 유지한다.
+            const holdUntil=effect?.lockActor?effect.hold:0;
+            const actionDuration=holdUntil?(animations.castDuration?.(attackId,attackState,holdUntil)||Math.max(attackDuration,holdUntil)):attackDuration;
+            b.actions.set(e.from,{kind:'attack',left:actionDuration,duration:actionDuration,state:attackState,holdUntil,flip:target.x>attacker.x});
+          }
           hitFeedbackByTarget.delete(e.to);
           if (effect?.lead) {
             const feedback = [];
@@ -1433,6 +1428,7 @@
             hitFeedbackByTarget.set(e.to, feedback);
           } else {
             battleHitVisual(b,e);
+            hitThisStep.add(e.to);
           }
           if(e.special&&e.skill){
             globalThis.ChampSound?.play('cast',{record:e.skill.record}); // 원작 연출음은 레코드 +0x60(0x02121D40)
@@ -1653,7 +1649,7 @@
       const status=u.status?.until>s.t?u.status.id:0;
       const statusPose=({8:'sleep2',9:'sleep',10:'eyesClosed',12:'sleep2'})[status];
       const action=battle.actions.get(u.id);
-      const reacting = action?.kind==='hit' && action.state!=='guard2';
+      const reacting = action?.kind==='hit';
       const pose=animations.movement(s.units[u.id],spriteId,m.dx,m.dy,reacting&&statusPose?0:dt,!u.alive||!!statusPose,statusPose);
       // 피격 시 해당 종의 원본 셀을 원본 유지 시간으로 재생한다. 인위적 흔들림/점멸 없음.
       const actionAge=action?Math.max(0,action.duration-action.left):0;
