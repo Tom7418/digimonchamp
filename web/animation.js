@@ -33,16 +33,21 @@
       return sequence(id, state).frames.reduce((n, f) => n + f[1], 0) / data.tickRate;
     }
     function trainingClip(id, cageNo, elapsed, running) {
-      const sequenceNo = data.training[`cm${String(cageNo).padStart(2,'0')}`];
-      const state = sequenceNo === undefined ? 'train' : `seq_${sequenceNo}`;
-      const action = duration(id, state);
+      const key = `cm${String(cageNo).padStart(2,'0')}`;
+      const phases = data.trainingActions[key] ?? [[32]];
+      const seconds = ([seq, ticks]) => ticks === undefined ? duration(id, `seq_${seq}`) : ticks / data.tickRate;
+      const action = phases.reduce((sum, phase) => sum + seconds(phase), 0);
       // 대기 자세를 사이에 넣어 정지 셀로 된 동작도 세 번 구분되어 보이게 한다.
       const rest = running ? 0.55 : 0.28;
       const cycle = action + rest;
       if (elapsed + 1e-8 >= 2 * cycle + action) return { done: true };
-      const inCycle = elapsed % cycle;
-      if (inCycle < action) return { frame: sample(id, state, inCycle) };
-      return { recovery: true, frame: sample(id, running ? 'run' : 'idle', inCycle - action) };
+      let time = elapsed % cycle;
+      for (const phase of phases) {
+        const length = seconds(phase), [seq] = phase;
+        if (time < length) return { frame: sample(id, `seq_${seq}`, time), moving: seq === 3 || seq === 11 };
+        time -= length;
+      }
+      return { recovery: true, moving: running, frame: sample(id, running ? 'run' : 'idle', time) };
     }
     function sample(id, state, elapsed) {
       const seq = sequence(id, state), total = duration(id, state) * data.tickRate;

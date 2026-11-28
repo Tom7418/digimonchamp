@@ -66,7 +66,33 @@ test('먹기·피격·로프 코드와 사용자 GIF 전투 불능37 분류를 �
  assert.equal(data.states.eat,14);assert.equal(data.states.hurt,5);assert.equal(data.states.hurtAlt,6);
  assert.equal(data.states.ko,37);assert.equal(data.states.boundIdle,16);
  assert.deepEqual(Array.from(data.banks[data.sprites.m201_agumon][14].frames,f=>f[0]),[24,25]);
- assert.equal(data.training.cm07,29);assert.equal(data.training.cm05,8);assert.equal(data.training.cm04,33);
+ assert.equal(data.trainingActions.cm07[0][0],29);assert.equal(data.trainingActions.cm05[0][0],8);assert.equal(data.trainingActions.cm04[0][0],33);
+});
+
+test('설치 가능한 모든 훈련 시설에 원본 동작이 연결되어 있다',()=>{
+ for(const file of ['core.js','cage-layout.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../web',file),'utf8'),ctx);
+ const cages=vm.runInContext('Object.values(window.CageLayout.types).map(type=>ChampCore.getCage(type.core)).filter(c=>c.up||c.apUp||c.battleUp)',ctx);
+ assert.ok(cages.length>20);
+ for(const cage of cages){
+  const phases=data.trainingActions['cm'+String(cage.no).padStart(2,'0')];
+  assert.ok(phases?.length,cage.id);
+  for(const [seq] of phases)assert.equal(data.states['seq_'+seq],seq);
+ }
+});
+
+test('시설의 복합 자세, 달리는 시설과 두 미니 시설의 원본 대응을 재생한다',()=>{
+ const id='m201_agumon';
+ assert.equal(player.trainingClip(id,30,.25,false).frame,player.sample(id,'seq_32',.25));
+ assert.equal(player.trainingClip(id,30,.51,false).frame,player.sample(id,'seq_15',.01));
+ assert.equal(player.trainingClip(id,6,.9,false).frame,player.sample(id,'seq_31',.9));
+ assert.equal(player.trainingClip(id,6,1.01,false).frame,player.sample(id,'seq_0',.01));
+ for(const no of [2,3,8,9]){
+  assert.equal(player.trainingClip(id,no,2,false).moving,true);
+  assert.equal(player.trainingClip(id,no,3.01,false).moving,false);
+ }
+ for(const [mini,normal] of [[33,11],[38,15]]){
+  for(const t of [.1,.7,1.5])assert.deepEqual(player.trainingClip(id,mini,t,false),player.trainingClip(id,normal,t,false));
+ }
 });
 
 test('216종의 필수 동작은 모두 존재하고 디지에그는 별도 구조를 유지한다',()=>{

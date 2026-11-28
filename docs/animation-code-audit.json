@@ -61,7 +61,12 @@
           3
         ],
         "primarySequence": 34,
-        "secondarySequence": 0
+        "secondarySequence": 0,
+        "primaryPhases": [
+          [
+            34
+          ]
+        ]
       },
       {
         "resource": "field_cm02_01",
@@ -71,7 +76,13 @@
           13
         ],
         "primarySequence": 3,
-        "secondarySequence": 1
+        "secondarySequence": 1,
+        "primaryPhases": [
+          [
+            3,
+            180
+          ]
+        ]
       },
       {
         "resource": "field_cm03_01",
@@ -81,7 +92,13 @@
           13
         ],
         "primarySequence": 3,
-        "secondarySequence": 1
+        "secondarySequence": 1,
+        "primaryPhases": [
+          [
+            3,
+            180
+          ]
+        ]
       },
       {
         "resource": "field_cm04_01",
@@ -91,7 +108,12 @@
           0
         ],
         "primarySequence": 33,
-        "secondarySequence": 8
+        "secondarySequence": 8,
+        "primaryPhases": [
+          [
+            33
+          ]
+        ]
       },
       {
         "resource": "field_cm05_01",
@@ -101,7 +123,12 @@
           25
         ],
         "primarySequence": 8,
-        "secondarySequence": 32
+        "secondarySequence": 32,
+        "primaryPhases": [
+          [
+            8
+          ]
+        ]
       },
       {
         "resource": "field_cm06_01",
@@ -111,7 +138,17 @@
           14
         ],
         "primarySequence": 31,
-        "secondarySequence": null
+        "secondarySequence": null,
+        "primaryPhases": [
+          [
+            31,
+            60
+          ],
+          [
+            0,
+            50
+          ]
+        ]
       },
       {
         "resource": "field_cm07_01",
@@ -121,7 +158,12 @@
           15
         ],
         "primarySequence": 29,
-        "secondarySequence": null
+        "secondarySequence": null,
+        "primaryPhases": [
+          [
+            29
+          ]
+        ]
       },
       {
         "resource": "field_cm08_01",
@@ -131,7 +173,13 @@
           6
         ],
         "primarySequence": 3,
-        "secondarySequence": 0
+        "secondarySequence": 0,
+        "primaryPhases": [
+          [
+            3,
+            180
+          ]
+        ]
       },
       {
         "resource": "field_cm09_01",
@@ -141,7 +189,13 @@
           15
         ],
         "primarySequence": 3,
-        "secondarySequence": null
+        "secondarySequence": null,
+        "primaryPhases": [
+          [
+            3,
+            180
+          ]
+        ]
       },
       {
         "resource": "field_cm10_01",
@@ -150,8 +204,13 @@
           5,
           16
         ],
-        "primarySequence": null,
-        "secondarySequence": 4
+        "primarySequence": 0,
+        "secondarySequence": 4,
+        "primaryPhases": [
+          [
+            0
+          ]
+        ]
       },
       {
         "resource": "field_cm11_01",
@@ -161,7 +220,12 @@
           17
         ],
         "primarySequence": 0,
-        "secondarySequence": 4
+        "secondarySequence": 4,
+        "primaryPhases": [
+          [
+            0
+          ]
+        ]
       },
       {
         "resource": "field_cm12_01",
@@ -171,7 +235,12 @@
           15
         ],
         "primarySequence": 0,
-        "secondarySequence": null
+        "secondarySequence": null,
+        "primaryPhases": [
+          [
+            0
+          ]
+        ]
       },
       {
         "resource": "field_cm13_01",
@@ -181,7 +250,12 @@
           8
         ],
         "primarySequence": 35,
-        "secondarySequence": 31
+        "secondarySequence": 31,
+        "primaryPhases": [
+          [
+            35
+          ]
+        ]
       },
       {
         "resource": "field_cm14_01",
@@ -191,7 +265,12 @@
           18
         ],
         "primarySequence": 31,
-        "secondarySequence": 1
+        "secondarySequence": 1,
+        "primaryPhases": [
+          [
+            31
+          ]
+        ]
       },
       {
         "resource": "field_cm15_01",
@@ -201,7 +280,12 @@
           14
         ],
         "primarySequence": 0,
-        "secondarySequence": null
+        "secondarySequence": null,
+        "primaryPhases": [
+          [
+            0
+          ]
+        ]
       },
       {
         "resource": "field_cm16_01",
@@ -211,7 +295,12 @@
           4294967295
         ],
         "primarySequence": 28,
-        "secondarySequence": null
+        "secondarySequence": null,
+        "primaryPhases": [
+          [
+            28
+          ]
+        ]
       },
       {
         "resource": "field_cm17_01",
@@ -221,7 +310,12 @@
           4294967295
         ],
         "primarySequence": 28,
-        "secondarySequence": null
+        "secondarySequence": null,
+        "primaryPhases": [
+          [
+            28
+          ]
+        ]
       },
       {
         "resource": "field_cm18_01",
@@ -231,7 +325,12 @@
           6
         ],
         "primarySequence": 30,
-        "secondarySequence": 0
+        "secondarySequence": 0,
+        "primaryPhases": [
+          [
+            30
+          ]
+        ]
       },
       {
         "resource": "field_cm19_01",
@@ -241,7 +340,12 @@
           13
         ],
         "primarySequence": 30,
-        "secondarySequence": 1
+        "secondarySequence": 1,
+        "primaryPhases": [
+          [
+            30
+          ]
+        ]
       },
       {
         "resource": "field_cm20_01",
@@ -251,7 +355,13 @@
           15
         ],
         "primarySequence": 3,
-        "secondarySequence": null
+        "secondarySequence": null,
+        "primaryPhases": [
+          [
+            3,
+            180
+          ]
+        ]
       },
       {
         "resource": "field_cm21_01",
@@ -261,7 +371,12 @@
           19
         ],
         "primarySequence": 1,
-        "secondarySequence": 4
+        "secondarySequence": 4,
+        "primaryPhases": [
+          [
+            1
+          ]
+        ]
       },
       {
         "resource": "field_cm22_01",
@@ -271,7 +386,12 @@
           20
         ],
         "primarySequence": 1,
-        "secondarySequence": 6
+        "secondarySequence": 6,
+        "primaryPhases": [
+          [
+            1
+          ]
+        ]
       },
       {
         "resource": "field_cm23_01",
@@ -281,7 +401,12 @@
           21
         ],
         "primarySequence": 31,
-        "secondarySequence": 14
+        "secondarySequence": 14,
+        "primaryPhases": [
+          [
+            31
+          ]
+        ]
       },
       {
         "resource": "field_cm24_01",
@@ -291,7 +416,12 @@
           14
         ],
         "primarySequence": 0,
-        "secondarySequence": null
+        "secondarySequence": null,
+        "primaryPhases": [
+          [
+            0
+          ]
+        ]
       },
       {
         "resource": "field_cm25_01",
@@ -301,7 +431,12 @@
           12
         ],
         "primarySequence": 0,
-        "secondarySequence": 13
+        "secondarySequence": 13,
+        "primaryPhases": [
+          [
+            0
+          ]
+        ]
       },
       {
         "resource": "field_cm26_01",
@@ -311,7 +446,12 @@
           1
         ],
         "primarySequence": 30,
-        "secondarySequence": 3
+        "secondarySequence": 3,
+        "primaryPhases": [
+          [
+            30
+          ]
+        ]
       },
       {
         "resource": "field_cm27_01",
@@ -321,7 +461,12 @@
           0
         ],
         "primarySequence": 8,
-        "secondarySequence": 8
+        "secondarySequence": 8,
+        "primaryPhases": [
+          [
+            8
+          ]
+        ]
       },
       {
         "resource": "field_cm30_01",
@@ -331,7 +476,17 @@
           13
         ],
         "primarySequence": 32,
-        "secondarySequence": 1
+        "secondarySequence": 1,
+        "primaryPhases": [
+          [
+            32,
+            30
+          ],
+          [
+            15,
+            30
+          ]
+        ]
       },
       {
         "resource": "field_cm31_01",
@@ -341,7 +496,12 @@
           4294967295
         ],
         "primarySequence": 28,
-        "secondarySequence": null
+        "secondarySequence": null,
+        "primaryPhases": [
+          [
+            28
+          ]
+        ]
       },
       {
         "resource": "field_cm32_01",
@@ -351,7 +511,12 @@
           6
         ],
         "primarySequence": 30,
-        "secondarySequence": 0
+        "secondarySequence": 0,
+        "primaryPhases": [
+          [
+            30
+          ]
+        ]
       },
       {
         "resource": "field_cm34_01",
@@ -361,7 +526,12 @@
           25
         ],
         "primarySequence": 8,
-        "secondarySequence": 32
+        "secondarySequence": 32,
+        "primaryPhases": [
+          [
+            8
+          ]
+        ]
       },
       {
         "resource": "field_cm35_01",
@@ -371,7 +541,12 @@
           15
         ],
         "primarySequence": 29,
-        "secondarySequence": null
+        "secondarySequence": null,
+        "primaryPhases": [
+          [
+            29
+          ]
+        ]
       },
       {
         "resource": "field_cm37_01",
@@ -380,8 +555,13 @@
           5,
           16
         ],
-        "primarySequence": null,
-        "secondarySequence": 4
+        "primarySequence": 0,
+        "secondarySequence": 4,
+        "primaryPhases": [
+          [
+            0
+          ]
+        ]
       },
       {
         "resource": "field_cm39_01",
@@ -391,7 +571,12 @@
           15
         ],
         "primarySequence": 28,
-        "secondarySequence": null
+        "secondarySequence": null,
+        "primaryPhases": [
+          [
+            28
+          ]
+        ]
       },
       {
         "resource": "field_cm40_01",
@@ -401,7 +586,12 @@
           6
         ],
         "primarySequence": 1,
-        "secondarySequence": 0
+        "secondarySequence": 0,
+        "primaryPhases": [
+          [
+            1
+          ]
+        ]
       },
       {
         "resource": "field_cm28_01",
@@ -411,7 +601,8 @@
           4294967295
         ],
         "primarySequence": null,
-        "secondarySequence": null
+        "secondarySequence": null,
+        "primaryPhases": null
       },
       {
         "resource": "field_cm29_01",
@@ -421,13 +612,20 @@
           4294967295
         ],
         "primarySequence": null,
-        "secondarySequence": null
+        "secondarySequence": null,
+        "primaryPhases": null
       }
-    ]
+    ],
+    "phaseFormat": "[NANR sequence, optional original hold in frames]",
+    "webAliases": {
+      "cm33": "cm11",
+      "cm36": "cm21",
+      "cm38": "cm15"
+    }
   },
   "correction": "Previous eat=29 and hurt=4 were visual guesses and wrong for these code paths. Previous eat=30 candidate withdrawn: common effect actor+0x1d8 was not proof of a food object.",
   "limitations": [
-    "training table includes alternative and multi-stage actions; web currently uses first mapped action only",
+    "web training repeats the primary action; secondarySequence is an independent AI choice, not the next phase",
     "special hit reactions remain partially decoded",
     "60Hz playback remains previous interpretation"
   ]

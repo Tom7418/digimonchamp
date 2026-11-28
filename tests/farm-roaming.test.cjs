@@ -53,6 +53,16 @@ test('미니 화산은 원본 자세를 세 번 재생한 뒤 한 번만 보상�
  for(let i=0;i<20;i++)ctx.drawFarm(0,.1);
  assert.equal(trained.length,1);
 });
+test('운동장에서는 성격과 상관없이 달리는 자세와 실제 이동을 함께 재생한다',()=>{
+ const {ctx,p}=setup(),d=ctx.save.digimon[0];
+ d.cage='운동장';d.cageInstance=p.cageId;d.personality='솔직';
+ p.cage='cm02';ctx.view.layout[0].kind='cm02';
+ const y=p.y;
+ for(let i=0;i<10;i++)ctx.drawFarm(0,.05);
+ assert.ok(Math.abs(p.y-y)>8);
+ assert.equal(p.motion,'run');
+ assert.equal(p.cageId,'c');
+});
 test('케이지 불만과 청소 이벤트가 원본 자세를 재생하고 정지 중에는 유지한다',()=>{
  const {ctx,p,poses}=setup();
  const d=ctx.save.digimon[0];

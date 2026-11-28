@@ -1814,6 +1814,7 @@
       const trainingActive = !dragging && !bouncing && !hatching.has(d.uid) && !!p.cageId && C.isTraining(d);
       const trainingRun = trainingActive && d.personality === '성급한';
       let trainingFrame;
+      let trainingMove = false;
       // 잡고 옮기는 동안에는 자율 이동·먹기 예약이 드롭 위치를 덮어쓰지 않는다.
       if (dragging) feeding.delete(d.uid);
       // 빈사: 돌아다니지 못한다 (help #124). 굶주려 빈사가 된 개체만 놓아 준 먹이까지 기어가 먹을 수 있다 (웹판 정책)
@@ -1821,7 +1822,6 @@
       if (!dragging && !bouncing && !d.isEgg && !hatching.has(d.uid)) {
         const eating = animDt > 0 ? (!d.dying || d.hunger <= 0) && seekFood(p, d, animDt) : feeding.has(d.uid);
         if (eating) reactionState = null;
-        let recovery = false;
         if (trainingActive && !eating && !reactionState) {
           if (trainingDt > 0) p.training ??= { cageId: p.cageId, speciesId: d.speciesId, elapsed: 0 };
           if (p.training) {
@@ -1830,14 +1830,14 @@
             if (pose.done && trainingDt > 0) finishedTraining.add(d.uid);
             else {
               trainingFrame = pose.frame;
-              recovery = !!pose.recovery;
+              trainingMove = !!pose.moving;
               p.training.elapsed += trainingDt;
             }
           }
         }
         // 케이지 안에서도 목표를 유지하며 걷는다. 식사/수면/드래그/튕기기가 우선한다.
-        if (!eating && !reactionState && !d.dying && (!trainingActive || (trainingRun && recovery && trainingDt > 0))) {
-          board.roamPet(p,animDt,(trainingRun?48:16)*(d.fatigue>80?0.4:1),trainingRun?.15:1);
+        if (!eating && !reactionState && !d.dying && (!trainingActive || (trainingMove && trainingDt > 0))) {
+          board.roamPet(p,animDt,(trainingMove?48:16)*(d.fatigue>80?0.4:1),trainingMove?0:1);
         }
       }
       const selected = p.uid === view.pickedUid; // 고른 디지몬만 발밑 테두리를 표시
@@ -1853,7 +1853,7 @@
         ctx.stroke();
       }
       // 행동별 원본 셀을 재생한다. 인위적인 상하 흔들림은 사용하지 않는다.
-      if (animDt > 0) p.motion = Math.hypot(p.x - oldX, p.y - oldY) > 0.01 ? (trainingRun?'run':'walk') : feeding.has(d.uid) ? 'eat' : 'idle';
+      if (animDt > 0) p.motion = Math.hypot(p.x - oldX, p.y - oldY) > 0.01 ? (trainingMove?'run':'walk') : feeding.has(d.uid) ? 'eat' : 'idle';
       const state=bouncing ? 'hurtAlt' : d.dying ? (d.hunger<=0&&['walk','eat'].includes(p.motion)?p.motion:'ko') : sleeping ? 'seq_13' : reactionState || p.motion || 'idle';
       if (d.isEgg) asset(SPRITE_BY_NAME[C.getSpecies(d.originBaby || d.speciesId).id]); // 부화 전에 미리 불러 둔다
       // 안내 편지/다른 창 때문에 연출이 대기 중이어도 진화 후 모습을 먼저 보여 주지 않는다.
