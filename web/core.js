@@ -4317,7 +4317,7 @@ var ChampCore = (function(exports) {
 		show: 70,
 		restPerHour: 1
 	};
-	/** 훈련 한 번에 걸리는 게임 분 */
+	/** 화면 없는 시뮬레이션에서 훈련 한 번에 걸리는 게임 분 */
 	var TRAINING_MINUTES = 15;
 	/** 병·부상을 방치해 로스트되기까지의 게임 분 (임시: 이틀) */
 	var NEGLECT_MINUTES = 2880;
@@ -4624,6 +4624,60 @@ var ChampCore = (function(exports) {
 			crampedMinutes: 0
 		};
 	}
+	function finishTraining(d, season, rng, cageLevels, events) {
+		const cage = getCage(d.cage), level = cageLevels?.[cage.id] ?? 0;
+		d.trainMinutes = 0;
+		d.trainDone = true;
+		const changes = applyTraining(d, cage, season, rng, CAGE_LEVEL_FACTOR[level] ?? 1);
+		changes.push(...applyTrainingSideEffects(d, cage.no, season, rng, level));
+		addBond(d, BOND.training);
+		const name = getSpecies(d.speciesId).name;
+		events.push({
+			type: "trained",
+			uid: d.uid,
+			name,
+			changes: changes.join(", ")
+		});
+		const risk = d.injuryRisk ?? 0;
+		const chance = (risk > 30 ? risk / 100 : 0) + (d.protein ?? 0) * PROTEIN_TRAIN_INJURY;
+		if (!d.injured && chance > 0 && rng() < chance) {
+			d.injured = true;
+			d.sickMinutes = 0;
+			d.penalties += 1;
+			events.push({
+				type: "injured",
+				uid: d.uid,
+				name
+			});
+		}
+	}
+	/** 육성 화면에서 동작을 모두 재생한 개체의 보상만 같은 프레임에 처리한다. */
+	function completeTraining(save, uids, rng = defaultRng) {
+		const events = [];
+		const season = dateOf(save.clock).season;
+		const digimon = save.digimon.map((d) => {
+			if (!uids.has(d.uid) || !d.cageInstance || !isTraining(d)) return d;
+			const trained = {
+				...d,
+				stats: { ...d.stats },
+				ap: { ...d.ap }
+			};
+			finishTraining(trained, season, rng, save.cageLevels, events);
+			return trained;
+		});
+		if (!events.length) return {
+			save,
+			events
+		};
+		const evolved = evaluateEvolutions({
+			...save,
+			digimon
+		}, rng);
+		return {
+			save: evolved.save,
+			events: [...events, ...evolved.events]
+		};
+	}
 	/** 디지몬 한 마리의 게임 시간 1분. null이면 로스트 */
 	function tickOne(prev, ctx, events) {
 		let d = {
@@ -4858,34 +4912,9 @@ var ChampCore = (function(exports) {
 			}
 		}
 		if (cage.up || cage.apUp || cage.battleUp) {
-			if (!d.trainDone && !sleeping && !d.sick && !d.injured && !d.dying) {
+			if (ctx.training === "clock" && !sleeping && isTraining(d)) {
 				d.trainMinutes = (d.trainMinutes ?? 0) + 1;
-				if (d.trainMinutes >= 15) {
-					d.trainMinutes = 0;
-					d.trainDone = true;
-					const level = ctx.cageLevels?.[cage.id] ?? 0;
-					const changes = applyTraining(d, cage, ctx.season ?? 0, ctx.rng, CAGE_LEVEL_FACTOR[level] ?? 1);
-					changes.push(...applyTrainingSideEffects(d, cage.no, ctx.season ?? 0, ctx.rng, level));
-					addBond(d, BOND.training);
-					events.push({
-						type: "trained",
-						uid: d.uid,
-						name: sp.name,
-						changes: changes.join(", ")
-					});
-					const risk = d.injuryRisk ?? 0;
-					const chance = (risk > 30 ? risk / 100 : 0) + (d.protein ?? 0) * PROTEIN_TRAIN_INJURY;
-					if (!d.injured && chance > 0 && ctx.rng() < chance) {
-						d.injured = true;
-						d.sickMinutes = 0;
-						d.penalties += 1;
-						events.push({
-							type: "injured",
-							uid: d.uid,
-							name: sp.name
-						});
-					}
-				}
+				if (d.trainMinutes >= 15) finishTraining(d, ctx.season ?? 0, ctx.rng, ctx.cageLevels, events);
 			}
 		} else {
 			d.trainDone = false;
@@ -4951,7 +4980,7 @@ var ChampCore = (function(exports) {
 	/** 사육장 전체의 게임 시간 1분 */
 	/** dirtyCages: 상한 먹이 한 개마다 그것이 놓인 설치 시설 ID(자유 활동 구역은 ''). 같은 ID가 여러 번 나오면 그 수만큼 센다 (바닥 먹이는 화면이 관리한다) */
 	/** petting: 이번 분에 손 도구로 누르고 있는 디지몬 uid (쓰다듬는 상태) */
-	function tickFarm(save, rng = defaultRng, sleep = false, dirtyCages = [], petting = /* @__PURE__ */ new Set()) {
+	function tickFarm(save, rng = defaultRng, sleep = false, dirtyCages = [], petting = /* @__PURE__ */ new Set(), training = "clock") {
 		const events = [];
 		const rank = tamerRank(save);
 		const season = dateOf(save.clock).season;
@@ -5002,7 +5031,8 @@ var ChampCore = (function(exports) {
 				petting: petting.has(d.uid),
 				caged: key !== null,
 				dirt,
-				over
+				over,
+				training
 			}, events);
 			if (!r) {
 				free += before;
@@ -12613,6 +12643,7 @@ var ChampCore = (function(exports) {
 	exports.clean = clean;
 	exports.cleanOne = cleanOne;
 	exports.cleanRelief = cleanRelief;
+	exports.completeTraining = completeTraining;
 	exports.createBattle = createBattle;
 	exports.critLevelOf = critLevelOf;
 	exports.cure = cure;

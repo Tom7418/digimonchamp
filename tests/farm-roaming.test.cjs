@@ -1,14 +1,16 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 function setup(){
  const noop=()=>{},texts=[],poses=[],orbits=[],nodes={},toolbar={classList:{toggle:noop},querySelector:k=>nodes[k]??={},querySelectorAll:()=>[]};
- const window={DIGIMON_ANIMATIONS:{training:{cm16:32}}},math=Object.create(Math);math.random=()=>.25;
+ const window={},math=Object.create(Math);math.random=()=>.25;
  const ctx=vm.createContext({farmHealth:undefined,window,Math:math,document:{createElement:()=>toolbar},Image:function(){},performance:{now:()=>0},eggName:()=>'디지에그',
   ctx:new Proxy({fillText(text){texts.push(text);},arc(x,y,r){if(r===2)orbits.push([x,y]);}}, {get:(t,k)=>k in t?t[k]:noop}),
   titleOpen:false,battle:null,hunt:null,paused:false,mailOpen:false,dayEnding:false,feeding:new Map(),hatching:new Map(),trainingFloats:new Map(),cageReactions:new WeakMap(),spriteFrames:new WeakMap(),effect:null,log:noop,
   drawFood:noop,drawPoop:noop,updateSweeps:noop,drawSweeps:noop,drawCareFx:noop,bubbleOf:()=>null,footprint:()=>20,body:noop,asset:()=>null,
-  animations:{pose(p,id,state){poses.push(state);return 0;}},animationId:()=> 'agumon',SPRITE_BY_NAME:{},petVisualBounds:p=>({cx:p.x,top:p.y-40,width:36}),
+  $:()=>({open:false}),render:noop,persist:noop,animationId:()=> 'm201_agumon',SPRITE_BY_NAME:{},petVisualBounds:p=>({cx:p.x,top:p.y-40,width:36}),
  });
- for(const file of ['core.js','cage-layout.js','cage-editor.js'])vm.runInContext(fs.readFileSync('web/'+file,'utf8'),ctx);
+ for(const file of ['core.js','cage-layout.js','cage-editor.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync('web/'+file,'utf8'),ctx);
+ const player=window.createAnimationPlayer(window.DIGIMON_ANIMATIONS);
+ ctx.animations={...player,pose(p,id,state,dt){poses.push(state);return player.pose(p,id,state,dt);}};
  vm.runInContext(`globalThis.C=ChampCore;globalThis.L=window.CageLayout;globalThis.save=C.freshSave(0);save.digimon=[C.newDigimon(1,'아구몬',()=>.5)];
  globalThis.view={layoutVersion:6,layout:[{id:'c',kind:'clinic',q:1,r:1,rotation:0}],team:[],foods:[],poops:[]};globalThis.digi=()=>save.digimon[0];
  globalThis.seekFood=()=>!!globalThis.foodBusy||C.isSleeping(digi());`,ctx);
@@ -25,14 +27,31 @@ test('실제 육성 화면은 소속 케이지 안에서 걸으며 걷기 대신
  assert.ok(Math.abs(s.p.y-y)>20);assert.ok(s.poses.includes('walk'));assert.equal(s.p.cageId,'c');
  assert.equal(s.texts.some(text=>String(text).includes('아구몬')),false);
 });
-test('실제 훈련을 시작할 때마다 자세를 재생하고 이미 끝났거나 아플 때는 훈련하지 않는다',()=>{
- const s=setup(),d=s.ctx.save.digimon[0];
- d.cage='미니 운동장';s.p.cage='field';
- s.ctx.window.DIGIMON_ANIMATIONS.training.cm30=32;
- s.ctx.drawFarm(0,.1);assert.equal(s.poses.at(-1),'seq_32');
- d.trainDone=true;s.ctx.drawFarm(0,.1);assert.notEqual(s.poses.at(-1),'seq_32');
- d.trainDone=false;s.ctx.drawFarm(0,.1);assert.equal(s.poses.at(-1),'seq_32');
- d.sick=true;s.ctx.drawFarm(0,.1);assert.notEqual(s.poses.at(-1),'seq_32');
+test('미니 화산은 원본 자세를 세 번 재생한 뒤 한 번만 보상하고 식사·정지·수면 중에는 진행하지 않는다',()=>{
+ const {ctx,p}=setup(),d=ctx.save.digimon[0],trained=[];
+ d.cage='미니 화산';d.cageInstance=p.cageId;d.hunger=100;
+ p.cage='cm35';ctx.view.layout[0].kind='cm35';
+ const id='m201_agumon',action=ctx.animations.duration(id,'seq_29');
+ const expected=ctx.animations.sample(id,'seq_29',0);
+ ctx.logEvent=e=>{if(e.type==='trained')trained.push(e);};
+ ctx.drawFarm(0,.025);
+ assert.equal(ctx.spriteFrames.get(p).frame,expected);
+ for(const mode of ['paused','foodBusy','sleep']){
+  const elapsed=p.training.elapsed;
+  if(mode==='sleep')d.restCycle={species:d.speciesId,sleepLeft:10};
+  else ctx[mode]=true;
+  ctx.drawFarm(0,1);
+  assert.equal(p.training.elapsed,elapsed,mode);assert.equal(trained.length,0);
+  if(mode==='sleep')d.restCycle=undefined;
+  else ctx[mode]=false;
+ }
+ const total=action*3+2*.28;
+ while(p.training.elapsed+.025<total)ctx.drawFarm(0,.025);
+ assert.equal(trained.length,0);
+ ctx.drawFarm(0,.025);ctx.drawFarm(0,.025);
+ assert.equal(trained.length,1);assert.equal(ctx.save.digimon[0].trainDone,true);
+ for(let i=0;i<20;i++)ctx.drawFarm(0,.1);
+ assert.equal(trained.length,1);
 });
 test('케이지 불만과 청소 이벤트가 원본 자세를 재생하고 정지 중에는 유지한다',()=>{
  const {ctx,p,poses}=setup();

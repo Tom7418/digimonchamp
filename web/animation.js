@@ -32,6 +32,18 @@
     function duration(id, state) {
       return sequence(id, state).frames.reduce((n, f) => n + f[1], 0) / data.tickRate;
     }
+    function trainingClip(id, cageNo, elapsed, running) {
+      const sequenceNo = data.training[`cm${String(cageNo).padStart(2,'0')}`];
+      const state = sequenceNo === undefined ? 'train' : `seq_${sequenceNo}`;
+      const action = duration(id, state);
+      // 대기 자세를 사이에 넣어 정지 셀로 된 동작도 세 번 구분되어 보이게 한다.
+      const rest = running ? 0.55 : 0.28;
+      const cycle = action + rest;
+      if (elapsed + 1e-8 >= 2 * cycle + action) return { done: true };
+      const inCycle = elapsed % cycle;
+      if (inCycle < action) return { frame: sample(id, state, inCycle) };
+      return { recovery: true, frame: sample(id, running ? 'run' : 'idle', inCycle - action) };
+    }
     function sample(id, state, elapsed) {
       const seq = sequence(id, state), total = duration(id, state) * data.tickRate;
       let tick = Math.max(0, elapsed) * data.tickRate;
@@ -71,7 +83,7 @@
       if(Math.abs(dx)>0.0001)m.flip=dx>0;
       return m.flip;
     }
-    return { duration, sample, pose, movement, face, windup, castDuration, sampleCast };
+    return { duration, sample, pose, movement, face, windup, castDuration, sampleCast, trainingClip };
   }
   root.createAnimationPlayer = create;
   if (typeof module !== 'undefined') module.exports = { createAnimationPlayer: create };

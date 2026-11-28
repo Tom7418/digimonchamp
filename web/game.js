@@ -257,6 +257,7 @@
     save = { ...save, digimon: save.digimon.map((d) => {
       const next = C.relocate(d, coreCage.get(d.uid), cageInstances.get(d.uid));
       if (next !== d && d.cageInstance !== undefined && next.cageInstance !== d.cageInstance) {
+        delete old.get(d.uid)?.training;
         const why = C.trainingBlocker(next);
         if (why) toast(`${nameOf(next)}: ${why}`);
       }
@@ -1199,7 +1200,7 @@
     showModal('케이지 훈련 효과',`<label>시설 <select id="training-cage">${cages.map(c=>`<option value="${esc(c.id)}"${c.id===chosen.id?' selected':''}>${esc(L.types[c.kind].name)}</option>`).join('')}</select></label>
       <p>${esc(date.seasonName)} 기준 · 케이지 Lv${level}${level?` (효과 ×${C.CAGE_LEVEL_FACTOR[level]})`:''} · ${preview.source==='original'?'원본 시설 결과표':'웹판 임시 효과'}${learner?.personality==='솔직'?' · 솔직: 증가량1.15배(정수 반올림)':''}</p>
       <table class="training-effects-table"><thead><tr><th>발생 비율</th><th>예상 변화 범위</th></tr></thead><tbody>${rows}</tbody></table>
-      <p class="hint">한 번의 훈련에서 위 결과 중 하나가 선택됩니다. 계절과 난수 보정을 포함한 범위이며, 실제 증감은 개체의 상·하한에 따라 줄어들 수 있습니다. 훈련은 배치당 한 번이며, 잠든 동안에는 진행되지 않습니다.</p>
+      <p class="hint">시설 동작을 세 번 마치면 위 결과 중 하나가 적용됩니다. 계절과 난수 보정을 포함한 범위이며, 실제 증감은 개체의 상·하한에 따라 줄어들 수 있습니다. 훈련은 배치당 한 번이며, 잠들거나 먹는 동안에는 진행되지 않습니다.</p>
       ${cage.battleUp?`<p>웹판 추가 효과: 배틀 수 +${cage.battleUp}</p>`:''}`,'TRAINING');
     $('#training-cage').onchange=e=>trainingMenu(e.target.value);
   }
@@ -1775,6 +1776,8 @@
     farmHealth?.begin();
     window.HDText?.begin(ctx);
     const animDt = !titleOpen && !battle && !hunt && !paused && !mailOpen && !dayEnding && !board.editing && !window.evolutionScene?.busy ? dt : 0;
+    const trainingDt = $('#modal').open ? 0 : animDt;
+    const finishedTraining = new Set();
     // 로스트·놓아주기·새 게임으로 사라진 개체의 먹이 예약을 해제한다.
     for (const uid of feeding.keys()) if (!digi(uid)) feeding.delete(uid);
     ctx.fillStyle = '#163a40';
@@ -1806,17 +1809,34 @@
         reaction.left -= animDt;
         if (reaction.left <= 1e-8 || reaction.speciesId !== d.speciesId || d.isEgg) cageReactions.delete(p);
       }
-      const trainingActive = !dragging && !!p.cageId && C.isTraining(d);
+      if (p.training && (p.training.cageId !== p.cageId || p.training.speciesId !== d.speciesId ||
+          !Number.isFinite(p.training.elapsed) || p.training.elapsed < 0 || d.trainDone || d.isEgg)) delete p.training;
+      const trainingActive = !dragging && !bouncing && !hatching.has(d.uid) && !!p.cageId && C.isTraining(d);
       const trainingRun = trainingActive && d.personality === '성급한';
+      let trainingFrame;
       // 잡고 옮기는 동안에는 자율 이동·먹기 예약이 드롭 위치를 덮어쓰지 않는다.
       if (dragging) feeding.delete(d.uid);
       // 빈사: 돌아다니지 못한다 (help #124). 굶주려 빈사가 된 개체만 놓아 준 먹이까지 기어가 먹을 수 있다 (웹판 정책)
       if (d.dying && d.hunger > 0) feeding.delete(d.uid);
-      if (animDt > 0 && !dragging && !bouncing && !d.isEgg && !hatching.has(d.uid)) {
-        const eating = (!d.dying || d.hunger <= 0) && seekFood(p, d, animDt);
+      if (!dragging && !bouncing && !d.isEgg && !hatching.has(d.uid)) {
+        const eating = animDt > 0 ? (!d.dying || d.hunger <= 0) && seekFood(p, d, animDt) : feeding.has(d.uid);
         if (eating) reactionState = null;
+        let recovery = false;
+        if (trainingActive && !eating && !reactionState) {
+          if (trainingDt > 0) p.training ??= { cageId: p.cageId, speciesId: d.speciesId, elapsed: 0 };
+          if (p.training) {
+            // 시설 그림 파일명과 무관하게 엔진의 원본 시설 번호로 시퀀스를 고른다.
+            const pose = animations.trainingClip(animationId(d), C.getCage(d.cage).no, p.training.elapsed, trainingRun);
+            if (pose.done && trainingDt > 0) finishedTraining.add(d.uid);
+            else {
+              trainingFrame = pose.frame;
+              recovery = !!pose.recovery;
+              p.training.elapsed += trainingDt;
+            }
+          }
+        }
         // 케이지 안에서도 목표를 유지하며 걷는다. 식사/수면/드래그/튕기기가 우선한다.
-        if (!eating && !reactionState && !d.dying && (!trainingActive || trainingRun)) {
+        if (!eating && !reactionState && !d.dying && (!trainingActive || (trainingRun && recovery && trainingDt > 0))) {
           board.roamPet(p,animDt,(trainingRun?48:16)*(d.fatigue>80?0.4:1),trainingRun?.15:1);
         }
       }
@@ -1834,14 +1854,7 @@
       }
       // 행동별 원본 셀을 재생한다. 인위적인 상하 흔들림은 사용하지 않는다.
       if (animDt > 0) p.motion = Math.hypot(p.x - oldX, p.y - oldY) > 0.01 ? (trainingRun?'run':'walk') : feeding.has(d.uid) ? 'eat' : 'idle';
-      const facility=L.types[p.cage];
-      const facilityNo=({field:'cm30',gym:'cm34',clinic:'cm16'})[p.cage] || facility?.img?.match(/cm[0-9]+/)?.[0];
-      const trainingSequence=window.DIGIMON_ANIMATIONS.training[facilityNo];
-      // 실제 훈련 중에 시설별 자세를 재생한다. 식사와 성급한 개체의 달리기가 우선한다.
-      const trainingPose = trainingActive && p.motion === 'idle'
-        ? (trainingSequence === undefined ? 'train' : 'seq_'+trainingSequence)
-        : null;
-      const state=bouncing ? 'hurtAlt' : d.dying ? (d.hunger<=0&&['walk','eat'].includes(p.motion)?p.motion:'ko') : sleeping ? 'seq_13' : reactionState || trainingPose || p.motion || 'idle';
+      const state=bouncing ? 'hurtAlt' : d.dying ? (d.hunger<=0&&['walk','eat'].includes(p.motion)?p.motion:'ko') : sleeping ? 'seq_13' : reactionState || p.motion || 'idle';
       if (d.isEgg) asset(SPRITE_BY_NAME[C.getSpecies(d.originBaby || d.speciesId).id]); // 부화 전에 미리 불러 둔다
       // 안내 편지/다른 창 때문에 연출이 대기 중이어도 진화 후 모습을 먼저 보여 주지 않는다.
       const evolutionFrom=window.evolutionScene?.appearance(d.uid);
@@ -1865,7 +1878,7 @@
         body(ctx,evolutionFrom,false,p.x,p.y,scale,frame,p.direction>0);
         continue;
       }
-      const frame = animations.pose(p, animationId(d), state, animDt);
+      const frame = trainingFrame ?? animations.pose(p, animationId(d), state, animDt);
       spriteFrames.set(p,{frame,speciesId:d.speciesId,isEgg:!!d.isEgg});
       body(ctx, d.speciesId, d.isEgg && eggName(d), p.x, p.y, scale, frame, p.direction > 0); // 원본 도트는 왼쪽을 향하므로 오른쪽 이동에서만 반전
       if(!d.isEgg)farmHealth?.draw(ctx,d.uid,C.hpOf(d),d.stats.hp,p.x-32,p.y+12,64,9);
@@ -1963,6 +1976,16 @@
       farmHealth.end();
     }
     window.HDText?.end(ctx);
+    if (finishedTraining.size) {
+      const result = C.completeTraining(save, finishedTraining);
+      save = result.save;
+      for (const p of view.team) if (finishedTraining.has(p.uid)) delete p.training;
+      result.events.forEach(logEvent);
+      if (result.events.length) {
+        render();
+        persist();
+      }
+    }
   }
   // 오른쪽 아래 작은 지도: 사육장 전체와 지금 보는 범위
   function drawMinimap() {
@@ -3197,7 +3220,7 @@
     for (let i = 0; i < 2 * 1440 && !dayEnding; i++) {
       syncTeam();
       const dirtyCages = view.foods.filter((f) => f.kind === 'rotten').map((f) => f.cageId ?? '');
-      const r = C.tickFarm(save, undefined, false, dirtyCages);
+      const r = C.tickFarm(save, undefined, false, dirtyCages, undefined, 'animation');
       save = r.save;
       r.events.forEach(logEvent);
       spoilFoods();
@@ -3395,7 +3418,7 @@
           syncTeam();
           // 상한 먹이 한 개마다 그 케이지 ID(자유 활동 구역은 ''): 더러움 스트레스(원본 0x211AE00)에 똥과 함께 센다
           const dirtyCages = view.foods.filter((f) => f.kind === 'rotten').map((f) => f.cageId ?? '');
-          const r = C.tickFarm(save, undefined, false, dirtyCages, pettingNow());
+          const r = C.tickFarm(save, undefined, false, dirtyCages, pettingNow(), 'animation');
           save = r.save;
           r.events.forEach(logEvent);
           spoilFoods();

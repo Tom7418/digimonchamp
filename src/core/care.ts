@@ -316,7 +316,7 @@ export function evaluateEvolutions(save: SaveData, rng: Rng = defaultRng, uids?:
  * 임시(Claude가 정함): 100이 되면 병.
  */
 export const STRESS = { rotten: 50, sick: 40, hungerBelow: 20, perHunger: 1.5, show: 70, restPerHour: 1 };
-/** 훈련 한 번에 걸리는 게임 분 */
+/** 화면 없는 시뮬레이션에서 훈련 한 번에 걸리는 게임 분 */
 export const TRAINING_MINUTES = 15;
 /** 병·부상을 방치해 로스트되기까지의 게임 분 (임시: 이틀) */
 export const NEGLECT_MINUTES = 2880;
@@ -566,8 +566,43 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
   };
 }
 
+function finishTraining(d: Digimon, season: number, rng: Rng, cageLevels: Record<string, number> | undefined, events: FarmEvent[]) {
+  const cage = getCage(d.cage), level = cageLevels?.[cage.id] ?? 0;
+  d.trainMinutes = 0;
+  d.trainDone = true;
+  const changes = applyTraining(d, cage, season, rng, CAGE_LEVEL_FACTOR[level] ?? 1);
+  changes.push(...applyTrainingSideEffects(d, cage.no, season, rng, level));
+  // 원본 overlay18 0x211D5AC / 0x211D5F8: 유대 +1, 위험도가 30을 넘으면 그 % 확률로 부상.
+  addBond(d, BOND.training);
+  const name = getSpecies(d.speciesId).name;
+  events.push({ type: 'trained', uid: d.uid, name, changes: changes.join(', ') });
+  const risk = d.injuryRisk ?? 0;
+  const chance = (risk > 30 ? risk / 100 : 0) + (d.protein ?? 0) * PROTEIN_TRAIN_INJURY;
+  if (!d.injured && chance > 0 && rng() < chance) {
+    d.injured = true;
+    d.sickMinutes = 0;
+    d.penalties += 1;
+    events.push({ type: 'injured', uid: d.uid, name });
+  }
+}
+
+/** 육성 화면에서 동작을 모두 재생한 개체의 보상만 같은 프레임에 처리한다. */
+export function completeTraining(save: SaveData, uids: ReadonlySet<number>, rng: Rng = defaultRng): { save: SaveData; events: FarmEvent[] } {
+  const events: FarmEvent[] = [];
+  const season = dateOf(save.clock).season;
+  const digimon = save.digimon.map(d => {
+    if (!uids.has(d.uid) || !d.cageInstance || !isTraining(d)) return d;
+    const trained = { ...d, stats: { ...d.stats }, ap: { ...d.ap } };
+    finishTraining(trained, season, rng, save.cageLevels, events);
+    return trained;
+  });
+  if (!events.length) return { save, events };
+  const evolved = evaluateEvolutions({ ...save, digimon }, rng);
+  return { save: evolved.save, events: [...events, ...evolved.events] };
+}
+
 /** 디지몬 한 마리의 게임 시간 1분. null이면 로스트 */
-function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number; dirty?: boolean; cageLevels?: Record<string, number>; mates?: readonly Digimon[]; petting?: boolean; caged?: boolean; dirt?: number; over?: number }, events: FarmEvent[]): Digimon | null {
+function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boolean; rng: Rng; clock: number; sleep?: boolean; season?: number; dirty?: boolean; cageLevels?: Record<string, number>; mates?: readonly Digimon[]; petting?: boolean; caged?: boolean; dirt?: number; over?: number; training: 'clock' | 'animation' }, events: FarmEvent[]): Digimon | null {
   let d: Digimon = { ...prev, stats: { ...prev.stats }, ap: { ...prev.ap } };
   d.stageAge += 1;
 
@@ -751,33 +786,11 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
     }
   }
 
-  // 훈련: 테이머가 훈련 케이지에 넣으면 15분 훈련을 한 번 한다. 끝나면 훈련 케이지가 아닌 곳에
-  // 두었다가 다시 넣기 전에는 훈련하지 않는다 (형규가 정함. 15분은 게임 시간)
   if (cage.up || cage.apUp || cage.battleUp) {
-    // 배고픔·스트레스로는 막지 않는다. 원본은 훈련을 시작할 때 배가 0이거나 스트레스 90 이상이면
-    // 부상 위험도만 +3씩 올린다(overlay18 0x211D8B8~0x211D914, 아래 applyTrainingSideEffects)
-    if (!d.trainDone && !sleeping && !d.sick && !d.injured && !d.dying) {
+    // 브라우저에서는 게임 시계가 보상을 선지급하지 않고 동작 완료까지 기다린다.
+    if (ctx.training === 'clock' && !sleeping && isTraining(d)) {
       d.trainMinutes = (d.trainMinutes ?? 0) + 1;
-      if (d.trainMinutes >= TRAINING_MINUTES) {
-        d.trainMinutes = 0;
-        d.trainDone = true;
-        const level = ctx.cageLevels?.[cage.id] ?? 0;
-        const changes = applyTraining(d, cage, ctx.season ?? 0, ctx.rng, CAGE_LEVEL_FACTOR[level] ?? 1);
-        changes.push(...applyTrainingSideEffects(d, cage.no, ctx.season ?? 0, ctx.rng, level));
-        // 훈련을 마치면 유대 +1 (0x211D5AC, 진화·부상 판정 직전)
-        addBond(d, BOND.training);
-        events.push({ type: 'trained', uid: d.uid, name: sp.name, changes: changes.join(', ') });
-        // 부상 (원본 overlay18 0x211D5F8): 부상 위험도가 30을 넘으면 그 % 확률로 부상, 페널티 +1(최대 7은 원본 칸 크기).
-        // 프로틴을 먹은 채 훈련하면 1개당 +2%p는 웹판 임시(help #138).
-        const risk = d.injuryRisk ?? 0;
-        const chance = (risk > 30 ? risk / 100 : 0) + (d.protein ?? 0) * PROTEIN_TRAIN_INJURY;
-        if (!d.injured && chance > 0 && ctx.rng() < chance) {
-          d.injured = true;
-          d.sickMinutes = 0;
-          d.penalties += 1;
-          events.push({ type: 'injured', uid: d.uid, name: sp.name });
-        }
-      }
+      if (d.trainMinutes >= TRAINING_MINUTES) finishTraining(d, ctx.season ?? 0, ctx.rng, ctx.cageLevels, events);
     }
   } else {
     d.trainDone = false;
@@ -822,7 +835,7 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
 /** 사육장 전체의 게임 시간 1분 */
 /** dirtyCages: 상한 먹이 한 개마다 그것이 놓인 설치 시설 ID(자유 활동 구역은 ''). 같은 ID가 여러 번 나오면 그 수만큼 센다 (바닥 먹이는 화면이 관리한다) */
 /** petting: 이번 분에 손 도구로 누르고 있는 디지몬 uid (쓰다듬는 상태) */
-export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, dirtyCages: readonly string[] = [], petting: ReadonlySet<number> = new Set()): { save: SaveData; events: FarmEvent[] } {
+export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, dirtyCages: readonly string[] = [], petting: ReadonlySet<number> = new Set(), training: 'clock' | 'animation' = 'clock'): { save: SaveData; events: FarmEvent[] } {
   const events: FarmEvent[] = [];
   const rank = tamerRank(save);
   const season = dateOf(save.clock).season;
@@ -856,7 +869,7 @@ export function tickFarm(save: SaveData, rng: Rng = defaultRng, sleep = false, d
     const dirt = (poops.get(dk) ?? 0) + dirtyCages.filter((id) => id === dk).length;
     const dirty = !!d.cageInstance && dirtyCages.includes(d.cageInstance);
     const mates = key === null || d.isEgg ? [] : save.digimon.filter((o) => o.uid !== d.uid && !o.isEgg && group(o) === key);
-    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1, dirty, cageLevels: save.cageLevels, mates, petting: petting.has(d.uid), caged: key !== null, dirt, over }, events);
+    const r = tickOne(candidate, { rank, free, isLast, rng, sleep, season, clock: save.clock + 1, dirty, cageLevels: save.cageLevels, mates, petting: petting.has(d.uid), caged: key !== null, dirt, over, training }, events);
     if (!r) {
       free += before;
       return;

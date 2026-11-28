@@ -11,12 +11,25 @@ import { describe, expect, it } from 'vitest';
 import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personalityTraining } from '../src/core/training';
 import { initialResistance, resistBounds, RESIST_ORDER } from '../src/core/data';
 import { evolvedResistance } from '../src/core/stats';
-import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy , relocate, trainingBlocker, BOND, CONTAGION, mateBond, settleMates, GRUMBLE, cleanRelief } from '../src/core/care';
+import { completeTraining, evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy , relocate, trainingBlocker, BOND, CONTAGION, mateBond, settleMates, GRUMBLE, cleanRelief } from '../src/core/care';
 import { EGG_MINUTES, EGG_TAPS, baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank, lifespanOf } from '../src/core/evolution';
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, extraFreeBattleLineup, FREE_TEAM_UPSET_CHANCE, freeBattleFoes, titleHolder, titleHolderFoes, npcTeamFoes, npcTeam, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
+
+it('애니메이션 연동 모드에서는 게임 분으로 보상을 지급하지 않고 완료한 개체만 즉시 훈련시킨다',()=>{
+ const d={...newDigimon(1,'아구몬',()=>.5),cage:'미니 화산',cageInstance:'volcano',trainMinutes:14};
+ const sick={...d,uid:2,sick:true};
+ const s={...freshEggSave(0),clock:540,digimon:[d,sick]};
+ const r=tickFarm(s,()=>.5,false,[],new Set(),'animation');
+ expect(r.events.some(e=>e.type==='trained')).toBe(false);
+ const done=completeTraining(r.save,new Set([1,2]),()=>.5);
+ expect(done.save.clock).toBe(541);
+ expect(done.events.filter(e=>e.type==='trained').map(e=>e.uid)).toEqual([1]);
+ expect(done.save.digimon[0]).toMatchObject({trainDone:true,trainMinutes:0});
+ expect(completeTraining(done.save,new Set([1]),()=>.5).events).toEqual([]);
+});
 import { DEX_ORDER, dexEntries, dexCount } from '../src/core/dex';
 import { RANK_UP_MAIL, rankUpMails, queueMails, openMail, rollNpcOffer, answerNpcOffer, offerText, rollRivalChallenge, mailEvent, rollMorningMail, rollBossMail, rivalBeaten, pickOfferCandidate, rollBattleOffer } from '../src/core/events';
 import { PLUGINS, PLUGIN_SLOTS, pluginOf, pluginPrice, pluginSlots, equippedPlugins, togglePlugin, pluginView, shopPlugins } from '../src/core/plugins';

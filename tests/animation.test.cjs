@@ -20,6 +20,18 @@ test('NANR의 서로 다른 유지 시간과 반복 경계를 따른다',()=>{
   assert.equal(player.sample(id,'idle',first+0.001),seq.frames[1][0]);
   assert.equal(player.sample(id,'idle',player.duration(id,'idle')+0.001),seq.frames[0][0]);
 });
+test('훈련 클립은 원본 시퀀스를 처음부터 세 번 재생하고 그 사이에만 쉬는 동작을 넣는다',()=>{
+  const id='m201_agumon',action=player.duration(id,'seq_29'),cycle=action+.28;
+  const first=player.sample(id,'seq_29',0),second=player.sample(id,'seq_29',.2);
+  for(let n=0;n<3;n++){
+    assert.equal(player.trainingClip(id,35,n*cycle+.001,false).frame,first);
+    assert.equal(player.trainingClip(id,35,n*cycle+.2,false).frame,second);
+  }
+  assert.equal(player.trainingClip(id,35,action+.01,false).recovery,true);
+  assert.equal(player.trainingClip(id,35,action+.01,true).frame,player.sample(id,'run',.01));
+  assert.equal(player.trainingClip(id,35,2*cycle+action-.001,false).done,undefined);
+  assert.equal(player.trainingClip(id,35,2*cycle+action,false).done,true);
+});
 test('상태 전환은 처음부터 시작하며 dt=0은 정지 프레임을 유지한다',()=>{
   const actor={},id='m201_agumon';player.pose(actor,id,'walk',0);
   const frame=player.pose(actor,id,'walk',0.3);
