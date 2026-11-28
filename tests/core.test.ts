@@ -14,7 +14,7 @@ import { evolvedResistance } from '../src/core/stats';
 import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy , relocate, trainingBlocker, BOND, CONTAGION, mateBond, settleMates, GRUMBLE, cleanRelief } from '../src/core/care';
 import { EGG_MINUTES, EGG_TAPS, baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank, lifespanOf } from '../src/core/evolution';
-import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, npcTeamFoes, npcTeam, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
+import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, extraFreeBattleLineup, FREE_TEAM_UPSET_CHANCE, freeBattleFoes, titleHolder, titleHolderFoes, npcTeamFoes, npcTeam, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
 import { seeded } from '../src/core/rng';
 import { DEX_ORDER, dexEntries, dexCount } from '../src/core/dex';
@@ -1581,6 +1581,31 @@ describe('프리 배틀 (원본 대진·상금)',()=>{
   }
   const ones=list.filter(x=>x.format===1).map(x=>x.foes[0].no);
   expect(new Set(ones).size).toBe(ones.length);
+ });
+ it('추가 3대3은 세대별 세 팀을 날짜로 고정하고, 낮은 확률로 다음 세대 한 마리만 편성한다',()=>{
+  const first=extraFreeBattleLineup(1,0,1);
+  const rosterOf=(team: (typeof first)[number])=>team.foes.map(foe=>foe.speciesId);
+  expect(extraFreeBattleLineup(1,0,1)).toEqual(first);
+  expect(extraFreeBattleLineup(1,0,2).map(rosterOf)).not.toEqual(first.map(rosterOf));
+  expect(new Set(first.map(team=>team.label)).size).toBe(15);
+  let guests=0, eligible=0;
+  for(let year=1;year<=10;year++)for(let season=0;season<4;season++)for(let day=1;day<=8;day++){
+   const teams=extraFreeBattleLineup(year,season,day);
+   expect(teams.map(team=>team.stage)).toEqual([2,2,2,3,3,3,4,4,4,5,5,5,6,6,6]);
+   expect(new Set(teams.flatMap(rosterOf)).size).toBe(45);
+   for(const team of teams){
+    expect(team.format).toBe(3);
+    expect(team.prize).toBe(team.foes.reduce((sum, foe)=>sum+foe.prize,0));
+    expect(team.foes.every(foe=>FREE_FOES.get(foe.no)===foe)).toBe(true);
+    const stages=team.foes.map(foe=>getSpecies(foe.speciesId).stage);
+    expect(stages[0]).toBe(team.stage);
+    const nextStage=stages.filter(stage=>stage!==team.stage);
+    expect(nextStage.length).toBeLessThanOrEqual(team.stage===6?0:1);
+    expect(nextStage.every(stage=>stage===team.stage+1)).toBe(true);
+    if(team.stage<6){eligible++;guests+=nextStage.length;}
+   }
+  }
+  expect(Math.abs(guests/eligible-FREE_TEAM_UPSET_CHANCE)).toBeLessThan(.02);
  });
  it('프리 배틀 상대 능력치는 원본 NPC 표의 곡선 번호대로 (0x02061DA8)',()=>{
   expect(freeFoeStats(FREE_FOES.get(456)!)).toEqual({hp:280,tp:14,atk:14,def:14,int:14,spd:14});

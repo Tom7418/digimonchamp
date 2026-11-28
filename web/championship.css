@@ -353,6 +353,10 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .battle-format-options .entry-title-option b{font-size:clamp(20px,5vw,26px)}
 .battle-opponent-group h3,.entry-teams h3{margin:10px 0 6px;font-size:15px;color:#d5ebff}
 .battle-opponent-group .menu-list small{overflow-wrap:anywhere}
+.entry-stage-teams{margin:6px 0;padding:8px 10px;border:1px solid #3d6180;border-radius:5px;background:#142d46}
+.entry-stage-teams summary{color:#d5ebff;cursor:pointer;font-size:13px;font-weight:700}
+.entry-stage-teams .menu-list{margin:7px 0 0}
+.entry-stage-teams .menu-list small{overflow-wrap:anywhere}
 .entry-match{margin:0 0 6px;font-weight:700;color:#ffde8f}
 .entry-issue{color:#ffc09a}
 .entry-teams{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}

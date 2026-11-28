@@ -63,6 +63,36 @@ export function freeBattleLineup(year: number, season: number, day: number): Fre
   return out;
 }
 
+// 웹판 추가 팀. 능력치·상금은 기존 프리 배틀 NPC 데이터를 그대로 사용한다.
+const STAGE_TEAMS: readonly (readonly [Stage, readonly [string, string, string]])[] = [
+  [2, ['햇살 탐험대', '새싹 원정대', '작은 발자국']],
+  [3, ['여명 정찰대', '바람 도전자', '별빛 선발대']],
+  [4, ['푸른 방패단', '황금 돌격대', '폭풍 수비대']],
+  [5, ['천공 기사단', '은하 파수대', '붉은 깃발']],
+  [6, ['별의 수호대', '황혼 연맹', '무한 원정대']],
+];
+export const FREE_TEAM_UPSET_CHANCE = 0.08;
+const extraFoesByStage = new Map(STAGE_TEAMS.map(([stage]) =>
+  [stage, [...FREE_FOES.values()].filter(foe => getSpecies(foe.speciesId).stage === stage)] as const));
+
+export function extraFreeBattleLineup(year: number, season: number, day: number): FreeBattle[] {
+  // 원작 대진과 난수 스트림을 분리해 추가 팀이 기존 대진을 바꾸지 않는다.
+  const rng = seeded(Math.imul((year * 4 + season) * 32 + day, 0x85ebca6b) ^ 0x51c9a62d);
+  const usedSpecies = new Set<string>();
+  const drawFoe = (stage: Stage) => {
+    const pool = extraFoesByStage.get(stage)!;
+    const available = pool.filter(foe => !usedSpecies.has(foe.speciesId));
+    const foe = pick(rng, available.length ? available : pool);
+    usedSpecies.add(foe.speciesId);
+    return foe;
+  };
+  return STAGE_TEAMS.flatMap(([stage, names]) => names.map(label => {
+    const guestSeat = stage < 6 && rng() < FREE_TEAM_UPSET_CHANCE ? 1 + Math.floor(rng() * 2) : -1;
+    const foes = Array.from({ length: 3 }, (_, seat) => drawFoe(seat === guestSeat ? (stage + 1) as Stage : stage));
+    return { label, format: 3, level: foes[0].level, stage, foes, prize: foes.reduce((sum, foe) => sum + foe.prize, 0) };
+  }));
+}
+
 /** 프리 배틀 상대의 원본 능력치 (arm9 0x02061DA8): HP는 종 HP 곡선의 시작값, 나머지는 NPC 표의 곡선 번호 값. 난수 없음 */
 export function freeFoeStats(f: FreeFoe): Stats {
   const hpIndex = originalSpecies(f.speciesId)?.stats[0] ?? 0;
