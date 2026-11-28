@@ -50,7 +50,7 @@
   const volume = document.querySelector('#sound-volume');
   const lastPlayed = new Map();
   let context, master, noise, opening, ambience;
-  let huntField = null, huntNight = false;
+  let huntField = null, huntNight = false, huntPaused = false;
   const buffers = new Map();
   let music = null, musicName = null, sceneMusic = null, menuMusic = null, baseMusic = null;
   const loops = new Map(), loopWanted = new Set();
@@ -62,7 +62,12 @@
   }
   // 원작 음원 하나를 master로 재생한다. 손잡이(stop)를 돌려주며, 읽기 전에 멈추면 재생하지 않는다.
   // loop=true: 원작 반복 구간이 있으면 그 구간을, 길이 정보만 있으면(반복 없는 곡·징글) 한 번만, 문자열 항목이면 파일 전체를 반복한다.
-  function playFile(name, loop = false) {
+  // place: { volume 0~127(원작 플레이어 음량), pan −128~127(원작 트랙 좌우, 중앙 64에 더함) } — 사냥 위치 효과음
+  function gainOf(volume) {
+    const table = cues.decibel, v = Math.max(0, Math.min(127, Math.round(volume)));
+    return table ? Math.pow(10, table[v] / 200) : (v / 127) ** 2;
+  }
+  function playFile(name, loop = false, place = null) {
     const pending = buffer(name);
     if (!pending) return null;
     const info = infoOf(name);
@@ -79,8 +84,19 @@
         source.loopStart = info.loop[0] + lead;
         source.loopEnd = Math.min(info.loop[1] + lead, data.duration);
       } else source.loop = loop && !Number.isFinite(info.dur);
-      source.connect(master);
-      source.onended = () => source.disconnect();
+      let out = source;
+      if (place) {
+        const gain = context.createGain();
+        gain.gain.value = gainOf(place.volume ?? 127);
+        out.connect(gain); out = gain;
+        if (place.pan && context.createStereoPanner) {
+          const panner = context.createStereoPanner();
+          panner.pan.value = Math.max(-1, Math.min(1, place.pan / 64));
+          out.connect(panner); out = panner;
+        }
+      }
+      out.connect(master);
+      source.onended = () => { source.disconnect(); if (out !== source) out.disconnect(); };
       source.start();
       handle.source = source;
     });
@@ -130,15 +146,17 @@
     syncLoops();
     // 사냥터 원작 배경곡 음원이 있으면 웹판 합성 환경음 대신 그 곡을 쓴다.
     const replaced = hasFile(cues.huntBgm?.[huntField]);
-    const field = preferences.enabled && preferences.volume > 0 && !document.hidden && !replaced ? huntField : null;
+    const field = preferences.enabled && preferences.volume > 0 && !document.hidden && !replaced && !huntPaused ? huntField : null;
     if (field && !ambience) ambience = root.createHuntAmbience?.(context, master);
     ambience?.set(field, huntNight);
   }
 
-  function setHunt(field, night = false) {
-    if (field === huntField && night === huntNight) return;
+  // paused: 메일·일시정지 등으로 사냥이 멈춘 동안. 합성 환경음만 멈추고 사냥터 곡은 유지한다(육성 곡으로 바뀌지 않게).
+  function setHunt(field, night = false, paused = false) {
+    if (field === huntField && night === huntNight && paused === huntPaused) return;
     huntField = field;
     huntNight = night;
+    huntPaused = paused;
     syncHunt();
   }
 
@@ -213,6 +231,7 @@
     if (record != null && (name === 'hit' || name === 'critical') && skill.hit?.[record]) return skill.hit[record];
     if (record != null && name === 'cast' && skill.cast?.[record]) return skill.cast[record];
     if (name === 'guard' && skill.guard) return skill.guard;
+    if (name === 'footstep') return detail?.sound;
     return cues.effects?.[name];
   }
 
@@ -223,10 +242,13 @@
     if (opening) { opening.then(() => { if (context?.state === 'running') play(name, detail); }); return; }
     if (!master || context?.state !== 'running') return;
     const now = context.currentTime;
+    // 위치 효과음(사냥의 폭발·발소리)은 물체마다 울리므로 겹침 방지를 하지 않는다. 음량 0이면 안 낸다.
+    const place = detail?.volume != null ? { volume: detail.volume, pan: detail.pan ?? 0 } : null;
+    if (place && place.volume <= 0) return;
     // 3:3 동시 명중과 일괄 시간 진행에서 같은 효과음이 겹쳐 커지지 않게 한다.
-    if (now - (lastPlayed.get(name) ?? -Infinity) < .085) return;
+    if (!place && now - (lastPlayed.get(name) ?? -Infinity) < .085) return;
     lastPlayed.set(name, now);
-    if (hasFile(original)) { playFile(original); return; }
+    if (hasFile(original)) { playFile(original, false, place); return; }
     for (const [wave, from, to, duration, level, offset = 0] of layers) {
       const start = now + .008 + offset;
       let source, output;

@@ -2172,6 +2172,26 @@
     return p.x>=AREA.x0&&p.x<=AREA.x1&&p.y>=AREA.y0&&p.y<=AREA.y1&&C.canStandOnHuntTerrain(hunt.terrain,huntMapPoint(p),radius);
   }
   function huntGroundLine(a,b,radius=4){return C.huntTerrainLineClear(hunt.terrain,huntMapPoint(a),huntMapPoint(b),radius);}
+  // 사냥 위치 효과음: 화면 중앙에서의 거리로 원작 음량·좌우를 정한다 (web/hunt-sound.js, overlay9_0 0x021214D8)
+  function huntSoundOffset(x,y){
+    const cam=hunt?.cam,zoom=hunt?.zoom||1;
+    return cam?{dx:x-(cam.x+480/zoom),dy:y-(cam.y+280/zoom)}:{dx:0,dy:0};
+  }
+  function huntPlaceSound(name,x,y,pick='area'){
+    const S=window.HuntSound,o=huntSoundOffset(x,y),place=S?.[pick]?.(o.dx,o.dy);
+    if(S&&!place)return;
+    globalThis.ChampSound?.play(name,place||undefined);
+  }
+  // 야생 발소리: 화면 밖 80px 안에서 움직인 거리가 12px을 넘을 때마다 한 걸음 (원본 0x021116F0~0x021117AC)
+  function huntFootstep(w,moved){
+    const S=window.HuntSound;if(!S||!moved||w.gone)return;
+    const o=huntSoundOffset(w.x,w.y),place=S.footstep(o.dx,o.dy);if(!place)return;
+    w.stepDist=(w.stepDist||0)+moved;
+    if(w.stepDist<=S.STEP)return;
+    w.stepDist=0;
+    const bits=C.huntTerrainAt(hunt.terrain,huntMapPoint(w));
+    globalThis.ChampSound?.play('footstep',{...place,sound:S.footstepSound(SPRITE_BY_NAME[C.getSpecies(w.id).id],bits)});
+  }
   function huntGroundMove(from,to){
     const result=C.moveOnHuntTerrain(hunt.terrain,huntMapPoint(from),huntMapPoint(to));
     return {...result,x:result.x-hunt.view.x,y:result.y-hunt.view.y,
@@ -2309,7 +2329,8 @@
   function blast(x, y, g) {
     // 원본 입자 풀의 시퀀스·생성 간격을 재생한다. 피해/효과 판정은 아래에서 한 번만 한다.
     hunt.fx.push(huntEquipmentArt.explosion(x,y,g));
-    globalThis.ChampSound?.play(g.id === 'bomb4' ? 'flash' : 'explosion'); // 원작: 플래시 폭탄만 039_8, 나머지 폭탄·마인 061_1
+    // 원작: 플래시 폭탄만 039_8(위치와 상관없이 127), 나머지 폭탄·마인은 061_1을 거리 음량으로 (0x02124B1C·0x02124B44·0x02128120)
+    if (g.id === 'bomb4') globalThis.ChampSound?.play('flash'); else huntPlaceSound('explosion', x, y);
     const hits = hunt.wilds.filter((w) => !w.gone && Math.hypot(x - w.x, y - (w.y - 15)) < g.range);
     for (const w of hits) {
       wakeFromSleep(w);
@@ -2684,6 +2705,7 @@
       }
       w.movedX = w.x - oldX;
       w.movedY = w.y - oldY;
+      huntFootstep(w, Math.hypot(w.movedX, w.movedY));
     }
     for (const b of hunt.baits) {
       b.left -= dt;
@@ -3456,7 +3478,8 @@
       if (hunt) {
         const active = !titleOpen && !paused && !board.editing && !mailOpen && !dayEnding;
         // 입장 후 시간이 18시를 지나면 같은 사냥 세션 안에서도 야간 환경음으로 바꾼다.
-        globalThis.ChampSound?.setHunt?.(active ? hunt.field.id : null, active && huntUsesNightMap(hunt.field));
+        // 멈춘 동안(메일·일시정지)은 합성 환경음만 멈추고 사냥터 곡은 유지한다(전에는 육성 곡이 대신 나왔다).
+        globalThis.ChampSound?.setHunt?.(hunt.field.id, huntUsesNightMap(hunt.field), !active);
         globalThis.ChampSound?.setLoop?.('draw', active && hunt.drawing); // 선을 긋는 동안 원작 반복음
         drawHunt(now / 1000, active ? dt : 0);
       } else drawFarm(now / 1000, dt);

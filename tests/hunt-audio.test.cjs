@@ -68,5 +68,5 @@ test('실제 게임 프레임이 현재 사냥터, 야간, 일시 정지를 환�
  c.frame(49);
  c.paused=true;
  c.frame(65);
- assert.deepEqual(calls,[['다이나 초원',false],['다이나 초원',true],['크롬 광산',false],[null,false]]);
+ assert.deepEqual(calls,[['다이나 초원',false,false],['다이나 초원',true,false],['크롬 광산',false,false],['크롬 광산',false,true]]);
 });

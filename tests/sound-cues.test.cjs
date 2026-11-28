@@ -21,12 +21,13 @@ test('원작 사운드 대응표는 사냥터 16곳·배틀 맵 11곳을 모두 
 });
 
 function audioWorld(manifest){
- const listeners={},fetched=[],started=[],noop=()=>{};
+ const listeners={},fetched=[],started=[],gains=[],pans=[],noop=()=>{};
  const param={value:0,setValueAtTime:noop,exponentialRampToValueAtTime:noop,cancelScheduledValues:noop,setTargetAtTime:noop,linearRampToValueAtTime:noop};
  class Ctx{constructor(){this.state='suspended';this.currentTime=0;this.sampleRate=16000;this.destination={};}
   resume(){this.state='running';this.onstate?.();return Promise.resolve();}
   addEventListener(_,f){this.onstate=f;}
-  createGain(){return{gain:{...param},connect:noop,disconnect:noop};}
+  createGain(){const g={gain:{...param},connect:noop,disconnect:noop};gains.push(g);return g;}
+  createStereoPanner(){const p={pan:{...param},connect:noop,disconnect:noop};pans.push(p);return p;}
   createBuffer(_,n){const d=new Float32Array(n);return{getChannelData:()=>d};}
   createOscillator(){return{type:'',frequency:{...param},connect:noop,disconnect:noop,start(){started.push('synth');},stop:noop};}
   createBiquadFilter(){return{type:'',Q:{},frequency:{...param},connect:noop,disconnect:noop};}
@@ -38,7 +39,7 @@ function audioWorld(manifest){
  const c=vm.createContext({window,fetch:(u)=>{fetched.push(u);return Promise.resolve({ok:true,arrayBuffer:()=>Promise.resolve({name:u})});}});
  for(const f of ['sound-cues.js','assets/battle/skill-sounds.js','game-audio.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),c);
  listeners.pointerdown();
- return {S:window.ChampSound,window,fetched,started,flush:()=>new Promise(r=>setTimeout(r,0))};
+ return {S:window.ChampSound,window,fetched,started,gains,pans,flush:()=>new Promise(r=>setTimeout(r,0))};
 }
 
 test('음원 목록에 원작 이름이 있으면 합성음 대신 그 파일을 재생하고, 배경곡은 반복·교체·정지한다',async()=>{
@@ -122,4 +123,51 @@ test('반복 구간이 있는 곡은 그 구간만 반복하고, 반복 없는 �
  w.S.setMusic('SEQ_U_21');await w.flush();
  const shop=w.started.at(-1);
  assert.ok(Math.abs(shop.loopStart-(26.485+1105/32000))<1e-9);
+});
+
+test('사냥 위치 효과음: 원작 거리 음량·좌우와 발소리 종류',()=>{
+ const c=vm.createContext({window:{HUNT_FOOTSTEP_AREA:{m541_dukemon:3584,m201_agumon:384}}});
+ vm.runInContext(fs.readFileSync('web/hunt-sound.js','utf8'),c);
+ const H=c.window.HuntSound;
+ // 0x021214D8: 화면 밖 80px 바깥은 안 울림, 중앙 128px 안은 127, 그 밖은 d−127
+ assert.equal(H.area(208,0),null);assert.equal(H.area(0,-176),null);
+ assert.equal(H.area(100,0).volume,127);assert.equal(H.area(150,0).volume,23);assert.equal(H.area(200,100).volume,96);
+ // 발소리: 127 − d/2, 좌우 ±120(화면 밖 80px 끝)
+ assert.deepEqual(JSON.parse(JSON.stringify(H.footstep(0,0))),{volume:127,pan:0});
+ assert.equal(H.footstep(100,0).volume,77);assert.equal(H.footstep(207,0).pan,120);assert.equal(H.footstep(-207,0).pan,-119);
+ // 지형 bit1(벽 아님)이면 038_2, 셀 넓이 0x400 초과면 107M
+ assert.equal(H.footstepSound('m201_agumon',2),'DIGI_SE_038_2');
+ assert.equal(H.footstepSound('m201_agumon',3),'DIGI_SE_036_3');
+ assert.equal(H.footstepSound('m541_dukemon',0),'DIGI_SE_107M');
+ assert.equal(H.footstepSound('m201_agumon',4),'DIGI_SE_036_3');
+ // 추출 결과: 모든 스프라이트에 넓이가 있다
+ const f=vm.createContext({window:{}});vm.runInContext(fs.readFileSync('web/assets/hunt/footsteps.js','utf8'),f);
+ assert.ok(Object.keys(f.window.HUNT_FOOTSTEP_AREA).length>200);
+});
+
+test('위치 효과음은 원작 데시벨 표 음량과 좌우로 내고, 겹침 방지를 하지 않는다',async()=>{
+ const w=audioWorld({HUNT_SE_061_1:{src:'assets/audio/HUNT_SE_061_1.mp3',dur:1},DIGI_SE_036_3:{src:'assets/audio/DIGI_SE_036_3.mp3',dur:.3}});
+ await w.flush();
+ const before=w.gains.length;
+ w.S.play('explosion',{volume:63,pan:0});w.S.play('explosion',{volume:127,pan:0});await w.flush();
+ assert.equal(w.started.filter(x=>x!=='synth').length,2);
+ const g=w.gains.slice(before).map(x=>x.gain.value);
+ assert.ok(Math.abs(g[0]-Math.pow(10,-122/200))<1e-9);assert.equal(g[1],1);
+ w.S.play('footstep',{sound:'DIGI_SE_036_3',volume:100,pan:-120});await w.flush();
+ assert.equal(w.pans.at(-1).pan.value,-1);
+ w.S.play('explosion',{volume:0});await w.flush();
+ assert.equal(w.started.filter(x=>x!=='synth').length,3);
+});
+
+test('사냥이 멈춘 동안(메일 등)은 합성 환경음만 멈추고 사냥터 곡은 육성 곡으로 바뀌지 않는다',async()=>{
+ const w=audioWorld({SEQ_N_06:'assets/audio/SEQ_N_06.ogg',SEQ_U_06:'assets/audio/SEQ_U_06.ogg'});
+ await w.flush();
+ w.S.setBase('SEQ_U_06');w.S.setHunt('대초원',false);await w.flush();
+ const hunting=w.started.at(-1);
+ w.S.setHunt('대초원',false,true);await w.flush();
+ assert.equal(w.started.at(-1),hunting);assert.ok(!hunting.stopped);
+ w.S.setHunt('기계 공장',false,true);await w.flush();
+ assert.ok(!w.window.ambienceField); // 곡 음원이 없는 사냥터도 멈춘 동안엔 환경음 없음
+ w.S.setHunt('기계 공장',false,false);await w.flush();
+ assert.equal(w.window.ambienceField,'기계 공장');
 });

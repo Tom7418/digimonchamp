@@ -26,12 +26,14 @@ test('폭발은 원본36틱을 재생하고 정지·상태전환·마지막프�
 
 test('실제 폭발 이벤트는 원본 도트를 예약하고 기존 범위·피해를 한 번만 적용한다',()=>{
  const src=fs.readFileSync('web/game.js','utf8'),a=src.indexOf('  function blast('),b=src.indexOf('  // 체커 묶음:',a),events=[];
- const hunt={fx:[],wilds:[{x:10,y:15,hp:10},{x:500,y:500,hp:10}]};
- const c=vm.createContext({hunt,window:{},Image:function(){this.complete=true;this.naturalWidth=1000;},C:{},itemHit:(w)=>{w.hp-=2;return true},wakeFromSleep(){},applyEffect:(...v)=>events.push(v),huntNote(){}});
+ const hunt={fx:[],wilds:[{x:10,y:15,hp:10},{x:500,y:500,hp:10}]},sounds=[];
+ const c=vm.createContext({hunt,window:{},Image:function(){this.complete=true;this.naturalWidth=1000;},C:{},itemHit:(w)=>{w.hp-=2;return true},wakeFromSleep(){},applyEffect:(...v)=>events.push(v),huntNote(){},huntPlaceSound:(...v)=>sounds.push(v)});
  for(const f of ['web/assets/hunt/equipment.js','web/hunt-equipment.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);c.huntEquipmentArt=c.window.createHuntEquipmentRenderer();
  vm.runInContext(src.slice(a,b),c);c.blast(10,0,{id:'mine1',name:'마인',power:50,range:70});
  assert.equal(hunt.fx.length,1);assert.equal(hunt.fx[0].explosion,true);assert.ok(hunt.fx[0].left>1);assert.equal(hunt.fx[0].particles.length,20);
  assert.equal(hunt.wilds[0].hp,8);assert.equal(hunt.wilds[1].hp,10);assert.equal(events.length,1);
+ // 마인 폭발음은 터진 자리 기준 거리 음량 (원본 0x02128120)
+ assert.deepEqual(JSON.parse(JSON.stringify(sounds)),[['explosion',10,0]]);
 });
 
 
