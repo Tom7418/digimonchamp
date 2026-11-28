@@ -338,6 +338,34 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .battle-roster button:disabled{opacity:.45;cursor:not-allowed}
 .battle-roster small{font-size:11px;color:#adc4dc}.roster-order{color:#ffd36a}
 
+#modal.battle-entry-modal{box-sizing:border-box;width:min(680px,calc(100% - 24px));max-width:none;max-height:calc(100dvh - 24px);overflow:auto}
+.battle-entry-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;padding:0;margin:0 0 16px;list-style:none}
+.battle-entry-steps li{padding:7px 2px;border-bottom:2px solid #34536c;color:#afc4d8;text-align:center;font-size:clamp(10px,2.7vw,12px)}
+.battle-entry-steps [aria-current]{color:#fff0bc;border-color:#ffd36a;background:#263d53;font-weight:700}
+.entry-back{margin:0 0 10px}
+.battle-format-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.battle-format-options button{display:grid;gap:8px;place-items:center;min-height:112px;padding:10px;border:1px solid #618199;border-radius:7px;background:#172f49;color:#e7f3ff;cursor:pointer}
+.battle-format-options button:is(:hover,:focus-visible){background:#254564;border-color:#ffd36a}
+.battle-format-options b{font-size:clamp(23px,6vw,37px);color:#ffd36a}
+.battle-format-options span{font-size:12px}
+.battle-opponent-group h3,.entry-teams h3{margin:10px 0 6px;font-size:15px;color:#d5ebff}
+.battle-opponent-group .menu-list small{overflow-wrap:anywhere}
+.entry-match{margin:0 0 6px;font-weight:700;color:#ffde8f}
+.entry-issue{color:#ffc09a}
+.entry-teams{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.entry-teams section{min-width:0;padding:10px;border-radius:6px;background:#122b45;border:1px solid #3d6180}
+.entry-teams section+section{background:#302438;border-color:#755571}
+.entry-teams h3{margin-top:0;text-align:center}
+.entry-teams ol{padding:0;margin:0;list-style:none}
+.entry-teams li{display:grid;justify-items:center;align-content:start;gap:4px;padding:8px 0;overflow-wrap:anywhere;text-align:center}
+.entry-teams li+li{border-top:1px solid #64809a50}
+.entry-teams li small{color:#bad0e3}
+.entry-tactics{display:flex;justify-content:center;gap:3px;flex-wrap:wrap;margin-top:3px}
+.entry-tactics button{padding:3px 7px;border:1px solid #5f80a0;border-radius:4px;background:#172e45;color:#eef6ff;cursor:pointer}
+.entry-tactics [aria-pressed=true]{background:#ffd36a;border-color:#ffd36a;color:#112339}
+#modal.battle-entry-modal #modal-ok{width:100%;margin-top:12px}
+@media(max-width:420px){#modal.battle-entry-modal{padding:12px}.entry-teams{gap:6px}.entry-teams section{padding:7px 5px}}
+
 .load-list{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}.load-list button{padding:4px 8px;font-size:12px}.load-list button.active{background:#4f7d4f;color:#fff}
 
 .dex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:4px;max-height:46vh;overflow:auto;margin-top:8px}.dex-grid button{padding:4px 6px;font-size:12px;text-align:left}.dex-grid button small{display:block;opacity:.6;font-size:10px}.dex-grid button.active{outline:2px solid #f2c94c}.dex-detail{display:flex;gap:12px;align-items:center;background:#0b2a44;border-radius:8px;padding:8px;margin:6px 0}.dex-detail h3{margin:0 0 4px}.dex-detail p{margin:2px 0}

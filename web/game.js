@@ -1164,11 +1164,12 @@
     $('#modal-body').querySelectorAll('[data-dex]').forEach(b=>b.onclick=()=>{dexMenu(+b.dataset.dex);$('#modal-body').querySelector(`[data-dex="${b.dataset.dex}"]`)?.focus({preventScroll:true});});
   }
   function showModal(title, body, kicker = 'TAMER GUIDE', ok = '사육장으로 돌아가기') {
-    $('#modal').classList.remove('battle-modal','day-change-modal','title-result-modal');
+    $('#modal').classList.remove('battle-modal','day-change-modal','title-result-modal','battle-entry-modal');
     $('#modal-title').textContent = title;
     $('#modal-body').innerHTML = body;
     $('#modal-kicker').textContent = kicker;
     $('#modal-ok').textContent = ok;
+    $('#modal-ok').onclick = closeModal;
     $('#modal-ok').disabled = false;
     $('#close-modal').disabled = false;
     if (!$('#modal').open) $('#modal').showModal();
@@ -1263,69 +1264,9 @@
     return [first, ...rest].slice(0, format);
   }
   function battleMenu() {
-    const date=C.dateOf(save.clock),titles=C.todaysMatches(save),free=C.freeBattleLineup(date.year,date.season,date.day);
-    const freeOpen=date.hour>=8&&date.hour<21;
-    const first=canFight(current())?current():save.digimon.find(canFight);
-    // 선택 순서가 출전 순서다. 1:1은 첫 개체,3:3은 직접 고른 세 개체를 사용한다.
-    const roster=first?[first.uid]:[];
-    const teamFor=format=>members(format,roster);
-    const titleText=m=>{
-      const team=teamFor(m.format),problems=C.entryProblems(m,team),limits=C.entryLimits(m);
-      if(team.length<m.format)problems.unshift(m.format+'마리를 선택해 주세요');
-      const prizeText=m.id==='prelim'?`예선 통과 시 ${C.PRELIM_PRIZE.toLocaleString('ko-KR')}`:m.id==='final'?`우승 시 ${C.CHAMP_PRIZE.toLocaleString('ko-KR')}`:m.prize.toLocaleString('ko-KR');
-      const holder=C.titleHolder(m.id),foeText=holder?`홀더 「${holder.name}」 ${holder.members.map(f=>f.nick).join('·')}`:`상대 ${C.STAGE_LABEL[m.stage]}`;
-      if(m.fee&&save.bits<m.fee)problems.push('소지금 부족');
-      return `${m.format} VS ${m.foes??m.format} · ${foeText} · 참가비 ${(m.fee??0).toLocaleString('ko-KR')} ฿ · 상금 ${prizeText} ฿${limits?' · '+limits:''}${problems.length?' (조건 미충족: '+problems.join(', ')+')':''}`;
-    };
-    showModal('배틀',
-      `<p>출전할 디지몬을 선택하세요. <b>1:1은 첫 번째,3:3은 선택한 세 마리</b>가 나갑니다. 다시 누르면 제외됩니다.</p>
-       <div id="battle-roster" class="battle-roster">${save.digimon.map(d=>`<button data-entrant="${d.uid}" aria-pressed="false"${canFight(d)?'':' disabled'}><b><span class="roster-order"></span>${esc(nameOf(d))}</b><small>${d.isEgg?'부화 전':d.dying?'빈사 상태로 출전 불가':d.sick?'병으로 출전 불가':d.injured?'부상으로 출전 불가':esc(C.STAGE_LABEL[C.getSpecies(d.speciesId).stage])+' · '+esc(d.personality)+' · 배틀 '+d.battles+'회'}</small>${d.isEgg?'':`<small>SP: ${C.supportSkills(d.speciesId,d.personality).map(sk=>esc(sk.name)+' ('+sk.tpCost+'TP)').join(' · ')||'없음'}</small>`}</button>`).join('')}</div>
-       <p id="battle-roster-count" class="hint" role="status"></p>
-       <div id="battle-tactics" class="mode-pick-list" aria-label="작전"></div>
-       <p class="hint">작전: 특수공격은 필살기 위주, 지원은 SP를 쓰며 공격, 일반공격은 둘을 균형 있게 씁니다. 디지몬마다 정할 수 있고 다음 배틀에도 기억합니다.</p>
-       ${save.challenge?`<h3>도전장</h3><div class="menu-list"><button data-challenge-battle><b>⚔ ${esc(save.challenge.from)} 「${esc(save.challenge.name)}」</b><small>${C.npcTeam(save.challenge.team).members.length}:${C.npcTeam(save.challenge.team).members.length} · ${C.npcTeam(save.challenge.team).members.map(f=>esc(f.nick)).join('·')} · 상금 ${save.challenge.prize.toLocaleString('ko-KR')} ฿</small></button></div>`:''}
-       <h3>타이틀 매치</h3><div class="menu-list">${titles.length?titles.map((m,i)=>`<button data-title="${i}"><b>★ ${esc(m.name)}</b><small>${esc(titleText(m))}</small></button>`).join(''):`<p class="hint">오늘은 타이틀 매치가 없습니다. 엔트리 시간은07:00~15:00, 일정: ${esc(C.upcoming(save)[0]||'-')}</p>`}</div>
-       <h3>프리 배틀 ${freeOpen?'':'(08:00~21:00)'}</h3><div class="menu-list two">${free.map((f,i)=>`<button data-free="${i}"><b>${esc(f.label)} ${f.format}:${f.format}</b><small>${f.foes.map(x=>esc(C.getSpecies(x.speciesId).name)).join(' · ')} · ${f.prize.toLocaleString('ko-KR')} ฿</small></button>`).join('')}</div>`,
-      'BATTLE ENTRY','취소');
-    const body=$('#modal-body');
-    function updateRoster(){
-      // 메뉴를 열어 둔 사이 사육 상태가 바뀌어도 사라지거나 아픈 개체를 출전시키지 않는다.
-      for(let i=roster.length-1;i>=0;i--){const d=save.digimon.find(d=>d.uid===roster[i]);if(!d||!canFight(d))roster.splice(i,1);}
-      body.querySelectorAll('[data-entrant]').forEach(b=>{
-        const d=save.digimon.find(d=>d.uid===+b.dataset.entrant);b.disabled=!d||!canFight(d);
-        const order=roster.indexOf(+b.dataset.entrant),selected=order>=0;
-        b.classList.toggle('active',selected);b.setAttribute('aria-pressed',String(selected));
-        b.querySelector('.roster-order').textContent=selected?(order+1)+'. ':'';
-      });
-      body.querySelector('#battle-tactics').innerHTML=roster.map(uid=>{const d=save.digimon.find(x=>x.uid===uid),t=d.tactic??'일반';
-        return `<div class="mode-pick"><b>${esc(nameOf(d))}</b> ${['일반','지원','특수'].map(m=>`<button data-tactic="${uid}" data-mode="${m}" class="${m===t?'active':''}">${m}</button>`).join('')}</div>`;}).join('');
-      body.querySelectorAll('[data-tactic]').forEach(b=>b.onclick=()=>{const d=save.digimon.find(x=>x.uid===+b.dataset.tactic);if(!d)return;d.tactic=b.dataset.mode;persist();updateRoster();});
-      body.querySelector('#battle-roster-count').textContent=`선택 ${roster.length}/3 · ${roster.map(uid=>nameOf(save.digimon.find(d=>d.uid===uid))).join(' → ')||'출전할 디지몬을 골라 주세요'}`;
-      body.querySelectorAll('[data-title]').forEach(b=>{
-        const m=titles[+b.dataset.title];b.disabled=teamFor(m.format).length<m.format||C.entryProblems(m,teamFor(m.format)).length>0||save.bits<(m.fee??0);b.querySelector('small').textContent=titleText(m);
-      });
-      body.querySelectorAll('[data-free]').forEach(b=>{const f=free[+b.dataset.free];b.disabled=!freeOpen||teamFor(f.format).length<f.format;});
-      body.querySelectorAll('[data-challenge-battle]').forEach(b=>{const n=C.npcTeam(save.challenge.team).members.length;b.disabled=teamFor(n).length<n;});
-    }
-    body.querySelectorAll('[data-entrant]').forEach(b=>b.onclick=()=>{
-      const uid=+b.dataset.entrant,d=save.digimon.find(d=>d.uid===uid);if(!d||!canFight(d))return;
-      const index=roster.indexOf(uid);if(index>=0)roster.splice(index,1);
-      else if(roster.length<3)roster.push(uid);else return toast('최대3마리까지 선택할 수 있어요.');
-      updateRoster();
-    });
-    body.querySelectorAll('[data-title]').forEach(b=>b.onclick=()=>{
-      const m=titles[+b.dataset.title];startBattle({title:m.name,match:m,format:m.format,foes:m.foes,stage:m.stage,scale:m.scale,prize:m.prize},[...roster]);
-    });
-    body.querySelectorAll('[data-challenge-battle]').forEach(b=>b.onclick=()=>{
-      const c=save.challenge,n=C.npcTeam(c.team).members.length;
-      startBattle({title:`${c.from}의 도전 「${c.name}」`,format:n,stage:3,scale:1,prize:c.prize,rival:c.team},[...roster]);
-    });
-    body.querySelectorAll('[data-free]').forEach(b=>b.onclick=()=>{
-      const f=free[+b.dataset.free];startBattle({title:`프리 배틀 ${f.label}`,format:f.format,stage:f.stage,scale:1,prize:f.prize,free:f},[...roster]);
-    });
-    updateRoster();
+    window.openBattleEntry({C,getSave:()=>save,showModal,$,esc,nameOf,canFight,prepare:prepareBattle,start:startBattle,persist});
   }
-  function startBattle(setup, selection) {
+  function startBattle(setup, selection, prepared) {
     const team = members(setup.format,selection);
     if (!team.length || team.some(d=>!canFight(d))) return toast('출전할 수 있는 디지몬이 없어요. (알·병·부상은 출전 불가)');
     if (team.length < setup.format) return toast(`${setup.format}:${setup.format}에는 건강한 디지몬 ${setup.format}마리가 필요해요.`);
@@ -1333,14 +1274,9 @@
     if(setup.match){const problems=C.entryProblems(setup.match,team);if(problems.length)return toast(problems.join(', '));}
     // 원본: 타이틀 참가비는 출전을 정할 때 내고, 모자라면 출전할 수 없다 (overlay9_10 0x2115DE8)
     if(setup.match?.fee){const paid=C.payEntryFee(save,setup.match);if(!paid.ok)return toast('소지금이 부족합니다.');save=paid.save;persist();log(`참가비 ${setup.match.fee.toLocaleString('ko-KR')} ฿ 지불`);}
-    // 타이틀 매치는 원본 홀더 팀(NPC 표)과 싸운다. 챔피언십처럼 홀더가 없는 경기만 무작위 상대
-    const holderFoes = setup.match ? C.titleHolderFoes(setup.match.id, Math.random) : null;
-    const rivalFoes = setup.rival ? C.npcTeamFoes(setup.rival, Math.random) : null;
-    // 배틀 신청은 시작하면 소모한다 (원본은 받는 즉시 배틀)
+    const {foes,map}=prepared??prepareBattle(setup);
+    // 도전장은 로비 진입이 아닌 실제 출전 시 소모한다.
     if (setup.rival) { save = { ...save, challenge: undefined }; delete save.challenge; persist(); }
-    const foes = rivalFoes ?? (setup.free ? C.freeBattleFoes(setup.free, Math.random) : holderFoes ?? C.makeEnemies(setup.stage, setup.foes ?? setup.format, setup.scale, Math.random));
-    // 맵은 시작 시 한 번 선택한다. 타이틀의 원본 지정값이 있으면 무작위보다 우선한다. 맵 번호는 지형 상성에 쓴다.
-    const map=C.battleMapFor(setup.match?.id,Math.random);
     const state = C.createBattle(
       team.map((d) => C.entrantOf(d)),
       foes,
@@ -1350,7 +1286,8 @@
     globalThis.ChampSound?.setMusic?.(globalThis.ChampSound.cues?.battleBgm?.[map?.id ?? 0]); // 맵 번호별 원작 배경곡
     for(const u of state.units)spriteOf(u.speciesId,false); // 배경과 출전 그림을 함께 미리 읽는다.
     battle = { setup, state, map, statusEffects:window.createBattleStatusEffects?.(), health:window.createHpBars?.(), assetWait:0, visualTime:0, paused:false, presentation:window.createBattlePresentation(), acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
-    if(holderFoes)log(`${setup.title} 홀더 「${C.titleHolder(setup.match.id).name}」 등장`);
+    const holder=setup.match&&C.titleHolder(setup.match.id);
+    if(holder)log(`${setup.title} 홀더 「${holder.name}」 등장`);
     log(`${setup.title} 출전: ${team.map(nameOf).join(', ')}`);
     showModal(
       setup.title,
@@ -1369,6 +1306,15 @@
     $('#modal-ok').disabled = true;
     $('#close-modal').disabled = true;
     render();
+  }
+  function prepareBattle(setup) {
+    // 대진의 원본 홀더·도전장·프리 배틀 조회 방식을 공유한다.
+    const holder=setup.match&&C.titleHolderFoes(setup.match.id,Math.random);
+    const rival=setup.rival&&C.npcTeamFoes(setup.rival,Math.random);
+    const foes=(rival||holder)||(setup.free?C.freeBattleFoes(setup.free,Math.random):
+      C.makeEnemies(setup.stage,setup.foes??setup.format,setup.scale,Math.random));
+    const map=C.battleMapFor(setup.match?.id,Math.random);
+    return {foes,map};
   }
   function bindBattleLogControls(record, filter, latest) {
     const scrollToLatest = () => { record.scrollTop = record.scrollHeight; };

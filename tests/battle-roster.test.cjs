@@ -22,3 +22,13 @@ test('타이틀 조건은 현재 선택한 팀 전체로 출전 직전에 다시
  const s=setup(),match={id:'test',format:1,limitStage:3};s.start(1,[2],match);assert.equal(s.ctx.battle,null);assert.ok(s.messages.some(x=>x.includes('성장기')));
  s.ctx.save.digimon[1]={...s.ctx.ChampCore.newDigimon(2,'아구몬')};s.start(1,[2],match);assert.ok(s.ctx.battle);assert.equal(s.ctx.battle.state.units.find(u=>u.team===0).uid,2);
 });
+test('로비에서 확정된 상대와 경기장을 다시 뽑지 않고 출전한다',()=>{
+ const s=setup();
+ const foe=s.ctx.ChampCore.entrantOf(s.ctx.ChampCore.newDigimon(7,'아구몬'));
+ const map=s.ctx.ChampCore.BATTLE_MAPS[4];
+ s.ctx.startBattle({title:'프리 배틀',format:1,stage:2,scale:1,prize:0},[1],{foes:[foe],map});
+ assert.equal(s.ctx.battle.map,map);
+ const opponent=s.ctx.battle.state.units.find(u=>u.team===1);
+ assert.equal(opponent.speciesId,'아구몬');
+ assert.equal(opponent.maxHp,foe.stats.hp);
+});
