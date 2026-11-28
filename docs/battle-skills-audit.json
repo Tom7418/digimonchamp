@@ -10,6 +10,18 @@
   "species": 216,
   "battleSpecies": 204,
   "skills": 361,
+  "attackRange": {
+    "instructionChecks": 16,
+    "classificationField": 12,
+    "melee": 134,
+    "ranged": 227,
+    "meleeDistanceExclusive": 32,
+    "arena": [
+      416,
+      272
+    ],
+    "evidence": "overlay19 0x02117678 and 0x021176b0 classify; AI actions 4/5 compare distance, action 6 has no launch distance gate"
+  },
   "combat": {
     "instructionChecks": 22,
     "sequenceField": 16,
@@ -40,7 +52,7 @@
   },
   "evidence": "overlay19 0x0211fa88..0x0211fb0c: owner grouping and skill-name lookup; species internal ID = row + 8",
   "unverified": [
-    "power, range, effects and hit timing, AI and opponent rosters",
+    "full effect scripts, collision ranges and hit timing, AI and opponent rosters",
     "basic attack animation policy (user requested sequence10 retained)"
   ]
 }

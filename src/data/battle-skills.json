@@ -56,7 +56,8 @@
         "englishName": "Howling Blow",
         "dbTextIndex": 432,
         "sequence": 7,
-        "tpCost": 4
+        "tpCost": 4,
+        "rangeClass": 2
       }
     ]
   },
@@ -69,7 +70,8 @@
         "englishName": "Froth",
         "dbTextIndex": 433,
         "sequence": 8,
-        "tpCost": 4
+        "tpCost": 4,
+        "rangeClass": 2
       }
     ]
   },
@@ -82,7 +84,8 @@
         "englishName": "Tackle",
         "dbTextIndex": 434,
         "sequence": 7,
-        "tpCost": 4
+        "tpCost": 4,
+        "rangeClass": 1
       }
     ]
   },
@@ -95,7 +98,8 @@
         "englishName": "Tackle",
         "dbTextIndex": 435,
         "sequence": 7,
-        "tpCost": 4
+        "tpCost": 4,
+        "rangeClass": 1
       }
     ]
   },
@@ -108,7 +112,8 @@
         "englishName": "Bite",
         "dbTextIndex": 436,
         "sequence": 7,
-        "tpCost": 4
+        "tpCost": 4,
+        "rangeClass": 1
       }
     ]
   },
@@ -121,7 +126,8 @@
         "englishName": "Tail Whip",
         "dbTextIndex": 437,
         "sequence": 7,
-        "tpCost": 4
+        "tpCost": 4,
+        "rangeClass": 1
       }
     ]
   },
@@ -134,7 +140,8 @@
         "englishName": "Tackle",
         "dbTextIndex": 438,
         "sequence": 7,
-        "tpCost": 4
+        "tpCost": 4,
+        "rangeClass": 1
       }
     ]
   },
@@ -147,7 +154,8 @@
         "englishName": "Flower Bubbles",
         "dbTextIndex": 439,
         "sequence": 7,
-        "tpCost": 4
+        "tpCost": 4,
+        "rangeClass": 2
       }
     ]
   },
@@ -160,7 +168,8 @@
         "englishName": "Froth Bubbles",
         "dbTextIndex": 440,
         "sequence": 7,
-        "tpCost": 4
+        "tpCost": 4,
+        "rangeClass": 2
       }
     ]
   },
@@ -173,7 +182,8 @@
         "englishName": "Flame Shot",
         "dbTextIndex": 441,
         "sequence": 7,
-        "tpCost": 4
+        "tpCost": 4,
+        "rangeClass": 2
       }
     ]
   },
@@ -186,7 +196,8 @@
         "englishName": "Elastic Froth",
         "dbTextIndex": 442,
         "sequence": 7,
-        "tpCost": 4
+        "tpCost": 4,
+        "rangeClass": 2
       }
     ]
   },
@@ -199,7 +210,8 @@
         "englishName": "Hot Steam",
         "dbTextIndex": 443,
         "sequence": 7,
-        "tpCost": 5
+        "tpCost": 5,
+        "rangeClass": 2
       }
     ]
   },
@@ -212,7 +224,8 @@
         "englishName": "Starlight",
         "dbTextIndex": 444,
         "sequence": 7,
-        "tpCost": 5
+        "tpCost": 5,
+        "rangeClass": 2
       }
     ]
   },
@@ -225,7 +238,8 @@
         "englishName": "Dark Burst",
         "dbTextIndex": 445,
         "sequence": 7,
-        "tpCost": 5
+        "tpCost": 5,
+        "rangeClass": 2
       }
     ]
   },
@@ -238,7 +252,8 @@
         "englishName": "Pepper Breath",
         "dbTextIndex": 446,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       },
       {
         "record": 61,
@@ -246,7 +261,8 @@
         "englishName": "Spitfire Blast",
         "dbTextIndex": 447,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -259,7 +275,8 @@
         "englishName": "Scratch",
         "dbTextIndex": 448,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 1
       },
       {
         "record": 64,
@@ -267,7 +284,8 @@
         "englishName": "Diamond Shell",
         "dbTextIndex": 449,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       }
     ]
   },
@@ -280,7 +298,8 @@
         "englishName": "Super Thunder Strike",
         "dbTextIndex": 450,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -293,7 +312,8 @@
         "englishName": "Stun Bubble",
         "dbTextIndex": 451,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -306,7 +326,8 @@
         "englishName": "Rolling Upper",
         "dbTextIndex": 452,
         "sequence": 8,
-        "tpCost": 8
+        "tpCost": 8,
+        "rangeClass": 1
       },
       {
         "record": 71,
@@ -314,7 +335,8 @@
         "englishName": "Double Back Hand",
         "dbTextIndex": 453,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 1
       },
       {
         "record": 72,
@@ -322,7 +344,8 @@
         "englishName": "Gao Rush",
         "dbTextIndex": 454,
         "sequence": 9,
-        "tpCost": 12
+        "tpCost": 12,
+        "rangeClass": 1
       }
     ]
   },
@@ -335,7 +358,8 @@
         "englishName": "Electric Stun Blast",
         "dbTextIndex": 455,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -348,7 +372,8 @@
         "englishName": "Blue Blaster",
         "dbTextIndex": 456,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       },
       {
         "record": 77,
@@ -356,7 +381,8 @@
         "englishName": "Petit Fire Hook",
         "dbTextIndex": 457,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       }
     ]
   },
@@ -369,7 +395,8 @@
         "englishName": "Pointer Arrow",
         "dbTextIndex": 458,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       },
       {
         "record": 80,
@@ -377,7 +404,8 @@
         "englishName": "Met Tackle",
         "dbTextIndex": 459,
         "sequence": 9,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       }
     ]
   },
@@ -390,7 +418,8 @@
         "englishName": "Spiral Saw",
         "dbTextIndex": 460,
         "sequence": 8,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 1
       }
     ]
   },
@@ -403,7 +432,8 @@
         "englishName": "Bonfire",
         "dbTextIndex": 461,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -416,7 +446,8 @@
         "englishName": "Electric Thread",
         "dbTextIndex": 462,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -429,7 +460,8 @@
         "englishName": "Rock Fist",
         "dbTextIndex": 463,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -442,7 +474,8 @@
         "englishName": "Goburi Strike",
         "dbTextIndex": 464,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -455,7 +488,8 @@
         "englishName": "Marching Fishes",
         "dbTextIndex": 465,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -468,7 +502,8 @@
         "englishName": "Bunny Blast",
         "dbTextIndex": 466,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 95,
@@ -476,7 +511,8 @@
         "englishName": "Blazing Fire",
         "dbTextIndex": 467,
         "sequence": 9,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -489,7 +525,8 @@
         "englishName": "Super Shocker",
         "dbTextIndex": 468,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -502,7 +539,8 @@
         "englishName": "Toy Flame",
         "dbTextIndex": 469,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -515,7 +553,8 @@
         "englishName": "Walking Dream",
         "dbTextIndex": 473,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -528,7 +567,8 @@
         "englishName": "Darkness Gear",
         "dbTextIndex": 474,
         "sequence": 8,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -541,7 +581,8 @@
         "englishName": "Wing Slap",
         "dbTextIndex": 475,
         "sequence": 9,
-        "tpCost": 5
+        "tpCost": 5,
+        "rangeClass": 1
       },
       {
         "record": 110,
@@ -549,7 +590,8 @@
         "englishName": "Boom Bubble",
         "dbTextIndex": 476,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -562,7 +604,8 @@
         "englishName": "Poison Ivy",
         "dbTextIndex": 477,
         "sequence": 8,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 1
       }
     ]
   },
@@ -575,7 +618,8 @@
         "englishName": "Demi Dart",
         "dbTextIndex": 478,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -588,7 +632,8 @@
         "englishName": "Spiral Twister",
         "dbTextIndex": 479,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -601,7 +646,8 @@
         "englishName": "Scratch Smash",
         "dbTextIndex": 480,
         "sequence": 8,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 1
       },
       {
         "record": 119,
@@ -609,7 +655,8 @@
         "englishName": "Falco Rush",
         "dbTextIndex": 481,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       },
       {
         "record": 120,
@@ -617,7 +664,8 @@
         "englishName": "Ninja Blade",
         "dbTextIndex": 482,
         "sequence": 9,
-        "tpCost": 5
+        "tpCost": 5,
+        "rangeClass": 2
       }
     ]
   },
@@ -630,7 +678,8 @@
         "englishName": "Puppy Howling",
         "dbTextIndex": 483,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -643,7 +692,8 @@
         "englishName": "Rain of Pollen",
         "dbTextIndex": 484,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -656,7 +706,8 @@
         "englishName": "Fungus Cruncher",
         "dbTextIndex": 485,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       }
     ]
   },
@@ -669,7 +720,8 @@
         "englishName": "Little Blizzard",
         "dbTextIndex": 486,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -682,7 +734,8 @@
         "englishName": "Leaf Blade",
         "dbTextIndex": 487,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -695,7 +748,8 @@
         "englishName": "Baby Breath",
         "dbTextIndex": 470,
         "sequence": 7,
-        "tpCost": 5
+        "tpCost": 5,
+        "rangeClass": 2
       },
       {
         "record": 102,
@@ -703,7 +757,8 @@
         "englishName": "Tail Smash",
         "dbTextIndex": 471,
         "sequence": 10,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       },
       {
         "record": 103,
@@ -711,7 +766,8 @@
         "englishName": "G Shurunen",
         "dbTextIndex": 472,
         "sequence": 9,
-        "tpCost": 12
+        "tpCost": 12,
+        "rangeClass": 2
       }
     ]
   },
@@ -724,7 +780,8 @@
         "englishName": "Coro-Knuckle",
         "dbTextIndex": 488,
         "sequence": 10,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 1
       },
       {
         "record": 133,
@@ -732,7 +789,8 @@
         "englishName": "Corona Flame",
         "dbTextIndex": 489,
         "sequence": 7,
-        "tpCost": 5
+        "tpCost": 5,
+        "rangeClass": 2
       },
       {
         "record": 134,
@@ -740,7 +798,8 @@
         "englishName": "Petit Prominence",
         "dbTextIndex": 490,
         "sequence": 9,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       }
     ]
   },
@@ -753,7 +812,8 @@
         "englishName": "Luna Claw",
         "dbTextIndex": 491,
         "sequence": 8,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 1
       },
       {
         "record": 137,
@@ -761,7 +821,8 @@
         "englishName": "Tear Shot",
         "dbTextIndex": 492,
         "sequence": 7,
-        "tpCost": 5
+        "tpCost": 5,
+        "rangeClass": 2
       },
       {
         "record": 138,
@@ -769,7 +830,8 @@
         "englishName": "Lop Ear Ripple",
         "dbTextIndex": 493,
         "sequence": 9,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -782,7 +844,8 @@
         "englishName": "Spit Fire",
         "dbTextIndex": 494,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 141,
@@ -790,7 +853,8 @@
         "englishName": "Pepper Breath",
         "dbTextIndex": 495,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -803,7 +867,8 @@
         "englishName": "Colored Sparkle",
         "dbTextIndex": 496,
         "sequence": 7,
-        "tpCost": 5
+        "tpCost": 5,
+        "rangeClass": 2
       },
       {
         "record": 144,
@@ -811,7 +876,8 @@
         "englishName": "Psyche Horn",
         "dbTextIndex": 497,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       }
     ]
   },
@@ -824,7 +890,8 @@
         "englishName": "Nemesis Ivy",
         "dbTextIndex": 498,
         "sequence": 8,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 1
       }
     ]
   },
@@ -837,7 +904,8 @@
         "englishName": "Purple Fog",
         "dbTextIndex": 499,
         "sequence": 7,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 2
       },
       {
         "record": 149,
@@ -845,7 +913,8 @@
         "englishName": "Soft Attack",
         "dbTextIndex": 500,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       }
     ]
   },
@@ -858,7 +927,8 @@
         "englishName": "Vee Head Butt",
         "dbTextIndex": 501,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       },
       {
         "record": 152,
@@ -866,7 +936,8 @@
         "englishName": "Gyral Punch",
         "dbTextIndex": 502,
         "sequence": 9,
-        "tpCost": 5
+        "tpCost": 5,
+        "rangeClass": 1
       }
     ]
   },
@@ -879,7 +950,8 @@
         "englishName": "Pyrosphere",
         "dbTextIndex": 503,
         "sequence": 7,
-        "tpCost": 4
+        "tpCost": 4,
+        "rangeClass": 2
       },
       {
         "record": 155,
@@ -887,7 +959,8 @@
         "englishName": "Rock Breaker",
         "dbTextIndex": 504,
         "sequence": 8,
-        "tpCost": 6
+        "tpCost": 6,
+        "rangeClass": 1
       },
       {
         "record": 156,
@@ -895,7 +968,8 @@
         "englishName": "Fire Mitt",
         "dbTextIndex": 505,
         "sequence": 9,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       }
     ]
   },
@@ -908,7 +982,8 @@
         "englishName": "Megaton Press",
         "dbTextIndex": 506,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       },
       {
         "record": 159,
@@ -916,7 +991,8 @@
         "englishName": "Tail Hammer",
         "dbTextIndex": 507,
         "sequence": 7,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 1
       }
     ]
   },
@@ -929,7 +1005,8 @@
         "englishName": "Harpoon Torpedo",
         "dbTextIndex": 508,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -942,7 +1019,8 @@
         "englishName": "Thundercloud",
         "dbTextIndex": 509,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -955,7 +1033,8 @@
         "englishName": "Twig Tap",
         "dbTextIndex": 510,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       }
     ]
   },
@@ -968,7 +1047,8 @@
         "englishName": "Tornado",
         "dbTextIndex": 511,
         "sequence": 7,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 2
       },
       {
         "record": 168,
@@ -976,7 +1056,8 @@
         "englishName": "Spinning Needle　",
         "dbTextIndex": 512,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -989,7 +1070,8 @@
         "englishName": "Hand of Fate",
         "dbTextIndex": 513,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1002,7 +1084,8 @@
         "englishName": "Pummel Whack",
         "dbTextIndex": 514,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1015,7 +1098,8 @@
         "englishName": "Dash Double Claw",
         "dbTextIndex": 515,
         "sequence": 9,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       },
       {
         "record": 175,
@@ -1023,7 +1107,8 @@
         "englishName": "Gaoga Hound",
         "dbTextIndex": 516,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       },
       {
         "record": 176,
@@ -1031,7 +1116,8 @@
         "englishName": "Spiral Blow",
         "dbTextIndex": 517,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1044,7 +1130,8 @@
         "englishName": "Electro Shocker",
         "dbTextIndex": 518,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1057,7 +1144,8 @@
         "englishName": "Bunny Pummel",
         "dbTextIndex": 519,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 181,
@@ -1065,7 +1153,8 @@
         "englishName": "Bunny Upper",
         "dbTextIndex": 520,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       }
     ]
   },
@@ -1078,7 +1167,8 @@
         "englishName": "Howling Blaster",
         "dbTextIndex": 521,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1091,7 +1181,8 @@
         "englishName": "Howling Blaster",
         "dbTextIndex": 522,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1104,7 +1195,8 @@
         "englishName": "Protect Grenade",
         "dbTextIndex": 523,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1117,7 +1209,8 @@
         "englishName": "Pummel Peck",
         "dbTextIndex": 524,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -1130,7 +1223,8 @@
         "englishName": "Will O' Wisp Ball",
         "dbTextIndex": 525,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 192,
@@ -1138,7 +1232,8 @@
         "englishName": "Fox Tail Inferno",
         "dbTextIndex": 526,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -1151,7 +1246,8 @@
         "englishName": "Mega Flame",
         "dbTextIndex": 527,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 195,
@@ -1159,7 +1255,8 @@
         "englishName": "Horn Impulse",
         "dbTextIndex": 528,
         "sequence": 8,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 1
       }
     ]
   },
@@ -1172,7 +1269,8 @@
         "englishName": "Chrono Breaker",
         "dbTextIndex": 529,
         "sequence": 9,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 1
       }
     ]
   },
@@ -1185,7 +1283,8 @@
         "englishName": "Scissow Claw",
         "dbTextIndex": 530,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       }
     ]
   },
@@ -1198,7 +1297,8 @@
         "englishName": "Symphony Crusher",
         "dbTextIndex": 531,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1211,7 +1311,8 @@
         "englishName": "Coral Crusher",
         "dbTextIndex": 532,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 204,
@@ -1219,7 +1320,8 @@
         "englishName": "Devil Bashing",
         "dbTextIndex": 533,
         "sequence": 9,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       }
     ]
   },
@@ -1232,7 +1334,8 @@
         "englishName": "Solar Ray",
         "dbTextIndex": 534,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1245,7 +1348,8 @@
         "englishName": "Frozen Fire Shot",
         "dbTextIndex": 535,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1258,7 +1362,8 @@
         "englishName": "Thunder Ball",
         "dbTextIndex": 536,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1271,7 +1376,8 @@
         "englishName": "Hydro Blaster",
         "dbTextIndex": 537,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1284,7 +1390,8 @@
         "englishName": "Mega Flame",
         "dbTextIndex": 538,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 215,
@@ -1292,7 +1399,8 @@
         "englishName": "Mega Burst",
         "dbTextIndex": 539,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 216,
@@ -1300,7 +1408,8 @@
         "englishName": "Horn Impulse",
         "dbTextIndex": 540,
         "sequence": 8,
-        "tpCost": 16
+        "tpCost": 16,
+        "rangeClass": 1
       }
     ]
   },
@@ -1313,7 +1422,8 @@
         "englishName": "Constriction",
         "dbTextIndex": 541,
         "sequence": 8,
-        "tpCost": 16
+        "tpCost": 16,
+        "rangeClass": 1
       },
       {
         "record": 219,
@@ -1321,7 +1431,8 @@
         "englishName": "Ice Blast",
         "dbTextIndex": 542,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1334,7 +1445,8 @@
         "englishName": "Compost Bomber",
         "dbTextIndex": 543,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1347,7 +1459,8 @@
         "englishName": "Halley's Squall",
         "dbTextIndex": 544,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -1360,7 +1473,8 @@
         "englishName": "Dancing Sword",
         "dbTextIndex": 545,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       }
     ]
   },
@@ -1373,7 +1487,8 @@
         "englishName": "Fire Blast",
         "dbTextIndex": 546,
         "sequence": 7,
-        "tpCost": 16
+        "tpCost": 16,
+        "rangeClass": 2
       }
     ]
   },
@@ -1386,7 +1501,8 @@
         "englishName": "Blaze Blast",
         "dbTextIndex": 547,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1399,7 +1515,8 @@
         "englishName": "Lightning Paw",
         "dbTextIndex": 548,
         "sequence": 7,
-        "tpCost": 16
+        "tpCost": 16,
+        "rangeClass": 1
       },
       {
         "record": 232,
@@ -1407,7 +1524,8 @@
         "englishName": "Feline's Eye",
         "dbTextIndex": 549,
         "sequence": 9,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1420,7 +1538,8 @@
         "englishName": "Crimson Claw",
         "dbTextIndex": 550,
         "sequence": 8,
-        "tpCost": 16
+        "tpCost": 16,
+        "rangeClass": 1
       }
     ]
   },
@@ -1433,7 +1552,8 @@
         "englishName": "The Touch of Evil",
         "dbTextIndex": 551,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       }
     ]
   },
@@ -1446,7 +1566,8 @@
         "englishName": "Needle Spray",
         "dbTextIndex": 552,
         "sequence": 8,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 2
       }
     ]
   },
@@ -1459,7 +1580,8 @@
         "englishName": "Strong Carapace",
         "dbTextIndex": 553,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1472,7 +1594,8 @@
         "englishName": "Compost Bomber",
         "dbTextIndex": 554,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1485,7 +1608,8 @@
         "englishName": "Night Claw",
         "dbTextIndex": 555,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       },
       {
         "record": 245,
@@ -1493,7 +1617,8 @@
         "englishName": "Death Charm",
         "dbTextIndex": 556,
         "sequence": 8,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 2
       }
     ]
   },
@@ -1506,7 +1631,8 @@
         "englishName": "Meteor Wing",
         "dbTextIndex": 557,
         "sequence": 7,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 2
       }
     ]
   },
@@ -1519,7 +1645,8 @@
         "englishName": "Compost Bomber",
         "dbTextIndex": 558,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1532,7 +1659,8 @@
         "englishName": "Spiral Claw",
         "dbTextIndex": 559,
         "sequence": 7,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 1
       },
       {
         "record": 252,
@@ -1540,7 +1668,8 @@
         "englishName": "Kunai Wing",
         "dbTextIndex": 560,
         "sequence": 9,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 253,
@@ -1548,7 +1677,8 @@
         "englishName": "Thousand Beaks",
         "dbTextIndex": 561,
         "sequence": 10,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       }
     ]
   },
@@ -1561,7 +1691,8 @@
         "englishName": "Fireball",
         "dbTextIndex": 562,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       }
     ]
   },
@@ -1574,7 +1705,8 @@
         "englishName": "Ice Cloud",
         "dbTextIndex": 563,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 258,
@@ -1582,7 +1714,8 @@
         "englishName": "Bone Boomerang",
         "dbTextIndex": 564,
         "sequence": 7,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 2
       }
     ]
   },
@@ -1595,7 +1728,8 @@
         "englishName": "Tomahawk Slash",
         "dbTextIndex": 565,
         "sequence": 8,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 1
       },
       {
         "record": 261,
@@ -1603,7 +1737,8 @@
         "englishName": "Volcanic Strike",
         "dbTextIndex": 566,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1616,7 +1751,8 @@
         "englishName": "Absolute Zero Ice Punch",
         "dbTextIndex": 567,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       }
     ]
   },
@@ -1629,7 +1765,8 @@
         "englishName": "Aerial Attack",
         "dbTextIndex": 568,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1642,7 +1779,8 @@
         "englishName": "Tail Flame",
         "dbTextIndex": 569,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 268,
@@ -1650,7 +1788,8 @@
         "englishName": "Jaenryu",
         "dbTextIndex": 570,
         "sequence": 7,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 2
       }
     ]
   },
@@ -1663,7 +1802,8 @@
         "englishName": "Howling Buster",
         "dbTextIndex": 571,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1676,7 +1816,8 @@
         "englishName": "Slime Pelter",
         "dbTextIndex": 572,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1689,7 +1830,8 @@
         "englishName": "Fist of the Beast King",
         "dbTextIndex": 573,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1702,7 +1844,8 @@
         "englishName": "Rotten Rainballs",
         "dbTextIndex": 574,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1715,7 +1858,8 @@
         "englishName": "Blue Flare Breath",
         "dbTextIndex": 575,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 279,
@@ -1723,7 +1867,8 @@
         "englishName": "Strike Bomber",
         "dbTextIndex": 576,
         "sequence": 9,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 1
       },
       {
         "record": 280,
@@ -1731,7 +1876,8 @@
         "englishName": "G Shurunen-II",
         "dbTextIndex": 577,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -1744,7 +1890,8 @@
         "englishName": "Green Flare Breath",
         "dbTextIndex": 578,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 283,
@@ -1752,7 +1899,8 @@
         "englishName": "Strike Bomber",
         "dbTextIndex": 579,
         "sequence": 9,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 1
       },
       {
         "record": 284,
@@ -1760,7 +1908,8 @@
         "englishName": "G Shurunen-II",
         "dbTextIndex": 580,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -1773,7 +1922,8 @@
         "englishName": "Flame Dive",
         "dbTextIndex": 581,
         "sequence": 8,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 1
       },
       {
         "record": 287,
@@ -1781,7 +1931,8 @@
         "englishName": "Fira Claw",
         "dbTextIndex": 582,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       },
       {
         "record": 288,
@@ -1789,7 +1940,8 @@
         "englishName": "Fira Bomb",
         "dbTextIndex": 583,
         "sequence": 9,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1802,7 +1954,8 @@
         "englishName": "Moon Night Bomb",
         "dbTextIndex": 584,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 291,
@@ -1810,7 +1963,8 @@
         "englishName": "Tear Arrow",
         "dbTextIndex": 585,
         "sequence": 9,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 292,
@@ -1818,7 +1972,8 @@
         "englishName": "Moon Night Kick",
         "dbTextIndex": 586,
         "sequence": 10,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 1
       }
     ]
   },
@@ -1831,7 +1986,8 @@
         "englishName": "Frost Claw",
         "dbTextIndex": 587,
         "sequence": 7,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 1
       },
       {
         "record": 295,
@@ -1839,7 +1995,8 @@
         "englishName": "Zero Freeze",
         "dbTextIndex": 588,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1852,7 +2009,8 @@
         "englishName": "Chaos Blaster",
         "dbTextIndex": 589,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 298,
@@ -1860,7 +2018,8 @@
         "englishName": "Killer Bite",
         "dbTextIndex": 590,
         "sequence": 9,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 1
       }
     ]
   },
@@ -1873,7 +2032,8 @@
         "englishName": "Compost Bomber",
         "dbTextIndex": 591,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1886,7 +2046,8 @@
         "englishName": "Crystal Cloud",
         "dbTextIndex": 592,
         "sequence": 7,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 2
       },
       {
         "record": 303,
@@ -1894,7 +2055,8 @@
         "englishName": "Ice Illusion",
         "dbTextIndex": 593,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1907,7 +2069,8 @@
         "englishName": "Chicken Red Eyes",
         "dbTextIndex": 594,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1920,7 +2083,8 @@
         "englishName": "Black Saber",
         "dbTextIndex": 595,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       },
       {
         "record": 308,
@@ -1928,7 +2092,8 @@
         "englishName": "Night Roar",
         "dbTextIndex": 596,
         "sequence": 7,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 2
       }
     ]
   },
@@ -1941,7 +2106,8 @@
         "englishName": "Iceball Bomb",
         "dbTextIndex": 597,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       }
     ]
   },
@@ -1954,7 +2120,8 @@
         "englishName": "V-Nova Blast",
         "dbTextIndex": 598,
         "sequence": 7,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 2
       },
       {
         "record": 313,
@@ -1962,7 +2129,8 @@
         "englishName": "Magnum Punch",
         "dbTextIndex": 599,
         "sequence": 9,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       }
     ]
   },
@@ -1975,7 +2143,8 @@
         "englishName": "Plasma Blade",
         "dbTextIndex": 600,
         "sequence": 8,
-        "tpCost": 10
+        "tpCost": 10,
+        "rangeClass": 1
       },
       {
         "record": 316,
@@ -1983,7 +2152,8 @@
         "englishName": "Pyro Blaster",
         "dbTextIndex": 601,
         "sequence": 7,
-        "tpCost": 18
+        "tpCost": 18,
+        "rangeClass": 2
       },
       {
         "record": 317,
@@ -1991,7 +2161,8 @@
         "englishName": "Raiden Blade",
         "dbTextIndex": 602,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       }
     ]
   },
@@ -2004,7 +2175,8 @@
         "englishName": "Horn Buster",
         "dbTextIndex": 603,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       },
       {
         "record": 320,
@@ -2012,7 +2184,8 @@
         "englishName": "Electro Shocker",
         "dbTextIndex": 604,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -2025,7 +2198,8 @@
         "englishName": "Stinger Surprise",
         "dbTextIndex": 605,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 323,
@@ -2033,7 +2207,8 @@
         "englishName": "Tail Blade",
         "dbTextIndex": 606,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -2046,7 +2221,8 @@
         "englishName": "Gatling Missile",
         "dbTextIndex": 607,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 326,
@@ -2054,7 +2230,8 @@
         "englishName": "Lightning Blade",
         "dbTextIndex": 608,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -2067,7 +2244,8 @@
         "englishName": "DarkNetwork&C.Crush",
         "dbTextIndex": 609,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 329,
@@ -2075,7 +2253,8 @@
         "englishName": "Dark Spirits",
         "dbTextIndex": 610,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -2088,7 +2267,8 @@
         "englishName": "Celestial Arrow",
         "dbTextIndex": 611,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 332,
@@ -2096,7 +2276,8 @@
         "englishName": "Heaven's Charm",
         "dbTextIndex": 612,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -2109,7 +2290,8 @@
         "englishName": "Double Scissor Claw",
         "dbTextIndex": 613,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       },
       {
         "record": 335,
@@ -2117,7 +2299,8 @@
         "englishName": "Destructive Impulse",
         "dbTextIndex": 614,
         "sequence": 8,
-        "tpCost": 42
+        "tpCost": 42,
+        "rangeClass": 1
       }
     ]
   },
@@ -2130,7 +2313,8 @@
         "englishName": "Wing Blade",
         "dbTextIndex": 615,
         "sequence": 9,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 338,
@@ -2138,7 +2322,8 @@
         "englishName": "Fire Hurricane",
         "dbTextIndex": 616,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -2151,7 +2336,8 @@
         "englishName": "Junk Chunker",
         "dbTextIndex": 617,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 341,
@@ -2159,7 +2345,8 @@
         "englishName": "Dirty Saucer",
         "dbTextIndex": 618,
         "sequence": 9,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -2172,7 +2359,8 @@
         "englishName": "Erase Claw",
         "dbTextIndex": 619,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 344,
@@ -2180,7 +2368,8 @@
         "englishName": "Cyber Nail",
         "dbTextIndex": 620,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       }
     ]
   },
@@ -2193,7 +2382,8 @@
         "englishName": "Pit Pelter",
         "dbTextIndex": 621,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 347,
@@ -2201,7 +2391,8 @@
         "englishName": "Vine Attack",
         "dbTextIndex": 622,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       }
     ]
   },
@@ -2214,7 +2405,8 @@
         "englishName": "Dark Shot",
         "dbTextIndex": 623,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 350,
@@ -2222,7 +2414,8 @@
         "englishName": "Cursed Breath",
         "dbTextIndex": 624,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -2235,7 +2428,8 @@
         "englishName": "Vulcan's Hammer",
         "dbTextIndex": 625,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 353,
@@ -2243,7 +2437,8 @@
         "englishName": "Glacial Spear",
         "dbTextIndex": 626,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -2256,7 +2451,8 @@
         "englishName": "Tentacle Claw",
         "dbTextIndex": 627,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 356,
@@ -2264,7 +2460,8 @@
         "englishName": "Thousand Whips",
         "dbTextIndex": 628,
         "sequence": 10,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 1
       }
     ]
   },
@@ -2277,7 +2474,8 @@
         "englishName": "Metal Fireball",
         "dbTextIndex": 629,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 359,
@@ -2285,7 +2483,8 @@
         "englishName": "Heat Chain",
         "dbTextIndex": 630,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -2298,7 +2497,8 @@
         "englishName": "Royal Smasher",
         "dbTextIndex": 631,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 362,
@@ -2306,7 +2506,8 @@
         "englishName": "Gorgeous Beak",
         "dbTextIndex": 632,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -2319,7 +2520,8 @@
         "englishName": "Musical Fist",
         "dbTextIndex": 633,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 365,
@@ -2327,7 +2529,8 @@
         "englishName": "Symphony Crusher",
         "dbTextIndex": 634,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -2340,7 +2543,8 @@
         "englishName": "Tri-horn Attack",
         "dbTextIndex": 635,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       },
       {
         "record": 368,
@@ -2348,7 +2552,8 @@
         "englishName": "Golden Tri-horn Attack",
         "dbTextIndex": 636,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -2361,7 +2566,8 @@
         "englishName": "Berserk Sword",
         "dbTextIndex": 637,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       },
       {
         "record": 371,
@@ -2369,7 +2575,8 @@
         "englishName": "Grand Smash",
         "dbTextIndex": 638,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       }
     ]
   },
@@ -2382,7 +2589,8 @@
         "englishName": "Sonic Destroyer",
         "dbTextIndex": 639,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 374,
@@ -2390,7 +2598,8 @@
         "englishName": "Mjollnir Lightning",
         "dbTextIndex": 640,
         "sequence": 9,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -2403,7 +2612,8 @@
         "englishName": "Striking Fish",
         "dbTextIndex": 641,
         "sequence": 9,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 377,
@@ -2411,7 +2621,8 @@
         "englishName": "Abyss Dive",
         "dbTextIndex": 642,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -2424,7 +2635,8 @@
         "englishName": "Animal Nail",
         "dbTextIndex": 643,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       },
       {
         "record": 380,
@@ -2432,7 +2644,8 @@
         "englishName": "Bamboo Punch",
         "dbTextIndex": 644,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -2445,7 +2658,8 @@
         "englishName": "Big Smiley Bomb",
         "dbTextIndex": 645,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 383,
@@ -2453,7 +2667,8 @@
         "englishName": "Buster Dive",
         "dbTextIndex": 646,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -2466,7 +2681,8 @@
         "englishName": "Pit Bomb",
         "dbTextIndex": 647,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 386,
@@ -2474,7 +2690,8 @@
         "englishName": "Fairy Tale",
         "dbTextIndex": 648,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       }
     ]
   },
@@ -2487,7 +2704,8 @@
         "englishName": "Shadow Scythe",
         "dbTextIndex": 649,
         "sequence": 10,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       },
       {
         "record": 389,
@@ -2495,7 +2713,8 @@
         "englishName": "Words of Death",
         "dbTextIndex": 650,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -2508,7 +2727,8 @@
         "englishName": "Unidentified Flying Kiss",
         "dbTextIndex": 651,
         "sequence": 9,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 392,
@@ -2516,7 +2736,8 @@
         "englishName": "Abduction Beam",
         "dbTextIndex": 652,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -2529,7 +2750,8 @@
         "englishName": "Tidal Wave",
         "dbTextIndex": 653,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 395,
@@ -2537,7 +2759,8 @@
         "englishName": "Blasting Spout",
         "dbTextIndex": 654,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -2550,7 +2773,8 @@
         "englishName": "Excalibur",
         "dbTextIndex": 655,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       },
       {
         "record": 398,
@@ -2558,7 +2782,8 @@
         "englishName": "The Gate of Destiny",
         "dbTextIndex": 656,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -2571,7 +2796,8 @@
         "englishName": "Gaoga Tornade",
         "dbTextIndex": 657,
         "sequence": 9,
-        "tpCost": 42
+        "tpCost": 42,
+        "rangeClass": 1
       },
       {
         "record": 401,
@@ -2579,7 +2805,8 @@
         "englishName": "Winning Knuckle",
         "dbTextIndex": 658,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       },
       {
         "record": 402,
@@ -2587,7 +2814,8 @@
         "englishName": "Howling Cannon",
         "dbTextIndex": 659,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -2600,7 +2828,8 @@
         "englishName": "Smiley Bomb",
         "dbTextIndex": 660,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 405,
@@ -2608,7 +2837,8 @@
         "englishName": "Buster Dive",
         "dbTextIndex": 661,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -2621,7 +2851,8 @@
         "englishName": "Tusk Crusher",
         "dbTextIndex": 662,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       },
       {
         "record": 408,
@@ -2629,7 +2860,8 @@
         "englishName": "Tundra Breath",
         "dbTextIndex": 663,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -2642,7 +2874,8 @@
         "englishName": "Lightning Javelin",
         "dbTextIndex": 664,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 411,
@@ -2650,7 +2883,8 @@
         "englishName": "Maelstrom",
         "dbTextIndex": 665,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -2663,7 +2897,8 @@
         "englishName": "Darkside Attack",
         "dbTextIndex": 666,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 414,
@@ -2671,7 +2906,8 @@
         "englishName": "Ultimate Slicer",
         "dbTextIndex": 667,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       }
     ]
   },
@@ -2684,7 +2920,8 @@
         "englishName": "Giga Blaster",
         "dbTextIndex": 668,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 417,
@@ -2692,7 +2929,8 @@
         "englishName": "Trident Arm",
         "dbTextIndex": 669,
         "sequence": 9,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -2705,7 +2943,8 @@
         "englishName": "Giga Blaster",
         "dbTextIndex": 670,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 420,
@@ -2713,7 +2952,8 @@
         "englishName": "Trident Arm",
         "dbTextIndex": 671,
         "sequence": 9,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -2726,7 +2966,8 @@
         "englishName": "Giga Blaster II",
         "dbTextIndex": 672,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 423,
@@ -2734,7 +2975,8 @@
         "englishName": "Nuclear Laser",
         "dbTextIndex": 673,
         "sequence": 9,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -2747,7 +2989,8 @@
         "englishName": "Hearts Attack",
         "dbTextIndex": 674,
         "sequence": 9,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 426,
@@ -2755,7 +2998,8 @@
         "englishName": "Gyral Punch",
         "dbTextIndex": 675,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -2768,7 +3012,8 @@
         "englishName": "Savage Emperor",
         "dbTextIndex": 676,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       },
       {
         "record": 429,
@@ -2776,7 +3021,8 @@
         "englishName": "Blackout",
         "dbTextIndex": 677,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -2789,7 +3035,8 @@
         "englishName": "Trident Revolver",
         "dbTextIndex": 678,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 432,
@@ -2797,7 +3044,8 @@
         "englishName": "Rising Destroyer",
         "dbTextIndex": 679,
         "sequence": 7,
-        "tpCost": 42
+        "tpCost": 42,
+        "rangeClass": 2
       },
       {
         "record": 433,
@@ -2805,7 +3053,8 @@
         "englishName": "Solid Strike",
         "dbTextIndex": 680,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -2818,7 +3067,8 @@
         "englishName": "Rapid Fire",
         "dbTextIndex": 681,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 436,
@@ -2826,7 +3076,8 @@
         "englishName": "Golden Triangle",
         "dbTextIndex": 682,
         "sequence": 9,
-        "tpCost": 42
+        "tpCost": 42,
+        "rangeClass": 2
       }
     ]
   },
@@ -2839,7 +3090,8 @@
         "englishName": "Flower Cannon",
         "dbTextIndex": 683,
         "sequence": 9,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 439,
@@ -2847,7 +3099,8 @@
         "englishName": "Fairy Vine",
         "dbTextIndex": 684,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -2860,7 +3113,8 @@
         "englishName": "Darkness Wave",
         "dbTextIndex": 685,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 442,
@@ -2868,7 +3122,8 @@
         "englishName": "Poison Spray",
         "dbTextIndex": 686,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -2881,7 +3136,8 @@
         "englishName": "Hearts Break Attack",
         "dbTextIndex": 687,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 445,
@@ -2889,7 +3145,8 @@
         "englishName": "Bear Claw",
         "dbTextIndex": 688,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -2902,7 +3159,8 @@
         "englishName": "Wolf Claw",
         "dbTextIndex": 689,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       },
       {
         "record": 448,
@@ -2910,7 +3168,8 @@
         "englishName": "Howling Blaster",
         "dbTextIndex": 690,
         "sequence": 9,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -2923,7 +3182,8 @@
         "englishName": "Wolf Claw",
         "dbTextIndex": 691,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       },
       {
         "record": 451,
@@ -2931,7 +3191,8 @@
         "englishName": "Garuru Kick",
         "dbTextIndex": 692,
         "sequence": 9,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -2944,7 +3205,8 @@
         "englishName": "Blaze Sonic Breath",
         "dbTextIndex": 693,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 454,
@@ -2952,7 +3214,8 @@
         "englishName": "Exploding Sonic Breath",
         "dbTextIndex": 694,
         "sequence": 9,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       },
       {
         "record": 455,
@@ -2960,7 +3223,8 @@
         "englishName": "Wing Blast",
         "dbTextIndex": 695,
         "sequence": 10,
-        "tpCost": 42
+        "tpCost": 42,
+        "rangeClass": 1
       }
     ]
   },
@@ -2973,7 +3237,8 @@
         "englishName": "Scrap Claw",
         "dbTextIndex": 696,
         "sequence": 10,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       },
       {
         "record": 458,
@@ -2981,7 +3246,8 @@
         "englishName": "Megaton Hammer Crush",
         "dbTextIndex": 697,
         "sequence": 9,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       },
       {
         "record": 459,
@@ -2989,7 +3255,8 @@
         "englishName": "Giga Crack",
         "dbTextIndex": 698,
         "sequence": 7,
-        "tpCost": 42
+        "tpCost": 42,
+        "rangeClass": 1
       }
     ]
   },
@@ -3002,7 +3269,8 @@
         "englishName": "Guren Juuouha",
         "dbTextIndex": 699,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 462,
@@ -3010,7 +3278,8 @@
         "englishName": "Kurenai Shishinomai",
         "dbTextIndex": 700,
         "sequence": 9,
-        "tpCost": 42
+        "tpCost": 42,
+        "rangeClass": 1
       },
       {
         "record": 463,
@@ -3018,7 +3287,8 @@
         "englishName": "Purifying Howl",
         "dbTextIndex": 701,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -3031,7 +3301,8 @@
         "englishName": "Lunatic Dance",
         "dbTextIndex": 702,
         "sequence": 8,
-        "tpCost": 42
+        "tpCost": 42,
+        "rangeClass": 1
       },
       {
         "record": 466,
@@ -3039,7 +3310,8 @@
         "englishName": "Ice Archery",
         "dbTextIndex": 703,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 467,
@@ -3047,7 +3319,8 @@
         "englishName": "Dark Archery",
         "dbTextIndex": 704,
         "sequence": 9,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -3060,7 +3333,8 @@
         "englishName": "Halley's Squall",
         "dbTextIndex": 705,
         "sequence": 8,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 2
       },
       {
         "record": 470,
@@ -3068,7 +3342,8 @@
         "englishName": "Superstar Upper",
         "dbTextIndex": 706,
         "sequence": 9,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 1
       }
     ]
   },
@@ -3081,7 +3356,8 @@
         "englishName": "Rapid Fire",
         "dbTextIndex": 707,
         "sequence": 7,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       },
       {
         "record": 473,
@@ -3089,7 +3365,8 @@
         "englishName": "Golden Triangle",
         "dbTextIndex": 708,
         "sequence": 9,
-        "tpCost": 42
+        "tpCost": 42,
+        "rangeClass": 2
       }
     ]
   },
@@ -3102,7 +3379,8 @@
         "englishName": "Ice Phantom",
         "dbTextIndex": 709,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 476,
@@ -3110,7 +3388,8 @@
         "englishName": "Cold Flame",
         "dbTextIndex": 710,
         "sequence": 8,
-        "tpCost": 20
+        "tpCost": 20,
+        "rangeClass": 2
       }
     ]
   },
@@ -3123,7 +3402,8 @@
         "englishName": "Arctic Blizzard",
         "dbTextIndex": 711,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 479,
@@ -3131,7 +3411,8 @@
         "englishName": "Mjollnir",
         "dbTextIndex": 712,
         "sequence": 7,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 1
       }
     ]
   },
@@ -3144,7 +3425,8 @@
         "englishName": "Feral Sword",
         "dbTextIndex": 713,
         "sequence": 8,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 1
       },
       {
         "record": 482,
@@ -3152,7 +3434,8 @@
         "englishName": "Aurvandil's Arrow",
         "dbTextIndex": 714,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -3165,7 +3448,8 @@
         "englishName": "Terra Force",
         "dbTextIndex": 715,
         "sequence": 9,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       },
       {
         "record": 485,
@@ -3173,7 +3457,8 @@
         "englishName": "Iron Claws",
         "dbTextIndex": 716,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -3186,7 +3471,8 @@
         "englishName": "Giga Sea Destroyer",
         "dbTextIndex": 717,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 488,
@@ -3194,7 +3480,8 @@
         "englishName": "Sky Wave",
         "dbTextIndex": 718,
         "sequence": 9,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       }
     ]
   },
@@ -3207,7 +3494,8 @@
         "englishName": "Dimension Scissors",
         "dbTextIndex": 719,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       },
       {
         "record": 491,
@@ -3215,7 +3503,8 @@
         "englishName": "Grand Death Screw",
         "dbTextIndex": 720,
         "sequence": 8,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 1
       }
     ]
   },
@@ -3228,7 +3517,8 @@
         "englishName": "Legendary Blade",
         "dbTextIndex": 721,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 494,
@@ -3236,7 +3526,8 @@
         "englishName": "Mobius Bite",
         "dbTextIndex": 722,
         "sequence": 9,
-        "tpCost": 50
+        "tpCost": 50,
+        "rangeClass": 1
       }
     ]
   },
@@ -3249,7 +3540,8 @@
         "englishName": "Phoenix Claw",
         "dbTextIndex": 723,
         "sequence": 8,
-        "tpCost": 50
+        "tpCost": 50,
+        "rangeClass": 1
       },
       {
         "record": 497,
@@ -3257,7 +3549,8 @@
         "englishName": "Mystic Break",
         "dbTextIndex": 724,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -3270,7 +3563,8 @@
         "englishName": "Howling Crusher",
         "dbTextIndex": 725,
         "sequence": 7,
-        "tpCost": 50
+        "tpCost": 50,
+        "rangeClass": 1
       },
       {
         "record": 500,
@@ -3278,7 +3572,8 @@
         "englishName": "Infinity Arrow",
         "dbTextIndex": 726,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -3291,7 +3586,8 @@
         "englishName": "Glorious Burst",
         "dbTextIndex": 727,
         "sequence": 7,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 2
       },
       {
         "record": 503,
@@ -3299,7 +3595,8 @@
         "englishName": "Shining Blast",
         "dbTextIndex": 728,
         "sequence": 10,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 1
       },
       {
         "record": 504,
@@ -3307,7 +3604,8 @@
         "englishName": "Geogrey Sword",
         "dbTextIndex": 729,
         "sequence": 9,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 1
       }
     ]
   },
@@ -3320,7 +3618,8 @@
         "englishName": "Spiral Bone Crusher",
         "dbTextIndex": 730,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 507,
@@ -3328,7 +3627,8 @@
         "englishName": "Grand Charge",
         "dbTextIndex": 731,
         "sequence": 8,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 1
       }
     ]
   },
@@ -3341,7 +3641,8 @@
         "englishName": "Burst Shot",
         "dbTextIndex": 732,
         "sequence": 7,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       },
       {
         "record": 510,
@@ -3349,7 +3650,8 @@
         "englishName": "Magna Blaster",
         "dbTextIndex": 733,
         "sequence": 9,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -3362,7 +3664,8 @@
         "englishName": "Atomic Ray",
         "dbTextIndex": 734,
         "sequence": 8,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 2
       },
       {
         "record": 513,
@@ -3370,7 +3673,8 @@
         "englishName": "Lightning Blade",
         "dbTextIndex": 735,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -3383,7 +3687,8 @@
         "englishName": "Lion King Slash",
         "dbTextIndex": 736,
         "sequence": 7,
-        "tpCost": 50
+        "tpCost": 50,
+        "rangeClass": 1
       },
       {
         "record": 516,
@@ -3391,7 +3696,8 @@
         "englishName": "Flash Bancho Punch",
         "dbTextIndex": 737,
         "sequence": 8,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 2
       }
     ]
   },
@@ -3404,7 +3710,8 @@
         "englishName": "Trump Sword",
         "dbTextIndex": 738,
         "sequence": 7,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 2
       },
       {
         "record": 519,
@@ -3412,7 +3719,8 @@
         "englishName": "Ending Snipe",
         "dbTextIndex": 739,
         "sequence": 9,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -3425,7 +3733,8 @@
         "englishName": "Puppet Pummel",
         "dbTextIndex": 740,
         "sequence": 9,
-        "tpCost": 50
+        "tpCost": 50,
+        "rangeClass": 1
       },
       {
         "record": 522,
@@ -3433,7 +3742,8 @@
         "englishName": "Wood Cross",
         "dbTextIndex": 741,
         "sequence": 8,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 2
       }
     ]
   },
@@ -3446,7 +3756,8 @@
         "englishName": "Necro Mist",
         "dbTextIndex": 742,
         "sequence": 8,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       },
       {
         "record": 525,
@@ -3454,7 +3765,8 @@
         "englishName": "Necro Mist",
         "dbTextIndex": 743,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -3467,7 +3779,8 @@
         "englishName": "Needle Squall",
         "dbTextIndex": 744,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 528,
@@ -3475,7 +3788,8 @@
         "englishName": "Britain Punch",
         "dbTextIndex": 745,
         "sequence": 7,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 1
       }
     ]
   },
@@ -3488,7 +3802,8 @@
         "englishName": "Dark Gaia Force",
         "dbTextIndex": 746,
         "sequence": 7,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       },
       {
         "record": 531,
@@ -3496,7 +3811,8 @@
         "englishName": "Iron Claws",
         "dbTextIndex": 747,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -3509,7 +3825,8 @@
         "englishName": "Smiley Warhead",
         "dbTextIndex": 748,
         "sequence": 8,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 1
       },
       {
         "record": 534,
@@ -3517,7 +3834,8 @@
         "englishName": "Purple Rain",
         "dbTextIndex": 749,
         "sequence": 7,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       }
     ]
   },
@@ -3530,7 +3848,8 @@
         "englishName": "Water Tail Blaster",
         "dbTextIndex": 750,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 537,
@@ -3538,7 +3857,8 @@
         "englishName": "Pulse Blast",
         "dbTextIndex": 751,
         "sequence": 7,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 2
       }
     ]
   },
@@ -3551,7 +3871,8 @@
         "englishName": "Giga Scissor Claw",
         "dbTextIndex": 752,
         "sequence": 7,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       },
       {
         "record": 540,
@@ -3559,7 +3880,8 @@
         "englishName": "Electro Blaster",
         "dbTextIndex": 753,
         "sequence": 7,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 2
       }
     ]
   },
@@ -3572,7 +3894,8 @@
         "englishName": "Starlight Explosion",
         "dbTextIndex": 754,
         "sequence": 9,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       },
       {
         "record": 543,
@@ -3580,7 +3903,8 @@
         "englishName": "Crimson Flame",
         "dbTextIndex": 755,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -3593,7 +3917,8 @@
         "englishName": "Double Crescent Mirage",
         "dbTextIndex": 756,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 546,
@@ -3601,7 +3926,8 @@
         "englishName": "Full Moon Blaster",
         "dbTextIndex": 757,
         "sequence": 9,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 2
       },
       {
         "record": 547,
@@ -3609,7 +3935,8 @@
         "englishName": "Gale Claw",
         "dbTextIndex": 758,
         "sequence": 8,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 1
       }
     ]
   },
@@ -3622,7 +3949,8 @@
         "englishName": "Giga Cannon",
         "dbTextIndex": 759,
         "sequence": 7,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       },
       {
         "record": 550,
@@ -3630,7 +3958,8 @@
         "englishName": "Infinite Hand",
         "dbTextIndex": 760,
         "sequence": 10,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 1
       }
     ]
   },
@@ -3643,7 +3972,8 @@
         "englishName": "Banana Slip",
         "dbTextIndex": 761,
         "sequence": 7,
-        "tpCost": 25
+        "tpCost": 25,
+        "rangeClass": 2
       },
       {
         "record": 553,
@@ -3651,7 +3981,8 @@
         "englishName": "DarkNetwork&C.Crush",
         "dbTextIndex": 762,
         "sequence": 8,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 2
       }
     ]
   },
@@ -3664,7 +3995,8 @@
         "englishName": "Freezing Breath",
         "dbTextIndex": 763,
         "sequence": 7,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 2
       },
       {
         "record": 556,
@@ -3672,7 +4004,8 @@
         "englishName": "Grace Cross Freezer",
         "dbTextIndex": 764,
         "sequence": 7,
-        "tpCost": 50
+        "tpCost": 50,
+        "rangeClass": 2
       }
     ]
   },
@@ -3685,7 +4018,8 @@
         "englishName": "Freezing Breath",
         "dbTextIndex": 765,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 559,
@@ -3693,7 +4027,8 @@
         "englishName": "Blizzard Wolf Claw",
         "dbTextIndex": 766,
         "sequence": 7,
-        "tpCost": 50
+        "tpCost": 50,
+        "rangeClass": 2
       }
     ]
   },
@@ -3706,7 +4041,8 @@
         "englishName": "River of Power",
         "dbTextIndex": 767,
         "sequence": 8,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       },
       {
         "record": 562,
@@ -3714,7 +4050,8 @@
         "englishName": "Poseidon Divide",
         "dbTextIndex": 768,
         "sequence": 8,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -3727,7 +4064,8 @@
         "englishName": "Thorn Whipping",
         "dbTextIndex": 769,
         "sequence": 10,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       },
       {
         "record": 565,
@@ -3735,7 +4073,8 @@
         "englishName": "Forbidden Temptation",
         "dbTextIndex": 770,
         "sequence": 7,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       }
     ]
   },
@@ -3748,7 +4087,8 @@
         "englishName": "Zeed Cannon",
         "dbTextIndex": 771,
         "sequence": 7,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       },
       {
         "record": 568,
@@ -3756,7 +4096,8 @@
         "englishName": "Full Metal Breath",
         "dbTextIndex": 772,
         "sequence": 7,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 2
       },
       {
         "record": 569,
@@ -3764,7 +4105,8 @@
         "englishName": "Blowback Breath",
         "dbTextIndex": 773,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       }
     ]
   },
@@ -3777,7 +4119,8 @@
         "englishName": "Dramon Breaker",
         "dbTextIndex": 774,
         "sequence": 8,
-        "tpCost": 50
+        "tpCost": 50,
+        "rangeClass": 1
       },
       {
         "record": 572,
@@ -3785,7 +4128,8 @@
         "englishName": "Trident Gaia",
         "dbTextIndex": 775,
         "sequence": 9,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       },
       {
         "record": 573,
@@ -3793,7 +4137,8 @@
         "englishName": "Victory Charge",
         "dbTextIndex": 776,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -3806,7 +4151,8 @@
         "englishName": "Tenryu Slash",
         "dbTextIndex": 777,
         "sequence": 8,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 1
       },
       {
         "record": 576,
@@ -3814,7 +4160,8 @@
         "englishName": "Shoryu Slash",
         "dbTextIndex": 778,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       },
       {
         "record": 577,
@@ -3822,7 +4169,8 @@
         "englishName": "Koryu Slash",
         "dbTextIndex": 779,
         "sequence": 9,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -3835,7 +4183,8 @@
         "englishName": "Destroyed Rush",
         "dbTextIndex": 780,
         "sequence": 8,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 1
       },
       {
         "record": 580,
@@ -3843,7 +4192,8 @@
         "englishName": "Infinity Bowling",
         "dbTextIndex": 781,
         "sequence": 10,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 1
       },
       {
         "record": 581,
@@ -3851,7 +4201,8 @@
         "englishName": "Gravity Press",
         "dbTextIndex": 782,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       }
     ]
   },
@@ -3864,7 +4215,8 @@
         "englishName": "Solblaster",
         "dbTextIndex": 783,
         "sequence": 9,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 584,
@@ -3872,7 +4224,8 @@
         "englishName": "Foibos Blow",
         "dbTextIndex": 784,
         "sequence": 8,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 1
       },
       {
         "record": 585,
@@ -3880,7 +4233,8 @@
         "englishName": "Arrow of Apollo",
         "dbTextIndex": 785,
         "sequence": 7,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       }
     ]
   },
@@ -3893,7 +4247,8 @@
         "englishName": "Crescent Harken",
         "dbTextIndex": 786,
         "sequence": 10,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 1
       },
       {
         "record": 588,
@@ -3901,7 +4256,8 @@
         "englishName": "Arrow of Artemis",
         "dbTextIndex": 787,
         "sequence": 7,
-        "tpCost": 25
+        "tpCost": 25,
+        "rangeClass": 2
       },
       {
         "record": 589,
@@ -3909,7 +4265,8 @@
         "englishName": "Goodnight Moon",
         "dbTextIndex": 788,
         "sequence": 9,
-        "tpCost": 40
+        "tpCost": 40,
+        "rangeClass": 2
       }
     ]
   },
@@ -3922,7 +4279,8 @@
         "englishName": "Positron Laser",
         "dbTextIndex": 789,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 2
       },
       {
         "record": 592,
@@ -3930,7 +4288,8 @@
         "englishName": "Giga Fire",
         "dbTextIndex": 790,
         "sequence": 9,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       }
     ]
   },
@@ -3943,7 +4302,8 @@
         "englishName": "Royal Saber",
         "dbTextIndex": 791,
         "sequence": 7,
-        "tpCost": 30
+        "tpCost": 30,
+        "rangeClass": 1
       },
       {
         "record": 595,
@@ -3951,7 +4311,8 @@
         "englishName": "Final Elision",
         "dbTextIndex": 792,
         "sequence": 8,
-        "tpCost": 60
+        "tpCost": 60,
+        "rangeClass": 2
       }
     ]
   }

@@ -170,6 +170,44 @@ describe('원본 종별 배틀 기술', () => {
     expect(distant.units[0].x).toBeGreaterThan(200);
     expect(distant.units[0].tp).toBe(5);
   });
+  it('원본은 테일 스매시를 근접, 베이비 브레스를 원거리로 분류한다',()=>{
+    const [breath,smash]=battleSkills('드라코몬');
+    expect(smash).toMatchObject({name:'테일 스매시',rangeType:'melee'});
+    expect(breath.rangeType).toBe('ranged');
+    const all=Object.keys(skillTable).flatMap(battleSkills);
+    expect(all.filter(s=>s.rangeType==='melee')).toHaveLength(134);
+    expect(all.filter(s=>s.rangeType==='ranged')).toHaveLength(227);
+    const entrant={speciesId:'드라코몬',stats:{hp:10000,tp:100,atk:100,def:20,int:10,spd:10},personality:'쿨' as const,mode:'특수' as const};
+    const setUp=(skill:typeof smash,x:number,y=125,format=1,tp=100)=>{
+      const s=createBattle(Array(format).fill(entrant),Array(format).fill(entrant));
+      const u=s.units[0],foe=s.units[format];
+      for(const f of s.units){f.cd=100;f.status={id:12,until:1000};}
+      u.status=undefined;
+      Object.assign(u,{x:70,y:125,tp,intent:{kind:'special',skill},target:foe.id});
+      Object.assign(foe,{x,y});
+      return {s,u,foe};
+    };
+    const melee=setUp(smash,190,125,3);
+    const hp=melee.foe.hp;
+    expect(stepBattle(melee.s,()=>.5)).toEqual([]);
+    expect(melee.foe.hp).toBe(hp);expect(melee.u.tp).toBe(100);expect(melee.u.x).toBeGreaterThan(70);
+    const hits=[];
+    for(let i=0;i<50&&!hits.length;i++)hits.push(...stepBattle(melee.s,()=>.5).filter(e=>e.type==='hit'));
+    expect(hits).toEqual([expect.objectContaining({type:'hit',from:0,to:3,special:true,skill:smash})]);
+    expect(melee.u.tp).toBe(90);expect(melee.foe.hp).toBeLessThan(hp);
+    const boundary=32*480/416;
+    for(const [x,y,canHit] of [[70+boundary+.01,125,false],[70+boundary-.01,125,true],[94,149,false]] as const){
+      const {s}=setUp(smash,x,y);
+      expect(stepBattle(s,()=>.5).some(e=>e.type==='hit')).toBe(canHit);
+    }
+    const ranged=setUp(breath,410);
+    expect(stepBattle(ranged.s,()=>.5)).toContainEqual(expect.objectContaining({type:'hit',from:0,special:true,skill:breath}));
+    expect(ranged.u.x).toBe(70);expect(ranged.u.tp).toBe(95);
+    const low=setUp(breath,170,125,1,0);
+    expect(stepBattle(low.s,()=>.5)).toEqual([]);
+    low.u.x=150;
+    expect(stepBattle(low.s,()=>.5)).toContainEqual(expect.objectContaining({type:'hit',from:0,special:false}));
+  });
 });
 
 describe('floor food reservations', () => {

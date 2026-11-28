@@ -8,6 +8,7 @@ import holderRaw from '../data/title-holders.txt?raw';
 import { PERSONALITIES, type AttackMode, type SpeciesAttr, type Digimon, type Personality, type Stage, type Stats } from './types';
 
 export const ARENA = { w: 480, h: 250 };
+const ORIGINAL_ARENA = { w: 416, h: 272 };
 /** 배틀 제한 시간(초): 원본은 7200프레임(120초)을 넘으면 시간 종료 (overlay19 0x2113FB4) */
 export const TIME_LIMIT = 120;
 const DT = 0.1;
@@ -552,15 +553,18 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
       else if (radial !== 0) move(u, near.x, near.y, speed, radial < 0);
       continue;
     }
-    const wantsSpecial = u.intent.kind === 'special';
-    const range = wantsSpecial ? 150 : 42;
-    if (d > range) {
-      if (duel && d > range + 24 && !hasStatus(u, s.t, 2, 5)) duelMove(u, near, speed, s.t, 1);
-      else move(u, near.x, near.y, speed);
-      continue;
-    }
-    const special = wantsSpecial;
     const skill = u.intent.kind === 'special' && u.intent.skill.tpCost <= u.tp ? u.intent.skill : null;
+    if (skill?.rangeType !== 'ranged') {
+      // 원본 AI 4·5는 32 미만에서 접촉 공격, 6은 거리 검사 없이 원거리 행동에 들어간다.
+      const originalDistance = Math.hypot((u.x - near.x) * ORIGINAL_ARENA.w / ARENA.w,
+        (u.y - near.y) * ORIGINAL_ARENA.h / ARENA.h);
+      if (originalDistance >= 32) {
+        if (duel && originalDistance >= 48 && !hasStatus(u, s.t, 2, 5)) duelMove(u, near, speed, s.t, 1);
+        else move(u, near.x, near.y, speed);
+        continue;
+      }
+    }
+    const special = !!skill;
     u.intent = undefined;
     // 원본 피해 계산: 공격 곡선 값(공격업이면 한 칸 위), 방어 또는 속성 내성(방어업·내성업이면 한 칸 위), 기술 위력
     const element = skill ? battleElement(skill.record) : undefined;

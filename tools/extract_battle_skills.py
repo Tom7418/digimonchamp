@@ -1,4 +1,4 @@
-"""원본 공격 표에서 종별 기술 이름/동작/소비TP를 변환한다.
+"""원본 공격 표에서 종별 기술 이름/동작/소비TP/거리 분류를 변환한다.
 python tools/extract_battle_skills.py <원본 root> [--check]
 미확인 피해량/효과 필드는 추출하지 않는다. 원본 실행 파일은 배포하지 않는다.
 """
@@ -37,6 +37,18 @@ def extract(root):
         0x211FA14: 0xE1500002, 0x211FA24: 0xE0400002, 0x211FA28: 0xE5810054,
     }
     for address, expected in combat_checks.items():
+        assert struct.unpack_from('<I', overlay, address - 0x210E8A0)[0] == expected, hex(address)
+    # 레코드 +0x0C로 필살기를 근접/원거리 AI 경로에 나눈 뒤 근접일 때만 거리 32 미만을 검사한다.
+    range_checks = {
+        0x2117678: 0xE595400C, 0x211767C: 0xE3540001,
+        0x21176B0: 0xE592200C, 0x21176B4: 0xE3520002,
+        0x2119280: 0xE3A01005, 0x21192D4: 0xE3A01006,
+        0x2133DA8: 0x021199B8, 0x2133DB0: 0x02119ADC, 0x2133DB8: 0x02119C00,
+        0x2119A84: 0xE3550802, 0x2119B80: 0xE3550803, 0x2119BA8: 0xE3550802,
+        0x2119C08: 0xEBFFF807, 0x2119C18: 0xE3A0100F,
+        0x21197E8: 0xE263081A, 0x2119808: 0xE2630811,
+    }
+    for address, expected in range_checks.items():
         assert struct.unpack_from('<I', overlay, address - 0x210E8A0)[0] == expected, hex(address)
     for index, function in enumerate([0x2116760, 0x21167A0, 0x21167E0, 0x2116820]):
         assert struct.unpack_from('<2I', overlay, 0x212310C - 0x210E8A0 + (8 + index) * 8) == (function, 0)
@@ -79,6 +91,7 @@ def extract(root):
         else:
             raise ValueError(f'Unterminated attack name: {index}')
         name = b''.join(v.to_bytes(2, 'little') for v in chars).decode('utf-16-le')
+        range_class = struct.unpack_from('<I', arm, TABLE + index * STRIDE + 0x0C)[0]
         entry = {'record': index, 'name': name}
         if owner == previous_owner:
             # 영문을 번역하지 않고 실제 도감의 조회 번호로 한글을 읽는다.
@@ -87,12 +100,12 @@ def extract(root):
             assert battle_text[1301 + skill_index] == localized
             motion = struct.unpack_from('<I', arm, TABLE + index * STRIDE + 16)[0]
             tp_cost = struct.unpack_from('<H', arm, TABLE + index * STRIDE + 72)[0]
-            assert 0 <= motion <= 3 and 0 < tp_cost <= 60
+            assert 0 <= motion <= 3 and 0 < tp_cost <= 60 and range_class in (1, 2)
             entry.update(name=localized, englishName=name, dbTextIndex=432 + skill_index,
-                         sequence=7 + motion, tpCost=tp_cost)
+                         sequence=7 + motion, tpCost=tp_cost, rangeClass=range_class)
             skill_index += 1
         else:
-            assert owner not in groups, 'Owner groups must be contiguous'
+            assert owner not in groups and range_class == 1, (owner, range_class)
         groups[owner].append(entry)
         previous_owner = owner
     result = {}
@@ -113,6 +126,9 @@ def extract(root):
     audit = {'arm9Sha256': hashlib.sha256(arm).hexdigest(), 'overlay19Sha256': hashlib.sha256(overlay).hexdigest(),
              'attackTable': hex(BASE + TABLE), 'stride': STRIDE, 'range': [31, 596],
              'species': 216, 'battleSpecies': 204, 'skills': 361,
+             'attackRange': {'instructionChecks': len(range_checks), 'classificationField': 12,
+                             'melee': 134, 'ranged': 227, 'meleeDistanceExclusive': 32, 'arena': [416, 272],
+                             'evidence': 'overlay19 0x02117678 and 0x021176b0 classify; AI actions 4/5 compare distance, action 6 has no launch distance gate'},
              'combat': {'instructionChecks': len(combat_checks) + 3, 'sequenceField': 16, 'tpCostField': 72,
                         'sequences': {str(n): sum(s['sequence'] == n for v in result.values() for s in v['skills']) for n in range(7, 11)},
                         'evidence': 'overlay19 0x0211a558..0x0211a5b4, dispatch table0x0212310c, state8..11 handlers0x02116760..0x0211685c, setter0x02117ad8 -> ARM9 0x02046e18/0x02046d98; TP compare/subtract 0x0211fa04..0x0211fa28'},
@@ -123,7 +139,7 @@ def extract(root):
                                 'battleTextSha256': hashlib.sha256(battle_raw).hexdigest(),
                                 'evidence': 'overlay16 0x02112bdc..0x02112c40 counts non-first owner rows; 0x02111fe0..0x021120d8 reads database text group1 index432 + species skill start + selected slot'},
              'evidence': 'overlay19 0x0211fa88..0x0211fb0c: owner grouping and skill-name lookup; species internal ID = row + 8',
-             'unverified': ['power, range, effects and hit timing, AI and opponent rosters', 'basic attack animation policy (user requested sequence10 retained)']}
+             'unverified': ['full effect scripts, collision ranges and hit timing, AI and opponent rosters', 'basic attack animation policy (user requested sequence10 retained)']}
     return result, audit
 
 
