@@ -10844,8 +10844,9 @@ var ChampCore = (function(exports) {
 	];
 	var FREE_TEAM_UPSET_CHANCE = .08;
 	var extraFoesByStage = new Map(STAGE_TEAMS.map(([stage]) => [stage, [...FREE_FOES.values()].filter((foe) => getSpecies(foe.speciesId).stage === stage)]));
-	function extraFreeBattleLineup(year, season, day) {
-		const rng = seeded(Math.imul((year * 4 + season) * 32 + day, 2246822507) ^ 1372169773);
+	function extraFreeBattleLineup(year, season, day, format = 3) {
+		const salt = format === 3 ? 1372169773 : 1775824715;
+		const rng = seeded(Math.imul((year * 4 + season) * 32 + day, 2246822507) ^ salt);
 		const usedSpecies = /* @__PURE__ */ new Set();
 		const drawFoe = (stage) => {
 			const pool = extraFoesByStage.get(stage);
@@ -10854,13 +10855,15 @@ var ChampCore = (function(exports) {
 			usedSpecies.add(foe.speciesId);
 			return foe;
 		};
-		return STAGE_TEAMS.flatMap(([stage, names]) => names.map((label) => {
-			const guestSeat = stage < 6 && rng() < .08 ? 1 + Math.floor(rng() * 2) : -1;
-			const foes = Array.from({ length: 3 }, (_, seat) => drawFoe(seat === guestSeat ? stage + 1 : stage));
+		return STAGE_TEAMS.flatMap(([stage, names]) => names.map((teamName) => {
+			const guestSeat = stage < 6 && rng() < .08 ? format === 1 ? 0 : 1 + Math.floor(rng() * 2) : -1;
+			const foes = Array.from({ length: format }, (_, seat) => drawFoe(seat === guestSeat ? stage + 1 : stage));
+			const lead = foes[0];
+			const level = format === 1 ? lead.level + 1 : lead.level;
 			return {
-				label,
-				format: 3,
-				level: foes[0].level,
+				label: format === 1 ? `Lv${level} ${lead.nick}` : teamName,
+				format,
+				level,
 				stage,
 				foes,
 				prize: foes.reduce((sum, foe) => sum + foe.prize, 0)

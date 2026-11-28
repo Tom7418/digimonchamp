@@ -75,9 +75,10 @@ export const FREE_TEAM_UPSET_CHANCE = 0.08;
 const extraFoesByStage = new Map(STAGE_TEAMS.map(([stage]) =>
   [stage, [...FREE_FOES.values()].filter(foe => getSpecies(foe.speciesId).stage === stage)] as const));
 
-export function extraFreeBattleLineup(year: number, season: number, day: number): FreeBattle[] {
-  // 원작 대진과 난수 스트림을 분리해 추가 팀이 기존 대진을 바꾸지 않는다.
-  const rng = seeded(Math.imul((year * 4 + season) * 32 + day, 0x85ebca6b) ^ 0x51c9a62d);
+export function extraFreeBattleLineup(year: number, season: number, day: number, format: 1 | 3 = 3): FreeBattle[] {
+  // 기존 대진과 분리하고, 3대3의 날짜별 편성도 그대로 유지한다.
+  const salt = format === 3 ? 0x51c9a62d : 0x69d8ef4b;
+  const rng = seeded(Math.imul((year * 4 + season) * 32 + day, 0x85ebca6b) ^ salt);
   const usedSpecies = new Set<string>();
   const drawFoe = (stage: Stage) => {
     const pool = extraFoesByStage.get(stage)!;
@@ -86,10 +87,14 @@ export function extraFreeBattleLineup(year: number, season: number, day: number)
     usedSpecies.add(foe.speciesId);
     return foe;
   };
-  return STAGE_TEAMS.flatMap(([stage, names]) => names.map(label => {
-    const guestSeat = stage < 6 && rng() < FREE_TEAM_UPSET_CHANCE ? 1 + Math.floor(rng() * 2) : -1;
-    const foes = Array.from({ length: 3 }, (_, seat) => drawFoe(seat === guestSeat ? (stage + 1) as Stage : stage));
-    return { label, format: 3, level: foes[0].level, stage, foes, prize: foes.reduce((sum, foe) => sum + foe.prize, 0) };
+  return STAGE_TEAMS.flatMap(([stage, names]) => names.map(teamName => {
+    const upset = stage < 6 && rng() < FREE_TEAM_UPSET_CHANCE;
+    const guestSeat = upset ? (format === 1 ? 0 : 1 + Math.floor(rng() * 2)) : -1;
+    const foes = Array.from({ length: format }, (_, seat) => drawFoe(seat === guestSeat ? (stage + 1) as Stage : stage));
+    const lead = foes[0];
+    const level = format === 1 ? lead.level + 1 : lead.level;
+    const label = format === 1 ? `Lv${level} ${lead.nick}` : teamName;
+    return { label, format, level, stage, foes, prize: foes.reduce((sum, foe) => sum + foe.prize, 0) };
   }));
 }
 

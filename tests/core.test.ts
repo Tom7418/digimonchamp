@@ -1607,6 +1607,29 @@ describe('프리 배틀 (원본 대진·상금)',()=>{
   }
   expect(Math.abs(guests/eligible-FREE_TEAM_UPSET_CHANCE)).toBeLessThan(.02);
  });
+ it('추가 1대1은 날짜별로 세대당 세 상대를 뽑고 윗세대 상대도 한 마리만 내보낸다',()=>{
+  const first=extraFreeBattleLineup(1,0,1,1);
+  expect(extraFreeBattleLineup(1,0,1,1)).toEqual(first);
+  expect(extraFreeBattleLineup(1,0,2,1)).not.toEqual(first);
+  expect(extraFreeBattleLineup(1,0,1,3)).toEqual(extraFreeBattleLineup(1,0,1));
+  let upsets=0, eligible=0;
+  for(let season=0;season<4;season++)for(let day=1;day<=8;day++){
+   const matches=extraFreeBattleLineup(1,season,day,1);
+   expect(matches.map(match=>match.stage)).toEqual([2,2,2,3,3,3,4,4,4,5,5,5,6,6,6]);
+   expect(new Set(matches.map(match=>match.foes[0].speciesId)).size).toBe(15);
+   for(const match of matches){
+    expect(match.format).toBe(1);
+    expect(match.foes).toHaveLength(1);
+    const [foe]=match.foes;
+    expect(match.prize).toBe(foe.prize);
+    expect(match.label).toBe(`Lv${foe.level+1} ${foe.nick}`);
+    const stage=getSpecies(foe.speciesId).stage;
+    expect([match.stage,Math.min(6,match.stage+1)]).toContain(stage);
+    if(match.stage<6){eligible++;if(stage>match.stage)upsets++;}
+   }
+  }
+  expect(Math.abs(upsets/eligible-FREE_TEAM_UPSET_CHANCE)).toBeLessThan(.04);
+ });
  it('프리 배틀 상대 능력치는 원본 NPC 표의 곡선 번호대로 (0x02061DA8)',()=>{
   expect(freeFoeStats(FREE_FOES.get(456)!)).toEqual({hp:280,tp:14,atk:14,def:14,int:14,spd:14});
   const top=freeFoeStats(FREE_FOES.get(575)!);

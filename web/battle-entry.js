@@ -75,14 +75,14 @@
       }
       const dateArgs = [date.year, date.season, date.day];
       function addFree(free, group, extra = false) {
-        choices.push({ group, extra, name: free.label, members: free.foes, day,
+        const stage = C.getSpecies(free.foes[0].speciesId).stage;
+        const stageNote = extra && format === 1 && stage !== free.stage ? C.STAGE_LABEL[stage] : undefined;
+        choices.push({ group, extra, name: free.label, members: free.foes, stageNote, day,
           key: `free:${day}:${free.label}:${free.foes.map(f => f.no).join(',')}`, closed: !freeOpen(date),
           setup: { title: `프리 배틀 ${free.label}`, format, stage: free.stage, scale: 1, prize: free.prize, free } });
       }
       for (const free of C.freeBattleLineup(...dateArgs).filter(f => f.format === format)) addFree(free, '프리 배틀');
-      if (format === 3) {
-        for (const free of C.extraFreeBattleLineup(...dateArgs)) addFree(free, C.STAGE_LABEL[free.stage], true);
-      }
+      for (const free of C.extraFreeBattleLineup(...dateArgs, format)) addFree(free, C.STAGE_LABEL[free.stage], true);
       return choices;
     }
 
@@ -105,11 +105,11 @@
           if (choice.group !== group) return [];
           const { setup } = choice;
           return [`<button type="button" data-opponent="${i}"${choice.closed ? ' disabled' : ''}><b>${esc(choice.name)}</b>
-            <small>${[`${setup.format} vs ${choice.members?.length ?? setup.foes ?? setup.format}`, choice.opponent, speciesList(choice.members) || '상대 편성은 로비에서 공개', reward(choice),
+            <small>${[`${setup.format} vs ${choice.members?.length ?? setup.foes ?? setup.format}`, choice.opponent, choice.stageNote, speciesList(choice.members) || '상대 편성은 로비에서 공개', reward(choice),
               setup.match?.fee ? `참가비 ${bits(setup.match.fee)}` : '', choice.limits].filter(Boolean).map(esc).join(' · ')}</small></button>`];
         });
         if (extraGroups.includes(group)) {
-          return `<details class="entry-stage-teams"><summary>${esc(group)} · ${matches.length}팀</summary><div class="menu-list">${matches.join('')}</div></details>`;
+          return `<details class="entry-stage-teams"><summary>${esc(group)} · ${matches.length}${format === 1 ? '명' : '팀'}</summary><div class="menu-list">${matches.join('')}</div></details>`;
         }
         if (!matches.length && group === '도전장') return '';
         const note = group === '타이틀 매치' && !matches.length ? '현재 신청할 수 있는 타이틀 매치가 없습니다. (07:00~15:00)' :
