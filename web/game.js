@@ -198,10 +198,12 @@
     else if (e.type === 'sick') {
       log(`${e.name}이(가) 병에 걸렸습니다. 약(주사기)을 선택하고 디지몬을 터치하세요. (페널티 +1)`);
       toast(`${e.name} 발병!`);
+      globalThis.ChampSound?.play('sick'); // 원작 DIGI_SE_032_4 (음원이 있을 때만)
       tipMail('sick', '디지몬이 병에 걸렸습니다.\n아래 약(주사기)을 선택한 뒤 디지몬을 터치하면 주사를 놓습니다. 세대가 낮으면 한 번에 안 나을 수도 있어요.\n내버려두면 빈사 상태가 되어버립니다.');
     } else if (e.type === 'injured') {
       log(`${e.name}이(가) 훈련하다 다쳤습니다. 상처약을 선택하고 디지몬을 터치하세요.`);
       toast(`${e.name} 부상!`);
+      globalThis.ChampSound?.play('sick');
     } else if (e.type === 'dying') {
       const fix = e.cause === 'sick' ? '약(주사기)으로 병을' : e.cause === 'injured' ? '상처약으로 부상을' : e.cause === 'hp' ? '양호실에서 쉬게 해 HP를' : '먹이로 배고픔을';
       log(`${e.name}이(가) 빈사 상태가 되었습니다! 움직이지 못합니다. ${fix} 고치세요. 계속 내버려두면 로스트됩니다.`);
@@ -1050,7 +1052,8 @@
       if (r.ok) {
         view.foods = r.foods;
         save = r.save;
-        globalThis.ChampSound?.play('feed');
+        // 원작 섭취음: 프로틴 027_3, 고기는 세대 3 이하 027_4 · 4 이상 027_2 (overlay9_18 0x0211BC04)
+        globalThis.ChampSound?.play(food.kind === 'pill' ? 'protein' : C.getSpecies(d.speciesId).stage <= 3 ? 'feed' : 'feedLarge');
         // 한 입마다 엔진이 새 객체를 돌려주므로 반대편 디지몬의 자리/씹기 시간도 함께 이어준다.
         const left = r.foods[foodIndex], eater = save.digimon.find(x => x.uid === d.uid);
         const remains=r.foods.length===oldCount&&left&&left.x===food.x&&left.y===food.y&&left.remaining>0;
@@ -1173,6 +1176,7 @@
     if (dayEnding) return finishDay();
     if (battle) {
       battle = null;
+      globalThis.ChampSound?.setMusic?.(null);
       render();
       persist();
     }
@@ -1336,6 +1340,7 @@
       map?.id ?? 0,
     );
     battleBackdrop.preload(map);
+    globalThis.ChampSound?.setMusic?.(globalThis.ChampSound.cues?.battleBgm?.[map?.id ?? 0]); // 맵 번호별 원작 배경곡
     for(const u of state.units)spriteOf(u.speciesId,false); // 배경과 출전 그림을 함께 미리 읽는다.
     battle = { setup, state, map, statusEffects:window.createBattleStatusEffects?.(), health:window.createHpBars?.(), assetWait:0, visualTime:0, paused:false, presentation:window.createBattlePresentation(), acc: 0, flashes: [], done: false, motion:new Map(), actions:new Map(), effects:window.createBattleEffects() };
     if(holderFoes)log(`${setup.title} 홀더 「${C.titleHolder(setup.match.id).name}」 등장`);
@@ -1544,6 +1549,8 @@
     const m = b.setup.match;
     const firstTitleWin=won && /^m\d+$/.test(m?.id||'') && !save.titles.includes(m.id);
     globalThis.ChampSound?.play(firstTitleWin?'medal':won?'win':'lose');
+    // 결과 화면 배경곡: 이번 경기를 이겼으면 SEQ_N_15, 졌으면 SEQ_N_14 (overlay9_8 0x021106F4)
+    globalThis.ChampSound?.setMusic?.(globalThis.ChampSound.cues?.resultBgm?.[won ? 'won' : 'lost']);
     const wasQualified = save.qualifiedYear;
     // 타이틀은 이겼을 때만, 챔피언십 예선·본선은 진 것도 기록한다
     const bitsBefore = save.bits;
@@ -1585,6 +1592,7 @@
       battleLog(msg);
       log(msg);
       toast('랭크 업!');
+      globalThis.ChampSound?.play('rankUp'); // 원작 STRM_JINGLE_ME_S_010 (음원이 있을 때만)
     }
     for (const d of save.digimon) if (uids.has(d.uid) && d.injured) log(`${nameOf(d)}이(가) 다쳤습니다. 양호실에 넣거나 상처약으로 치료하세요.`);
     // mN corresponds to original item_badge(N+1); prelim/final have no title medal.
@@ -2214,6 +2222,7 @@
   function endHunt(reason) {
     if (!hunt) return;
     globalThis.ChampSound?.setHunt?.(null);
+    globalThis.ChampSound?.setLoop?.('draw', false);
     window.resetHuntItemHud($('#hunt-item-hud'));
     log(`${hunt.field.id} 사냥 종료${reason ? ` (${reason})` : ''}`);
     hunt = null;
@@ -2382,7 +2391,7 @@
       return huntNote(`${gear.name}을(를) 놓았다.`);
     }
     hunt.shotReady = now + C.shotCooldown(shot);
-    globalThis.ChampSound?.play('shot');
+    globalThis.ChampSound?.play(shot.spread ? 'spread' : 'shot');
     hunt.fx.push({ x: p.x, y: p.y, r: shot.spread ? C.SHOT_SPREAD_RADIUS : 14, left: 0.25 });
     // 원본: 산탄은 누른 곳 ±16px 안에 7발이 떨어지고 발마다 따로 맞는다. 보통 샷은 한 발
     const points = shot.spread ? Array.from({ length: C.SHOT_PELLETS }, () => ({ x: p.x + Math.floor(Math.random() * 32) - C.SHOT_JITTER, y: p.y + Math.floor(Math.random() * 32) - C.SHOT_JITTER })) : [p];
@@ -3439,6 +3448,7 @@
         const active = !titleOpen && !paused && !board.editing && !mailOpen && !dayEnding;
         // 입장 후 시간이 18시를 지나면 같은 사냥 세션 안에서도 야간 환경음으로 바꾼다.
         globalThis.ChampSound?.setHunt?.(active ? hunt.field.id : null, active && huntUsesNightMap(hunt.field));
+        globalThis.ChampSound?.setLoop?.('draw', active && hunt.drawing); // 선을 긋는 동안 원작 반복음
         drawHunt(now / 1000, active ? dt : 0);
       } else drawFarm(now / 1000, dt);
       drawPortrait(!titleOpen && !paused && !mailOpen && !dayEnding && !board.editing && !window.evolutionScene?.busy ? dt : 0);

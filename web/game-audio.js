@@ -24,6 +24,14 @@
       ['sine', 784, 784, .33, .23, .46], ['sine', 1175, 1175, .28, .12, .46]],
     lose: [['triangle', 392, 349, .16, .18], ['triangle', 294, 220, .29, .22, .12]],
   };
+  // 원작 이름이 다른 변형은 음원이 없을 때 같은 합성음을 쓴다.
+  sounds.feedLarge = sounds.feed;
+  sounds.protein = sounds.feed;
+  sounds.spread = sounds.shot;
+  // 원작 대응표(sound-cues.js)와 음원 목록(assets/audio/manifest.js). 음원이 있으면 합성음 대신 재생한다.
+  const cues = root.ORIGINAL_SOUND_CUES || {};
+  const files = () => root.ORIGINAL_SOUND_FILES || {};
+  const hasFile = (name) => !!(name && files()[name]);
   const key = 'champion-sound-v1';
   const Audio = root.AudioContext || root.webkitAudioContext;
   let preferences = { enabled: true, volume: .4 };
@@ -39,10 +47,66 @@
   const lastPlayed = new Map();
   let context, master, noise, opening, ambience;
   let huntField = null, huntNight = false;
+  const buffers = new Map();
+  let music = null, musicName = null, sceneMusic = null;
+  const loops = new Map(), loopWanted = new Set();
+
+  function buffer(name) {
+    if (!hasFile(name) || !context) return null;
+    if (!buffers.has(name)) buffers.set(name, fetch(files()[name]).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(r.status))).then((b) => context.decodeAudioData(b)).catch(() => null));
+    return buffers.get(name);
+  }
+  // 원작 음원 하나를 master로 재생한다. 손잡이(stop)를 돌려주며, 읽기 전에 멈추면 재생하지 않는다.
+  function playFile(name, loop = false) {
+    const pending = buffer(name);
+    if (!pending) return null;
+    const handle = { stopped: false, source: null, stop() { this.stopped = true; try { this.source?.stop(); } catch {} } };
+    pending.then((data) => {
+      if (!data || handle.stopped || context.state !== 'running') return;
+      const source = context.createBufferSource();
+      source.buffer = data;
+      source.loop = loop;
+      source.connect(master);
+      source.onended = () => source.disconnect();
+      source.start();
+      handle.source = source;
+    });
+    return handle;
+  }
+  // 배경곡: 장면(배틀·결과)이 정한 곡이 먼저, 없으면 사냥터 곡. 음원이 없으면 아무것도 틀지 않는다.
+  function syncMusic() {
+    const running = context?.state === 'running' && preferences.enabled;
+    const field = cues.huntBgm?.[huntField];
+    const want = running ? (sceneMusic ?? (huntField && hasFile(field) ? field : null)) : null;
+    const name = hasFile(want) ? want : null;
+    if (name === musicName) return;
+    music?.stop();
+    music = name ? playFile(name, true) : null;
+    musicName = name;
+  }
+  function setMusic(name) {
+    sceneMusic = name || null;
+    syncMusic();
+  }
+  function syncLoops() {
+    const running = context?.state === 'running' && preferences.enabled;
+    for (const [key, handle] of loops) if (!running || !loopWanted.has(key)) { handle.stop(); loops.delete(key); }
+    if (running) for (const key of loopWanted) if (!loops.has(key)) { const h = playFile(cues.loops?.[key], true); if (h) loops.set(key, h); }
+  }
+  // 반복음(사냥 선 긋기 등)을 켜고 끈다. 음원이 없으면 소리 없음
+  function setLoop(key, on) {
+    if (on === loopWanted.has(key)) return;
+    if (on) loopWanted.add(key); else loopWanted.delete(key);
+    syncLoops();
+  }
 
   function syncHunt() {
     if (context?.state !== 'running' || !master) return;
-    const field = preferences.enabled && preferences.volume > 0 && !document.hidden ? huntField : null;
+    syncMusic();
+    syncLoops();
+    // 사냥터 원작 배경곡 음원이 있으면 웹판 합성 환경음 대신 그 곡을 쓴다.
+    const replaced = hasFile(cues.huntBgm?.[huntField]);
+    const field = preferences.enabled && preferences.volume > 0 && !document.hidden && !replaced ? huntField : null;
     if (field && !ambience) ambience = root.createHuntAmbience?.(context, master);
     ambience?.set(field, huntNight);
   }
@@ -117,14 +181,16 @@
   }
 
   function play(name) {
+    const original = cues.effects?.[name];
     const layers = sounds[name];
-    if (!layers || !preferences.enabled || preferences.volume === 0 || document.hidden) return;
+    if ((!layers && !hasFile(original)) || !preferences.enabled || preferences.volume === 0 || document.hidden) return;
     if (opening) { opening.then(() => { if (context?.state === 'running') play(name); }); return; }
     if (!master || context?.state !== 'running') return;
     const now = context.currentTime;
     // 3:3 동시 명중과 일괄 시간 진행에서 같은 효과음이 겹쳐 커지지 않게 한다.
     if (now - (lastPlayed.get(name) ?? -Infinity) < .085) return;
     lastPlayed.set(name, now);
+    if (hasFile(original)) { playFile(original); return; }
     for (const [wave, from, to, duration, level, offset = 0] of layers) {
       const start = now + .008 + offset;
       let source, output;
@@ -158,5 +224,5 @@
   for (const event of ['pointerdown', 'pointerup', 'keydown']) document.addEventListener(event, unlock, true);
   document.addEventListener('visibilitychange', update);
   update();
-  root.ChampSound = { play, setHunt };
+  root.ChampSound = { play, setHunt, setMusic, setLoop, cues, hasFile };
 })(window);
