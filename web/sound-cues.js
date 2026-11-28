@@ -15,6 +15,11 @@ window.ORIGINAL_SOUND_CUES = {
   },
   // 배틀 맵 번호(0~10)별 배경곡: overlay9_19 0x021134B8~0x0211359C (배틀 객체 +0x1F0 = 맵 번호)
   battleBgm: ['SEQ_N_09', 'SEQ_U_15', 'SEQ_N_11', 'SEQ_U_15', 'SEQ_U_16', 'SEQ_N_11', 'SEQ_N_04', 'SEQ_U_16', 'SEQ_N_10', 'SEQ_N_10', 'SEQ_N_12'],
+  // 장면별 기본 배경곡: ARM9 0x0207A2EC가 장면 번호([0x020C7F20])로 0x020BD710 표(4바이트: 시퀀스, 스트림)를 읽어 장면이 바뀔 때 튼다.
+  // 장면 → 오버레이는 0x020BCAD0 표. 육성(장면3 = overlay18)·케이지 편집(장면6 = overlay15) SEQ_U_06, 상점(장면4 = overlay17) SEQ_U_21,
+  // 도감(장면5 = overlay16) SEQ_U_02, 사냥터 선택(장면9 = overlay12) SEQ_N_03, 배틀 접수(장면11 = overlay10) SEQ_N_05.
+  // 타이틀(overlay21)은 표에 없고 코드가 시퀀스 1을 튼다(0x0210ECF4).
+  sceneBgm: { farm: 'SEQ_U_06', cageEdit: 'SEQ_U_06', shop: 'SEQ_U_21', dex: 'SEQ_U_02', huntSelect: 'SEQ_N_03', battleEntry: 'SEQ_N_05', title: 'SEQ_N_00' },
   // 결과 화면 배경곡: overlay9_8 0x02110668~0x021106F4. 이번 경기들을 모두 이겼으면 15, 하나라도 졌으면 14 (+0xCAC 승패 배열)
   resultBgm: { won: 'SEQ_N_15', lost: 'SEQ_N_14' },
   // 효과음: 웹판 이름 → 원작 이름
@@ -29,6 +34,10 @@ window.ORIGINAL_SOUND_CUES = {
     medal: 'STRM_JINGLE_ME_S_011', rankUp: 'STRM_JINGLE_ME_S_010',
     // 병·부상이 날 때 overlay9_18 0x021187B4(스트레스 100 → 병), 0x0211D68C(훈련 뒤 부상)
     sick: 'DIGI_SE_032_4',
+    // 부화 overlay9_18 0x0211FE7C (알의 나이가 수명 60분을 넘거나 세 번 두드리면), 치료 연출 0x0211F564(성공)·0x0211F580(실패)
+    // 상점에서 값을 치르면 (overlay9_17 0x02111A1C~0x02111A60, 돈 +0x4C8에서 값 +0x1144를 뺀 뒤)
+    buy: 'MENU_SE_078',
+    hatch: 'TRAINING_SE_072_1', care: 'DIGI_SE_102', careFail: 'TRAINING_SE_006_3',
   },
   // 반복음: 사냥에서 선을 긋는 동안 overlay9_0 0x02117D78
   loops: { draw: 'HUNT_LOOP_DRAW_LOOP' },

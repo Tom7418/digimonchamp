@@ -1,7 +1,7 @@
 import { applyTraining } from './training';
 import facilityEffects from '../data/facility-effects.json';
 import { evolvedResistance, evolvedStats, upgradeStats } from './stats';
-import { CAGE_LEVEL_FACTOR, CAGE_LEVEL_ROWS, CAGE_LEVEL_SIDE_FACTOR, CAGE_SHOP, CAGE_RENAMES, CAGES, dateOf, DAY_END_MINUTE, DAY_START_HOUR, EGG_MINUTES, initialResistance, initialStats, getCage, getSpecies, originalSpecies, MIN_PER_DAY, START_CAGES, START_CLOCK } from './data';
+import { CAGE_LEVEL_FACTOR, CAGE_LEVEL_ROWS, CAGE_LEVEL_SIDE_FACTOR, CAGE_SHOP, CAGE_RENAMES, CAGES, dateOf, DAY_END_MINUTE, DAY_START_HOUR, EGG_MINUTES, EGG_TAPS, initialResistance, initialStats, getCage, getSpecies, originalSpecies, MIN_PER_DAY, START_CAGES, START_CLOCK } from './data';
 import { endOfLife, findEvolution, lifespanOf, type EvoResult } from './evolution';
 import { defaultRng, pick, type Rng } from './rng';
 import { capacityOf, migrateTitleIds, tamerRank } from './titles';
@@ -532,6 +532,7 @@ function toEgg(d: Digimon, countEgg = true): Digimon {
   return {
     ...d,
     isEgg: true,
+    eggTaps: 0,
     eggs: countEgg ? Math.min(100, d.eggs + 1) : d.eggs,
     stageAge: 0,
     // 옛 임시15% 잔여는 폐기. 부화 때 재탄생 횟수 보정을 새 종 범위 안에서 적용한다.
@@ -571,12 +572,13 @@ function tickOne(prev: Digimon, ctx: { rank: number; free: number; isLast: boole
   d.stageAge += 1;
 
   if (d.isEgg) {
-    if (d.stageAge >= EGG_MINUTES) {
+    // 나이가 60분에 닿거나 세 번 두드렸으면 부화 (원본 0x211FE44~0x211FE7C)
+    if (d.stageAge >= EGG_MINUTES || (d.eggTaps ?? 0) >= EGG_TAPS) {
       // 원본 overlay18 0x211A400: 유년기I 기억이 두 칸이면 1/2씩, 한 칸이면 그 종으로 태어난다
       const first = d.memory?.first[1], second = d.memory?.second[1];
       const baby = first && second ? (ctx.rng() < 0.5 ? second : first) : first ?? d.originBaby;
       events.push({ type: 'hatched', uid: d.uid, from: '디지에그', to: baby });
-      d = { ...d, isEgg: false, speciesId: baby, stageAge: 0, stats: evolvedStats(null, baby, d.eggs, ctx.rng), resistance: evolvedResistance(null, baby, d.eggs, ctx.rng), statVersion: 1 };
+      d = { ...d, isEgg: false, eggTaps: 0, speciesId: baby, stageAge: 0, stats: evolvedStats(null, baby, d.eggs, ctx.rng), resistance: evolvedResistance(null, baby, d.eggs, ctx.rng), statVersion: 1 };
     }
     return d;
   }
@@ -979,7 +981,12 @@ export function feedRotten(save: SaveData, uid: number): ActionResult {
  */
 export function pet(save: SaveData, uid: number, rng: Rng = defaultRng, credit = true): ActionResult & { soothed?: boolean; awakened?: boolean } {
   const d = find(save, uid);
-  if (!d || d.isEgg) return fail(save, '아직 쓰다듬을 수 없어요.');
+  if (!d) return fail(save, '아직 쓰다듬을 수 없어요.');
+  if (d.isEgg) {
+    // 손으로 알을 톡 두드리면 원본은 탭 메시지 0x7E를 보내고, 알은 그 수를 센다(+0x1E4). 세 번이면 다음 분에 부화
+    const taps = Math.min(EGG_TAPS, (d.eggTaps ?? 0) + 1);
+    return { ok: true, save: update(save, uid, (x) => ({ ...x, eggTaps: taps })), message: taps >= EGG_TAPS ? '디지에그가 흔들린다… 곧 태어날 것 같다!' : `디지에그를 톡톡 두드렸다. (${taps}/${EGG_TAPS})` };
+  }
   const name = getSpecies(d.speciesId).name;
   // 원작의 '게으름은 터치해도 잘 깨지 않음'. 성공률20%는 웹판 임시 값, 밤에는 깨우지 않는다.
   let awakened = false;

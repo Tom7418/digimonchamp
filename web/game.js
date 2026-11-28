@@ -336,7 +336,7 @@
     $('#stage').textContent = d.isEgg ? `디지에그화 ${d.eggs}회` : `${sp.family} · ${sp.attr} · ${sp.size}G`;
     const life = d.isEgg ? C.EGG_MINUTES : C.lifespanOf(d);
     $('#mood').textContent = d.isEgg
-      ? `${Math.max(0, C.EGG_MINUTES - d.stageAge)}분 뒤 부화합니다.`
+      ? `${Math.max(0, C.EGG_MINUTES - d.stageAge)}분 뒤 부화합니다. 손으로 세 번 두드리면 바로 깨어납니다.`
       : `성격: ${d.personality} · 배틀 ${d.battles}회 (승 ${d.wins}) · 페널티 ${d.penalties}${d.dying ? ' · 빈사' : ''}${d.sick ? ' · 병' : ''}${d.injured ? ' · 부상' : ''}`;
     $('#xp-label').textContent = `${Math.floor(d.stageAge / 60)}시간 / ${Math.floor(life / 60)}시간`;
     $('#xp-bar').style.width = `${clamp((d.stageAge / life) * 100)}%`;
@@ -1169,6 +1169,9 @@
     $('#modal-ok').disabled = false;
     $('#close-modal').disabled = false;
     if (!$('#modal').open) $('#modal').showModal();
+    // 메뉴 창의 원작 장면 배경곡 (sound-cues.js sceneBgm)
+    const menu = { SHOP: 'shop', 'DIGIMON DEX': 'dex', HUNT: 'huntSelect', 'BATTLE ENTRY': 'battleEntry' }[kicker];
+    globalThis.ChampSound?.setMenu?.(menu ? globalThis.ChampSound.cues?.sceneBgm?.[menu] : null);
   }
   function closeModal() {
     if (battle && !battle.done) return;
@@ -1216,6 +1219,7 @@
           const r = C.buy(save, items[+b.dataset.buy]);
           if (r.ok) {
             save = r.save;
+            globalThis.ChampSound?.play('buy'); // 원작: 값을 치르면 MENU_SE_078 (overlay9_17 0x02111A60·0x0211222C)
             log(r.message);
             render();
             persist();
@@ -1380,7 +1384,8 @@
       const id=SPRITE_BY_NAME[C.getSpecies(target.speciesId).id];
       const state=e.damage===0?'guard2':Math.random()<0.5?'hurt':'hurtAlt';
       // 피해음은 엔진 판정 순간이 아니라 화면의 피격·방어 전환과 함께 난다.
-      globalThis.ChampSound?.play(e.damage===0?'guard':e.critical?'critical':'hit');
+      // 원작 명중음은 기술 레코드 +0x64(overlay9_19 0x02118540), 막기·회피는 BATTLE_SE_067_2
+      globalThis.ChampSound?.play(e.damage===0?'guard':e.critical?'critical':'hit',{record:e.skill?.record??(attacker&&C.basicRecordOf?C.basicRecordOf(attacker.speciesId):null)});
       const duration=animations.duration(id,state);
       b.actions.set(e.to,{kind:'hit',left:duration,duration,state});
       const text=e.damage===0?'막음':`-${e.damage}${e.critical?' 크리티컬!':e.special?'!':''}`;
@@ -1468,7 +1473,7 @@
             battleHitVisual(b,e);
           }
           if(e.special&&e.skill){
-            globalThis.ChampSound?.play('cast');
+            globalThis.ChampSound?.play('cast',{record:e.skill.record}); // 원작 연출음은 레코드 +0x60(0x02121D40)
             b.flashes.push({id:e.from,text:e.skill.name,until:b.visualTime+700,color:'#a9e7ff',skill:true});
           }
         }
@@ -3165,7 +3170,9 @@
     const r = p && C.pet(save, p.uid, Math.random, credit);
     if (!r) return;
     save = r.save;
-    if (r.ok&&!C.isSleeping(digi(p.uid))) startCareFx('pet', p, true);
+    // 알은 손으로 톡톡 두드린다. 세 번이면 다음 분에 부화 (원본 탭 메시지 0x7E)
+    if (r.ok&&digi(p.uid)?.isEgg) toast(r.message);
+    else if (r.ok&&!C.isSleeping(digi(p.uid))) startCareFx('pet', p, true);
     else if(r.ok)toast(r.message);
     if (r.soothed) log(r.message);
     render();
@@ -3221,6 +3228,8 @@
     e.preventDefault();
     closeModal();
   });
+  // 창이 닫히면 메뉴 창의 배경곡을 내리고 기본 화면 곡으로 돌아간다
+  $('#modal').addEventListener('close', () => globalThis.ChampSound?.setMenu?.(null));
   $('#pause').onclick = () => {
     paused = !paused;
     $('#pause').textContent = paused ? '▶ 다시 진행' : 'Ⅱ 일시 정지';
@@ -3411,6 +3420,8 @@
 
   function frame(now) {
     if (titleOpen) drawTitleArt(now / 1000);
+    // 기본 화면 곡: 타이틀 SEQ_N_00, 케이지 편집·육성 SEQ_U_06 (ARM9 장면 표 0x020BD710)
+    globalThis.ChampSound?.setBase?.(globalThis.ChampSound.cues?.sceneBgm?.[titleOpen ? 'title' : board.editing ? 'cageEdit' : 'farm']);
     if (selectedItem && farmInputBlocked()) clearItemTool();
     // 화면이 느려도 게임 시계는 실제 경과 시간을 따른다. 움직임만 큰 프레임 간격을 제한한다.
     const elapsed = lastTime ? Math.min(C.OFFLINE_CAP_MINUTES / MINUTES_PER_SECOND, Math.max(0, (now - lastTime) / 1000)) : 0;

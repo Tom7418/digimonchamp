@@ -131,6 +131,8 @@ export interface Digimon {
   dirtMinutes?: number;
   /** 정원 초과 시간 (원본 +0x1A4): 180을 넘으면 초과 수만큼 스트레스. 옛 저장은 없음 = 0 */
   crowdMinutes?: number;
+  /** 알을 두드린 횟수 (원본 +0x1E4). EGG_TAPS에 닿으면 부화. 옛 저장은 없음 = 0 */
+  eggTaps?: number;
   /** 겁쟁이가 혼자 있던 시간 (원본 +0x1A8): 180을 넘으면 스트레스 +1. 옛 저장은 없음 = 0 */
   lonelyMinutes?: number;
   /** 완전체·궁극체가 정원 2 이하 케이지에 있던 시간 (원본 +0x1B4): 180을 넘으면 스트레스 +1. 옛 저장은 없음 = 0 */

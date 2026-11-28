@@ -962,7 +962,10 @@ var ChampCore = (function(exports) {
 		5: 24480,
 		6: 30240
 	};
-	var EGG_MINUTES = 30;
+	/** 부화까지 게임 분. 원본: 알 종(번호 0~7) 표 +0x28 = 60, 알의 나이가 이를 넘으면 부화(overlay18 0x211FE44). 예전 웹판 30은 임시 값이었다 */
+	var EGG_MINUTES = 60;
+	/** 알을 손으로 이만큼 두드리면 바로 부화 (원본: 탭 메시지 0x7E를 센 +0x1E4가 3 이상, overlay18 0x210FA70·0x211FE54) */
+	var EGG_TAPS = 3;
 	var isFamily = (s) => FAMILIES.includes(s);
 	var isAttr = (s) => ATTRS.includes(s);
 	function parseCond(text) {
@@ -4591,6 +4594,7 @@ var ChampCore = (function(exports) {
 		return {
 			...d,
 			isEgg: true,
+			eggTaps: 0,
 			eggs: countEgg ? Math.min(100, d.eggs + 1) : d.eggs,
 			stageAge: 0,
 			stats: Object.fromEntries(STAT_KEYS.map((k) => [k, 0])),
@@ -4629,7 +4633,7 @@ var ChampCore = (function(exports) {
 		};
 		d.stageAge += 1;
 		if (d.isEgg) {
-			if (d.stageAge >= 30) {
+			if (d.stageAge >= 60 || (d.eggTaps ?? 0) >= 3) {
 				const first = d.memory?.first[1], second = d.memory?.second[1];
 				const baby = first && second ? ctx.rng() < .5 ? second : first : first ?? d.originBaby;
 				events.push({
@@ -4641,6 +4645,7 @@ var ChampCore = (function(exports) {
 				d = {
 					...d,
 					isEgg: false,
+					eggTaps: 0,
 					speciesId: baby,
 					stageAge: 0,
 					stats: evolvedStats(null, baby, d.eggs, ctx.rng),
@@ -5150,7 +5155,18 @@ var ChampCore = (function(exports) {
 	*/
 	function pet(save, uid, rng = defaultRng, credit = true) {
 		const d = find(save, uid);
-		if (!d || d.isEgg) return fail(save, "아직 쓰다듬을 수 없어요.");
+		if (!d) return fail(save, "아직 쓰다듬을 수 없어요.");
+		if (d.isEgg) {
+			const taps = Math.min(3, (d.eggTaps ?? 0) + 1);
+			return {
+				ok: true,
+				save: update(save, uid, (x) => ({
+					...x,
+					eggTaps: taps
+				})),
+				message: taps >= 3 ? "디지에그가 흔들린다… 곧 태어날 것 같다!" : `디지에그를 톡톡 두드렸다. (${taps}/3)`
+			};
+		}
 		const name = getSpecies(d.speciesId).name;
 		let awakened = false;
 		if (isSleeping(d)) {
@@ -12383,6 +12399,7 @@ var ChampCore = (function(exports) {
 	exports.DYING_AFTER_MINUTES = DYING_AFTER_MINUTES;
 	exports.DYING_LOST_MINUTES = DYING_LOST_MINUTES;
 	exports.EGG_MINUTES = EGG_MINUTES;
+	exports.EGG_TAPS = EGG_TAPS;
 	exports.ENTRY_CLOSE_HOUR = ENTRY_CLOSE_HOUR;
 	exports.ENTRY_OPEN_HOUR = ENTRY_OPEN_HOUR;
 	exports.FAINT_RECOVER_DELAY = FAINT_RECOVER_DELAY;

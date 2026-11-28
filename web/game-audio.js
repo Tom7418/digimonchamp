@@ -28,6 +28,7 @@
   sounds.feedLarge = sounds.feed;
   sounds.protein = sounds.feed;
   sounds.spread = sounds.shot;
+  sounds.buy = sounds.menu;
   // 원작 대응표(sound-cues.js)와 음원 목록(assets/audio/manifest.js). 음원이 있으면 합성음 대신 재생한다.
   const cues = root.ORIGINAL_SOUND_CUES || {};
   const files = () => root.ORIGINAL_SOUND_FILES || {};
@@ -48,7 +49,7 @@
   let context, master, noise, opening, ambience;
   let huntField = null, huntNight = false;
   const buffers = new Map();
-  let music = null, musicName = null, sceneMusic = null;
+  let music = null, musicName = null, sceneMusic = null, menuMusic = null, baseMusic = null;
   const loops = new Map(), loopWanted = new Set();
 
   function buffer(name) {
@@ -73,11 +74,12 @@
     });
     return handle;
   }
-  // 배경곡: 장면(배틀·결과)이 정한 곡이 먼저, 없으면 사냥터 곡. 음원이 없으면 아무것도 틀지 않는다.
+  // 배경곡 우선순위: 장면(배틀·결과) → 메뉴 창(상점·도감·사냥터 선택·배틀 접수) → 사냥터 곡 → 기본 화면(육성·타이틀).
+  // 사냥 중에는 기본 화면 곡을 틀지 않는다(사냥터 곡 음원이 없으면 합성 환경음). 음원이 없으면 아무것도 틀지 않는다.
   function syncMusic() {
     const running = context?.state === 'running' && preferences.enabled;
     const field = cues.huntBgm?.[huntField];
-    const want = running ? (sceneMusic ?? (huntField && hasFile(field) ? field : null)) : null;
+    const want = running ? (sceneMusic ?? menuMusic ?? (huntField ? (hasFile(field) ? field : null) : baseMusic)) : null;
     const name = hasFile(want) ? want : null;
     if (name === musicName) return;
     music?.stop();
@@ -86,6 +88,16 @@
   }
   function setMusic(name) {
     sceneMusic = name || null;
+    syncMusic();
+  }
+  function setMenu(name) {
+    if ((name || null) === menuMusic) return;
+    menuMusic = name || null;
+    syncMusic();
+  }
+  function setBase(name) {
+    if ((name || null) === baseMusic) return;
+    baseMusic = name || null;
     syncMusic();
   }
   function syncLoops() {
@@ -180,11 +192,20 @@
     return { source, output: filter };
   }
 
-  function play(name) {
-    const original = cues.effects?.[name];
+  // 배틀 기술 레코드별 원작 효과음 (assets/battle/skill-sounds.js, tools/extract_battle_sounds.py)
+  function originalOf(name, detail) {
+    const skill = root.BATTLE_SKILL_SOUNDS || {}, record = detail?.record;
+    if (record != null && (name === 'hit' || name === 'critical') && skill.hit?.[record]) return skill.hit[record];
+    if (record != null && name === 'cast' && skill.cast?.[record]) return skill.cast[record];
+    if (name === 'guard' && skill.guard) return skill.guard;
+    return cues.effects?.[name];
+  }
+
+  function play(name, detail) {
+    const original = originalOf(name, detail);
     const layers = sounds[name];
     if ((!layers && !hasFile(original)) || !preferences.enabled || preferences.volume === 0 || document.hidden) return;
-    if (opening) { opening.then(() => { if (context?.state === 'running') play(name); }); return; }
+    if (opening) { opening.then(() => { if (context?.state === 'running') play(name, detail); }); return; }
     if (!master || context?.state !== 'running') return;
     const now = context.currentTime;
     // 3:3 동시 명중과 일괄 시간 진행에서 같은 효과음이 겹쳐 커지지 않게 한다.
@@ -224,5 +245,5 @@
   for (const event of ['pointerdown', 'pointerup', 'keydown']) document.addEventListener(event, unlock, true);
   document.addEventListener('visibilitychange', update);
   update();
-  root.ChampSound = { play, setHunt, setMusic, setLoop, cues, hasFile };
+  root.ChampSound = { play, setHunt, setMusic, setMenu, setBase, setLoop, cues, hasFile };
 })(window);

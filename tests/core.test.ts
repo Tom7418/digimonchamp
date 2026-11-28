@@ -12,7 +12,7 @@ import { trainingPreview, applyTraining, trainingBounds, trainingDelta, personal
 import { initialResistance, resistBounds, RESIST_ORDER } from '../src/core/data';
 import { evolvedResistance } from '../src/core/stats';
 import { evaluateEvolutions, advance, advanceOffline, nextMorningClock, capture, cleanOne, endDay, isSleeping, isTraining, isNight, eggSpriteIndex, eatHp, cageLevelUp, CURE_CHANCE, trainingSideDelta, TREAT_CHANCE, trainingHpCost, facilityHpEffects, remember, memoryEvolution, feed, feedRotten, scheduleMealPoop, freshSave as freshEggSave, newDigimon, setCage, tickFarm, shopItems, upgradeSave, poopInterval, cure, treat, STRESS, pet, PET, buy , relocate, trainingBlocker, BOND, CONTAGION, mateBond, settleMates, GRUMBLE, cleanRelief } from '../src/core/care';
-import { baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
+import { EGG_MINUTES, EGG_TAPS, baseResist, CAGES, getCage, getSpecies, originalSpecies, initialStats, statBounds, MINUTES_PER_SECOND, LIFESPAN, parseCond, SPECIES, speciesByStage, typicalStats, dateOf, FIELDS } from '../src/core/data';
 import { explain, hints, findEvolution, maxStageForRank, lifespanOf } from '../src/core/evolution';
 import { applyBattleResult, FREE_FOES, FREE_POOLS, freeBattleLineup, freeBattleFoes, titleHolder, titleHolderFoes, npcTeamFoes, npcTeam, freeFoeStats, freeFoeResist, digimonResist, foePersonality, originalDamage, attackPower, terrainOf, curveStep, thinkSeconds, actionSeconds, chooseAction, chooseTarget, tpBudget, critLevelOf, statusChance, inflictStatus, keepDistance, type BattleEvent, createBattle, entrantOf, makeEnemies, runBattle, stepBattle } from '../src/core/battle';
 import { RANK_UP, MONEY_MAX, payEntryFee, migrateTitleIds, cageSpaceOf, entryProblems, applyMatch, applyWin, capacityOf, rankName, tamerRank, TITLES, todaysMatches, upcoming, matchEntryNotice } from '../src/core/titles';
@@ -416,7 +416,7 @@ describe('evolution', () => {
     expect(only(sixth.save)).toMatchObject({ stress: 49, bond: 1, petMinutes: 0 });
     // 누르는 동안 시간이 흘렀으면 뗄 때는 세지 않는다
     expect(only(pet(sixth.save, 1, () => 0.5, false).save).petMinutes).toBe(0);
-    expect(pet(withMon(s, { isEgg: true }), 1).ok).toBe(false);
+    expect(pet(withMon(s, { isEgg: true }), 1).save.digimon[0].eggTaps).toBe(1); // 알은 두드리기(부화 횟수)
   });
   it('누르고 있는 디지몬은 사육 시간 1분마다 쓰다듬은 분이 는다', () => {
     const s = withMon(freshSave(0), { stress: 50, petMinutes: 5 });
@@ -549,7 +549,7 @@ describe('evolution', () => {
     s = tickFarm(s, seeded(1)).save;
     expect(only(s).isEgg).toBe(true);
     expect(only(s).eggs).toBe(1);
-    s = advance(s, 30, seeded(1)).save;
+    s = advance(s, EGG_MINUTES, seeded(1)).save;
     expect(only(s).speciesId).toBe('깜몬');
   });
   it('the last Digimon is never lost', () => {
@@ -643,7 +643,7 @@ describe('titles and hunting', () => {
   it('a new game starts from a digi-egg that hatches into 깜몬', () => {
     const s = freshEggSave(0);
     expect(s.digimon[0].isEgg).toBe(true);
-    expect(advance(s, 30, seeded(1)).save.digimon[0]).toMatchObject({ isEgg: false, speciesId: '깜몬' });
+    expect(advance(s, EGG_MINUTES, seeded(1)).save.digimon[0]).toMatchObject({ isEgg: false, speciesId: '깜몬' });
   });
   it('title matches appear on their day before 15:00', () => {
     const s = { ...freshSave(0), clock: 1440 * 2 + 9 * 60 };
@@ -988,7 +988,7 @@ describe('illness', () => {
     expect(e && e.type === 'evolved' && e.to).toBe('가오몬');
     expect(e && e.type === 'evolved' && e.memory).toBe(true);
     // 부화: 기억한 유년기I
-    const egg = { ...young, digimon: [{ ...newDigimon(1, '깜몬'), isEgg: true, stageAge: 29, memory: mem }, newDigimon(2, '깜몬')] };
+    const egg = { ...young, digimon: [{ ...newDigimon(1, '깜몬'), isEgg: true, stageAge: EGG_MINUTES - 1, memory: mem }, newDigimon(2, '깜몬')] };
     expect(tickFarm(egg, () => 0.2).save.digimon[0].speciesId).toBe('푸니몬');
   });
   it('뿔몬→사이케몬은 롬 진화표 값(데이터10, 페널티 없음), 나머지는 위키 목록', () => {
@@ -1491,7 +1491,7 @@ describe('원본 능력치 생성·진화·저장 이전', () => {
     expect(Object.values(egg.stats)).toEqual([0,0,0,0,0,0]);
   });
   it('부화·진화는 새 단위 표식을 유지하고 범위 안에서 시작한다', () => {
-    const hatch = advance(freshEggSave(0), 30, () => 0.5).save.digimon[0];
+    const hatch = advance(freshEggSave(0), EGG_MINUTES, () => 0.5).save.digimon[0];
     expect(hatch).toMatchObject({ isEgg:false, speciesId:'깜몬', statVersion:1 });
     expect(hatch.stats).toEqual(initialStats('깜몬', () => 0.5));
     let s = withMon(freshSave(0), { stageAge:LIFESPAN[1]-1, hunger:100 });
@@ -1517,7 +1517,7 @@ describe('원본 능력치 생성·진화·저장 이전', () => {
 describe('배틀 접근 AI 회귀',()=>{
   it('시작 알에서 깜몬→코로몬→아구몬으로 진화한 게으름 개체도 모든 모드에서 먼저 걷는다',()=>{
     let save=freshEggSave(0);save.digimon[0].personality='게으름';
-    save=advance(save,30,()=>.5).save;const stages=[only(save)];
+    save=advance(save,EGG_MINUTES,()=>.5).save;const stages=[only(save)];
     save={...save,digimon:[{...only(save),stageAge:LIFESPAN[1]}]};save=evaluateEvolutions(save,()=>.5).save;stages.push(only(save));
     save={...save,digimon:[{...only(save),battles:3}]};save=evaluateEvolutions(save,()=>.5).save;stages.push(only(save));
     expect(stages.map(d=>d.speciesId)).toEqual(['깜몬','코로몬','아구몬']);
@@ -2536,5 +2536,26 @@ describe('혼자인 겁쟁이 · 좁은 케이지의 완전체 (원본 +0x1A8·+
     expect(wide.crampedMinutes).toBe(29);
     const young = tickFarm(farm([mon(1, '아구몬', { cage: '공터', crampedMinutes: GRUMBLE.after })]), seeded(1));
     expect(young.events.some((e) => e.type === 'grumble')).toBe(false);
+  });
+});
+
+describe('부화 (원본 overlay18 0x211FE44)', () => {
+  const eggSave = (patch: Partial<Digimon> = {}) => ({ ...freshEggSave(0), digimon: [{ ...newDigimon(1, '깜몬'), isEgg: true, stageAge: 0, ...patch }] }) as SaveData;
+  it('알은 60분이 지나면 부화한다', () => {
+    expect(tickFarm(eggSave({ stageAge: EGG_MINUTES - 2 }), seeded(1)).save.digimon[0].isEgg).toBe(true);
+    expect(tickFarm(eggSave({ stageAge: EGG_MINUTES - 1 }), seeded(1)).save.digimon[0].isEgg).toBe(false);
+  });
+  it('손으로 세 번 두드리면 다음 분에 바로 부화한다', () => {
+    let s = eggSave();
+    for (let i = 1; i <= EGG_TAPS; i++) {
+      const r = pet(s, 1);
+      expect(r.ok).toBe(true);
+      s = r.save;
+      expect(s.digimon[0].eggTaps).toBe(i);
+    }
+    const r = tickFarm(s, seeded(1));
+    expect(r.events.some((e) => e.type === 'hatched')).toBe(true);
+    expect(r.save.digimon[0]).toMatchObject({ isEgg: false, eggTaps: 0 });
+    expect(tickFarm(eggSave({ eggTaps: 2 }), seeded(1)).save.digimon[0].isEgg).toBe(true);
   });
 });

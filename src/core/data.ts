@@ -15,7 +15,10 @@ export const STAGE_LABEL: Record<Stage, string> = { 1: '유년기I', 2: '유년�
  * 값은 원본 실행 코드의 디지몬 표(+44, 세대마다 모든 종이 같다)이고, '수명'이라는 뜻은 추정이다 (형규 지시로 적용).
  */
 export const LIFESPAN: Record<Stage, number> = { 1: 1440, 2: 5760, 3: 11520, 4: 17280, 5: 24480, 6: 30240 };
-export const EGG_MINUTES = 30;
+/** 부화까지 게임 분. 원본: 알 종(번호 0~7) 표 +0x28 = 60, 알의 나이가 이를 넘으면 부화(overlay18 0x211FE44). 예전 웹판 30은 임시 값이었다 */
+export const EGG_MINUTES = 60;
+/** 알을 손으로 이만큼 두드리면 바로 부화 (원본: 탭 메시지 0x7E를 센 +0x1E4가 3 이상, overlay18 0x210FA70·0x211FE54) */
+export const EGG_TAPS = 3;
 
 const isFamily = (s: string): s is Family => (FAMILIES as readonly string[]).includes(s);
 const isAttr = (s: string): s is Attr => (ATTRS as readonly string[]).includes(s);
