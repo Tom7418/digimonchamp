@@ -37,7 +37,22 @@
   const toggles = [...document.querySelectorAll('[data-sound-toggle]')];
   const volume = document.querySelector('#sound-volume');
   const lastPlayed = new Map();
-  let context, master, noise, opening;
+  let context, master, noise, opening, ambience;
+  let huntField = null, huntNight = false;
+
+  function syncHunt() {
+    if (context?.state !== 'running' || !master) return;
+    const field = preferences.enabled && preferences.volume > 0 && !document.hidden ? huntField : null;
+    if (field && !ambience) ambience = root.createHuntAmbience?.(context, master);
+    ambience?.set(field, huntNight);
+  }
+
+  function setHunt(field, night = false) {
+    if (field === huntField && night === huntNight) return;
+    huntField = field;
+    huntNight = night;
+    syncHunt();
+  }
 
   function update() {
     for (const toggle of toggles) {
@@ -53,6 +68,7 @@
       master.gain.cancelScheduledValues(context.currentTime);
       master.gain.setTargetAtTime(preferences.enabled && !document.hidden ? preferences.volume : 0, context.currentTime, .012);
     }
+    syncHunt();
   }
 
   function save() {
@@ -69,6 +85,7 @@
         master = context.createGain();
         master.gain.value = 0;
         master.connect(context.destination);
+        context.addEventListener('statechange', syncHunt);
         update();
       }
       if (context.state !== 'running') {
@@ -141,5 +158,5 @@
   for (const event of ['pointerdown', 'pointerup', 'keydown']) document.addEventListener(event, unlock, true);
   document.addEventListener('visibilitychange', update);
   update();
-  root.ChampSound = { play };
+  root.ChampSound = { play, setHunt };
 })(window);

@@ -2070,10 +2070,13 @@
   const HUNT_MAP = C.HUNT_MAP; // 배경과 충돌 지형의 사냥터 번호를 공유한다.
   const HUNT_NO_NIGHT = ['09', '10', '11'];
   const huntMaps = {};
+  function huntUsesNightMap(field) {
+    return huntIsNight() && !HUNT_NO_NIGHT.includes(HUNT_MAP[field.id]);
+  }
   function huntMapImage(field) {
     const no = HUNT_MAP[field.id];
     if (!no) return null;
-    const night = C.dateOf(save.clock).hour >= C.HUNT_NIGHT_HOUR && !HUNT_NO_NIGHT.includes(no);
+    const night = huntUsesNightMap(field);
     const key = `${no}_${night ? '02' : '01'}`;
     if (!huntMaps[key]) {
       const img = new Image();
@@ -2210,6 +2213,7 @@
   }
   function endHunt(reason) {
     if (!hunt) return;
+    globalThis.ChampSound?.setHunt?.(null);
     window.resetHuntItemHud($('#hunt-item-hud'));
     log(`${hunt.field.id} 사냥 종료${reason ? ` (${reason})` : ''}`);
     hunt = null;
@@ -3431,8 +3435,12 @@
       }
       if(window.evolutionScene?.busy&&!titleOpen&&!battle&&!hunt&&!mailOpen&&!dayEnding&&!board.editing&&!$('#modal').open)
         window.evolutionScene.update(paused?0:dt);
-      if (hunt) drawHunt(now / 1000, !titleOpen && !paused && !board.editing && !mailOpen && !dayEnding ? dt : 0);
-      else drawFarm(now / 1000, dt);
+      if (hunt) {
+        const active = !titleOpen && !paused && !board.editing && !mailOpen && !dayEnding;
+        // 입장 후 시간이 18시를 지나면 같은 사냥 세션 안에서도 야간 환경음으로 바꾼다.
+        globalThis.ChampSound?.setHunt?.(active ? hunt.field.id : null, active && huntUsesNightMap(hunt.field));
+        drawHunt(now / 1000, active ? dt : 0);
+      } else drawFarm(now / 1000, dt);
       drawPortrait(!titleOpen && !paused && !mailOpen && !dayEnding && !board.editing && !window.evolutionScene?.busy ? dt : 0);
     }
     requestAnimationFrame(frame);
