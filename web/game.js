@@ -67,7 +67,10 @@
       const spriteId=SPRITE_BY_NAME[C.getSpecies(id).id];
       sprite(context,spriteId,x,y,scale,animations.sample(spriteId,white?'evolving':'idle',elapsed),false);
     },
-    onComplete:event=>toast(`${C.getSpecies(event.from).name} → ${C.getSpecies(event.to).name} 진화!`),
+    onComplete:(event,skipped)=>{
+      if(!skipped)globalThis.ChampSound?.play('evolution');
+      toast(`${C.getSpecies(event.from).name} → ${C.getSpecies(event.to).name} 진화!`);
+    },
     onDrain:event=>{
       if(!event)return;
       // 다음 단계까지 이미 충족했다면 그 연출부터 이어간다. 모든 진화가 끝난 뒤 안내를 연다.
@@ -177,6 +180,7 @@
     if (e.type === 'hatched') {
       // 원본 디지에그 그림의 두 번째 동작(금이 가고 갈라지며 빛이 퍼지는 9칸)을 재생한 뒤 새 디지몬을 보여 준다
       hatching.set(e.uid, 0);
+      globalThis.ChampSound?.play('hatch');
       asset(SPRITE_BY_NAME[n(e.to)]);
       log(`디지에그가 부화해 ${n(e.to)}이(가) 태어났습니다!`);
     }
@@ -817,6 +821,7 @@
         }
         // 치운 뒤 그 케이지에 더러운 것이 없으면 기뻐하며 스트레스 -1 (원본 0x8D 메시지·반응 9)
         if (cleanedKey !== null) {
+          globalThis.ChampSound?.play('clean');
           const rotten = view.foods.filter((f) => f.kind === 'rotten' && (f.cageId ?? '') === cleanedKey).length;
           const relief = C.cleanRelief(save, cleanedKey, rotten);
           save = relief.save;
@@ -847,6 +852,7 @@
   const TOOL_TIME = 0, HEAL_SEQ = [1, 2, 3, 0, 4, 5, 6, 0];
   function startCareFx(kind, pet, success) {
     careFx.push({ kind, pet, success, start: performance.now() });
+    if (success) globalThis.ChampSound?.play('care');
   }
   function drawCareFx(now) {
     const put = (key, x, y, ox, oy) => {
@@ -1044,6 +1050,7 @@
       if (r.ok) {
         view.foods = r.foods;
         save = r.save;
+        globalThis.ChampSound?.play('feed');
         // 한 입마다 엔진이 새 객체를 돌려주므로 반대편 디지몬의 자리/씹기 시간도 함께 이어준다.
         const left = r.foods[foodIndex], eater = save.digimon.find(x => x.uid === d.uid);
         const remains=r.foods.length===oldCount&&left&&left.x===food.x&&left.y===food.y&&left.remaining>0;
@@ -1103,6 +1110,7 @@
   }
   function act(action) {
     if (battle) return;
+    globalThis.ChampSound?.play('menu');
     const d = current();
     if (action === 'clean') apply(C.clean(save, d.uid));
     if (action === 'heal') apply(C.heal(save, d.uid));
@@ -1366,6 +1374,8 @@
       const target=b.state.units.find(u=>u.id===e.to);
       const id=SPRITE_BY_NAME[C.getSpecies(target.speciesId).id];
       const state=e.damage===0?'guard2':Math.random()<0.5?'hurt':'hurtAlt';
+      // 피해음은 엔진 판정 순간이 아니라 화면의 피격·방어 전환과 함께 난다.
+      globalThis.ChampSound?.play(e.damage===0?'guard':e.critical?'critical':'hit');
       const duration=animations.duration(id,state);
       b.actions.set(e.to,{kind:'hit',left:duration,duration,state});
       const text=e.damage===0?'막음':`-${e.damage}${e.critical?' 크리티컬!':e.special?'!':''}`;
@@ -1453,6 +1463,7 @@
             battleHitVisual(b,e);
           }
           if(e.special&&e.skill){
+            globalThis.ChampSound?.play('cast');
             b.flashes.push({id:e.from,text:e.skill.name,until:b.visualTime+700,color:'#a9e7ff',skill:true});
           }
         }
@@ -1532,6 +1543,7 @@
     save = { ...save, digimon: save.digimon.map((d) => (uids.has(d.uid) ? C.applyBattleResult(d, won, ko.has(d.uid), Math.random, C.dateOf(save.clock).season === C.WINTER, endHp.get(d.uid)) : d)) };
     const m = b.setup.match;
     const firstTitleWin=won && /^m\d+$/.test(m?.id||'') && !save.titles.includes(m.id);
+    globalThis.ChampSound?.play(firstTitleWin?'medal':won?'win':'lose');
     const wasQualified = save.qualifiedYear;
     // 타이틀은 이겼을 때만, 챔피언십 예선·본선은 진 것도 기록한다
     const bitsBefore = save.bits;
@@ -2366,6 +2378,7 @@
       return huntNote(`${gear.name}을(를) 놓았다.`);
     }
     hunt.shotReady = now + C.shotCooldown(shot);
+    globalThis.ChampSound?.play('shot');
     hunt.fx.push({ x: p.x, y: p.y, r: shot.spread ? C.SHOT_SPREAD_RADIUS : 14, left: 0.25 });
     // 원본: 산탄은 누른 곳 ±16px 안에 7발이 떨어지고 발마다 따로 맞는다. 보통 샷은 한 발
     const points = shot.spread ? Array.from({ length: C.SHOT_PELLETS }, () => ({ x: p.x + Math.floor(Math.random() * 32) - C.SHOT_JITTER, y: p.y + Math.floor(Math.random() * 32) - C.SHOT_JITTER })) : [p];
@@ -2461,6 +2474,7 @@
         if (w.hp <= 0) { faint(w); continue; }
         if (w.bound <= 0) {
           // 원작 도움말: 끊어져도 몇 번이고 다시 쓸 수 있다
+          globalThis.ChampSound?.play('snap');
           w.bound = 0;
           if (hunt.pull?.w === w) hunt.pull = null;
           w.flee = 3;
@@ -2713,6 +2727,7 @@
         continue;
       }
       w.bound = w.boundMax = C.ropeHoldSeconds(save);
+      globalThis.ChampSound?.play('rope');
       w.waking = false;
       w.runAway = 0;
       const end = poly[poly.length - 1];
@@ -2736,6 +2751,7 @@
   function captureFainted(w) {
     const r = C.capture(save, w.id, Math.random, hunt.carried, w.personality);
     if (r.ok) {
+      globalThis.ChampSound?.play('capture');
       save = r.save;
       hunt.carried += C.getSpecies(w.id).size;
       w.gone = true;
@@ -3231,6 +3247,7 @@
   let titleOpen = true;
   function closeTitle() {
     const el = $('#title-screen');
+    globalThis.ChampSound?.play('start');
     el.classList.add('closing');
     setTimeout(() => (el.hidden = true), 350);
     titleOpen = false;

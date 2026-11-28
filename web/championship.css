@@ -260,6 +260,9 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .actions button b{font-size:14px;line-height:1}
 .world-bottom{padding:3px 12px!important;min-height:0;font-size:11px}
 .world-bottom #pause{padding:2px 8px;font-size:11px}
+.sound-controls{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.world-bottom [data-sound-toggle]{padding:2px 8px;font-size:11px;white-space:nowrap}
+#sound-volume{width:clamp(46px,8vw,84px);margin:0;accent-color:#ffd164}
 .side-body>.partner>.section-label{display:none}
 .partner .portrait{height:140px}
 @media (min-width:1000px) and (min-height:560px){

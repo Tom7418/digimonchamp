@@ -38,14 +38,14 @@ test('타이틀로 랭크가 풀리면 출전하지 않은 대기 개체도 결�
 test('최초 타이틀 승리만 메달을 안내하고 재우승은 상금과 세로 결과만 표시한다',()=>{
  const src=fs.readFileSync('web/game.js','utf8'),start=src.indexOf('  function finishBattle()'),end=src.indexOf('  function drawArena(',start);
  for(const repeat of [false,true]){
-  const nodes={},messages=[],classes=new Set(['battle-modal']);
+  const nodes={},messages=[],sounds=[],classes=new Set(['battle-modal']);
   const recordPanel={},resultDetails=[];
   nodes['#modal-body']={
    querySelector:selector=>selector==='.battle-log-panel'?recordPanel:null,
    append:detail=>resultDetails.push(detail),
   };
   const document={createElement:tag=>({tag,append(...children){this.children=children;}})};
-  const c=vm.createContext({window:{},document,esc:String,$:key=>nodes[key]??={classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)}},battleLog:()=>{},log:s=>messages.push(s),toast:()=>{},render:()=>{},persist:()=>{},logEvent:()=>{}});
+  const c=vm.createContext({window:{},document,esc:String,ChampSound:{play:name=>sounds.push(name)},$:key=>nodes[key]??={classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)}},battleLog:()=>{},log:s=>messages.push(s),toast:()=>{},render:()=>{},persist:()=>{},logEvent:()=>{}});
   for(const file of ['web/core.js','web/day-result-view.js'])vm.runInContext(fs.readFileSync(file,'utf8'),c);
   vm.runInContext(`globalThis.C=ChampCore;globalThis.save=C.freshSave(0);globalThis.m=C.TITLES[0];save.titles=${repeat?'[m.id]':'[]'};globalThis.oldBits=save.bits;
    globalThis.battle={done:false,state:{winner:0,reason:'hp',units:[]},setup:{match:m,prize:0,title:m.name}};`+src.slice(start,end),c);
@@ -55,6 +55,7 @@ test('최초 타이틀 승리만 메달을 안내하고 재우승은 상금과 �
   assert.equal(/class="title-medal"/.test(html),!repeat);assert.equal(messages.some(x=>x.startsWith('타이틀 메달 획득:')), !repeat);
   assert.equal(html.includes('class="medal-reveal"'),!repeat);
   assert.equal(html.includes('class="medal-award-message"'),!repeat);
+  assert.deepEqual(sounds,[repeat?'win':'medal']);
   assert.equal(nodes['#modal-ok'].disabled,false);
   assert.equal(resultDetails.length,1);assert.equal(resultDetails[0].tag,'details');
   assert.equal(resultDetails[0].children[1],recordPanel);
