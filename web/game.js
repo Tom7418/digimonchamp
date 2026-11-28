@@ -2173,9 +2173,12 @@
   }
   function huntGroundLine(a,b,radius=4){return C.huntTerrainLineClear(hunt.terrain,huntMapPoint(a),huntMapPoint(b),radius);}
   // 사냥 위치 효과음: 화면 중앙에서의 거리로 원작 음량·좌우를 정한다 (web/hunt-sound.js, overlay9_0 0x021214D8)
+  // 웹판 화면(960×560 ÷ 확대)을 원작 256×192 화면 비율로 환산해, 확대해도 화면 끝 = 원작 화면 끝이 되게 한다.
   function huntSoundOffset(x,y){
-    const cam=hunt?.cam,zoom=hunt?.zoom||1;
-    return cam?{dx:x-(cam.x+480/zoom),dy:y-(cam.y+280/zoom)}:{dx:0,dy:0};
+    const cam=hunt?.cam,zoom=hunt?.zoom||1,vw=960/zoom,vh=560/zoom;
+    if(!cam)return {dx:0,dy:0};
+    const dx=x-(cam.x+vw/2),dy=y-(cam.y+vh/2);
+    return window.HuntSound?.toDs?window.HuntSound.toDs(dx,dy,vw,vh):{dx,dy};
   }
   function huntPlaceSound(name,x,y,pick='area'){
     const S=window.HuntSound,o=huntSoundOffset(x,y),place=S?.[pick]?.(o.dx,o.dy);

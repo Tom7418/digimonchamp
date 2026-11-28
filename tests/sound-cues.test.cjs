@@ -140,6 +140,11 @@ test('사냥 위치 효과음: 원작 거리 음량·좌우와 발소리 종류'
  assert.equal(H.footstepSound('m201_agumon',3),'DIGI_SE_036_3');
  assert.equal(H.footstepSound('m541_dukemon',0),'DIGI_SE_107M');
  assert.equal(H.footstepSound('m201_agumon',4),'DIGI_SE_036_3');
+ // 웹판 화면 비율 환산: 확대 1.5배 화면(640×373.3)의 오른쪽 끝·아래 끝 = 원작 화면 끝(128, 96)
+ const edge=H.toDs(320,560/1.5/2,640,560/1.5);
+ assert.equal(edge.dx,128);assert.ok(Math.abs(edge.dy-96)<1e-9);
+ assert.equal(H.footstep(edge.dx,0).volume,63); // 원작 화면 오른쪽 끝의 발소리 음량
+ assert.equal(H.footstep(edge.dx,0).pan,74);
  // 추출 결과: 모든 스프라이트에 넓이가 있다
  const f=vm.createContext({window:{}});vm.runInContext(fs.readFileSync('web/assets/hunt/footsteps.js','utf8'),f);
  assert.ok(Object.keys(f.window.HUNT_FOOTSTEP_AREA).length>200);

@@ -1,5 +1,5 @@
 'use strict';
-// 사냥 효과음의 거리 음량·좌우와 야생 발소리 (원본 overlay9_0). 좌표는 화면 중앙 기준 지도 px.
+// 사냥 효과음의 거리 음량·좌우와 야생 발소리 (원본 overlay9_0). 좌표는 화면 중앙 기준이고 원작 화면 px 단위(toDs로 환산).
 // 원작 화면은 256×192이고 카메라 좌상단 기준으로 계산하지만, 여기서는 중앙(128,96)을 뺀 값을 받는다.
 (function (root) {
   // 화면 밖 80px까지만 울린다: 카메라 기준 x −80~336, y −80~272 (경계 값은 안 울림) — 0x021214D8, 0x021116BC
@@ -29,8 +29,14 @@
     return (root.HUNT_FOOTSTEP_AREA?.[spriteId] ?? 0) > 0x400 ? 'DIGI_SE_107M' : 'DIGI_SE_036_3';
   }
 
+  // 웹판 화면 → 원작 화면 비율. 웹판 사냥 화면(viewW×viewH 지도 px)의 가장자리가 원작 256×192 화면의 가장자리와
+  // 같아지도록 가로·세로를 따로 줄인다. 그래서 웹판에서 보이는 끝의 디지몬은 원작에서 화면 끝에 있을 때와 같은 음량·좌우가 된다.
+  function toDs(dx, dy, viewW, viewH) {
+    return { dx: viewW > 0 ? dx * 256 / viewW : dx, dy: viewH > 0 ? dy * 192 / viewH : dy };
+  }
+
   // 한 걸음 = 이동 거리 누적이 12px(0xC000)을 넘을 때. 화면 밖 80px 바깥에서는 쌓지 않는다 (0x021116F0~0x02111708)
   const STEP = 12;
 
-  root.HuntSound = { area, footstep, footstepSound, STEP };
+  root.HuntSound = { area, footstep, footstepSound, toDs, STEP };
 })(typeof window !== 'undefined' ? window : globalThis);
