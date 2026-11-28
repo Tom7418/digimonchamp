@@ -339,7 +339,7 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .battle-roster small{font-size:11px;color:#adc4dc}.roster-order{color:#ffd36a}
 
 #modal.battle-entry-modal{box-sizing:border-box;width:min(680px,calc(100% - 24px));max-width:none;max-height:calc(100dvh - 24px);overflow:auto}
-.battle-entry-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;padding:0;margin:0 0 16px;list-style:none}
+.battle-entry-steps{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:3px;padding:0;margin:0 0 16px;list-style:none}
 .battle-entry-steps li{padding:7px 2px;border-bottom:2px solid #34536c;color:#afc4d8;text-align:center;font-size:clamp(10px,2.7vw,12px)}
 .battle-entry-steps [aria-current]{color:#fff0bc;border-color:#ffd36a;background:#263d53;font-weight:700}
 .entry-back{margin:0 0 10px}
@@ -348,6 +348,9 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .battle-format-options button:is(:hover,:focus-visible){background:#254564;border-color:#ffd36a}
 .battle-format-options b{font-size:clamp(23px,6vw,37px);color:#ffd36a}
 .battle-format-options span{font-size:12px}
+.battle-format-options .entry-title-option{grid-column:1/-1;min-height:76px;background:#302b35;border-color:#aa8653}
+.battle-format-options .entry-title-option:is(:hover,:focus-visible){background:#453740;border-color:#ffd36a}
+.battle-format-options .entry-title-option b{font-size:clamp(20px,5vw,26px)}
 .battle-opponent-group h3,.entry-teams h3{margin:10px 0 6px;font-size:15px;color:#d5ebff}
 .battle-opponent-group .menu-list small{overflow-wrap:anywhere}
 .entry-match{margin:0 0 6px;font-weight:700;color:#ffde8f}
