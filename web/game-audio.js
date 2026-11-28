@@ -32,8 +32,10 @@
   sounds.cancel = [['sine', 620, 420, .07, .15]];
   // 원작 대응표(sound-cues.js)와 음원 목록(assets/audio/manifest.js). 음원이 있으면 합성음 대신 재생한다.
   const cues = root.ORIGINAL_SOUND_CUES || {};
+  // 항목은 'assets/audio/x.mp3' 문자열 또는 { src, dur, loop: [시작초, 끝초] } (tools/convert_sound_wav.py)
   const files = () => root.ORIGINAL_SOUND_FILES || {};
   const hasFile = (name) => !!(name && files()[name]);
+  const infoOf = (name) => { const e = files()[name]; return typeof e === 'string' ? { src: e } : e || null; };
   const key = 'champion-sound-v1';
   const Audio = root.AudioContext || root.webkitAudioContext;
   let preferences = { enabled: true, volume: .4 };
@@ -55,19 +57,28 @@
 
   function buffer(name) {
     if (!hasFile(name) || !context) return null;
-    if (!buffers.has(name)) buffers.set(name, fetch(files()[name]).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(r.status))).then((b) => context.decodeAudioData(b)).catch(() => null));
+    if (!buffers.has(name)) buffers.set(name, fetch(infoOf(name).src).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(r.status))).then((b) => context.decodeAudioData(b)).catch(() => null));
     return buffers.get(name);
   }
   // 원작 음원 하나를 master로 재생한다. 손잡이(stop)를 돌려주며, 읽기 전에 멈추면 재생하지 않는다.
+  // loop=true: 원작 반복 구간이 있으면 그 구간을, 길이 정보만 있으면(반복 없는 곡·징글) 한 번만, 문자열 항목이면 파일 전체를 반복한다.
   function playFile(name, loop = false) {
     const pending = buffer(name);
     if (!pending) return null;
+    const info = infoOf(name);
     const handle = { stopped: false, source: null, stop() { this.stopped = true; try { this.source?.stop(); } catch {} } };
     pending.then((data) => {
       if (!data || handle.stopped || context.state !== 'running') return;
       const source = context.createBufferSource();
       source.buffer = data;
-      source.loop = loop;
+      if (loop && info.loop) {
+        // MP3 앞 공백을 디코더가 지우지 않은 브라우저면(길이가 원본보다 길다) 그만큼 반복 지점을 민다. LAME 기본 지연 1105표본(32 kHz)
+        const extra = Number.isFinite(info.dur) ? data.duration - info.dur : 0;
+        const lead = extra > .02 ? Math.min(extra, 1105 / 32000) : 0;
+        source.loop = true;
+        source.loopStart = info.loop[0] + lead;
+        source.loopEnd = Math.min(info.loop[1] + lead, data.duration);
+      } else source.loop = loop && !Number.isFinite(info.dur);
       source.connect(master);
       source.onended = () => source.disconnect();
       source.start();
@@ -164,6 +175,9 @@
         master.connect(context.destination);
         context.addEventListener('statechange', syncHunt);
         update();
+        // 짧은 효과음·징글(배경곡 SEQ_ 제외, 합쳐 약 1.3 MB)은 처음 울릴 때 늦지 않게 미리 읽는다.
+        const short = Object.keys(files()).filter((n) => !n.startsWith('SEQ_'));
+        if (root.setTimeout) short.forEach((n, i) => root.setTimeout(() => buffer(n), 200 + i * 15));
       }
       if (context.state !== 'running') {
         opening = Promise.resolve(context.resume()).catch(() => {}).finally(() => { opening = null; });
@@ -246,7 +260,7 @@
   for (const event of ['pointerdown', 'pointerup', 'keydown']) document.addEventListener(event, unlock, true);
   document.addEventListener('visibilitychange', update);
   update();
-    // 곡을 끄기만 하는 자리표시(음원 목록에 없는 이름이라 아무것도 틀지 않는다)
+  // 곡을 끄기만 하는 자리표시(음원 목록에 없는 이름이라 아무것도 틀지 않는다)
   const SILENCE = '(silence)';
   root.ChampSound = { play, setHunt, setMusic, setMenu, setBase, setLoop, cues, hasFile, SILENCE };
 })(window);

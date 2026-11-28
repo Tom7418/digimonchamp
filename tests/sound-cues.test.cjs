@@ -31,7 +31,7 @@ function audioWorld(manifest){
   createOscillator(){return{type:'',frequency:{...param},connect:noop,disconnect:noop,start(){started.push('synth');},stop:noop};}
   createBiquadFilter(){return{type:'',Q:{},frequency:{...param},connect:noop,disconnect:noop};}
   createBufferSource(){const s={connect:noop,disconnect:noop,start(){started.push(s);},stop(){s.stopped=true;}};return s;}
-  decodeAudioData(b){return Promise.resolve({name:b.name});}}
+  decodeAudioData(b){return Promise.resolve({name:b.name,duration:window.decodedDuration??100});}}
  const window={AudioContext:Ctx,localStorage:{getItem:()=>null,setItem:noop},ORIGINAL_SOUND_FILES:manifest,
   createHuntAmbience:()=>({set(f){window.ambienceField=f;}}),
   document:{hidden:false,querySelectorAll:()=>[],querySelector:()=>null,addEventListener(t,f){listeners[t]=f;}}};
@@ -90,4 +90,36 @@ test('배틀 명중음은 기술 레코드별 원작 이름, 기본 화면·메�
  assert.equal(w.started.at(-1).buffer.name,'assets/audio/farm.ogg');
  w.S.setHunt('기계 공장');await w.flush(); // 사냥 중엔 육성 곡을 내린다
  assert.equal(w.started.at(-1).stopped,true);
+});
+
+test('배포 음원 목록: 대응표의 모든 이름에 MP3가 있고 반복 구간은 원본 길이 안에 있다',()=>{
+ const c=vm.createContext({window:{}});
+ for(const f of ['sound-cues.js','assets/battle/skill-sounds.js','assets/audio/manifest.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),c);
+ const {ORIGINAL_SOUND_CUES:cu,BATTLE_SKILL_SOUNDS:sk,ORIGINAL_SOUND_FILES:F}=c.window;
+ const used=[...Object.values(cu.huntBgm),...cu.battleBgm,...Object.values(cu.resultBgm),...Object.values(cu.sceneBgm),...Object.values(cu.effects),...Object.values(cu.loops),...Object.values(sk.hit),...Object.values(sk.cast),sk.guard];
+ for(const n of used)assert.ok(F[n],n);
+ for(const [n,e] of Object.entries(F)){
+  assert.ok(inventory.has(n),n);
+  assert.ok(fs.statSync('web/'+e.src).size>0,e.src);
+  if(e.loop)assert.ok(e.loop[0]>=0&&e.loop[0]<e.loop[1]&&e.loop[1]<=e.dur+1e-3,n);
+ }
+ // 배경곡은 첫 곡(오프닝 SEQ_N_00)만 반복하지 않는다. 사냥 선 긋기는 반복음
+ assert.deepEqual(Object.keys(F).filter(n=>n.startsWith('SEQ_')&&!F[n].loop),['SEQ_N_00']);
+ assert.ok(F.HUNT_LOOP_DRAW_LOOP.loop);
+});
+
+test('반복 구간이 있는 곡은 그 구간만 반복하고, 반복 없는 곡은 한 번만 튼다',async()=>{
+ const w=audioWorld({SEQ_U_06:{src:'assets/audio/SEQ_U_06.mp3',dur:110.333,loop:[55.007,110.02]},SEQ_N_00:{src:'assets/audio/SEQ_N_00.mp3',dur:34.9247},SEQ_U_21:{src:'assets/audio/SEQ_U_21.mp3',dur:52.997,loop:[26.485,52.976]}});
+ w.window.decodedDuration=110.333;
+ await w.flush();
+ w.S.setBase('SEQ_U_06');await w.flush();
+ const farm=w.started.at(-1);
+ assert.equal(farm.loop,true);assert.equal(farm.loopStart,55.007);assert.equal(farm.loopEnd,110.02);
+ w.S.setMusic('SEQ_N_00');await w.flush();
+ assert.equal(w.started.at(-1).loop,false);
+ // MP3 앞 공백을 남기는 디코더(원본보다 길다)면 반복 지점을 그만큼 민다
+ w.window.decodedDuration=52.997+0.06;
+ w.S.setMusic('SEQ_U_21');await w.flush();
+ const shop=w.started.at(-1);
+ assert.ok(Math.abs(shop.loopStart-(26.485+1105/32000))<1e-9);
 });

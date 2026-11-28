@@ -30,5 +30,5 @@ Codex와 Claude Code가 번갈아 작업하므로 아래 규칙을 지킨다.
 ## 규칙
 - 원작에서 확인한 값과 임시로 정한 값을 섞지 말고 주석이나 문서에 구분해 둔다.
 - 환경: Windows + VS Code 우선. PowerShell 명령은 Windows 문법으로 쓴다.
-- 원본 게임 파일(ROM 등)은 저장소에 올리지 않는다. 변환한 PNG만 `web/assets`에 둔다.
+- 원본 게임 파일(ROM·SDAT 등)은 저장소에 올리지 않는다. 변환한 PNG와 음원(MP3, `web/assets/audio`, `tools/convert_sound_wav.py`)만 `web/assets`에 둔다. (형규 결정 2026-11-28: 변환 음원도 공개 웹판에 배포)
 - 저장 형식(`localStorage` 키 `champion-web-v2`)을 바꾸면 기존 저장 데이터 이전 방법을 함께 만든다.

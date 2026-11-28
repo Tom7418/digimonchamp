@@ -1556,9 +1556,12 @@
     save = { ...save, digimon: save.digimon.map((d) => (uids.has(d.uid) ? C.applyBattleResult(d, won, ko.has(d.uid), Math.random, C.dateOf(save.clock).season === C.WINTER, endHp.get(d.uid)) : d)) };
     const m = b.setup.match;
     const firstTitleWin=won && /^m\d+$/.test(m?.id||'') && !save.titles.includes(m.id);
-    globalThis.ChampSound?.play(firstTitleWin?'medal':won?'win':'lose');
     // 결과 화면 배경곡: 이번 경기를 이겼으면 SEQ_N_15, 졌으면 SEQ_N_14 (overlay9_8 0x021106F4)
-    globalThis.ChampSound?.setMusic?.(globalThis.ChampSound.cues?.resultBgm?.[won ? 'won' : 'lost']);
+    const resultSong = globalThis.ChampSound?.cues?.resultBgm?.[won ? 'won' : 'lost'];
+    // 승패 합성음은 원작 결과곡 음원이 없을 때만 (원작에는 따로 없다)
+    if (firstTitleWin) globalThis.ChampSound?.play('medal');
+    else if (!globalThis.ChampSound?.hasFile?.(resultSong)) globalThis.ChampSound?.play(won ? 'win' : 'lose');
+    globalThis.ChampSound?.setMusic?.(resultSong);
     const wasQualified = save.qualifiedYear;
     // 타이틀은 이겼을 때만, 챔피언십 예선·본선은 진 것도 기록한다
     const bitsBefore = save.bits;
