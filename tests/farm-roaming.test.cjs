@@ -4,7 +4,7 @@ function setup(){
  const window={DIGIMON_ANIMATIONS:{training:{cm16:32}}},math=Object.create(Math);math.random=()=>.25;
  const ctx=vm.createContext({farmHealth:undefined,window,Math:math,document:{createElement:()=>toolbar},Image:function(){},performance:{now:()=>0},eggName:()=>'디지에그',
   ctx:new Proxy({fillText(text){texts.push(text);},arc(x,y,r){if(r===2)orbits.push([x,y]);}}, {get:(t,k)=>k in t?t[k]:noop}),
-  titleOpen:false,battle:null,hunt:null,paused:false,mailOpen:false,dayEnding:false,feeding:new Map(),hatching:new Map(),trainingFloats:new Map(),spriteFrames:new WeakMap(),effect:null,
+  titleOpen:false,battle:null,hunt:null,paused:false,mailOpen:false,dayEnding:false,feeding:new Map(),hatching:new Map(),trainingFloats:new Map(),cageReactions:new WeakMap(),spriteFrames:new WeakMap(),effect:null,log:noop,
   drawFood:noop,drawPoop:noop,updateSweeps:noop,drawSweeps:noop,drawCareFx:noop,bubbleOf:()=>null,footprint:()=>20,body:noop,asset:()=>null,
   animations:{pose(p,id,state){poses.push(state);return 0;}},animationId:()=> 'agumon',SPRITE_BY_NAME:{},petVisualBounds:p=>({cx:p.x,top:p.y-40,width:36}),
  });
@@ -16,6 +16,8 @@ function setup(){
  ctx.board=window.createCageEditor(canvas,()=>ctx.view,noop,noop,()=>false);
  const center=ctx.board.center(1,1);ctx.view.team=[{uid:1,...center,cageId:'c',cage:'clinic',direction:1}];
  const source=fs.readFileSync('web/game.js','utf8'),a=source.indexOf('  function drawFarm('),b=source.indexOf('  // 오른쪽 아래 작은 지도:',a);
+ const before=source.indexOf('  function showCageReaction('),after=source.indexOf('  // 화면용 목록(view.team)',before);
+ vm.runInContext(source.slice(before,after),ctx);
  vm.runInContext(source.slice(a,b),ctx);return {ctx,texts,poses,orbits,p:ctx.view.team[0]};
 }
 test('실제 육성 화면은 소속 케이지 안에서 걸으며 걷기 대신 훈련 동작을 덮어씌우지 않는다',()=>{
@@ -31,6 +33,31 @@ test('실제 훈련을 시작할 때마다 자세를 재생하고 이미 끝났�
  d.trainDone=true;s.ctx.drawFarm(0,.1);assert.notEqual(s.poses.at(-1),'seq_32');
  d.trainDone=false;s.ctx.drawFarm(0,.1);assert.equal(s.poses.at(-1),'seq_32');
  d.sick=true;s.ctx.drawFarm(0,.1);assert.notEqual(s.poses.at(-1),'seq_32');
+});
+test('케이지 불만과 청소 이벤트가 원본 자세를 재생하고 정지 중에는 유지한다',()=>{
+ const {ctx,p,poses}=setup();
+ const d=ctx.save.digimon[0];
+ const at={x:p.x,y:p.y};
+ ctx.logEvent({type:'grumble',uid:1,name:'아구몬',reason:'dirty'});
+ for(let i=0;i<5;i++)ctx.drawFarm(0,.1);
+ assert.ok(poses.slice(-5).every(state=>state==='eyesClosed'));
+ assert.deepEqual({x:p.x,y:p.y},at);
+ ctx.drawFarm(0,.1);
+ assert.notEqual(poses.at(-1),'eyesClosed');
+
+ ctx.logEvent({type:'relieved',uids:[1]});
+ ctx.drawFarm(0,.05);
+ const left=ctx.cageReactions.get(p).left;
+ assert.equal(poses.at(-1),'cheering');
+ assert.ok(Math.abs(left+.05-70/60)<1e-8);
+ ctx.paused=true;
+ ctx.drawFarm(0,.1);
+ assert.equal(ctx.cageReactions.get(p).left,left);
+ assert.equal(poses.at(-1),'cheering');
+ ctx.paused=false;
+ d.restCycle={species:'아구몬',sleepLeft:10};
+ ctx.drawFarm(0,.1);
+ assert.equal(poses.at(-1),'seq_13');
 });
 test('실제 육성 화면은 수면·식사·정지 화면·알 상태에서는 자율 이동하지 않는다',()=>{
  for(const mode of ['paused','mailOpen','dayEnding','titleOpen','food','sleep','egg']){

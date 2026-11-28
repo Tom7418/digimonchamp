@@ -78,6 +78,7 @@
   });
   window.evolutionScene=evolutionScene;
   const trainingFloats = new Map();
+  const cageReactions = new WeakMap();
   const farmHealth=window.createHpBars?.();
 
   // ---------- 저장 ----------
@@ -158,6 +159,13 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 3000);
   }
+  function showCageReaction(uid, state, frames) {
+    const pet = view.team.find(p => p.uid === uid);
+    const digimon = digi(uid);
+    if (pet && digimon && !digimon.isEgg) {
+      cageReactions.set(pet, { speciesId: digimon.speciesId, state, left: frames / 60 });
+    }
+  }
   function logEvent(e) {
     const n = (id) => C.getSpecies(id).name;
     if (e.type === 'trained') {
@@ -200,10 +208,12 @@
       toast(`${e.name} 회복`);
     } else if (e.type === 'grumble') {
       // 원본 불만 반응 18(스트레스 +1). 문구는 웹판
+      showCageReaction(e.uid, 'eyesClosed', 30); // overlay18 0x2118FF4: NANR 1, 30프레임
       const why = { dirty: '케이지가 더러워', crowded: '케이지 정원이 넘쳐', lonely: '혼자 있는 게 무서워', cramped: '케이지가 비좁아' }[e.reason];
       log(`${e.name}: ${why} 스트레스를 받고 있습니다.`);
     } else if (e.type === 'relieved') {
       // 원본 반응 9(스트레스 -1). 문구는 웹판
+      for (const uid of e.uids) showCageReaction(uid, 'cheering', 70); // 0x2118EB0: NANR 30, 70프레임
       log(`케이지가 깨끗해져 ${e.uids.map((u) => digi(u) ? C.getSpecies(digi(u).speciesId).name : '').filter(Boolean).join('·')}(이)가 기뻐합니다.`);
     } else if (e.type === 'petted') {
       const p = view.team.find((x) => x.uid === e.uid);
@@ -1806,16 +1816,29 @@
       if (!d) continue;
       const oldX = p.x, oldY = p.y;
       const dragging = board.isDragging(d.uid);
+      const bouncing = board.isBouncing(d.uid);
+      const sleeping = C.isSleeping(d);
+      const reaction = cageReactions.get(p);
+      let reactionState = null;
+      if (reaction) {
+        if (!dragging && !bouncing && !sleeping && !d.dying && !d.isEgg &&
+            !hatching.has(d.uid) && reaction.speciesId === d.speciesId && !feeding.has(d.uid)) {
+          reactionState = reaction.state;
+        }
+        reaction.left -= animDt;
+        if (reaction.left <= 1e-8 || reaction.speciesId !== d.speciesId || d.isEgg) cageReactions.delete(p);
+      }
       const trainingActive = !dragging && !!p.cageId && C.isTraining(d);
       const trainingRun = trainingActive && d.personality === '성급한';
       // 잡고 옮기는 동안에는 자율 이동·먹기 예약이 드롭 위치를 덮어쓰지 않는다.
       if (dragging) feeding.delete(d.uid);
       // 빈사: 돌아다니지 못한다 (help #124). 굶주려 빈사가 된 개체만 놓아 준 먹이까지 기어가 먹을 수 있다 (웹판 정책)
       if (d.dying && d.hunger > 0) feeding.delete(d.uid);
-      if (animDt > 0 && !dragging && !board.isBouncing(d.uid) && !d.isEgg && !hatching.has(d.uid)) {
+      if (animDt > 0 && !dragging && !bouncing && !d.isEgg && !hatching.has(d.uid)) {
         const eating = (!d.dying || d.hunger <= 0) && seekFood(p, d, animDt);
+        if (eating) reactionState = null;
         // 케이지 안에서도 목표를 유지하며 걷는다. 식사/수면/드래그/튕기기가 우선한다.
-        if (!eating && !d.dying && (!trainingActive || trainingRun)) {
+        if (!eating && !reactionState && !d.dying && (!trainingActive || trainingRun)) {
           board.roamPet(p,animDt,(trainingRun?48:16)*(d.fatigue>80?0.4:1),trainingRun?.15:1);
         }
       }
@@ -1840,7 +1863,7 @@
       const trainingPose = trainingActive && p.motion === 'idle'
         ? (trainingSequence === undefined ? 'train' : 'seq_'+trainingSequence)
         : null;
-      const state=board.isBouncing(d.uid) ? 'hurtAlt' : d.dying ? (d.hunger<=0&&['walk','eat'].includes(p.motion)?p.motion:'ko') : C.isSleeping(d) ? 'seq_13' : trainingPose || p.motion || 'idle';
+      const state=bouncing ? 'hurtAlt' : d.dying ? (d.hunger<=0&&['walk','eat'].includes(p.motion)?p.motion:'ko') : sleeping ? 'seq_13' : reactionState || trainingPose || p.motion || 'idle';
       if (d.isEgg) asset(SPRITE_BY_NAME[C.getSpecies(d.originBaby || d.speciesId).id]); // 부화 전에 미리 불러 둔다
       // 안내 편지/다른 창 때문에 연출이 대기 중이어도 진화 후 모습을 먼저 보여 주지 않는다.
       const evolutionFrom=window.evolutionScene?.appearance(d.uid);
