@@ -385,6 +385,30 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .title-result-modal #modal-ok{width:100%;margin-top:12px}
 @media(max-width:600px){.title-result-modal .medal-panel{gap:8px}.title-result-modal .medal-panel h3{font-size:18px}.title-result-modal .medal-panel p{font-size:16px}}
 
+/* 첫 우승의 웹 연출. 원본 메달 도트는 그대로 표시하고 자리도 미리 확보한다. */
+.medal-reveal{position:relative;isolation:isolate;display:grid;place-items:center;flex:none;width:64px;height:64px}
+@media(prefers-reduced-motion:no-preference){
+  .medal-reveal::before{content:"";position:absolute;inset:-12px;z-index:-1;border-radius:50%;
+    background:radial-gradient(circle,#ffda6990 0%,#ffc34940 52%,transparent 71%);
+    opacity:0;animation:medal-gold-light 520ms ease-out 480ms both}
+  .medal-reveal .title-medal{animation:medal-settle 620ms cubic-bezier(.22,.74,.29,1) 160ms both}
+  .medal-award-message{animation:medal-message-in 220ms ease-out 570ms both}
+  @keyframes medal-settle{
+    0%{opacity:0;transform:translateY(-16px) scale(.65)}
+    64%{opacity:1;transform:translateY(0) scale(1.1)}
+    100%{opacity:1;transform:none}
+  }
+  @keyframes medal-gold-light{
+    0%{opacity:0;transform:scale(.72)}
+    35%{opacity:.8}
+    100%{opacity:0;transform:scale(1.18)}
+  }
+  @keyframes medal-message-in{
+    from{opacity:0;transform:translateY(3px)}
+    to{opacity:1;transform:none}
+  }
+}
+
 /* 원본 아이템 도트와 창/슬롯 그림. 칸의 반응형 배치는 웹판 정책이다. */
 .hunt-items{padding:16px;margin:16px 0;background:#12362f;border:12px solid transparent;border-image:url('assets/hunt/item-panel.png') 12 fill stretch}
 .hunt-items h3{margin:0 0 14px;color:#ffe898;font-size:18px;display:flex;align-items:center;justify-content:space-between;gap:8px}

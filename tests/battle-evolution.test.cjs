@@ -53,6 +53,9 @@ test('최초 타이틀 승리만 메달을 안내하고 재우승은 상금과 �
   const html=nodes['#modal-body'].innerHTML;
   assert.equal(c.save.titles.filter(x=>x===c.m.id).length,1);assert.equal(c.save.bits,c.oldBits+c.m.prize);
   assert.equal(/class="title-medal"/.test(html),!repeat);assert.equal(messages.some(x=>x.startsWith('타이틀 메달 획득:')), !repeat);
+  assert.equal(html.includes('class="medal-reveal"'),!repeat);
+  assert.equal(html.includes('class="medal-award-message"'),!repeat);
+  assert.equal(nodes['#modal-ok'].disabled,false);
   assert.equal(resultDetails.length,1);assert.equal(resultDetails[0].tag,'details');
   assert.equal(resultDetails[0].children[1],recordPanel);
   assert.equal(classes.has('title-result-modal'),true);assert.equal(classes.has('battle-modal'),false);assert.doesNotMatch(html,/<canvas|battle-layout/);
