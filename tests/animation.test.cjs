@@ -182,11 +182,32 @@ test('피해0은 방어34, 치료/강화는35, 부활은33을 종별 원본 길�
  }
 });
 
+test('일반 공격은 준비 동작 뒤 적중하고 교차 공격은 각자의 공격 뒤 반응을 재생한다',()=>{
+ const source=fs.readFileSync('web/game.js','utf8'),logs=[];
+ const c=vm.createContext({window:{},Image:function(){},battleLog:line=>logs.push(line),drawArena(){},finishBattle(){}});
+ for(const f of ['assets/battle/effects.js','battle-effects.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),c);
+ vm.runInContext(`
+  const units=[{id:0,name:'A',speciesId:'a',x:70,y:80},{id:1,name:'B',speciesId:'b',x:110,y:80}];
+  const events=[{type:'hit',from:0,to:1,damage:0},{type:'hit',from:1,to:0,damage:12}];
+  const C={getSpecies:id=>({id}),stepBattle:()=>events.splice(0)};
+  const SPRITE_BY_NAME={},animations={duration:()=>.5,windup:()=>.2},battleBackdrop={spriteScale:()=>1},spriteOf=()=>({});
+  const battle={acc:0,state:{units,over:false},motion:new Map(),actions:new Map(),flashes:[],effects:window.createBattleEffects()};
+  globalThis.b=battle;
+ `+source.slice(source.indexOf('  function battleTick('),source.indexOf('  function battleLog(')),c);
+ c.battleTick(.1);
+ assert.equal(c.b.actions.get(0).state,'attack4');assert.equal(c.b.actions.get(1).state,'attack4');
+ c.battleTick(.19);assert.equal(logs.length,0);
+ c.battleTick(.02);assert.equal(logs.length,2);
+ assert.equal(c.b.actions.get(1).state,'attack4');assert.equal(c.b.actions.get(1).reaction.state,'guard2');
+ c.battleTick(.3);assert.equal(c.b.actions.get(1).state,'guard2');
+ assert.ok(['hurt','hurtAlt'].includes(c.b.actions.get(0).state));
+});
+
 test('실제 경기장은 상태이상 지속·해제·KO·정지에서 올바른 원본 자세를 그린다',()=>{
- const source=fs.readFileSync('web/game.js','utf8'),frames=[],labels=[],els={};
+ const source=fs.readFileSync('web/game.js','utf8'),frames=[],drawXs=[],labels=[],els={};
  const paint={save(){},restore(){},translate(){},scale(){},beginPath(){},ellipse(){},fill(){},fillRect(){},fillText(text){labels.push(text);},strokeText(){}};
  els['#arena']={width:416,height:272,getContext:()=>paint};
- const c=vm.createContext({window:{},performance:{now:()=>0},body:(...args)=>frames.push(args[6]),$:sel=>els[sel]??(els[sel]={}),esc:String,clamp:n=>Math.max(0,Math.min(100,n))});
+ const c=vm.createContext({window:{},performance:{now:()=>0},body:(...args)=>{frames.push(args[6]);drawXs.push(args[3]);},$:sel=>els[sel]??(els[sel]={}),esc:String,clamp:n=>Math.max(0,Math.min(100,n))});
  for(const f of ['core.js','assets/sprites.js','assets/animations.js','animation.js'])vm.runInContext(fs.readFileSync('web/'+f,'utf8'),c);
  vm.runInContext(`const C=ChampCore,animations=window.createAnimationPlayer(window.DIGIMON_ANIMATIONS),SPRITE_BY_NAME=Object.fromEntries(window.SPRITES.map(s=>[s.name,s.id]));
  const battleBackdrop={draw:()=>true,viewport:{x:0,y:0,scale:1},spriteScale:()=>1},spriteOf=()=>({body:24});
@@ -227,6 +248,11 @@ test('실제 경기장은 상태이상 지속·해제·KO·정지에서 올바�
  c.b.actions.clear();
  frames.length=0;c.drawArena(.1);
  assert.equal(frames[0],player.sample(id,'sleep',0));
+ c.b.motion.set(0,{dx:10,dy:0});
+ for(const [age,x] of [[0,u.x-10],[.03,u.x-7],[.07,u.x-3],[.1,u.x]]){
+  c.b.motionAge=age;drawXs.length=0;c.drawArena(0);
+  assert.ok(Math.abs(drawXs[0]-x)<1e-8);
+ }
 
 });
 

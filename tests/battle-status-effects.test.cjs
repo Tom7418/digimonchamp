@@ -22,7 +22,7 @@ test('개체별 상태 시계는 독립적이며 dt0/초기화는 동작을 진�
 });
 test('필살기 전환 중 정지하고 유지 구간에만 기존 배틀 연출 시계를 따라간다',()=>{
  const src=fs.readFileSync('web/game.js','utf8'),part=src.slice(src.indexOf('  function battleTick('),src.indexOf('  function battleLog('));let tick=0;
- const c=vm.createContext({drawArena(){},battle:{state:{},actions:new Map(),effects:{tick(){}},statusEffects:{tick:dt=>tick+=dt},presentation:{busy:true,snapshot:()=>({age:0,transition:.2,hold:1}),tick(){}}}});vm.runInContext(part,c);c.battleTick(.1);assert.equal(tick,0);
+ const c=vm.createContext({C:{},drawArena(){},battle:{state:{},actions:new Map(),effects:{tick(){}},statusEffects:{tick:dt=>tick+=dt},presentation:{busy:true,snapshot:()=>({age:0,transition:.2,hold:1}),tick(){}}}});vm.runInContext(part,c);c.battleTick(.1);assert.equal(tick,0);
  c.battle.presentation.snapshot=()=>({age:.2,transition:.2,hold:1});c.battleTick(.1);assert.ok(Math.abs(tick-.1)<1e-9);
 });
 

@@ -10774,6 +10774,7 @@ var ChampCore = (function(exports) {
 	/** 배틀 제한 시간(초): 원본은 7200프레임(120초)을 넘으면 시간 종료 (overlay19 0x2113FB4) */
 	var TIME_LIMIT = 120;
 	var DT = .1;
+	var BATTLE_STEP_SECONDS = DT;
 	var FREE_FOES = /* @__PURE__ */ new Map();
 	/** 후보표 [레벨 0~9][계절 0~3, 4=공통] (원본 0x020C7E24) */
 	var FREE_POOLS = Array.from({ length: 10 }, () => Array.from({ length: 5 }, () => []));
@@ -11337,11 +11338,18 @@ var ChampCore = (function(exports) {
 		u.x = Math.min(ARENA.w - 20, Math.max(20, u.x + dx * k));
 		u.y = Math.min(ARENA.h - 20, Math.max(20, u.y + dy * k));
 	}
+	/** 웹판 1대1 이동: 일정한 방향을 유지하며 측면으로 돌고, 공격 사거리 근처에서는 곧게 접근한다. */
+	function duelMove(u, target, speed, t, forward) {
+		const x = target.x - u.x, y = target.y - u.y;
+		const lateral = (Math.floor(t / 2.6 + u.id * .43) % 2 ? -1 : 1) * (forward === 0 ? 1 : .34);
+		move(u, u.x + x * forward - y * lateral, u.y + y * forward + x * lateral, forward === 0 ? speed * .55 : speed);
+	}
 	/** 전투를 0.1초 진행한다. state를 직접 바꾸고 이번 스텝의 이벤트를 돌려준다 */
 	function stepBattle(s, rng) {
 		const events = [];
 		if (s.over) return events;
 		s.t += DT;
+		const duel = s.units.length === 2;
 		for (const u of s.units) tickRevival(s, u, events, rng);
 		for (const u of s.units) {
 			if (!u.alive) continue;
@@ -11406,13 +11414,16 @@ var ChampCore = (function(exports) {
 			}
 			if (!u.intent) {
 				const keep = u.keep ?? keepDistance(u.mode, 108);
-				if (d < keep.dist - keep.tol) move(u, near.x, near.y, speed, true);
-				else if (d > keep.dist + keep.tol) move(u, near.x, near.y, speed);
+				const radial = d < keep.dist - keep.tol ? -1 : d > keep.dist + keep.tol ? 1 : 0;
+				if (duel && !hasStatus(u, s.t, 2, 5)) duelMove(u, near, speed, s.t, radial);
+				else if (radial !== 0) move(u, near.x, near.y, speed, radial < 0);
 				continue;
 			}
 			const wantsSpecial = u.intent.kind === "special";
-			if (d > (wantsSpecial ? 150 : 42)) {
-				move(u, near.x, near.y, speed);
+			const range = wantsSpecial ? 150 : 42;
+			if (d > range) {
+				if (duel && d > range + 24 && !hasStatus(u, s.t, 2, 5)) duelMove(u, near, speed, s.t, 1);
+				else move(u, near.x, near.y, speed);
 				continue;
 			}
 			const special = wantsSpecial;
@@ -12447,6 +12458,7 @@ var ChampCore = (function(exports) {
 	exports.BAIT_PACK = BAIT_PACK;
 	exports.BATTLE_MAPS = BATTLE_MAPS;
 	exports.BATTLE_OFFER = BATTLE_OFFER;
+	exports.BATTLE_STEP_SECONDS = BATTLE_STEP_SECONDS;
 	exports.BLAST_RADIUS = BLAST_RADIUS;
 	exports.BOMB_FUSE = BOMB_FUSE;
 	exports.BOND = BOND;

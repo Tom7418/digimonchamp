@@ -1871,6 +1871,19 @@ describe('사용자 지정 성격 효과와 원본 SP 연결',()=>{
   const mon=(uid=1,personality:Digimon['personality']='쿨',species='아구몬'):Digimon=>({...newDigimon(uid,species,()=>.5),personality,hunger:80,restCycle:{species,awakeLeft:10000,sleepLeft:0}});
   const saveOf=(...digimon:Digimon[]):SaveData=>({...freshEggSave(0),clock:480,digimon});
   const duel=(p:Digimon['personality']='쿨',mode:'일반'|'지원'|'특수'='일반')=>createBattle([entrantOf(mon(1,p),mode)],[entrantOf(mon(2,'쿨'),'일반')]);
+  it('1대1 개체는 측면으로 접근하고 거리 유지 중에도 선회하며 공격한다',()=>{
+    const s=duel('솔직'),rng=seeded(32),u=s.units[0];
+    let minY=u.y,maxY=u.y,attacks=0;
+    for(let i=0;i<200&&!s.over;i++){
+      attacks+=stepBattle(s,rng).filter(e=>e.type==='hit').length;
+      minY=Math.min(minY,u.y);maxY=Math.max(maxY,u.y);
+    }
+    expect(maxY-minY).toBeGreaterThan(30);expect(attacks).toBeGreaterThan(1);
+    const waiting=duel();waiting.units[0].x=145;waiting.units[1].x=295;
+    waiting.units.forEach(u=>u.cd=2);
+    stepBattle(waiting,()=>.5);
+    expect(waiting.units[0].y).not.toBe(125);
+  });
   it('KO 기본 부상25%, 대담35%의 경계와 기존 부상·알약·겨울 보정을 유지한다',()=>{
     for(const p of ['솔직','쿨','열혈','대담','겁쟁이','게으름','성급한','제멋대로'] as const){
       const chance=p==='대담'?.35:.25,d=mon(1,p);

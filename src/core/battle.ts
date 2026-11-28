@@ -11,6 +11,7 @@ export const ARENA = { w: 480, h: 250 };
 /** 배틀 제한 시간(초): 원본은 7200프레임(120초)을 넘으면 시간 종료 (overlay19 0x2113FB4) */
 export const TIME_LIMIT = 120;
 const DT = 0.1;
+export const BATTLE_STEP_SECONDS = DT;
 
 // ---------- 프리 배틀 (원본 대진·상금, tools/extract_free_battles.py → free-battles.txt) ----------
 export interface FreeFoe { no: number; nick: string; speciesId: string; level: number; prize: number; curves: number[]; resist: number[] }
@@ -469,11 +470,20 @@ function move(u: Unit, tx: number, ty: number, speed: number, away = false) {
   u.y = Math.min(ARENA.h - 20, Math.max(20, u.y + dy * k));
 }
 
+/** 웹판 1대1 이동: 일정한 방향을 유지하며 측면으로 돌고, 공격 사거리 근처에서는 곧게 접근한다. */
+function duelMove(u: Unit, target: Unit, speed: number, t: number, forward: -1 | 0 | 1) {
+  const x = target.x - u.x, y = target.y - u.y;
+  const side = Math.floor(t / 2.6 + u.id * 0.43) % 2 ? -1 : 1;
+  const lateral = side * (forward === 0 ? 1 : 0.34);
+  move(u, u.x + x * forward - y * lateral, u.y + y * forward + x * lateral, forward === 0 ? speed * 0.55 : speed);
+}
+
 /** 전투를 0.1초 진행한다. state를 직접 바꾸고 이번 스텝의 이벤트를 돌려준다 */
 export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
   const events: BattleEvent[] = [];
   if (s.over) return events;
   s.t += DT;
+  const duel = s.units.length === 2;
   // 다운 중에는 공격 대상에서 제외하고 원본310프레임 뒤 기상을 재판정한다.
   for (const u of s.units) tickRevival(s, u, events, rng);
   for (const u of s.units) {
@@ -537,12 +547,18 @@ export function stepBattle(s: BattleState, rng: Rng): BattleEvent[] {
     if (!u.intent) {
       // 기다리는 동안은 이동 행동에서 고른 거리를 유지한다 (원본 상태 동작 3)
       const keep = u.keep ?? keepDistance(u.mode, 108);
-      if (d < keep.dist - keep.tol) move(u, near.x, near.y, speed, true);
-      else if (d > keep.dist + keep.tol) move(u, near.x, near.y, speed);
+      const radial = d < keep.dist - keep.tol ? -1 : d > keep.dist + keep.tol ? 1 : 0;
+      if (duel && !hasStatus(u, s.t, 2, 5)) duelMove(u, near, speed, s.t, radial);
+      else if (radial !== 0) move(u, near.x, near.y, speed, radial < 0);
       continue;
     }
     const wantsSpecial = u.intent.kind === 'special';
-    if (d > (wantsSpecial ? 150 : 42)) { move(u, near.x, near.y, speed); continue; }
+    const range = wantsSpecial ? 150 : 42;
+    if (d > range) {
+      if (duel && d > range + 24 && !hasStatus(u, s.t, 2, 5)) duelMove(u, near, speed, s.t, 1);
+      else move(u, near.x, near.y, speed);
+      continue;
+    }
     const special = wantsSpecial;
     const skill = u.intent.kind === 'special' && u.intent.skill.tpCost <= u.tp ? u.intent.skill : null;
     u.intent = undefined;

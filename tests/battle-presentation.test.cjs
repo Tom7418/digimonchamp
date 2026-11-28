@@ -18,7 +18,7 @@ test('광역 중복 강조를 막고 서로 다른 시전자는 차례대로 처
 });
 test('실제 배틀 틱은 강조 중 엔진·효과·시간을 진행하지 않고 정지 프레임을 그린다',()=>{
  const src=fs.readFileSync('web/game.js','utf8');let ticks=0,draws=0;
- const c=vm.createContext({battle:{presentation:{busy:true,snapshot:()=>({age:0,transition:1,hold:1}),tick(){ticks++;}},state:{}},drawArena:dt=>{assert.equal(dt,0);draws++;}});
+ const c=vm.createContext({C:{},battle:{presentation:{busy:true,snapshot:()=>({age:0,transition:1,hold:1}),tick(){ticks++;}},state:{}},drawArena:dt=>{assert.equal(dt,0);draws++;}});
  vm.runInContext(src.slice(src.indexOf('  function battleTick('),src.indexOf('  function battleLog(')),c);c.battleTick(.1);assert.equal(ticks,1);assert.equal(draws,1);
 });
 

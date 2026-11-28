@@ -11,7 +11,7 @@
    const skill=skills?.add(event,units,before,actorScale,windup);if(skill)return skill;
    if(!['hit','heal'].includes(event.type))return;
    const target=units.find(u=>u.id===event.to);if(!target)return;
-   const delay=event.type==='hit'&&event.special?windup:0;
+   const delay=event.type==='hit'?windup:0;
    const blocked=event.type==='hit'&&event.damage===0;
    if(blocked&&!delay)return;
    const duration=blocked?0:event.type==='heal'?1:data.hit.frames.reduce((s,f)=>s+f[1],0)/data.tickRate;
