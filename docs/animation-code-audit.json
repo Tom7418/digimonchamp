@@ -49,6 +49,13 @@
     "entry": "overlay18 0x0211b888/0x0211b894",
     "status": "rest-state path, not knockout"
   },
+  "carry": {
+    "sequence": 11,
+    "input": "overlay18 0x0210fb20 and 0x0210fda0",
+    "actorState": 6,
+    "entry": "0x0211bfb8/0x0211bfbc",
+    "followTouch": "0x0211c16c and 0x0211c194"
+  },
   "training": {
     "table": "ARM9 0x020c81e0; 37 records of40 bytes",
     "dispatch": "overlay18 0x021191d4..0x02119300 -> 0x02118cfc -> 0x02118a10 -> 0x0211ceb0",

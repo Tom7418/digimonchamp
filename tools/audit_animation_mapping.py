@@ -21,6 +21,10 @@ def main():
  assert branch(19,0x21168fc)==0x2117ad8
  assert word(19,0x2116558)==0xe3a0100f
  assert word(0,0x2121c68)==0xe3a01013 and word(0,0x2121c74)==0xe3a01003
+ assert word(18,0x210fb20)==0xe3a0107f and word(18,0x210fda0)==0xe3500006
+ assert word(18,0x212bd58)==0x0211bfb0  # 육성 상태 6 진입
+ assert word(18,0x211bfb8)==0xe3a0100b and branch(18,0x211bfbc)==0x21159c4
+ assert word(18,0x211c16c)==0xe5820024 and word(18,0x211c194)==0xe5820028  # 터치 X/Y → 배우 위치
  assert word(18,0x2118db4)==0xe3a010b4 and word(18,0x211b6ac)==0xe3a01003  # 달리기 180프레임·시퀀스3
  assert word(18,0x211ec84)==0xe3a01000 and branch(18,0x211ec98)==0x2046e38  # 고산은 시퀀스0
  assert word(18,0x21190c8)==0xe3a01020 and word(18,0x21190d4)==0xe3a0000f and word(18,0x21190e4)==0xe3a0001e
@@ -40,6 +44,8 @@ def main():
  'ko':{'sequence':37,'source':'user-provided GIF classification: Knocked Out','correction':'previous sequence15 code branch is Sleep2 pose, not the general visual knockout mapping'},
  'rope':{'userVerifiedAgumonCells':[27,43],'sequenceRange':[16,25],'codeCorroboration':'overlay0 0x02121c58..0x02121c78 selects sequence19 instead of3 with bound flag+0x118'},
  'sleep':{'sequence':13,'entry':'overlay18 0x0211b888/0x0211b894','status':'rest-state path, not knockout'},
+ 'carry':{'sequence':11,'input':'overlay18 0x0210fb20 and 0x0210fda0','actorState':6,'entry':'0x0211bfb8/0x0211bfbc',
+          'followTouch':'0x0211c16c and 0x0211c194'},
  'training':{'table':'ARM9 0x020c81e0; 37 records of40 bytes','dispatch':'overlay18 0x021191d4..0x02119300 -> 0x02118cfc -> 0x02118a10 -> 0x0211ceb0','facilities':facilities,
              'phaseFormat':'[NANR sequence, optional original hold in frames]',
              'webAliases':TRAINING_ALIASES},

@@ -90,6 +90,7 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
  const worldPoint=(p,c)=>{const a=(c.rotation||0)*Math.PI/3,o=center(c.q,c.r);return {x:o.x+p.x*Math.cos(a)-p.y*Math.sin(a),y:o.y+p.x*Math.sin(a)+p.y*Math.cos(a)};};
  const placePet=(pet,point,cage)=>{roaming.delete(pet);pet.x=point.x;pet.y=point.y;pet.target=point.x;pet.cagePosition=cage?localPoint(point,cage):null;};
  const draggedPoint=point=>({x:point.x+(drag.offset?.x||0),y:point.y+(drag.offset?.y||0)});
+ const beyondPetDragThreshold=point=>Math.hypot(point.x-drag.start.x,point.y-drag.start.y)>=8;
  const restoreDrag=()=>{if(drag?.pet!==undefined){const pet=getState().team[drag.pet];if(pet)Object.assign(pet,drag.original);}};
  // 팔레트의 작은 모양 미리보기도 실제 배치 좌표에서 생성한다.
  function footprint(kind){const points=L.cells({kind,q:0,r:0,rotation:0}).map(([q,r])=>{const c=center(q,r);return Array.from({length:6},(_,i)=>{const a=(i*60-30)*Math.PI/180;return [c.x+R*Math.cos(a),c.y+R*Math.sin(a)];});});const flat=points.flat(),xs=flat.map(p=>p[0]),ys=flat.map(p=>p[1]);return `<svg class="footprint" viewBox="${Math.min(...xs)-3} ${Math.min(...ys)-3} ${Math.max(...xs)-Math.min(...xs)+6} ${Math.max(...ys)-Math.min(...ys)+6}" aria-label="${L.types[kind].cells.length}칸 점유 모양">${points.map(ps=>`<polygon points="${ps.map(p=>p.join(',')).join(' ')}"/>`).join('')}</svg>`;}
@@ -136,12 +137,12 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
    // 디지몬·케이지를 잡지 않았으면 끌어서 사육장을 둘러본다
    if(drag?.click||(editing&&!tool&&!drag)){drag={...(drag||{}),pan:{x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y,moved:false}};}
  };
- canvas.onpointermove=e=>{if(drag?.pan){const box=canvas.getBoundingClientRect(),k=VIEW.w/box.width/zoom,dx=(e.clientX-drag.pan.x)*k,dy=(e.clientY-drag.pan.y)*k;if(Math.hypot(dx,dy)>6)drag.pan.moved=true;if(drag.pan.moved){cam.x=drag.pan.cx-dx;cam.y=drag.pan.cy-dy;clampCam();}}hover=tile(coordinate(e));if(drag?.pet!==undefined)drag.point=coordinate(e);};
+ canvas.onpointermove=e=>{if(drag?.pan){const box=canvas.getBoundingClientRect(),k=VIEW.w/box.width/zoom,dx=(e.clientX-drag.pan.x)*k,dy=(e.clientY-drag.pan.y)*k;if(Math.hypot(dx,dy)>6)drag.pan.moved=true;if(drag.pan.moved){cam.x=drag.pan.cx-dx;cam.y=drag.pan.cy-dy;clampCam();}}const point=coordinate(e);hover=tile(point);if(drag?.pet!==undefined){drag.point=point;drag.lifted ||= beyondPetDragThreshold(point);}};
  canvas.addEventListener('wheel',e=>{if(isBlocked())return;e.preventDefault();const before=coordinate(e),p=screenPoint(e);zoom=Math.max(0.5,Math.min(2.5,zoom*Math.exp(-e.deltaY*0.001)));cam.x=before.x-p.x/zoom;cam.y=before.y-p.y/zoom;clampCam();},{passive:false});
  canvas.onpointerup=e=>{if(isBlocked()){restoreDrag();drag=null;return;}if(drag?.pan?.moved){drag=null;status();return;}const s=getState(),point=coordinate(e),foot=drag?.pet!==undefined?draggedPoint(point):point,t=tile(editing?point:foot);
    if(editing){const next=candidate(t);if(next){if(L.valid(s.layout,next)){if(drag?.cage){const c=s.layout.find(c=>c.id===drag.cage);moveContents(c,next);Object.assign(c,next);}else{const stored=(s.storedCages||[]).findIndex(c=>c.kind===next.kind);const id=stored>=0?s.storedCages.splice(stored,1)[0].id:crypto.randomUUID();s.layout.push({...next,id});}changed('케이지 배치를 저장했습니다.');}else notify('다른 케이지와 겹치거나 잠긴 칸입니다. 테이머 랭크가 오르면 사용 가능한 칸이 늘어납니다.');}}
    // 디지몬 클릭은 선택/쓰다듬기만 한다. 수동 이동은 실제로 잡아 끈 개체만 허용한다.
-   else if(drag?.pet!==undefined&&Math.hypot(point.x-drag.start.x,point.y-drag.start.y)<8){restoreDrag();const uid=s.team[drag.pet].uid;s.pickedUid=s.pickedUid===uid?null:uid;onPet?.(drag.pet);changed();}
+   else if(drag?.pet!==undefined&&!drag.lifted&&!beyondPetDragThreshold(point)){restoreDrag();const uid=s.team[drag.pet].uid;s.pickedUid=s.pickedUid===uid?null:uid;onPet?.(drag.pet);changed();}
    else if(drag?.pet!==undefined){
      const cage=t&&L.at(s.layout,t.q,t.r),pet=s.team[drag.pet];
      if(pet&&(!cage||!safeInCage(foot,cage))&&bouncePet(pet,foot)){changed('케이지 안으로 튕겨 들어갔습니다.');}
@@ -169,8 +170,9 @@ window.createCageEditor=function(canvas,getState,changed,notify,isBlocked){
      while(b.elapsed>=b.duration){b.elapsed-=b.duration;b.from=b.to;b.completed++;if(!nextBounce(b,p)){bounces.delete(uid);break;}}
    }},
    isDragging(uid){return drag?.pet!==undefined&&getState().team[drag.pet]?.uid===uid;},
-   // 손 도구로 디지몬을 누른 채 움직이지 않는 중(8px 미만) = 쓰다듬는 상태 (원본 배우 +0x430, 조작은 웹판)
-   pressingUid(){if(drag?.pet===undefined||isBlocked())return null;const p=drag.point??drag.start;if(Math.hypot(p.x-drag.start.x,p.y-drag.start.y)>=8)return null;return getState().team[drag.pet]?.uid??null;},
+   // 한 번 집으면 처음 위치로 돌아와도 놓을 때까지 쓰다듬기로 돌아가지 않는다.
+   carryingUid(){return drag?.lifted&&!isBlocked()?getState().team[drag.pet]?.uid??null:null;},
+   pressingUid(){return drag?.pet!==undefined&&!drag.lifted&&!isBlocked()?getState().team[drag.pet]?.uid??null:null;},
    reset(){selected=null;drag=null;tool=null;bounces.clear();roaming=new WeakMap();init();status();},
    world:WORLD, view:VIEW, cam, center, R, get zoom(){return zoom;},
    // 화면(캔버스) 좌표 이벤트 → 월드 좌표

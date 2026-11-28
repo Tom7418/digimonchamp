@@ -1791,6 +1791,7 @@
     for (const pp of view.poops) drawPoop(pp.x, pp.y);
     updateSweeps(performance.now());
     drawSweeps(performance.now());
+    const carryingUid = board.carryingUid();
     const order = view.team.map((p, i) => ({ p, i })).sort((a, b) => a.p.y - b.p.y);
     for (const { p, i } of order) {
       const d = digi(p.uid);
@@ -1854,7 +1855,8 @@
       }
       // 행동별 원본 셀을 재생한다. 인위적인 상하 흔들림은 사용하지 않는다.
       if (animDt > 0) p.motion = Math.hypot(p.x - oldX, p.y - oldY) > 0.01 ? (trainingMove?'run':'walk') : feeding.has(d.uid) ? 'eat' : 'idle';
-      const state=bouncing ? 'hurtAlt' : d.dying ? (d.hunger<=0&&['walk','eat'].includes(p.motion)?p.motion:'ko') : sleeping ? 'seq_13' : reactionState || p.motion || 'idle';
+      // 원작에서 집힌 개체는 육성 상태 6의 시퀀스 11로 매달린 동안 버둥거린다.
+      const state=carryingUid===d.uid && !d.isEgg ? 'runScared' : bouncing ? 'hurtAlt' : d.dying ? (d.hunger<=0&&['walk','eat'].includes(p.motion)?p.motion:'ko') : sleeping ? 'seq_13' : reactionState || p.motion || 'idle';
       if (d.isEgg) asset(SPRITE_BY_NAME[C.getSpecies(d.originBaby || d.speciesId).id]); // 부화 전에 미리 불러 둔다
       // 안내 편지/다른 창 때문에 연출이 대기 중이어도 진화 후 모습을 먼저 보여 주지 않는다.
       const evolutionFrom=window.evolutionScene?.appearance(d.uid);
