@@ -21,3 +21,24 @@ test('방어 성공은 타격광을 생략하되 기술 준비 시간과 명중 
  fx.tick(.02);assert.equal(fx.drain()[0],blocked);
  fx.draw(ctx);assert.equal(draws.length,0);assert.equal(fx.busy,false);
 });
+
+test('컷인 동안 비행 중인 다른 공격의 명중을 보류하고 복귀 후 현재 위치에서 반영한다',()=>{
+ const fx=setup(),target={id:1,x:90,y:60,hp:25,maxHp:100,alive:true},units=[target],draws=[];
+ const live={type:'hit',from:0,to:1,damage:45},focus={type:'hit',from:2,to:1,damage:30};
+ fx.add(live,units,undefined,1,.3,45);
+ fx.add(focus,units,undefined,1,.2,30);
+ target.x=120;
+ fx.tick(.25,units,event=>event===focus);
+ assert.deepEqual([...fx.drain()],[focus]);
+ assert.equal(fx.visualUnit(target).hp,70);
+ assert.equal(fx.visualUnit(target).x,120);
+ target.x=150;
+ fx.tick(.15,units);
+ assert.equal(fx.drain().length,0);
+ assert.equal(fx.visualUnit(target).hp,70);
+ fx.tick(.151,units);
+ assert.deepEqual([...fx.drain()],[live]);
+ assert.equal(fx.visualUnit(target).hp,25);
+ fx.draw({drawImage:(...args)=>draws.push(args)});
+ assert.deepEqual(draws.map(d=>d[5]+d[7]/2),[150,120]);
+});

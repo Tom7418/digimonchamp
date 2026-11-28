@@ -2,7 +2,7 @@
 (function(root){
  // 원본 0x21285ee/0x2129611: 발사/비행/명중 NANR, 속도, 오프셋·배율. 대상 이동/충돌은 확정된 웹 이벤트를 따른다.
  root.createBattleSkillEffects=function(data=root.BATTLE_SKILL_EFFECTS,lobEffects=root.BATTLE_LOB_EFFECTS,throwEffects=root.BATTLE_THROW_EFFECTS){
-  const image=new Image();image.src='assets/battle/skill-effects.png';let jobs=[],clock=0;const arrivals=[];
+  const image=new Image();image.src='assets/battle/skill-effects.png';let jobs=[];const arrivals=[];
   // 투척 기술 7종(tools/extract_throw_effects.py): 따로 변환한 아틀라스. 뱅크 키는 't'+원본 뱅크 번호라 기존 뱅크와 겹치지 않는다.
   const throwImage=throwEffects?Object.assign(new Image(),{src:throwEffects.image}):null;
   const bank=ref=>throwEffects?.banks[ref[0]]??data.banks[ref[0]];
@@ -26,13 +26,19 @@
    const beam=d.kind==='beam'?data.beam:null;
    const activeEnd=beam?Math.max(lead,(beam.growDelayFrames+Math.ceil(1/beam.widthStep)-1)/data.tickRate):0;
    const tail=beam?Math.max(activeEnd-lead+Math.ceil(1/beam.widthStep)/data.tickRate,duration(d.impact)):Math.max(duration(d.finish,d.finishFrameTicks),duration(d.impact));
-   jobs.push({d,event,from,actorScale,start,end,flip,begin:clock+windup,lead,tail,activeEnd,arrived:windup+lead===0,before:before?.get(t.id)});
+   jobs.push({d,event,from,actorScale,start,end,flip,age:-windup,lead,tail,activeEnd,arrived:windup+lead===0,before:before?.get(t.id)});
    return {lead:windup+lead,hold:windup+lead+tail,lockActor:d.kind==='beam'};
   }
-  function tick(dt){
-   clock+=Math.max(0,dt);
-   for(const j of jobs)if(!j.arrived&&clock-j.begin>=j.lead){j.arrived=true;arrivals.push(j.event);}
-   jobs=jobs.filter(j=>clock-j.begin<j.lead+j.tail);
+  function tick(dt,units,allows){
+   for(const j of jobs){
+    if(allows&&!allows(j.event))continue;
+    j.age+=Math.max(0,dt);
+    if(j.arrived)continue;
+    const target=units?.find(u=>u.id===j.event.to);
+    if(target&&j.d.kind!=='beam')j.end={x:target.x,y:target.y-10};
+    if(j.age>=j.lead){j.arrived=true;arrivals.push(j.event);}
+   }
+   jobs=jobs.filter(j=>j.age<j.lead+j.tail);
   }
   function drawRef(ctx,ref,x,y,age,scale=1,flip=false,options={}){
    if(!ref)return;
@@ -47,7 +53,7 @@
   }
   function draw(ctx,scale=1){
    for(const j of jobs){
-    const age=clock-j.begin,d=j.d;
+    const age=j.age,d=j.d;
     if(age<0)continue; // 준비 동작 중에는 발사광·투사체·빔을 그리지 않는다.
     if(d.kind==='beam'){
      const b=data.beam,dx=j.end.x-j.start.x,dy=j.end.y-j.start.y,distance=Math.hypot(dx,dy)||1;

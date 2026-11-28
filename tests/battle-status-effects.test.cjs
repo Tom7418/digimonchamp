@@ -20,10 +20,11 @@ test('머리 효과는 원본 높이 비율, 얼음·마비는 발끝에 맞추�
 test('개체별 상태 시계는 독립적이며 dt0/초기화는 동작을 진행시키지 않는다',()=>{
  const {fx,ctx}=setup(),a={id:0,alive:true,status:{id:9,until:10}},b={id:1,alive:true,status:{id:9,until:10}};fx.draw(ctx,a,0,bounds);fx.tick(.18);assert.equal(fx.draw(ctx,a,0,bounds).cell,26);assert.equal(fx.draw(ctx,b,0,bounds).cell,25);fx.tick(0);assert.equal(fx.draw(ctx,a,0,bounds).cell,26);fx.clear();assert.equal(fx.draw(ctx,a,0,bounds).cell,25);
 });
-test('필살기 전환 중 정지하고 유지 구간에만 기존 배틀 연출 시계를 따라간다',()=>{
+test('필살기 컷인 중에는 기존 상태 효과도 정지하고 복귀 후 재생된다',()=>{
  const src=fs.readFileSync('web/game.js','utf8'),part=src.slice(src.indexOf('  function battleTick('),src.indexOf('  function battleLog('));let tick=0;
  const c=vm.createContext({C:{},drawArena(){},battle:{state:{},actions:new Map(),effects:{tick(){}},statusEffects:{tick:dt=>tick+=dt},presentation:{busy:true,snapshot:()=>({age:0,transition:.2,hold:1}),tick(){}}}});vm.runInContext(part,c);c.battleTick(.1);assert.equal(tick,0);
- c.battle.presentation.snapshot=()=>({age:.2,transition:.2,hold:1});c.battleTick(.1);assert.ok(Math.abs(tick-.1)<1e-9);
+ c.battle.presentation.snapshot=()=>({age:.2,transition:.2,hold:1});c.battleTick(.1);assert.equal(tick,0);
+ c.battle.presentation.busy=false;c.battleTick(.05);assert.equal(tick,.05);
 });
 
 // 모양으로 추정했던 연결이 원본 분기와 다시 달라지지 않도록 확인한다.

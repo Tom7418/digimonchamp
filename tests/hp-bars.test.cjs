@@ -64,7 +64,8 @@ test('배틀 정지는 효과·행동·HP 보간과 다음 전투 틱을 함께 
  assert.equal(c.battle.visualTime,100);
  assert.ok(visual.at(-1)<hp&&visual.at(-1)>20);
  assert.equal(effects.elapsed,.1);
+ assert.equal(steps,1);
  effects.busy=false;
  c.battleTick(.1);
- assert.equal(steps,1);
+ assert.equal(steps,2);
 });

@@ -1338,7 +1338,7 @@
       globalThis.ChampSound?.play(e.damage===0?'guard':e.critical?'critical':'hit',{record:e.skill?.record??(attacker&&C.basicRecordOf?C.basicRecordOf(attacker.speciesId):null)});
       const duration=animations.duration(id,state);
       // 원작 overlay19 0x02118a88: 명중하면 기존 행동을 끝내고 반응 상태로 바로 전환한다.
-      b.actions.set(e.to,{kind:'hit',left:duration,duration,state});
+      b.actions.set(e.to,{kind:'hit',left:duration,duration,state,event:e});
       const text=e.damage===0?'막음':`-${e.damage}${e.critical?' 크리티컬!':e.special?'!':''}`;
       b.flashes.push({id:e.to,text,until:b.visualTime+700,color:e.critical?'#ff9a6a':e.special?'#ffd36a':'#fff'});
       const attack=e.skill?.name ?? (e.special ? '필살기' : '일반 공격');
@@ -1348,13 +1348,14 @@
       for (const notify of b.pendingHitFeedback?.get(e) ?? []) notify();
       b.pendingHitFeedback?.delete(e);
     }
-    function tickBattleArt(b,dt) {
+    function tickBattleArt(b,dt,allows) {
       for(const [id,action] of b.actions){
+        if(allows&&!allows(action.event))continue;
         action.left-=dt;
         if(action.left<=0)b.actions.delete(id);
       }
-      b.effects.tick(dt);
-      b.statusEffects?.tick(dt);
+      b.effects.tick(dt,b.state.units,allows);
+      if(!allows)b.statusEffects?.tick(dt);
       for(const e of b.effects.drain?.()||[])battleHitVisual(b,e);
     }
     const b = battle;
@@ -1363,7 +1364,6 @@
     const finishReady=()=>b.state.over&&!b.effects.busy&&!b.presentation?.busy&&!b.actions.size&&!b.health?.busy(b.visualTime);
     // 표시용 시간도 멈춰 HP와 피해 숫자가 재개 시 건너뛰지 않게 한다.
     b.visualTime = (b.visualTime ?? 0) + dt * 1000;
-    b.motionAge = Math.min(stepSeconds,(b.motionAge ?? stepSeconds) + dt);
     // 그림을 읽는 동안 보이지 않는 전투가 먼저 진행되지 않는다. 실패/지연은 최대4초만 기다린다.
     if(!b.done&&b.map&&(b.assetWait??0)<4&&
       (b.effects.ready===false||b.statusEffects?.ready===false||battleBackdrop.status(b.map)==='loading'||b.state.units.some(u=>{const a=spriteOf(u.speciesId,false);return a&&!a.image.complete;}))){
@@ -1374,22 +1374,18 @@
       const focus=b.presentation.snapshot(),step=dt;
       b.presentation.tick(step);
       const play=Math.max(0,Math.min(focus.age+step,focus.transition+focus.hold)-Math.max(focus.age,focus.transition));
-      if(play)tickBattleArt(b,play);
+      // 컷인 기술의 동작과 효과만 재생하고 먼저 발사된 기술은 복귀 후 이어 간다.
+      if(play)tickBattleArt(b,play,event=>event?.special&&event.from===focus.from&&event.skill?.record===focus.record);
       drawArena(0);return;
     }
-    if(b.effects.busy){
-      tickBattleArt(b,dt);
-      drawArena(dt);
-      if(finishReady())finishBattle();
-      return;
-    }
+    b.motionAge = Math.min(stepSeconds,(b.motionAge ?? stepSeconds) + dt);
     if(b.done){
       tickBattleArt(b,dt);
       drawArena(dt);return;
     }
     tickBattleArt(b,dt);
     b.acc += dt; // 사용자 요청: 이동·공격·피격·기술 연출 모두 실시간 1배속으로 진행
-    while (b.acc >= stepSeconds && !b.state.over && !b.presentation?.busy && !b.effects.busy) {
+    while (b.acc >= stepSeconds && !b.state.over && !b.presentation?.busy) {
       b.acc -= stepSeconds;
       const before=new Map(b.state.units.map(u=>[u.id,{...u}]));
       const events=C.stepBattle(b.state, Math.random);
@@ -1401,14 +1397,22 @@
       // 지연된 공격의 상태 문구와 기록은 해당 명중에서 함께 표시한다.
       const hitFeedbackByTarget = new Map();
       const hitThisStep = new Set();
+      // 이미 계산한 피해 중 아직 화면에 닿지 않은 양만 HP 표시에서 되돌린다.
+      const hpBeforeHit = new Map([...before].map(([id,unit])=>[id,unit.hp]));
       for (const e of events) {
+        const hp = hpBeforeHit.get(e.to ?? e.id);
+        const shownLoss = e.type==='hit' ? Math.min(hp,e.damage) : 0;
+        if(e.type==='hit')hpBeforeHit.set(e.to,hp-shownLoss);
+        if(e.type==='statusDamage')hpBeforeHit.set(e.id,Math.max(0,hp-e.damage));
+        if(e.type==='heal')hpBeforeHit.set(e.to,hp+e.amount);
+        if(e.type==='revive')hpBeforeHit.set(e.id,e.amount);
         const caster=b.state.units.find(u=>u.id===e.from);
         const attackState=e.type==='hit'?(e.special?(e.skill?.animation??'attack1'):'attack4'):null;
         const attackId=attackState&&caster?SPRITE_BY_NAME[C.getSpecies(caster.speciesId).id]:null;
         const attackDuration=attackState?animations.duration(attackId,attackState):0;
         const poseWindup=attackState?(animations.windup?.(attackId,attackState)||0):0;
         const windup=e.type==='hit'&&!e.special?Math.min(.25,poseWindup||attackDuration/2):poseWindup;
-        const effect=b.effects.add(e,b.state.units,before,caster?battleBackdrop.spriteScale(spriteOf(caster.speciesId,false)):1,windup);
+        const effect=b.effects.add(e,b.state.units,before,caster?battleBackdrop.spriteScale(spriteOf(caster.speciesId,false)):1,windup,shownLoss);
         // 실제 적중 이벤트로 공격/피격을 연결하고 각 종 NANR 유지 시간을 사용한다.
         if(e.type==='hit'){
           const attacker=b.state.units.find(u=>u.id===e.from),target=b.state.units.find(u=>u.id===e.to);
@@ -1419,7 +1423,7 @@
             // 원본 빔은 0x212073c로 시전자를 잠근다. 빔이 끝날 때까지 공격 자세를 유지한다.
             const holdUntil=effect?.lockActor?effect.hold:0;
             const actionDuration=holdUntil?(animations.castDuration?.(attackId,attackState,holdUntil)||Math.max(attackDuration,holdUntil)):attackDuration;
-            b.actions.set(e.from,{kind:'attack',left:actionDuration,duration:actionDuration,state:attackState,holdUntil,flip:target.x>attacker.x});
+            b.actions.set(e.from,{kind:'attack',left:actionDuration,duration:actionDuration,state:attackState,holdUntil,flip:target.x>attacker.x,event:e});
           }
           hitFeedbackByTarget.delete(e.to);
           if (effect?.lead) {

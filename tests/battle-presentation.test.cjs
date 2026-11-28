@@ -3,9 +3,9 @@ function setup(){const c=vm.createContext({window:{}});for(const f of ['assets/b
 test('原本325개 기술만 확대하고 일반공격·SP는 확대하지 않는다',()=>{
  const {c,p}=setup(),records=c.window.BATTLE_PRESENTATION_DATA.records;assert.equal(Object.keys(records).length,325);
  const units=[{id:0,x:10,y:30}];
- for(const e of [{type:'hit',from:0,special:false},{type:'support',from:0,skill:{id:1}},{type:'hit',from:0,special:true,skill:{record:31}}])p.add(e,units,.5);
+ for(const e of [{type:'hit',from:0,special:false},{type:'support',from:0,skill:{id:1}},{type:'hit',from:0,special:true,skill:{record:60}}])p.add(e,units,.5);
  assert.equal(p.busy,false);
- p.add({type:'hit',from:0,special:true,skill:{record:+Object.keys(records)[0],name:'검증'}},units,.5);assert.equal(p.busy,true);
+ p.add({type:'hit',from:0,special:true,skill:{record:61,name:'헤비 버너'}},units,.5);assert.equal(p.busy,true);
  assert.equal(p.snapshot().zoom,1);p.tick(p.snapshot().transition);assert.equal(p.snapshot().zoom,2);assert.ok(Math.abs(p.snapshot().dim-2/3)<1e-9);
  const held=p.snapshot();p.tick(0);assert.deepEqual(p.snapshot(),held);
  p.tick(.5);p.tick(held.transition/4);assert.ok(Math.abs(p.snapshot().zoom-1.5)<1e-8);
@@ -36,11 +36,14 @@ test('배틀 이동·효과·피격과 확대는 모두 실시간 1배속으로 
  const src=fs.readFileSync('web/game.js','utf8'),part=src.slice(src.indexOf('  function battleTick('),src.indexOf('  function battleLog('));
  for(const mode of ['normal','effect','done','focus']){
   let elapsed=0,focusTime=0,engine=0;
-  const action={left:1},c=vm.createContext({drawArena:()=>{},finishBattle:()=>{},C:{stepBattle:()=>{engine++;return [];}},
+  const cutIn={from:0,special:true,skill:{record:61}};
+  const action={left:1,event:cutIn},c=vm.createContext({drawArena:()=>{},finishBattle:()=>{},C:{stepBattle:()=>{engine++;return [];}},
    battle:{done:mode==='done',acc:0,state:{over:false,units:[]},motion:new Map(),actions:new Map([[0,action]]),effects:{busy:mode==='effect',tick:t=>elapsed+=t},
-    presentation:{busy:mode==='focus',snapshot:()=>({age:1,transition:0,hold:5}),tick:t=>focusTime+=t}}});
+    presentation:{busy:mode==='focus',snapshot:()=>({age:1,transition:0,hold:5,from:0,record:61}),tick:t=>focusTime+=t}}});
   vm.runInContext(part,c);c.battleTick(.05);
   assert.ok(Math.abs(elapsed-.05)<1e-9,mode);assert.ok(Math.abs(action.left-.95)<1e-9,mode);assert.equal(engine,0);
-  if(mode==='normal'){c.battleTick(.05);assert.equal(engine,1);}if(mode==='focus')assert.equal(focusTime,.05);
+  c.battleTick(.05);
+  assert.equal(engine,mode==='normal'||mode==='effect'?1:0,mode);
+  if(mode==='focus'){assert.equal(focusTime,.1);assert.equal(c.battle.acc,0);}
  }
 });
