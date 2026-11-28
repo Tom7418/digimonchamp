@@ -26,7 +26,7 @@
 .warn{color:#ffb37a;font-size:12px;margin:4px 0 8px}
 .schedule{margin:6px 0 0;padding-left:18px;font-size:12px;color:#a9bdc6}
 .objective h2{font-size:15px}
-.actions{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))!important}
+
 .menu-list{display:grid;gap:6px;margin:6px 0 12px}
 .menu-list.two{grid-template-columns:1fr 1fr}
 .menu-list button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 10px;text-align:left;border:1px solid #33515f;border-radius:6px;background:#132c3b;color:#eef6f8}
@@ -143,14 +143,67 @@ header{height:62px;overflow:visible}
 .tray-item.tool small{position:absolute;right:4px;top:2px;font-size:11px;font-weight:900;color:#ffe36a;text-shadow:0 1px 0 #000}
 .tray-item.tool[aria-pressed="true"]{outline:none;background:linear-gradient(#ffd84a,#f0a20f);border-color:#7a4a00;color:#3a2300;box-shadow:inset 0 2px #fff3a8,inset 0 -3px #b97700,0 0 10px #ffcf3a88}
 .tray-item.tool:hover:not(:disabled){filter:brightness(1.12)}
-/* 메뉴 버튼: 원작 파란 버튼 */
-.actions button{background:url('assets/ui/btn_blue.png') center/100% 100% no-repeat;image-rendering:pixelated;border:0;border-radius:0;box-shadow:none;padding:14px 18px 16px;color:#fff;text-shadow:0 2px 0 #10164a}
-/* hover에서도 배경 크기/반복을 명시해 원본88x32 그림이 타일처럼 반복되지 않게 한다. */
-.actions button:hover,.actions button:focus-visible{background:url('assets/ui/btn_blue_on.png') center/100% 100% no-repeat;transform:translateY(-1px)}
-.actions button b{font-size:15px}
-.actions small{color:#ffe36a!important;text-shadow:0 1px 0 #10164a}
-.actions .action-icon{background:#ffffff26;color:#ffe36a;border-radius:50%}
-.action-icon.gold{color:#ffe36a}
+/* 육성 메뉴의 테두리와 하이라이트는 브라우저 해상도에 맞춰 그린다. */
+.dock .actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 7px 8px;
+}
+.dock .actions button {
+  min-width: 0;
+  min-height: 40px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 5px 6px;
+  border: 1px solid #547fca;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #364f93 0%, #263d77 53%, #202f5e 100%);
+  box-shadow: inset 0 1px #c2d9ff52, inset 0 -2px #14234c, 0 2px 3px #09182c80;
+  color: #f4f8ff;
+  font: 600 13px/1.2 system-ui, 'Malgun Gothic', sans-serif;
+  text-shadow: 0 1px 2px #101c40;
+  transition: background-color .14s, border-color .14s, box-shadow .14s;
+}
+.dock .actions button:not(:disabled):hover,
+.dock .actions button:focus-visible {
+  background: linear-gradient(180deg, #4361a8, #2e4888 55%, #293969);
+  border-color: #8fbfff;
+  box-shadow: inset 0 1px #c2d9ff73, inset 0 -2px #172744, 0 2px 5px #08142888;
+  transform: none;
+}
+.dock .actions button:not(:disabled):active {
+  background: linear-gradient(180deg, #1d2d58, #2a417b);
+  box-shadow: inset 0 2px 4px #132445;
+}
+.dock .actions button:focus-visible {
+  outline: 2px solid #ffe29a;
+  outline-offset: 2px;
+}
+.dock .action-label {white-space: nowrap}
+.dock .action-icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  margin: 0;
+  border: 1px solid #b5cbff40;
+  border-radius: 6px;
+  background: #18295c80;
+  color: #ffdd87;
+  font: 600 15px/1 'Segoe UI Symbol', system-ui, sans-serif;
+  text-shadow: none;
+}
+@media (min-width:700px) and (max-width:999px), (min-width:1120px) {
+  .dock .actions {grid-template-columns: repeat(6, minmax(0, 1fr))}
+}
+@media (max-width:380px) {
+  .dock .actions {grid-template-columns: repeat(2, minmax(0, 1fr))}
+}
+@media (prefers-reduced-motion: reduce) {
+  .dock .actions button {transition: none}
+}
 /* 창: 파란 육각 물결 + 금색 제목 */
 dialog{background:linear-gradient(145deg,#18334b,#0b1c30);border:3px solid #f2b13a;border-radius:6px;box-shadow:0 0 0 3px #0b1d4a,0 20px 60px #000a}
 dialog h2{display:inline-block;background:linear-gradient(#ffe36a,#f2a915);color:#4a2a00;padding:4px 22px;border:2px solid #7a4a00;border-radius:16px 4px 16px 4px;font-size:20px;letter-spacing:0;box-shadow:inset 0 -3px #c27a00}
@@ -169,7 +222,7 @@ dialog p,dialog li{color:#e3f2ff}
 .world-top .band>* b{background:none;border:0;box-shadow:none;padding:0;color:#b8000f!important}
 .world-top .wallet{flex-direction:row-reverse;align-items:center}
 #world{width:min(100%,calc((100vh - 222px) * 960 / 560))}
-@media(max-width:700px){.world-top .band{order:5;flex-basis:100%}.world-top .band>*{font-size:11px;padding:2px 7px}.tray-item.tool{min-width:54px;height:52px}.tray-item.tool img{width:26px;height:26px}.actions button{padding:10px 8px 12px}}
+@media(max-width:700px){.world-top .band{order:5;flex-basis:100%}.world-top .band>*{font-size:11px;padding:2px 7px}.tray-item.tool{min-width:54px;height:52px}.tray-item.tool img{width:26px;height:26px}}
 
 /* 도구 줄: 사육장 화면 안 아래쪽 (원작 배치) */
 .canvas-wrap>.tray{position:absolute;left:0;right:0;bottom:0;z-index:3;margin:0;border:0;border-radius:0;border-top:3px solid #f2b13a;background:linear-gradient(#3a3f46e6,#1d2126f2);gap:6px;padding:5px 8px;flex-wrap:nowrap;justify-content:center;overflow-x:auto}
@@ -208,11 +261,6 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 .objective h2{color:#ffe36a}
 .side-body>.journal #journal{margin:0;padding:0}
 .side-body .reset{display:block;margin:14px auto 4px}
-.actions{display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:6px;padding:6px 8px!important}
-.actions button{min-height:0;padding:6px 4px 8px!important;display:flex;flex-direction:column;align-items:center;gap:1px}
-.actions button b{font-size:14px}
-.actions .action-icon{width:22px;height:22px;font-size:13px;line-height:22px}
-.actions small{font-size:10px}
 .cage-toolbar{padding:6px 10px}
 .cage-toolbar-head button{padding:5px 9px;font-size:13px}
 #cage-instruction{margin:4px 0 0;font-size:11px;line-height:1.35}
@@ -248,16 +296,10 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
  .layout{display:flex!important;flex-direction:column}
  aside{display:block!important}
  .side-body{max-height:none}
- .actions{grid-template-columns:repeat(5,1fr)!important}
- .actions small{display:none}
- .actions .action-icon{display:none}
  .cage-toolbar:not(.editing) #cage-instruction{display:none}
 }
 
 /* 한 화면 배치 2차: 아래쪽 줄을 얇게 해서 사육장을 키운다 */
-.actions button{flex-direction:row!important;justify-content:center;gap:6px!important;padding:5px 4px 7px!important;min-height:38px}
-.actions button small{display:none}
-.actions button b{font-size:14px;line-height:1}
 .world-bottom{padding:3px 12px!important;min-height:0;font-size:11px}
 .world-bottom #pause{padding:2px 8px;font-size:11px}
 .sound-controls{display:flex;align-items:center;gap:7px;flex-shrink:0}
@@ -271,7 +313,6 @@ aside[data-pane="digimon"] .side-body>.pane-digimon,aside[data-pane="evo"] .side
 }
 @media (max-width:999px){
  .canvas-wrap>.tray{position:static;border-top-width:2px}
- .actions button b{font-size:13px}
 }
 /* 케이지 편집 중 시설 목록은 가로 한 줄로 (사육장이 줄어들지 않게) */
 .cage-toolbar.editing .cage-palette{display:flex!important;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-height:none;gap:6px;padding:6px 0 2px}

@@ -7,6 +7,3 @@ h1,h2,h3,.brand,.band,#day,.tbtn,.world-top,.info-field,button,select,.tray-item
 .tab,.tray-item b{letter-spacing:0}
 .canvas-wrap>.tray{z-index:3}
 .hd-text-layer{display:block;max-width:none;max-height:none;aspect-ratio:auto}
-/* 작은 화면에서도 긴 메뉴 이름을 한 줄로 표시한다. */
-.actions button b{white-space:nowrap}
-@media(max-width:600px){.actions button[data-action="tamer"]{grid-column:span 2}}

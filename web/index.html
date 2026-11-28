@@ -7,8 +7,8 @@
 <link rel="preload" href="assets/hunt/item-shutter.png" as="image">
 <link rel="preload" href="assets/fonts/championship-hd.woff2?v=20261122-wal" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="championship.css?v=stage-teams1">
-<link rel="stylesheet" href="typography.css?v=20261122-wal">
+<link rel="stylesheet" href="championship.css?v=farm-menu-hd1">
+<link rel="stylesheet" href="typography.css?v=farm-menu-hd1">
 </head>
 <body>
 <div id="title-screen" class="title-screen" role="dialog" aria-label="타이틀 화면">
@@ -33,12 +33,12 @@
 <div id="hunt-item-hud" class="hunt-item-hud" aria-label="사냥 장비"></div>
 <div class="tray" id="tray"></div>
 <div class="dock"><div class="actions">
-<button data-action="battle" title="타이틀 · 프리 배틀"><span class="action-icon pink">⚔</span><b>배틀</b><small>타이틀 · 프리 배틀</small></button>
-<button data-action="hunt" title="로프로 둘러 포획"><span class="action-icon green">⌁</span><b>사냥</b><small>로프로 둘러 포획</small></button>
-<button data-action="shop" title="고기 · 알약 · 케이지"><span class="action-icon orange">฿</span><b>상점</b><small>고기 · 알약 · 케이지</small></button>
-<button data-action="release" title="용량 비우기"><span class="action-icon blue">↩</span><b>놓아주기</b><small>용량 비우기</small></button>
-<button data-action="dex" title="원작 도감 순서 216종"><span class="action-icon blue">📖</span><b>도감</b><small>등록한 디지몬</small></button>
-<button data-action="tamer" title="랭크 · 달성률"><span class="action-icon gold">★</span><b>테이머 정보</b><small>랭크 · 달성률</small></button>
+<button type="button" data-action="battle" title="타이틀 · 프리 배틀"><span class="action-icon" aria-hidden="true">⚔︎</span><span class="action-label">배틀</span></button>
+<button type="button" data-action="hunt" title="로프로 둘러 포획"><span class="action-icon" aria-hidden="true">◎</span><span class="action-label">사냥</span></button>
+<button type="button" data-action="shop" title="고기 · 알약 · 케이지"><span class="action-icon" aria-hidden="true">฿</span><span class="action-label">상점</span></button>
+<button type="button" data-action="release" title="용량 비우기"><span class="action-icon" aria-hidden="true">↩︎</span><span class="action-label">놓아주기</span></button>
+<button type="button" data-action="dex" title="원작 도감 순서 216종"><span class="action-icon" aria-hidden="true">◫</span><span class="action-label">도감</span></button>
+<button type="button" data-action="tamer" title="랭크 · 달성률"><span class="action-icon" aria-hidden="true">★</span><span class="action-label">테이머 정보</span></button>
 </div>
 <div class="world-bottom"><span><i class="live-dot"></i> <span id="save-status">자동 저장 준비</span></span><span id="inventory"></span><div class="sound-controls"><button type="button" class="quiet" data-sound-toggle aria-label="게임 소리" aria-pressed="true">소리 켜짐</button><input id="sound-volume" type="range" min="0" max="100" value="40" aria-label="게임 소리 음량"></div><button class="quiet" id="pause">Ⅱ 일시 정지</button></div></div>
 </section>
